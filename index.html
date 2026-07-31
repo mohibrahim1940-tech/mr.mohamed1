@@ -1173,12 +1173,13 @@
     background:var(--ink); border:1px solid var(--line); border-radius:12px;
   }
   .ask-box .field-label{margin-bottom:8px;display:block;}
-  .ask-row{display:flex; gap:8px;}
+  .ask-row{display:flex; flex-direction:column; gap:10px;}
   .ask-row input[type="text"]{
-    flex:1; padding:10px 14px; border-radius:8px;
+    width:100%; padding:10px 14px; border-radius:8px;
     border:1px solid var(--line); background:var(--panel); color:var(--text);
     font-family:'Inter',sans-serif; font-size:0.88rem;
   }
+  .ask-row .btn-blue{width:100%;}
   .ask-sent-msg{color:#39D98A; font-size:0.8rem; margin-top:8px; display:none;}
   .btn-blue{background:var(--signal); color:#fff; border-color:var(--signal);}
   .btn-blue:hover{background:#3a5ce0; border-color:#3a5ce0;}
@@ -2070,7 +2071,7 @@
       </div>
       <div class="admin-table-wrap">
         <table class="admin-table" id="asksTable">
-          <thead><tr><th>Student</th><th>Homework</th><th>Question</th><th>Their message</th><th>Sent</th><th></th></tr></thead>
+          <thead><tr><th>Student</th><th>Homework</th><th>Question</th><th>Photo</th><th>Their message</th><th>Sent</th><th></th></tr></thead>
           <tbody id="asksBody"></tbody>
         </table>
         <div class="admin-empty" id="asksEmpty" style="display:none;">No questions sent yet.</div>
@@ -3043,8 +3044,8 @@
         <div class="ask-box">
           <label class="field-label">Ask about this question</label>
           <div class="ask-row">
-            <input type="text" id="askInput" placeholder="Type your question for Mr. Mohamed Ibrahim…">
             <button type="button" class="btn btn-blue" id="askSendBtn">Send</button>
+            <input type="text" id="askInput" placeholder="Type your question for Mr. Mohamed Ibrahim…">
           </div>
           <div class="ask-sent-msg" id="askSentMsg">Sent ✓ — Mr. Mohamed Ibrahim will see this.</div>
         </div>
@@ -3072,19 +3073,34 @@
       document.getElementById('askSendBtn').addEventListener('click', async ()=>{
         const askInput = document.getElementById('askInput');
         const message = askInput.value.trim();
-        if(!message) return;
+        const sentMsg = document.getElementById('askSentMsg');
+        if(!message){ askInput.focus(); return; }
         const askBtn = document.getElementById('askSendBtn');
         askBtn.disabled = true; askBtn.textContent = 'Sending…';
-        await saveAsk({
-          username: currentStudent ? currentStudent.username : 'Unknown',
-          homeworkTitle: exam.title,
-          questionText: q.text || (q.image ? '(question with image)' : ''),
-          lesson: q.lesson || 'General',
-          message
-        });
+        let ok = false;
+        try{
+          ok = await saveAsk({
+            username: currentStudent ? currentStudent.username : 'Unknown',
+            homeworkTitle: exam.title,
+            questionText: q.text || (q.image ? '(question with image)' : ''),
+            questionImage: q.image || null,
+            lesson: q.lesson || 'General',
+            message
+          });
+        }catch(err){
+          console.error('Ask failed:', err);
+        }
         askBtn.disabled = false; askBtn.textContent = 'Send';
-        askInput.value = '';
-        document.getElementById('askSentMsg').classList.add('show');
+        if(ok){
+          askInput.value = '';
+          sentMsg.textContent = 'Sent ✓ — Mr. Mohamed Ibrahim will see this.';
+          sentMsg.style.color = '#39D98A';
+          sentMsg.classList.add('show');
+        } else {
+          sentMsg.textContent = 'Could not send — check your connection and try again.';
+          sentMsg.style.color = 'var(--ember)';
+          sentMsg.classList.add('show');
+        }
       });
 
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
@@ -3837,10 +3853,19 @@
         <td>${esc(ask.username)}</td>
         <td>${esc(ask.homeworkTitle || '')}</td>
         <td>${esc(ask.questionText || '')}</td>
+        <td>${ask.questionImage ? `<img class="mistake-thumb" src="${ask.questionImage}" alt="Question photo">` : '—'}</td>
         <td>${esc(ask.message || '')}</td>
         <td>${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
         <td><button class="student-action-btn delete-ask-btn">Delete</button></td>
       `;
+      if(ask.questionImage){
+        tr.querySelector('.mistake-thumb').addEventListener('click', ()=>{
+          openQuestionView({
+            username: ask.username, source: ask.homeworkTitle, lesson: ask.lesson || 'General',
+            text: ask.questionText, image: ask.questionImage, options: [], chosenAnswer: null, correctAnswer: null
+          });
+        });
+      }
       tr.querySelector('.delete-ask-btn').addEventListener('click', async ()=>{
         await deleteAsk(ask.id);
         await renderAdminAsks();
@@ -4443,8 +4468,8 @@
         <div class="ask-box">
           <label class="field-label">Ask about this question</label>
           <div class="ask-row">
-            <input type="text" id="askInput" placeholder="Type your question for Mr. Mohamed Ibrahim…">
             <button type="button" class="btn btn-blue" id="askSendBtn">Send</button>
+            <input type="text" id="askInput" placeholder="Type your question for Mr. Mohamed Ibrahim…">
           </div>
           <div class="ask-sent-msg" id="askSentMsg">Sent ✓ — Mr. Mohamed Ibrahim will see this.</div>
         </div>
@@ -4472,19 +4497,34 @@
       document.getElementById('askSendBtn').addEventListener('click', async ()=>{
         const askInput = document.getElementById('askInput');
         const message = askInput.value.trim();
-        if(!message) return;
+        const sentMsg = document.getElementById('askSentMsg');
+        if(!message){ askInput.focus(); return; }
         const askBtn = document.getElementById('askSendBtn');
         askBtn.disabled = true; askBtn.textContent = 'Sending…';
-        await saveAsk({
-          username: currentStudent ? currentStudent.username : 'Unknown',
-          homeworkTitle: hw.title,
-          questionText: q.text || (q.image ? '(question with image)' : ''),
-          lesson: q.lesson || 'General',
-          message
-        });
+        let ok = false;
+        try{
+          ok = await saveAsk({
+            username: currentStudent ? currentStudent.username : 'Unknown',
+            homeworkTitle: hw.title,
+            questionText: q.text || (q.image ? '(question with image)' : ''),
+            questionImage: q.image || null,
+            lesson: q.lesson || 'General',
+            message
+          });
+        }catch(err){
+          console.error('Ask failed:', err);
+        }
         askBtn.disabled = false; askBtn.textContent = 'Send';
-        askInput.value = '';
-        document.getElementById('askSentMsg').classList.add('show');
+        if(ok){
+          askInput.value = '';
+          sentMsg.textContent = 'Sent ✓ — Mr. Mohamed Ibrahim will see this.';
+          sentMsg.style.color = '#39D98A';
+          sentMsg.classList.add('show');
+        } else {
+          sentMsg.textContent = 'Could not send — check your connection and try again.';
+          sentMsg.style.color = 'var(--ember)';
+          sentMsg.classList.add('show');
+        }
       });
 
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
