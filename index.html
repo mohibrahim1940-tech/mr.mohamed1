@@ -241,6 +241,8 @@
     .hero{grid-template-columns:1fr;padding-top:150px;}
     .hero-stats{flex-wrap:wrap;row-gap:20px;}
   }
+  .hero.no-preview{grid-template-columns:1fr;}
+  .hero.no-preview .lead{max-width:640px;}
 
   /* ---------- trust bar ---------- */
   .trust{
@@ -609,11 +611,13 @@
     border-radius:18px;
     padding:34px 30px;
     max-width:400px;width:100%;
+    max-height:90vh;overflow-y:auto;
     position:relative;
     transform:translateY(14px);
     transition:transform .25s ease;
   }
   .modal-overlay.open .modal-box{transform:translateY(0);}
+  .modal-overlay.quiz-locked .modal-close{display:none;}
   .modal-close{
     position:absolute;top:16px;right:16px;
     background:none;border:none;color:var(--muted);
@@ -917,6 +921,17 @@
 
   /* ---------- public practice exams ---------- */
   .exam-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .dash-search{
+    width:100%; padding:12px 16px; border-radius:8px;
+    border:1px solid var(--line); background:var(--ink); color:var(--text);
+    font-family:'Inter',sans-serif; font-size:0.92rem;
+    margin-bottom:18px;
+  }
+  .dash-search:focus{outline:2px solid var(--signal); outline-offset:2px;}
+  .dash-search-empty{
+    grid-column:1/-1; text-align:center; color:var(--muted);
+    padding:30px 20px; font-size:0.9rem;
+  }
   .exam-card{
     background:var(--panel);border:1px solid var(--line);
     border-radius:16px;padding:26px 24px;
@@ -967,15 +982,26 @@
   .exam-q-text{font-size:1.08rem;margin-bottom:20px;font-family:'Space Grotesk',sans-serif;font-weight:600;}
   .exam-q-image{width:100%;max-height:260px;object-fit:contain;border-radius:10px;margin-bottom:18px;background:var(--ink);border:1px solid var(--line);}
   .exam-option{
-    display:flex;align-items:center;gap:12px;
+    display:grid;grid-template-columns:20px 1fr 20px;align-items:center;gap:12px;
     padding:13px 16px;border-radius:8px;
     border:1px solid var(--line);margin-bottom:10px;
     cursor:pointer;transition:border-color .2s, background .2s;
   }
   .exam-option:hover{border-color:rgba(76,111,255,0.5);}
   .exam-option.selected{border-color:var(--signal);background:rgba(76,111,255,0.08);}
-  .exam-option input{accent-color:var(--signal);}
+  .exam-option input{accent-color:var(--signal);grid-column:1;justify-self:start;}
+  .exam-option span{grid-column:2;text-align:center;}
   .exam-nav{display:flex;justify-content:space-between;margin-top:22px;gap:12px;}
+  .q-nav-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+  .q-nav-btn{
+    width:34px;height:34px;border-radius:8px;flex-shrink:0;
+    border:1px solid var(--line);background:var(--ink);color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:0.8rem;cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .q-nav-btn:hover{border-color:rgba(255,255,255,0.3);color:var(--text);}
+  .q-nav-btn.answered{border-color:rgba(57,217,138,0.4);color:#39D98A;}
+  .q-nav-btn.current{border-color:var(--signal);color:var(--text);background:rgba(76,111,255,0.14);}
   .exam-score{text-align:center;}
   .exam-score .big-num{
     font-family:'Space Grotesk',sans-serif;font-size:3rem;font-weight:700;
@@ -1332,7 +1358,7 @@
       </div>
     </div>
 
-    <div class="chart-card">
+    <div class="chart-card" id="heroPreviewCard">
       <div class="chart-card-head">
         <span class="mono">STUDENT DASHBOARD</span>
         <span class="mono">PREVIEW</span>
@@ -1423,6 +1449,7 @@
       </div>
 
       <div class="hw-section-title">Practice by skill</div>
+      <input type="text" class="dash-search" id="skillsSearchInput" placeholder="Search skills…">
       <div class="exam-grid" id="skillsGrid">
         <div class="exams-empty">Loading skills…</div>
       </div>
@@ -1464,6 +1491,7 @@
 
     <div class="dash-tab-panel" id="tabExams">
       <div class="hw-section-title">Practice exams</div>
+      <input type="text" class="dash-search" id="examsSearchInput" placeholder="Search exams…">
       <div class="exam-grid" id="examsGrid">
         <div class="exams-empty">Loading practice exams…</div>
       </div>
@@ -1916,6 +1944,7 @@
 
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveSkillBtn">Save skill set</button>
+          <button class="btn btn-ghost" id="cancelSkillEditBtn" type="button" style="display:none;">Cancel edit</button>
         </div>
       </div>
 
@@ -2063,6 +2092,7 @@
           <option value="">All students</option>
         </select>
         <button class="btn btn-ghost" id="refreshMistakesPanel">Refresh</button>
+        <button class="btn btn-ghost" id="deleteAllMistakesBtn" style="color:var(--ember);border-color:var(--ember);">Delete all</button>
       </div>
       <div class="admin-table-wrap">
         <table class="admin-table" id="mistakesTable">
@@ -2770,6 +2800,7 @@
       });
       grid.appendChild(card);
     });
+    applyDashSearchFilter('examsSearchInput', 'examsGrid');
   }
 
   // Builds a lookup of the current student's most recent attempt per exam/skill
@@ -2786,10 +2817,45 @@
     return latestByTitle;
   }
 
+  // Filters the cards inside a skills/exams grid by their <h3> title against
+  // whatever's currently typed in the matching search box. Re-run after every
+  // render so the filter survives a refresh (e.g. after finishing a quiz).
+  function applyDashSearchFilter(inputId, gridId){
+    const input = document.getElementById(inputId);
+    const grid = document.getElementById(gridId);
+    if(!input || !grid) return;
+    const query = input.value.trim().toLowerCase();
+    const cards = grid.querySelectorAll('.exam-card');
+    let visibleCount = 0;
+
+    cards.forEach(card=>{
+      const title = (card.querySelector('h3')?.textContent || '').toLowerCase();
+      const match = !query || title.includes(query);
+      card.style.display = match ? '' : 'none';
+      if(match) visibleCount++;
+    });
+
+    let noMatchMsg = grid.querySelector('.dash-search-empty');
+    if(cards.length > 0 && visibleCount === 0){
+      if(!noMatchMsg){
+        noMatchMsg = document.createElement('div');
+        noMatchMsg.className = 'dash-search-empty';
+        grid.appendChild(noMatchMsg);
+      }
+      noMatchMsg.textContent = `No matches for "${input.value.trim()}".`;
+    } else if(noMatchMsg){
+      noMatchMsg.remove();
+    }
+  }
+
+  document.getElementById('examsSearchInput').addEventListener('input', ()=> applyDashSearchFilter('examsSearchInput', 'examsGrid'));
+  document.getElementById('skillsSearchInput').addEventListener('input', ()=> applyDashSearchFilter('skillsSearchInput', 'skillsGrid'));
+
   /* ---------------- PUBLIC: exam player ---------------- */
   const examModal = document.getElementById('examModal');
   const examPlayer = document.getElementById('examPlayer');
   let activeTimerInterval = null; // countdown for whichever exam/homework is currently open
+  let quizLocked = false; // true while a question is showing — prevents accidental exits mid-quiz
   function stopActiveTimer(){
     if(activeTimerInterval){ clearInterval(activeTimerInterval); activeTimerInterval = null; }
   }
@@ -2798,14 +2864,42 @@
     const s = Math.max(0,sec) % 60;
     return `${m}:${String(s).padStart(2,'0')}`;
   }
-  document.getElementById('closeExamModal').addEventListener('click', ()=>{ stopActiveTimer(); examModal.classList.remove('open'); });
-  examModal.addEventListener('click', (e)=>{ if(e.target === examModal){ stopActiveTimer(); examModal.classList.remove('open'); } });
+  // Builds the row of numbered buttons that let a student jump straight to
+  // any question (e.g. "go to question 6") instead of only stepping Back/Next.
+  function buildQuestionNav(total, currentIdx, answers, onJump){
+    const wrap = document.createElement('div');
+    wrap.className = 'q-nav-grid';
+    for(let i=0; i<total; i++){
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'q-nav-btn' + (i === currentIdx ? ' current' : '') + (answers[i] != null ? ' answered' : '');
+      btn.textContent = i + 1;
+      btn.title = `Go to question ${i + 1}`;
+      btn.addEventListener('click', ()=> onJump(i));
+      wrap.appendChild(btn);
+    }
+    return wrap;
+  }
+  function unlockQuiz(){
+    quizLocked = false;
+    examModal.classList.remove('quiz-locked');
+  }
+  document.getElementById('closeExamModal').addEventListener('click', ()=>{
+    if(quizLocked) return;
+    stopActiveTimer(); examModal.classList.remove('open');
+  });
+  examModal.addEventListener('click', (e)=>{
+    if(quizLocked) return;
+    if(e.target === examModal){ stopActiveTimer(); examModal.classList.remove('open'); }
+  });
 
   function startExam(exam){
     let current = 0;
     const answers = new Array(exam.questions.length).fill(null);
     let remainingSeconds = exam.timeLimit ? exam.timeLimit * 60 : null;
 
+    quizLocked = true;
+    examModal.classList.add('quiz-locked');
     stopActiveTimer();
     if(remainingSeconds !== null){
       activeTimerInterval = setInterval(()=>{
@@ -2828,6 +2922,7 @@
       examPlayer.innerHTML = `
         ${remainingSeconds !== null ? `<div class="exam-timer"><span id="examTimerDisplay">${formatTimer(remainingSeconds)}</span></div>` : ''}
         <div class="exam-progress"><div class="exam-progress-fill" style="width:${progress}%"></div></div>
+        <div id="qNavWrap"></div>
         <div class="exam-q-count">QUESTION ${current+1} OF ${exam.questions.length}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
         ${q.image ? `<img class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
         ${q.text ? `<div class="exam-q-text">${esc(q.text)}</div>` : ''}
@@ -2837,6 +2932,9 @@
           <button class="btn btn-primary" id="examNextBtn">${current === exam.questions.length-1 ? 'See score' : 'Next'}</button>
         </div>
       `;
+      document.getElementById('qNavWrap').appendChild(
+        buildQuestionNav(exam.questions.length, current, answers, (i)=>{ current = i; renderQuestion(); })
+      );
       const optionsWrap = document.getElementById('examOptions');
       q.options.forEach((opt, i)=>{
         const row = document.createElement('label');
@@ -2861,6 +2959,7 @@
 
     function renderScore(){
       stopActiveTimer();
+      unlockQuiz();
       const correctCount = exam.questions.reduce((sum,q,i)=> sum + (answers[i]===q.correct ? 1 : 0), 0);
       const pct = Math.round((correctCount / exam.questions.length) * 100);
       const hasMistakes = correctCount < exam.questions.length;
@@ -2869,7 +2968,12 @@
       if(currentStudent){
         exam.questions.forEach((q,i)=>{
           if(answers[i] !== q.correct){
-            saveMistake({ username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title });
+            saveMistake({
+              username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title,
+              text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
+              options: q.options, chosenAnswer: answers[i], correctAnswer: q.correct,
+              questionNumber: i + 1, questionTotal: exam.questions.length
+            });
           }
         });
         reviewResults = exam.questions.map((q,i) => ({
@@ -3281,6 +3385,8 @@
     await renderAdminSkillList();
   }
 
+  let editingSkillId = null;
+
   async function renderAdminSkillList(){
     const wrap = document.getElementById('skillListWrap');
     const emptyState = document.getElementById('skillListEmpty');
@@ -3303,18 +3409,42 @@
           <div class="meta">${(set.questions || []).length} classified question${(set.questions || []).length === 1 ? '' : 's'}</div>
         </div>
         <div class="exam-list-actions">
+          <button class="edit-skill-btn" title="Edit this skill set" aria-label="Edit this skill set">✏️ Edit</button>
           <button class="danger delete-skill-btn">Delete</button>
         </div>
       `;
+      row.querySelector('.edit-skill-btn').addEventListener('click', ()=> editSkill(set));
       row.querySelector('.delete-skill-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete the "${set.skill}" skill set?`)) return;
         await deleteSkillSet(set.id);
+        if(editingSkillId === set.id) resetSkillForm();
         await renderAdminSkillList();
         if(currentStudent) await renderStudentSkills();
       });
       wrap.appendChild(row);
     });
   }
+
+  function editSkill(set){
+    editingSkillId = set.id;
+    document.getElementById('skillNameInput').value = set.skill;
+    skillQuestionsContainer.innerHTML = '';
+    (set.questions || []).forEach(q => addQuestionBlock(q, skillQuestionsContainer));
+    document.getElementById('saveSkillBtn').textContent = 'Save changes';
+    document.getElementById('cancelSkillEditBtn').style.display = 'inline-flex';
+    document.getElementById('skillNameInput').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function resetSkillForm(){
+    editingSkillId = null;
+    document.getElementById('saveSkillBtn').textContent = 'Save skill set';
+    document.getElementById('cancelSkillEditBtn').style.display = 'none';
+    document.getElementById('skillNameInput').value = '';
+    skillQuestionsContainer.innerHTML = '';
+    addQuestionBlock(null, skillQuestionsContainer);
+  }
+
+  document.getElementById('cancelSkillEditBtn').addEventListener('click', resetSkillForm);
 
   document.getElementById('saveSkillBtn').addEventListener('click', async ()=>{
     const skill = document.getElementById('skillNameInput').value.trim();
@@ -3330,18 +3460,18 @@
     }
 
     const btn = document.getElementById('saveSkillBtn');
+    const wasEditing = !!editingSkillId;
     btn.disabled = true; btn.textContent = 'Saving…';
-    const id = generateId('skill');
+    const id = editingSkillId || generateId('skill');
     const ok = await saveSkillSet(id, { skill, questions, ts: new Date().toISOString() });
-    btn.disabled = false; btn.textContent = 'Save skill set';
+    btn.disabled = false;
 
     if(ok){
-      document.getElementById('skillNameInput').value = '';
-      skillQuestionsContainer.innerHTML = '';
-      addQuestionBlock(null, skillQuestionsContainer);
+      resetSkillForm();
       await renderAdminSkillList();
       if(currentStudent) await renderStudentSkills();
     } else {
+      btn.textContent = wasEditing ? 'Save changes' : 'Save skill set';
       alert('Could not save the skill set — please try again.');
     }
   });
@@ -3517,6 +3647,9 @@
   }
   async function fetchAllMistakes(){
     return await dbGetAll('mistakes');
+  }
+  async function deleteMistakeRecord(id){
+    return await dbDelete('mistakes', id);
   }
 
   async function renderAdminAsks(){
@@ -3846,6 +3979,7 @@
       });
       grid.appendChild(card);
     });
+    applyDashSearchFilter('skillsSearchInput', 'skillsGrid');
   }
 
 
@@ -3986,6 +4120,8 @@
     const answers = new Array(hw.questions.length).fill(null);
     let remainingSeconds = hw.timeLimit ? hw.timeLimit * 60 : null;
 
+    quizLocked = true;
+    examModal.classList.add('quiz-locked');
     stopActiveTimer();
     if(remainingSeconds !== null){
       activeTimerInterval = setInterval(()=>{
@@ -4008,6 +4144,7 @@
       examPlayer.innerHTML = `
         ${remainingSeconds !== null ? `<div class="exam-timer"><span id="examTimerDisplay">${formatTimer(remainingSeconds)}</span></div>` : ''}
         <div class="exam-progress"><div class="exam-progress-fill" style="width:${progress}%"></div></div>
+        <div id="qNavWrap"></div>
         <div class="exam-q-count">QUESTION ${current+1} OF ${hw.questions.length}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
         ${q.image ? `<img class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
         ${q.text ? `<div class="exam-q-text">${esc(q.text)}</div>` : ''}
@@ -4025,6 +4162,9 @@
           <button class="btn btn-primary" id="examNextBtn">${current === hw.questions.length-1 ? 'Submit' : 'Next'}</button>
         </div>
       `;
+      document.getElementById('qNavWrap').appendChild(
+        buildQuestionNav(hw.questions.length, current, answers, (i)=>{ current = i; renderQuestion(); })
+      );
       const optionsWrap = document.getElementById('examOptions');
       q.options.forEach((opt, i)=>{
         const row = document.createElement('label');
@@ -4067,6 +4207,7 @@
 
     async function submitHomework(){
       stopActiveTimer();
+      unlockQuiz();
       const correctCount = hw.questions.reduce((sum,q,i)=> sum + (answers[i]===q.correct ? 1 : 0), 0);
       const pct = Math.round((correctCount / hw.questions.length) * 100);
       const score = { correct: correctCount, total: hw.questions.length, pct };
@@ -4084,7 +4225,12 @@
       if(currentStudent){
         hw.questions.forEach((q,i)=>{
           if(answers[i] !== q.correct){
-            saveMistake({ username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title });
+            saveMistake({
+              username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title,
+              text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
+              options: q.options, chosenAnswer: answers[i], correctAnswer: q.correct,
+              questionNumber: i + 1, questionTotal: hw.questions.length
+            });
           }
         });
       }
@@ -4262,6 +4408,15 @@
   });
 
   function applySignedInState(){
+    // Hide the marketing hero's fake dashboard preview now that the student
+    // has their own real dashboard further down the page.
+    const heroPreview = document.getElementById('heroPreviewCard');
+    if(heroPreview){
+      heroPreview.style.display = 'none';
+      const heroSection = heroPreview.closest('.hero');
+      if(heroSection) heroSection.classList.add('no-preview');
+    }
+
     // Replace desktop nav-cta auth buttons (Sign in + Register) with a single signed-in pill
     const navCta = document.getElementById('navCta');
     const oldBtns = navCta.querySelectorAll('.open-auth-btn');
@@ -4416,38 +4571,31 @@
   // Shared by the per-student Analysis modal's summary and the global Mistakes
   // tab: pulls every wrong answer out of every completed homework and exam/skill
   // attempt, across all students (or one, if usernameFilter is given).
+  // Every row here is its own record in the "mistakes" table (one per wrong
+  // answer, saved the moment a student submits), so each one has a stable id
+  // and can be deleted individually — e.g. once you've gone over it with them.
   async function gatherAllMistakeRows(usernameFilter){
-    const allHw = await fetchAllHomework();
-    const allAttempts = await fetchAllAttempts();
-    const rows = [];
+    const all = await fetchAllMistakes();
+    const filtered = usernameFilter
+      ? all.filter(m => (m.username || '').trim().toLowerCase() === usernameFilter.trim().toLowerCase())
+      : all;
 
-    function addRows(items, sourceKey){
-      items
-        .filter(item => Array.isArray(item.results) && (!usernameFilter || (item.username||'').trim().toLowerCase() === usernameFilter.trim().toLowerCase()))
-        .forEach(item=>{
-          item.results.forEach((r, idx)=>{
-            if(r.correct) return;
-            rows.push({
-              username: item.username,
-              source: item[sourceKey],
-              questionNumber: idx + 1,
-              questionTotal: item.results.length,
-              lesson: r.lesson || 'General',
-              text: r.text || '(question)',
-              image: r.image || null,
-              options: r.options || [],
-              chosenAnswer: r.chosenAnswer,
-              correctAnswer: r.correctAnswer,
-              chosenText: (r.options && r.chosenAnswer != null) ? (r.options[r.chosenAnswer] ?? '—') : '—',
-              correctText: (r.options && r.correctAnswer != null) ? (r.options[r.correctAnswer] ?? '—') : '—',
-              ts: item.submittedAt || item.ts
-            });
-          });
-        });
-    }
-
-    addRows(allHw.filter(h => h.status === 'completed'), 'title');
-    addRows(allAttempts, 'examTitle');
+    const rows = filtered.map(m => ({
+      id: m.id,
+      username: m.username,
+      source: m.source,
+      questionNumber: m.questionNumber,
+      questionTotal: m.questionTotal,
+      lesson: m.lesson || 'General',
+      text: m.text || '(question)',
+      image: m.image || null,
+      options: m.options || [],
+      chosenAnswer: m.chosenAnswer,
+      correctAnswer: m.correctAnswer,
+      chosenText: (m.options && m.chosenAnswer != null) ? (m.options[m.chosenAnswer] ?? '—') : '—',
+      correctText: (m.options && m.correctAnswer != null) ? (m.options[m.correctAnswer] ?? '—') : '—',
+      ts: m.ts
+    }));
 
     rows.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
     return rows;
@@ -4492,12 +4640,20 @@
         <td>${esc(row.chosenText)}</td>
         <td>${esc(row.correctText)}</td>
         <td>${date ? date.toLocaleDateString() : '—'}</td>
-        <td><button class="student-action-btn goto-question-btn">Go to the question</button></td>
+        <td style="white-space:nowrap;">
+          <button class="student-action-btn goto-question-btn">Go to the question</button>
+          <button class="student-action-btn delete-mistake-btn">Delete</button>
+        </td>
       `;
       if(row.image){
-        tr.querySelector('.mistake-thumb').addEventListener('click', ()=> openQuestionView(row));
+        tr.querySelector('.mistake-thumb').addEventListener('click', ()=> openQuestionView(row, true));
       }
-      tr.querySelector('.goto-question-btn').addEventListener('click', ()=> openQuestionView(row));
+      tr.querySelector('.goto-question-btn').addEventListener('click', ()=> openQuestionView(row, true));
+      tr.querySelector('.delete-mistake-btn').addEventListener('click', async ()=>{
+        if(!confirm(`Delete this mistake for ${row.username}? This just clears it from your review list — it won't change their saved score.`)) return;
+        await deleteMistakeRecord(row.id);
+        await renderAdminMistakesTable();
+      });
       tbody.appendChild(tr);
     });
   }
@@ -4512,7 +4668,7 @@
   // Shows the exact question a mistake came from — text/image and all four
   // options, with the student's wrong pick and the correct one marked —
   // so it's quick to see exactly what to go over with them.
-  function openQuestionView(row){
+  function openQuestionView(row, allowDelete){
     const content = document.getElementById('questionViewContent');
     const optionsHtml = (row.options || []).map((opt, i)=>{
       let cls = '';
@@ -4528,11 +4684,41 @@
       <div class="exam-q-text" style="margin-bottom:20px;">${esc(row.text)}</div>
       ${optionsHtml}
       <p style="color:var(--muted); font-size:0.82rem; margin-top:18px;">Student: <strong style="color:var(--text);">${esc(row.username)}</strong></p>
+      ${allowDelete && row.id ? `<button class="btn btn-ghost" id="deleteMistakeFromViewBtn" style="width:100%;margin-top:16px;">Delete this mistake</button>` : ''}
     `;
     document.getElementById('questionViewModal').classList.add('open');
+
+    const deleteBtn = document.getElementById('deleteMistakeFromViewBtn');
+    if(deleteBtn){
+      deleteBtn.addEventListener('click', async ()=>{
+        if(!confirm(`Delete this mistake for ${row.username}? This just clears it from your review list — it won't change their saved score.`)) return;
+        await deleteMistakeRecord(row.id);
+        document.getElementById('questionViewModal').classList.remove('open');
+        await renderAdminMistakesTable();
+      });
+    }
   }
 
   document.getElementById('refreshMistakesPanel').addEventListener('click', renderAdminMistakesTable);
+
+  document.getElementById('deleteAllMistakesBtn').addEventListener('click', async ()=>{
+    const filterVal = document.getElementById('mistakesFilterSelect').value;
+    const rows = await gatherAllMistakeRows(filterVal || null);
+    if(rows.length === 0){
+      alert('There are no mistakes to delete.');
+      return;
+    }
+    const who = filterVal ? `for ${filterVal}` : 'for every student';
+    if(!confirm(`Delete all ${rows.length} mistake${rows.length === 1 ? '' : 's'} ${who}? This can't be undone.`)) return;
+
+    const btn = document.getElementById('deleteAllMistakesBtn');
+    btn.disabled = true; btn.textContent = 'Deleting…';
+    for(const row of rows){
+      await deleteMistakeRecord(row.id);
+    }
+    btn.disabled = false; btn.textContent = 'Delete all';
+    await renderAdminMistakesTable();
+  });
 
   /* ---------------- ADMIN: Reminders (WhatsApp nudge for pending retakes) ---------------- */
   function digitsOnly(str){
