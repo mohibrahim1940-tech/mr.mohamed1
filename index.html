@@ -1908,6 +1908,12 @@
         <div id="skillQuestionsContainer"></div>
         <button class="add-q-btn" id="addSkillQuestionBtn" type="button">+ Add question</button>
 
+        <div class="field-row" style="margin-top:24px;">
+          <label class="field-label">Bulk import (paste questions here — e.g. from Claude)</label>
+          <textarea id="skillImportInput" placeholder='Paste a block like: [{"lesson":"Fractions","text":"1/2 + 1/2 = ?","options":["0","1","2","1/2"],"correct":1}, ...]' style="min-height:100px;"></textarea>
+          <button class="btn btn-ghost" id="importSkillQuestionsBtn" type="button" style="margin-top:10px;">Import into questions above</button>
+        </div>
+
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveSkillBtn">Save skill set</button>
         </div>
@@ -3239,6 +3245,34 @@
 
   const skillQuestionsContainer = document.getElementById('skillQuestionsContainer');
   document.getElementById('addSkillQuestionBtn').addEventListener('click', ()=> addQuestionBlock(null, skillQuestionsContainer));
+
+  document.getElementById('importSkillQuestionsBtn').addEventListener('click', ()=>{
+    const raw = document.getElementById('skillImportInput').value.trim();
+    if(!raw){ alert('Paste a block of questions first.'); return; }
+
+    let parsed;
+    try{
+      parsed = JSON.parse(raw);
+    }catch(err){
+      alert('That doesn\'t look like valid JSON — check for a missing bracket or comma and try again.');
+      return;
+    }
+    if(!Array.isArray(parsed)){
+      alert('Expected a list of questions in [ ] brackets.');
+      return;
+    }
+
+    const valid = parsed.filter(q => q && typeof q.text === 'string' && Array.isArray(q.options) && q.options.length === 4);
+    if(valid.length === 0){
+      alert('No valid questions found — each one needs "text" and 4 "options".');
+      return;
+    }
+
+    skillQuestionsContainer.innerHTML = '';
+    valid.forEach(q => addQuestionBlock(q, skillQuestionsContainer));
+    document.getElementById('skillImportInput').value = '';
+    alert(`Imported ${valid.length} question${valid.length === 1 ? '' : 's'} — review them below, then click "Save skill set".`);
+  });
 
   async function initSkillsPanel(){
     if(skillQuestionsContainer.children.length === 0){
