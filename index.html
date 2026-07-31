@@ -1940,6 +1940,12 @@
         <div id="questionsContainer"></div>
         <button class="add-q-btn" id="addQuestionBtn">+ Add question</button>
 
+        <div class="field-row" style="margin-top:24px;">
+          <label class="field-label">Bulk import (paste questions here — e.g. from Claude)</label>
+          <textarea id="examImportInput" placeholder='Paste a block like: [{"lesson":"Fractions","text":"1/2 + 1/2 = ?","options":["0","1","2","1/2"],"correct":1}, ...]' style="min-height:100px;"></textarea>
+          <button class="btn btn-ghost" id="importExamQuestionsBtn" type="button" style="margin-top:10px;">Import into questions above</button>
+        </div>
+
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveExamBtn">Save exam</button>
           <button class="btn btn-ghost" id="cancelExamBtn">Cancel</button>
@@ -2775,6 +2781,34 @@
   function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
   document.getElementById('addQuestionBtn').addEventListener('click', ()=> addQuestionBlock(null));
+
+  document.getElementById('importExamQuestionsBtn').addEventListener('click', ()=>{
+    const raw = document.getElementById('examImportInput').value.trim();
+    if(!raw){ alert('Paste a block of questions first.'); return; }
+
+    let parsed;
+    try{
+      parsed = JSON.parse(raw);
+    }catch(err){
+      alert('That doesn\'t look like valid JSON — check for a missing bracket or comma and try again.');
+      return;
+    }
+    if(!Array.isArray(parsed)){
+      alert('Expected a list of questions in [ ] brackets.');
+      return;
+    }
+
+    const valid = parsed.filter(q => q && typeof q.text === 'string' && Array.isArray(q.options) && q.options.length === 4);
+    if(valid.length === 0){
+      alert('No valid questions found — each one needs "text" and 4 "options".');
+      return;
+    }
+
+    questionsContainer.innerHTML = '';
+    valid.forEach(q => addQuestionBlock(q));
+    document.getElementById('examImportInput').value = '';
+    alert(`Imported ${valid.length} question${valid.length === 1 ? '' : 's'} — review them below, then click "Save exam".`);
+  });
 
   document.getElementById('newExamBtn').addEventListener('click', ()=>{
     editingExamId = null;
