@@ -1310,6 +1310,68 @@
   .dash-tab-btn.active{background:var(--panel-2); color:var(--text); border-color:var(--signal);}
   .dash-tab-panel{display:none;}
   .dash-tab-panel.active{display:block;}
+
+  /* ---------- dashboard sidebar shell ---------- */
+  .dash-shell{display:grid; grid-template-columns:220px 1fr; gap:32px; align-items:start;}
+  .dash-sidebar{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:22px 16px; position:sticky; top:100px;
+  }
+  .dash-sidebar-user{
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--line);
+  }
+  .dash-sidebar-avatar{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg, var(--signal), var(--ember));
+  }
+  .dash-sidebar-user .name{font-weight:600; font-size:0.92rem;}
+  .dash-sidebar-user .role{font-size:0.75rem; color:var(--muted);}
+  .dash-sidebar-nav{display:flex; flex-direction:column; gap:4px;}
+  .dash-sidebar-nav .dash-tab-btn{
+    text-align:left; width:100%; background:none; border:1px solid transparent; color:var(--muted);
+    padding:10px 12px; border-radius:8px; font-size:0.88rem; cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .dash-sidebar-nav .dash-tab-btn.active{background:rgba(76,111,255,0.14); color:var(--text); border-color:rgba(76,111,255,0.3);}
+  .dash-sidebar-nav .dash-tab-btn:hover{background:var(--panel-2); color:var(--text);}
+  .dash-sidebar-actions{
+    margin-top:20px; padding-top:16px; border-top:1px solid var(--line);
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .dash-sidebar-actions .btn{width:100%; padding:10px 14px; font-size:0.85rem;}
+
+  @media(max-width:900px){
+    .dash-shell{grid-template-columns:1fr;}
+    .dash-sidebar{position:static;}
+    .dash-sidebar-nav{flex-direction:row; flex-wrap:wrap;}
+    .dash-sidebar-nav .dash-tab-btn{width:auto;}
+    .dash-sidebar-actions{flex-direction:row;}
+  }
+
+  /* ---------- streak + achievements (overview) ---------- */
+  .dash-overview-top{display:flex; gap:20px; flex-wrap:wrap; margin-bottom:28px;}
+  .streak-card{
+    background:linear-gradient(135deg, rgba(255,107,74,0.16), rgba(255,209,102,0.08));
+    border:1px solid rgba(255,107,74,0.3); border-radius:16px;
+    padding:18px 26px; display:flex; align-items:center; gap:16px; min-width:180px;
+  }
+  .streak-flame{font-size:2.2rem; line-height:1;}
+  .streak-num{font-family:'Space Grotesk',sans-serif; font-size:1.9rem; font-weight:700;}
+  .streak-label{color:var(--muted); font-size:0.8rem;}
+  .achievements-row{display:flex; gap:18px; flex-wrap:wrap;}
+  .achievement-badge{display:flex; flex-direction:column; align-items:center; gap:8px; width:88px; text-align:center;}
+  .achievement-badge .icon{
+    width:56px; height:56px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:1.5rem;
+    background:var(--ink); border:1px solid var(--line);
+  }
+  .achievement-badge.unlocked .icon{
+    background:linear-gradient(135deg, var(--signal), var(--ember)); border-color:transparent;
+  }
+  .achievement-badge.locked .icon{opacity:0.5;}
+  .achievement-badge .label{font-size:0.72rem; color:var(--muted);}
+  .achievement-badge.unlocked .label{color:var(--text);}
 </style>
 </head>
 <body>
@@ -1407,99 +1469,132 @@
       <p>Here's what's on file for your account.</p>
     </div>
 
-    <div class="session-reminder" id="sessionReminder">
-      <div class="icon">📅</div>
-      <div>
-        <div class="label">Next session</div>
-        <div class="detail" id="sessionReminderDetail">No upcoming session scheduled yet.</div>
-        <div class="topic" id="sessionReminderTopic"></div>
-      </div>
-    </div>
+    <div class="dash-shell">
+      <aside class="dash-sidebar">
+        <div class="dash-sidebar-user">
+          <div class="dash-sidebar-avatar"></div>
+          <div>
+            <div class="name" id="dashSidebarName">Student</div>
+            <div class="role">Student</div>
+          </div>
+        </div>
+        <nav class="dash-sidebar-nav">
+          <button class="dash-tab-btn active" data-dashtab="tabOverview">📊 Overview</button>
+          <button class="dash-tab-btn" data-dashtab="tabSkills">🧠 Skills</button>
+          <button class="dash-tab-btn" data-dashtab="tabHw">📘 HW</button>
+          <button class="dash-tab-btn" data-dashtab="tabLeaderboard">🏆 Leaderboard</button>
+          <button class="dash-tab-btn" data-dashtab="tabExams">📝 Exams</button>
+          <button class="dash-tab-btn" data-dashtab="tabMistakes">🧾 Mistake History</button>
+        </nav>
+        <div class="dash-sidebar-actions">
+          <button class="btn btn-primary" id="dashMyScoresBtn">View my scores</button>
+          <a href="https://wa.me/201093875919?text=Hi%2C%20I%20have%20a%20question%20about%20my%20account" target="_blank" rel="noopener" class="btn btn-ghost">Message on WhatsApp</a>
+        </div>
+      </aside>
 
-    <div class="dash-grid">
-      <div class="dash-card">
-        <span class="field-label">Course</span>
-        <div class="dash-value" id="dashCourse">—</div>
-      </div>
-      <div class="dash-card">
-        <span class="field-label">Grade / level</span>
-        <div class="dash-value" id="dashGrade">—</div>
-      </div>
-      <div class="dash-card">
-        <span class="field-label">Student number</span>
-        <div class="dash-value" id="dashStudentNumber">—</div>
-      </div>
-      <div class="dash-card">
-        <span class="field-label">Status</span>
-        <div class="dash-value"><span class="status-pill status-approved">approved</span></div>
-      </div>
-    </div>
+      <div class="dash-main">
+        <div class="session-reminder" id="sessionReminder">
+          <div class="icon">📅</div>
+          <div>
+            <div class="label">Next session</div>
+            <div class="detail" id="sessionReminderDetail">No upcoming session scheduled yet.</div>
+            <div class="topic" id="sessionReminderTopic"></div>
+          </div>
+        </div>
 
-    <div class="dash-tab-bar">
-      <button class="dash-tab-btn active" data-dashtab="tabSkills">Skills</button>
-      <button class="dash-tab-btn" data-dashtab="tabHw">HW</button>
-      <button class="dash-tab-btn" data-dashtab="tabLeaderboard">Leaderboard</button>
-      <button class="dash-tab-btn" data-dashtab="tabExams">Exams</button>
-    </div>
+        <div class="dash-tab-panel active" id="tabOverview">
+          <div class="dash-overview-top">
+            <div class="streak-card">
+              <div class="streak-flame">🔥</div>
+              <div>
+                <div class="streak-num"><span id="streakCount">0</span></div>
+                <div class="streak-label">day streak</div>
+              </div>
+            </div>
+            <div class="dash-card">
+              <span class="field-label">Course</span>
+              <div class="dash-value" id="dashCourse">—</div>
+            </div>
+            <div class="dash-card">
+              <span class="field-label">Grade / level</span>
+              <div class="dash-value" id="dashGrade">—</div>
+            </div>
+            <div class="dash-card">
+              <span class="field-label">Student number</span>
+              <div class="dash-value" id="dashStudentNumber">—</div>
+            </div>
+            <div class="dash-card">
+              <span class="field-label">Status</span>
+              <div class="dash-value"><span class="status-pill status-approved">approved</span></div>
+            </div>
+          </div>
 
-    <div class="dash-tab-panel active" id="tabSkills">
-      <div class="hw-section-title">Reviews from Mr. Mohamed Ibrahim</div>
-      <div id="reviewsList" style="margin-bottom:8px;">
-        <div class="admin-empty">No reviews yet.</div>
-      </div>
+          <div class="hw-section-title">Achievements</div>
+          <div class="achievements-row" id="achievementsRow"></div>
+        </div>
 
-      <div class="hw-section-title">Practice by skill</div>
-      <input type="text" class="dash-search" id="skillsSearchInput" placeholder="Search skills…">
-      <div class="exam-grid" id="skillsGrid">
-        <div class="exams-empty">Loading skills…</div>
-      </div>
-    </div>
+        <div class="dash-tab-panel" id="tabSkills">
+          <div class="hw-section-title">Reviews from Mr. Mohamed Ibrahim</div>
+          <div id="reviewsList" style="margin-bottom:8px;">
+            <div class="admin-empty">No reviews yet.</div>
+          </div>
 
-    <div class="dash-tab-panel" id="tabHw">
-      <div class="hw-section-title">Homework &amp; progress</div>
-      <div class="hw-summary-line">
-        <span>Homework completed</span>
-        <span id="hwProgressText">0 of 0</span>
-      </div>
-      <div class="hw-progress-outer"><div class="hw-progress-fill" id="hwProgressFill"></div></div>
-      <div class="hw-list" id="hwList">
-        <div class="admin-empty">No homework logged yet — it'll show up here once Mr. Mohamed Ibrahim adds it.</div>
-      </div>
+          <div class="hw-section-title">Practice by skill</div>
+          <input type="text" class="dash-search" id="skillsSearchInput" placeholder="Search skills…">
+          <div class="exam-grid" id="skillsGrid">
+            <div class="exams-empty">Loading skills…</div>
+          </div>
+        </div>
 
-      <div class="hw-section-title">Session history</div>
-      <div class="hw-list" id="sessionHistoryList">
-        <div class="admin-empty">No sessions recorded yet.</div>
-      </div>
+        <div class="dash-tab-panel" id="tabHw">
+          <div class="hw-section-title">Homework &amp; progress</div>
+          <div class="hw-summary-line">
+            <span>Homework completed</span>
+            <span id="hwProgressText">0 of 0</span>
+          </div>
+          <div class="hw-progress-outer"><div class="hw-progress-fill" id="hwProgressFill"></div></div>
+          <div class="hw-list" id="hwList">
+            <div class="admin-empty">No homework logged yet — it'll show up here once Mr. Mohamed Ibrahim adds it.</div>
+          </div>
 
-      <div class="hw-section-title">Weak points to study</div>
-      <div class="hw-list" id="weakPointsList">
-        <div class="admin-empty">No mistakes yet — keep it up! This fills in as you practice.</div>
-      </div>
+          <div class="hw-section-title">Session history</div>
+          <div class="hw-list" id="sessionHistoryList">
+            <div class="admin-empty">No sessions recorded yet.</div>
+          </div>
 
-      <div class="hw-section-title">Mistake history</div>
-      <div class="hw-list" id="mistakeHistoryList">
-        <div class="admin-empty">No mistakes yet.</div>
-      </div>
-    </div>
+          <div class="hw-section-title">Weak points to study</div>
+          <div class="hw-list" id="weakPointsList">
+            <div class="admin-empty">No mistakes yet — keep it up! This fills in as you practice.</div>
+          </div>
+        </div>
 
-    <div class="dash-tab-panel" id="tabLeaderboard">
-      <div class="hw-section-title">Leaderboard</div>
-      <div class="leaderboard-wrap" id="dashLeaderboardWrap">
-        <div class="admin-empty">Loading…</div>
-      </div>
-    </div>
+        <div class="dash-tab-panel" id="tabLeaderboard">
+          <div class="hw-section-title">Leaderboard</div>
+          <div class="leaderboard-wrap" id="dashLeaderboardWrap">
+            <div class="admin-empty">Loading…</div>
+          </div>
+        </div>
 
-    <div class="dash-tab-panel" id="tabExams">
-      <div class="hw-section-title">Practice exams</div>
-      <input type="text" class="dash-search" id="examsSearchInput" placeholder="Search exams…">
-      <div class="exam-grid" id="examsGrid">
-        <div class="exams-empty">Loading practice exams…</div>
-      </div>
-    </div>
+        <div class="dash-tab-panel" id="tabExams">
+          <div class="hw-section-title">Practice exams</div>
+          <input type="text" class="dash-search" id="examsSearchInput" placeholder="Search exams…">
+          <div class="exam-grid" id="examsGrid">
+            <div class="exams-empty">Loading practice exams…</div>
+          </div>
+        </div>
 
-    <div class="dash-actions">
-      <button class="btn btn-primary" id="dashMyScoresBtn">View my scores</button>
-      <a href="https://wa.me/201093875919?text=Hi%2C%20I%20have%20a%20question%20about%20my%20account" target="_blank" rel="noopener" class="btn btn-ghost">Message on WhatsApp</a>
+        <div class="dash-tab-panel" id="tabMistakes">
+          <div class="hw-section-title">Mistakes by day</div>
+          <div class="hw-list" id="dailyMistakeSummary">
+            <div class="admin-empty">No mistakes yet.</div>
+          </div>
+
+          <div class="hw-section-title">All mistakes</div>
+          <div class="hw-list" id="mistakeHistoryList">
+            <div class="admin-empty">No mistakes yet.</div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -2209,22 +2304,38 @@
   // attempts/leaderboard, students, homework, skills, asks, sessions,
   // reviews). Each "collection" name is a Supabase table with columns
   // (id text primary key, data jsonb).
-  async function dbSet(collection, docId, data){
+  async function dbSet(collection, docId, data, attempt){
+    attempt = attempt || 1;
     if(!storageAvailable()) return false;
     try{
       const { error } = await supabaseClient.from(collection).upsert({ id: docId, data });
       if(error) throw error;
       return true;
-    }catch(err){ console.error(`dbSet(${collection}) failed:`, err); return false; }
+    }catch(err){
+      console.error(`dbSet(${collection}) failed (attempt ${attempt}):`, err);
+      if(attempt < 3){
+        await new Promise(r => setTimeout(r, 500 * attempt));
+        return dbSet(collection, docId, data, attempt + 1);
+      }
+      return false;
+    }
   }
-  async function dbAdd(collection, data){
+  async function dbAdd(collection, data, attempt){
+    attempt = attempt || 1;
     if(!storageAvailable()) return false;
     try{
       const id = generateId(collection);
       const { error } = await supabaseClient.from(collection).insert({ id, data });
       if(error) throw error;
       return true;
-    }catch(err){ console.error(`dbAdd(${collection}) failed:`, err); return false; }
+    }catch(err){
+      console.error(`dbAdd(${collection}) failed (attempt ${attempt}):`, err);
+      if(attempt < 3){
+        await new Promise(r => setTimeout(r, 500 * attempt));
+        return dbAdd(collection, data, attempt + 1);
+      }
+      return false;
+    }
   }
   async function dbGet(collection, docId){
     if(!storageAvailable()) return null;
@@ -3047,7 +3158,7 @@
       }
       document.getElementById('examCloseBtn').addEventListener('click', ()=>{
         examModal.classList.remove('open');
-        if(currentStudent){ renderWeakPoints(); renderMistakeHistory(); }
+        if(currentStudent){ renderWeakPoints(); renderMistakeHistory(); renderOverview(); }
       });
     }
 
@@ -3268,8 +3379,35 @@
         <td>${esc(entry.dueDate || '—')}</td>
         <td><span class="status-pill ${isCompleted ? 'status-approved' : 'status-pending'}">${isCompleted ? 'completed' : 'assigned'}</span></td>
         <td>${isCompleted && entry.score ? `${entry.score.correct}/${entry.score.total} (${entry.score.pct}%)` : '—'}</td>
-        <td><button class="student-action-btn delete-hw-btn">Delete</button></td>
+        <td style="white-space:nowrap;">
+          ${!isCompleted ? `<button class="student-action-btn mark-complete-btn" title="Use this if a student says they finished it but it's still stuck on Assigned">Mark completed</button>` : ''}
+          <button class="student-action-btn delete-hw-btn">Delete</button>
+        </td>
       `;
+      const markBtn = tr.querySelector('.mark-complete-btn');
+      if(markBtn){
+        markBtn.addEventListener('click', async ()=>{
+          const totalQ = Array.isArray(entry.questions) ? entry.questions.length : null;
+          const promptLabel = totalQ ? `How many did ${entry.username} get correct out of ${totalQ}?` : `How many did ${entry.username} get correct?`;
+          const correctStr = prompt(promptLabel, '');
+          if(correctStr === null) return;
+          const correct = parseInt(correctStr, 10);
+          if(isNaN(correct) || correct < 0){ alert('Enter a valid number.'); return; }
+          const total = totalQ || correct;
+          const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+          markBtn.disabled = true; markBtn.textContent = 'Saving…';
+          const ok = await saveHomeworkAssignment(entry.id, {
+            ...entry, status:'completed', score:{correct, total, pct}, submittedAt: new Date().toISOString()
+          });
+          if(ok){
+            await renderAdminHomework();
+            await refreshDashboardIfSignedInAs(entry.username);
+          } else {
+            markBtn.disabled = false; markBtn.textContent = 'Mark completed';
+            alert('Could not save — check your connection and try again.');
+          }
+        });
+      }
       tr.querySelector('.delete-hw-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete this homework assignment for ${entry.username}?`)) return;
         await deleteHomeworkEntry(entry.id);
@@ -4093,6 +4231,8 @@
     const list = document.getElementById('mistakeHistoryList');
     const rows = await gatherAllMistakeRows(currentStudent.username);
 
+    renderDailyMistakeSummary(rows);
+
     if(rows.length === 0){
       list.innerHTML = '<div class="admin-empty">No mistakes yet.</div>';
       return;
@@ -4112,6 +4252,129 @@
       item.querySelector('button').addEventListener('click', ()=> openQuestionView(row));
       list.appendChild(item);
     });
+  }
+
+  // Groups every mistake by the day it happened, and within each day by
+  // which exam/homework/skill it came from — so "all exams I got wrong
+  // today" is one glance instead of scrolling the full list.
+  function renderDailyMistakeSummary(rows){
+    const container = document.getElementById('dailyMistakeSummary');
+    if(!container) return;
+
+    if(rows.length === 0){
+      container.innerHTML = '<div class="admin-empty">No mistakes yet.</div>';
+      return;
+    }
+
+    const byDay = {}; // dateStr -> { sources: {name: count}, rows: [...] }
+    rows.forEach(r=>{
+      if(!r.ts) return;
+      const day = new Date(r.ts).toDateString();
+      if(!byDay[day]) byDay[day] = { sources: {}, rows: [] };
+      const src = r.source || 'Unknown';
+      byDay[day].sources[src] = (byDay[day].sources[src] || 0) + 1;
+      byDay[day].rows.push(r);
+    });
+
+    const todayStr = new Date().toDateString();
+    const days = Object.keys(byDay).sort((a,b)=> new Date(b) - new Date(a));
+    container.innerHTML = '';
+    days.forEach(day=>{
+      const { sources, rows: dayRows } = byDay[day];
+      const totalForDay = Object.values(sources).reduce((s,n)=> s+n, 0);
+      const pillsHtml = Object.entries(sources)
+        .map(([src, count]) => `<span class="tag-pill">${esc(src)} (${count})</span>`)
+        .join(' ');
+      const isPastDay = day !== todayStr;
+
+      // Only questions with full detail (options + a known correct answer) can
+      // be turned back into an answerable exam.
+      const retakeQuestions = dayRows
+        .filter(r => Array.isArray(r.options) && r.options.length === 4 && r.correctAnswer != null)
+        .map(r => ({ lesson: r.lesson || 'General', text: r.text, image: r.image, options: r.options, correct: r.correctAnswer }));
+
+      const row = document.createElement('div');
+      row.className = 'hw-row';
+      row.style.flexWrap = 'wrap';
+      const dayLabel = new Date(day).toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+      row.innerHTML = `
+        <span class="hw-date">${esc(dayLabel)}</span>
+        <span class="hw-title" style="flex:1; display:flex; gap:8px; flex-wrap:wrap;">${pillsHtml}</span>
+        <span class="hw-mark">${totalForDay} total</span>
+        ${isPastDay
+          ? (retakeQuestions.length > 0 ? `<button class="btn btn-ghost retake-day-btn" style="padding:6px 14px;font-size:0.8rem;">Retake as exam</button>` : '')
+          : `<span class="hw-mark" style="color:var(--muted);">Retake unlocks tomorrow</span>`
+        }
+      `;
+      const retakeBtn = row.querySelector('.retake-day-btn');
+      if(retakeBtn){
+        retakeBtn.addEventListener('click', ()=>{
+          startExam({ title: `Review — ${dayLabel}`, questions: retakeQuestions });
+        });
+      }
+      container.appendChild(row);
+    });
+  }
+
+  /* ---------------- OVERVIEW: streak (like TikTok/Snapchat) + achievements ---------------- */
+  // Counts consecutive calendar days (ending today or yesterday, so the streak
+  // doesn't wipe out the instant midnight passes) on which the student
+  // submitted homework or took an exam/skill practice.
+  async function getStreakCount(){
+    if(!currentStudent) return 0;
+    const [hw, attempts] = await Promise.all([fetchAllHomework(), fetchAllAttempts()]);
+    const uname = currentStudent.username.trim().toLowerCase();
+    const dates = new Set();
+    hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.submittedAt)
+      .forEach(h => dates.add(new Date(h.submittedAt).toDateString()));
+    attempts.filter(a => (a.username||'').trim().toLowerCase() === uname && a.ts)
+      .forEach(a => dates.add(new Date(a.ts).toDateString()));
+
+    let streak = 0;
+    const cursor = new Date();
+    if(!dates.has(cursor.toDateString())){
+      cursor.setDate(cursor.getDate() - 1); // grace period: today doesn't have to be done yet
+    }
+    while(dates.has(cursor.toDateString())){
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return streak;
+  }
+
+  async function renderOverview(){
+    if(!currentStudent) return;
+
+    const streak = await getStreakCount();
+    const streakEl = document.getElementById('streakCount');
+    if(streakEl) streakEl.textContent = streak;
+
+    const [hw, attempts] = await Promise.all([fetchAllHomework(), fetchAllAttempts()]);
+    const uname = currentStudent.username.trim().toLowerCase();
+    const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
+    const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
+    const totalCompleted = mineHw.length + mineAttempts.length;
+    const allPct = [...mineHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
+    const bestPct = allPct.length ? Math.max(...allPct) : 0;
+
+    const badges = [
+      { icon:'🎯', label:'First Steps', unlocked: totalCompleted >= 1 },
+      { icon:'📚', label:'Skill Builder', unlocked: totalCompleted >= 5 },
+      { icon:'🏅', label:'Dedicated', unlocked: totalCompleted >= 10 },
+      { icon:'🌟', label:'Perfect Score', unlocked: bestPct >= 100 },
+      { icon:'🔥', label:'3-Day Streak', unlocked: streak >= 3 },
+      { icon:'🚀', label:'Week Warrior', unlocked: streak >= 7 },
+    ];
+
+    const row = document.getElementById('achievementsRow');
+    if(row){
+      row.innerHTML = badges.map(b => `
+        <div class="achievement-badge ${b.unlocked ? 'unlocked' : 'locked'}" title="${b.unlocked ? 'Unlocked!' : 'Locked — keep going'}">
+          <div class="icon">${b.unlocked ? b.icon : '🔒'}</div>
+          <div class="label">${esc(b.label)}</div>
+        </div>
+      `).join('');
+    }
   }
 
   /* ---------------- HOMEWORK PLAYER (student answers, auto-graded) ---------------- */
@@ -4281,6 +4544,7 @@
         await renderStudentHomework();
         await renderWeakPoints();
         await renderMistakeHistory();
+        await renderOverview();
       });
     }
 
@@ -4408,14 +4672,10 @@
   });
 
   function applySignedInState(){
-    // Hide the marketing hero's fake dashboard preview now that the student
-    // has their own real dashboard further down the page.
-    const heroPreview = document.getElementById('heroPreviewCard');
-    if(heroPreview){
-      heroPreview.style.display = 'none';
-      const heroSection = heroPreview.closest('.hero');
-      if(heroSection) heroSection.classList.add('no-preview');
-    }
+    // Hide the whole marketing hero (headline, stats, preview card) now that
+    // the student has their own real dashboard further down the page.
+    const heroSection = document.querySelector('.hero');
+    if(heroSection) heroSection.style.display = 'none';
 
     // Replace desktop nav-cta auth buttons (Sign in + Register) with a single signed-in pill
     const navCta = document.getElementById('navCta');
@@ -4444,6 +4704,7 @@
     // reveal and fill in the student dashboard
     const dash = document.getElementById('studentDashboard');
     document.getElementById('dashWelcome').textContent = `Welcome back, ${currentStudent.username}!`;
+    document.getElementById('dashSidebarName').textContent = currentStudent.username;
     document.getElementById('dashCourse').textContent = currentStudent.course || '—';
     document.getElementById('dashGrade').textContent = currentStudent.grade || '—';
     document.getElementById('dashStudentNumber').textContent = currentStudent.studentNumber || '—';
@@ -4454,6 +4715,7 @@
     renderStudentSkills();
     renderWeakPoints();
     renderMistakeHistory();
+    renderOverview();
 
     // exam cards (if any exist elsewhere) were rendered as locked before sign-in — refresh so they unlock
     renderPublicExams();
@@ -4471,7 +4733,9 @@
       if(btn.dataset.dashtab === 'tabLeaderboard') renderDashboardLeaderboard();
       if(btn.dataset.dashtab === 'tabExams') renderPublicExams();
       if(btn.dataset.dashtab === 'tabSkills') renderStudentSkills();
-      if(btn.dataset.dashtab === 'tabHw'){ renderWeakPoints(); renderMistakeHistory(); }
+      if(btn.dataset.dashtab === 'tabHw') renderWeakPoints();
+      if(btn.dataset.dashtab === 'tabMistakes') renderMistakeHistory();
+      if(btn.dataset.dashtab === 'tabOverview') renderOverview();
     });
   });
 
@@ -4908,6 +5172,8 @@
       const status = s.status || 'pending';
       const tr = document.createElement('tr');
       const date = new Date(s.ts);
+      const waDigits = digitsOnly(s.parentNumber);
+      const waLink = waDigits ? `https://wa.me/${waDigits}` : null;
       tr.innerHTML = `
         <td>${esc(s.username)}</td>
         <td>${esc(s.grade)}</td>
@@ -4920,6 +5186,7 @@
           <button class="student-action-btn accept-btn" ${status==='approved' ? 'disabled' : ''}>Accept</button>
           <button class="student-action-btn decline-btn" ${status==='declined' ? 'disabled' : ''}>Decline</button>
           <button class="student-action-btn analysis-btn">Analysis</button>
+          ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="student-action-btn" style="color:#39D98A;border-color:#39D98A;text-decoration:none;display:inline-block;">WhatsApp</a>` : ''}
           <button class="student-action-btn delete-student-btn">Delete</button>
         </td>
       `;
