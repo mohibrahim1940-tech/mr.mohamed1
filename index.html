@@ -1180,6 +1180,8 @@
     font-family:'Inter',sans-serif; font-size:0.88rem;
   }
   .ask-sent-msg{color:#39D98A; font-size:0.8rem; margin-top:8px; display:none;}
+  .btn-blue{background:var(--signal); color:#fff; border-color:var(--signal);}
+  .btn-blue:hover{background:#3a5ce0; border-color:#3a5ce0;}
   .ask-sent-msg.show{display:block;}
 
   /* ---------- session reminder + history (dashboard) ---------- */
@@ -3038,6 +3040,14 @@
         ${q.image ? `<img class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
         ${q.text ? `<div class="exam-q-text">${esc(q.text)}</div>` : ''}
         <div id="examOptions"></div>
+        <div class="ask-box">
+          <label class="field-label">Ask about this question</label>
+          <div class="ask-row">
+            <input type="text" id="askInput" placeholder="Type your question for Mr. Mohamed Ibrahim…">
+            <button type="button" class="btn btn-blue" id="askSendBtn">Send</button>
+          </div>
+          <div class="ask-sent-msg" id="askSentMsg">Sent ✓ — Mr. Mohamed Ibrahim will see this.</div>
+        </div>
         <div class="exam-nav">
           <button class="btn btn-ghost" id="examPrevBtn" ${current===0 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>Back</button>
           <button class="btn btn-primary" id="examNextBtn">${current === exam.questions.length-1 ? 'See score' : 'Next'}</button>
@@ -3057,6 +3067,24 @@
           row.classList.add('selected');
         });
         optionsWrap.appendChild(row);
+      });
+
+      document.getElementById('askSendBtn').addEventListener('click', async ()=>{
+        const askInput = document.getElementById('askInput');
+        const message = askInput.value.trim();
+        if(!message) return;
+        const askBtn = document.getElementById('askSendBtn');
+        askBtn.disabled = true; askBtn.textContent = 'Sending…';
+        await saveAsk({
+          username: currentStudent ? currentStudent.username : 'Unknown',
+          homeworkTitle: exam.title,
+          questionText: q.text || (q.image ? '(question with image)' : ''),
+          lesson: q.lesson || 'General',
+          message
+        });
+        askBtn.disabled = false; askBtn.textContent = 'Send';
+        askInput.value = '';
+        document.getElementById('askSentMsg').classList.add('show');
       });
 
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
@@ -4416,7 +4444,7 @@
           <label class="field-label">Ask about this question</label>
           <div class="ask-row">
             <input type="text" id="askInput" placeholder="Type your question for Mr. Mohamed Ibrahim…">
-            <button type="button" class="btn btn-ghost" id="askSendBtn">Send</button>
+            <button type="button" class="btn btn-blue" id="askSendBtn">Send</button>
           </div>
           <div class="ask-sent-msg" id="askSentMsg">Sent ✓ — Mr. Mohamed Ibrahim will see this.</div>
         </div>
