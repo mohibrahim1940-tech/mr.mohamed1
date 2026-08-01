@@ -797,7 +797,7 @@
     background:var(--panel);
     border:1px solid var(--line);
     border-radius:14px;
-    overflow:hidden;
+    overflow-x:auto;
   }
   .admin-table{width:100%;border-collapse:collapse;}
   .admin-table th{
@@ -1060,6 +1060,23 @@
     background-repeat:no-repeat;background-position:right 14px center;
   }
   .auth-form .btn{width:100%;}
+  .phone-input-group{
+    display:flex; align-items:stretch;
+    border:1px solid var(--line); border-radius:8px; background:var(--ink);
+    margin-bottom:14px; overflow:hidden;
+  }
+  .phone-input-group .phone-prefix{
+    display:flex; align-items:center; padding:0 12px;
+    background:var(--panel-2); color:var(--muted);
+    font-family:'IBM Plex Mono',monospace; font-size:0.85rem;
+    border-right:1px solid var(--line); flex-shrink:0;
+  }
+  .phone-input-group input{
+    border:none !important; background:transparent !important; flex:1;
+    padding:12px 14px !important; margin-bottom:0 !important;
+    color:var(--text); font-family:'Inter',sans-serif; font-size:0.92rem;
+  }
+  .phone-input-group input:focus{outline:none;}
   .auth-error{color:var(--ember);font-size:0.82rem;margin:-6px 0 14px;display:none;}
   .auth-error.show{display:block;}
   .auth-success{color:#39D98A;font-size:0.82rem;margin:-6px 0 14px;display:none;}
@@ -1577,6 +1594,11 @@
             </div>
           </div>
 
+          <div class="hw-section-title">Progress over time</div>
+          <div id="myProgressChartWrap">
+            <div class="admin-empty">No graded homework or exams yet — this fills in as you practice.</div>
+          </div>
+
           <div class="hw-section-title">Achievements</div>
           <div class="achievements-row" id="achievementsRow"></div>
         </div>
@@ -1882,7 +1904,10 @@
         <option>Not sure yet</option>
       </select>
       <input type="text" id="regStudentNumber" placeholder="Student number" required>
-      <input type="tel" id="regParentNumber" placeholder="Parent / guardian number" required>
+      <div class="phone-input-group">
+        <span class="phone-prefix">+20</span>
+        <input type="tel" id="regParentNumber" placeholder="10XXXXXXXX (parent / guardian number)" required>
+      </div>
       <div class="auth-error" id="registerError">Something's not right — check the fields above.</div>
       <div class="auth-success" id="registerSuccess">Registration received! Mr. Mohamed Ibrahim will review your request and accept or decline it soon.</div>
       <button type="submit" class="btn btn-primary" id="registerSubmitBtn">Create account</button>
@@ -4554,6 +4579,32 @@
     const allPct = [...mineHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
     const bestPct = allPct.length ? Math.max(...allPct) : 0;
 
+    const chartWrap = document.getElementById('myProgressChartWrap');
+    if(chartWrap){
+      const timeline = [
+        ...mineHw.map(h => ({ title: h.title, date: h.submittedAt || h.ts, pct: h.score ? h.score.pct : null })),
+        ...attempts.filter(a => (a.username||'').trim().toLowerCase() === uname).map(a => ({ title: a.examTitle, date: a.ts, pct: a.pct }))
+      ].filter(t => t.date && t.pct != null).sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+      if(timeline.length === 0){
+        chartWrap.innerHTML = '<div class="admin-empty">No graded homework or exams yet — this fills in as you practice.</div>';
+      } else {
+        chartWrap.innerHTML = `<div class="progress-chart">${timeline.map(t=>{
+          const barColor = t.pct >= 75 ? '#39D98A' : (t.pct >= 50 ? 'var(--signal)' : 'var(--ember)');
+          const dateLabel = new Date(t.date).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+          return `
+            <div class="progress-bar-col" title="${esc(t.title)}: ${t.pct}% on ${dateLabel}">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" style="height:${Math.max(4, t.pct)}%; background:${barColor};"></div>
+              </div>
+              <span class="progress-bar-pct">${t.pct}%</span>
+              <span class="progress-bar-date">${esc(dateLabel)}</span>
+            </div>
+          `;
+        }).join('')}</div>`;
+      }
+    }
+
     const badges = [
       { icon:'🎯', label:'First Steps', unlocked: totalCompleted >= 1 },
       { icon:'📚', label:'Skill Builder', unlocked: totalCompleted >= 5 },
@@ -4848,7 +4899,7 @@
       grade: document.getElementById('regGrade').value,
       course: document.getElementById('regCourse').value,
       studentNumber: document.getElementById('regStudentNumber').value,
-      parentNumber: document.getElementById('regParentNumber').value
+      parentNumber: formatEgyptNumber(document.getElementById('regParentNumber').value)
     };
     if(!data.username || !data.password || !data.grade || !data.course || !data.studentNumber || !data.parentNumber){
       errEl.textContent = 'Please fill in every field.';
@@ -5204,6 +5255,16 @@
     return (str || '').replace(/[^\d]/g, '');
   }
 
+  // Every phone number on this site is Egyptian. Takes whatever the person
+  // typed (with or without a leading 0, +20, spaces, dashes) and normalizes
+  // it to a clean "+20XXXXXXXXXX" so WhatsApp links always work.
+  function formatEgyptNumber(raw){
+    let digits = digitsOnly(raw);
+    if(digits.startsWith('0')) digits = digits.slice(1);
+    if(digits.startsWith('20')) digits = digits.slice(2);
+    return digits ? `+20${digits}` : '';
+  }
+
   async function renderAdminReminders(){
     const wrap = document.getElementById('remindersListWrap');
     wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
@@ -5246,7 +5307,7 @@
       const row = document.createElement('div');
       row.className = 'reminder-row';
 
-      const parentDigits = student ? digitsOnly(student.parentNumber) : '';
+      const parentDigits = student ? digitsOnly(formatEgyptNumber(student.parentNumber)) : '';
       const message = `Hi, please ask ${item.username} to retake their ${item.kind.toLowerCase()} "${item.title}" — it's ${overdue ? 'overdue' : `due by ${deadlineLabel}`}.`;
       const waLink = parentDigits ? `https://wa.me/${parentDigits}?text=${encodeURIComponent(message)}` : null;
 
@@ -5419,7 +5480,7 @@
       const status = s.status || 'pending';
       const tr = document.createElement('tr');
       const date = new Date(s.ts);
-      const waDigits = digitsOnly(s.parentNumber);
+      const waDigits = digitsOnly(formatEgyptNumber(s.parentNumber));
       const waLink = waDigits ? `https://wa.me/${waDigits}` : null;
       tr.innerHTML = `
         <td>${esc(s.username)}</td>
@@ -5434,9 +5495,25 @@
           ${!isAssistant ? `<button class="student-action-btn decline-btn" ${status==='declined' ? 'disabled' : ''}>Decline</button>` : ''}
           <button class="student-action-btn analysis-btn">Analysis</button>
           ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="student-action-btn" style="color:#39D98A;border-color:#39D98A;text-decoration:none;display:inline-block;">WhatsApp</a>` : ''}
+          ${!isAssistant ? `<button class="student-action-btn reset-pass-btn" title="Passwords are stored securely and can't be viewed — set a new one instead">Reset password</button>` : ''}
           ${!isAssistant ? `<button class="student-action-btn delete-student-btn">Delete</button>` : ''}
         </td>
       `;
+      tr.querySelector('.reset-pass-btn')?.addEventListener('click', async ()=>{
+        const newPass = prompt(`Set a new password for "${s.username}". They'll need to use this the next time they sign in.\n\n(Passwords are stored securely, so the old one can't be shown — only reset.)`, '');
+        if(newPass === null) return;
+        if(newPass.trim().length < 4){
+          alert('Please enter a password at least 4 characters long.');
+          return;
+        }
+        const passwordHash = await hashPassword(newPass.trim());
+        const ok = await dbSet('students', studentKey(s.username), { ...s, passwordHash });
+        if(ok){
+          alert(`Password reset for ${s.username}.`);
+        } else {
+          alert('Could not save the new password — check your connection and try again.');
+        }
+      });
       tr.querySelector('.accept-btn')?.addEventListener('click', async ()=>{
         await setStudentStatus(s.username, 'approved');
         await renderAdminStudents();
