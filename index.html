@@ -2552,25 +2552,29 @@
   const _backfillDone = { skills: false, exams: false };
   async function ensureIndexBackfilled(collection, buildIndexRecord){
     if(_backfillDone[collection]) return;
-    const [totalCount, idxCount] = await Promise.all([
-      getRowCount(collection, null),
-      getRowCount(collection, 'idx-%')
-    ]);
-    const fullCount = totalCount - idxCount;
-    if(fullCount <= idxCount){
-      _backfillDone[collection] = true;
-      return;
+    try{
+      const [totalCount, idxCount] = await Promise.all([
+        getRowCount(collection, null),
+        getRowCount(collection, 'idx-%')
+      ]);
+      const fullCount = totalCount - idxCount;
+      if(fullCount <= idxCount){
+        _backfillDone[collection] = true;
+        return;
+      }
+      const [fullRows, idxRows] = await Promise.all([
+        dbGetAll(collection).then(rows => rows.filter(r => !r._index)),
+        dbGetAllByIdPrefix(collection, 'idx-')
+      ]);
+      const indexedIds = new Set(idxRows.map(r => r.id));
+      const missing = fullRows.filter(r => !indexedIds.has(r.id));
+      for(const row of missing){
+        await dbSet(collection, `idx-${row.id}`, buildIndexRecord(row));
+      }
+      if(missing.length > 0) invalidateDbCache(collection);
+    }catch(err){
+      console.error(`ensureIndexBackfilled(${collection}) failed:`, err);
     }
-    const [fullRows, idxRows] = await Promise.all([
-      dbGetAll(collection).then(rows => rows.filter(r => !r._index)),
-      dbGetAllByIdPrefix(collection, 'idx-')
-    ]);
-    const indexedIds = new Set(idxRows.map(r => r.id));
-    const missing = fullRows.filter(r => !indexedIds.has(r.id));
-    for(const row of missing){
-      await dbSet(collection, `idx-${row.id}`, buildIndexRecord(row));
-    }
-    if(missing.length > 0) invalidateDbCache(collection);
     _backfillDone[collection] = true;
   }
   async function dbDelete(collection, docId){
@@ -3646,17 +3650,48 @@
   }
 
   async function saveHomeworkAssignment(id, data){
-    return await dbSet('homework', id, { id, ...data });
+    const ok = await dbSet('homework', id, { id, ...data });
+    if(ok){
+      // Lightweight companion — everything a list/summary view needs (status,
+      // score, retake info) but never the questions or their images. Kept in
+      // sync automatically since every homework write (assign, submit, mark
+      // completed, retake) goes through this same function.
+      await dbSet('homework', `idx-${id}`, {
+        _index: true, id, username: data.username, title: data.title, dueDate: data.dueDate,
+        status: data.status, score: data.score, retakeRequired: data.retakeRequired,
+        retakeDeadline: data.retakeDeadline, submittedAt: data.submittedAt, ts: data.ts,
+        questionCount: (data.questions || []).length
+      });
+    }
+    return ok;
   }
 
   async function fetchAllHomework(){
-    const entries = await dbGetAll('homework');
+    const rows = await dbGetAll('homework');
+    const entries = rows.filter(r => !r._index);
     entries.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
     return entries;
   }
 
+  // Lightweight version for lists/summaries/leaderboards — no question
+  // content or images. Use fetchAllHomework()/dbGet('homework', id) when you
+  // actually need the questions (starting homework or the full Analysis view).
+  async function fetchHomeworkIndex(){
+    await ensureIndexBackfilled('homework', (hw)=> ({
+      _index: true, id: hw.id, username: hw.username, title: hw.title, dueDate: hw.dueDate,
+      status: hw.status, score: hw.score, retakeRequired: hw.retakeRequired,
+      retakeDeadline: hw.retakeDeadline, submittedAt: hw.submittedAt, ts: hw.ts,
+      questionCount: (hw.questions || []).length
+    }));
+    const rows = await dbGetAllByIdPrefix('homework', 'idx-');
+    rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+    return rows;
+  }
+
   async function deleteHomeworkEntry(id){
-    return await dbDelete('homework', id);
+    const ok = await dbDelete('homework', id);
+    if(ok) await dbDelete('homework', `idx-${id}`);
+    return ok;
   }
 
   /* ---------------- ADMIN: Homework tab (question builder) ---------------- */
@@ -3708,7 +3743,7 @@
 
   async function renderAdminHomework(){
     const filterVal = document.getElementById('hwFilterSelect').value;
-    let entries = await fetchAllHomework();
+    let entries = await fetchHomeworkIndex();
     if(filterVal) entries = entries.filter(e => e.username === filterVal);
 
     const tbody = document.getElementById('homeworkBody');
@@ -3738,7 +3773,7 @@
       const markBtn = tr.querySelector('.mark-complete-btn');
       if(markBtn){
         markBtn.addEventListener('click', async ()=>{
-          const totalQ = Array.isArray(entry.questions) ? entry.questions.length : null;
+          const totalQ = entry.questionCount || null;
           const promptLabel = totalQ ? `How many did ${entry.username} get correct out of ${totalQ}?` : `How many did ${entry.username} get correct?`;
           const correctStr = prompt(promptLabel, '');
           if(correctStr === null) return;
@@ -3747,8 +3782,17 @@
           const total = totalQ || correct;
           const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
           markBtn.disabled = true; markBtn.textContent = 'Saving…';
+          // Fetch the FULL record first — entry here is the lightweight index
+          // row and has no "questions" array, so saving it directly would
+          // wipe out the homework's actual questions.
+          const full = await dbGet('homework', entry.id);
+          if(!full){
+            markBtn.disabled = false; markBtn.textContent = 'Mark completed';
+            alert('Could not load this homework — please try again.');
+            return;
+          }
           const ok = await saveHomeworkAssignment(entry.id, {
-            ...entry, status:'completed', score:{correct, total, pct}, submittedAt: new Date().toISOString()
+            ...full, status:'completed', score:{correct, total, pct}, submittedAt: new Date().toISOString()
           });
           if(ok){
             await renderAdminHomework();
@@ -4094,7 +4138,7 @@
   /* ---------------- ADMIN: Leaderboard tab (ranked by homework average) ---------------- */
   async function renderAdminLeaderboard(){
     const wrap = document.getElementById('adminLeaderboardWrap');
-    const all = await fetchAllHomework();
+    const all = await fetchHomeworkIndex();
     const completed = all.filter(e => e.status === 'completed' && e.score);
 
     if(completed.length === 0){
@@ -4515,7 +4559,7 @@
     const progressText = document.getElementById('hwProgressText');
     const progressFill = document.getElementById('hwProgressFill');
 
-    const all = await fetchAllHomework();
+    const all = await fetchHomeworkIndex();
     const mine = all.filter(e => (e.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
 
     const total = mine.length;
@@ -4558,7 +4602,15 @@
         ${statusHtml}
       `;
       if(!isCompleted || needsRetake){
-        row.querySelector('.start-hw-btn').addEventListener('click', ()=> startHomework(entry));
+        row.querySelector('.start-hw-btn').addEventListener('click', async ()=>{
+          const btn = row.querySelector('.start-hw-btn');
+          const originalLabel = btn.textContent;
+          btn.disabled = true; btn.textContent = 'Loading…';
+          const full = await dbGet('homework', entry.id);
+          btn.disabled = false; btn.textContent = originalLabel;
+          if(!full){ alert('Could not load this homework — please try again.'); return; }
+          startHomework(full);
+        });
       }
       list.appendChild(row);
     });
@@ -4715,7 +4767,7 @@
   // submitted homework or took an exam/skill practice.
   async function getStreakCount(){
     if(!currentStudent) return 0;
-    const [hw, attempts] = await Promise.all([fetchAllHomework(), fetchAllAttempts()]);
+    const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts()]);
     const uname = currentStudent.username.trim().toLowerCase();
     const dates = new Set();
     hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.submittedAt)
@@ -4742,7 +4794,7 @@
     const streakEl = document.getElementById('streakCount');
     if(streakEl) streakEl.textContent = streak;
 
-    const [hw, attempts] = await Promise.all([fetchAllHomework(), fetchAllAttempts()]);
+    const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts()]);
     const uname = currentStudent.username.trim().toLowerCase();
     const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
     const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
@@ -5186,7 +5238,9 @@
 
     ['homework','attempts','mistakes','skills','exams','sessions','reviews','students'].forEach(invalidateDbCache);
 
-    await Promise.all([
+    // allSettled (not all) so one failing piece can never block the rest, or
+    // leave the button stuck on "Refreshing…" forever.
+    const results = await Promise.allSettled([
       renderStudentHomework(),
       renderStudentSessions(),
       renderStudentReviews(),
@@ -5197,16 +5251,23 @@
       renderPublicExams()
     ]);
 
+    const failures = results.filter(r => r.status === 'rejected');
+    if(failures.length > 0){
+      failures.forEach(f => console.error('Dashboard refresh — a section failed:', f.reason));
+    }
+
     btn.disabled = false; btn.textContent = '🔄 Refresh';
     const now = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-    status.textContent = `Up to date as of ${now}.`;
+    status.textContent = failures.length > 0
+      ? `Refreshed at ${now} — one part had trouble loading, check your connection.`
+      : `Up to date as of ${now}.`;
   });
 
   // Same ranking as the admin leaderboard (average % across completed homework),
   // shown to the student with their own row highlighted.
   async function renderDashboardLeaderboard(){
     const wrap = document.getElementById('dashLeaderboardWrap');
-    const all = await fetchAllHomework();
+    const all = await fetchHomeworkIndex();
     const completed = all.filter(e => e.status === 'completed' && e.score);
 
     if(completed.length === 0){
@@ -5469,7 +5530,7 @@
     const wrap = document.getElementById('remindersListWrap');
     wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
 
-    const [allHw, allAttempts, allStudents] = await Promise.all([fetchAllHomework(), fetchAllAttempts(), fetchAllStudents()]);
+    const [allHw, allAttempts, allStudents] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts(), fetchAllStudents()]);
     const studentsByUsername = {};
     allStudents.forEach(s => { studentsByUsername[(s.username||'').trim().toLowerCase()] = s; });
 
