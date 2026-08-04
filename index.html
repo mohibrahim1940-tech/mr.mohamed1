@@ -4795,12 +4795,32 @@
       byDay[day].rows.push(r);
     });
 
-    const myAttempts = currentStudent ? await fetchAllAttempts() : [];
+    const [myAttempts, myHw] = currentStudent
+      ? await Promise.all([fetchAllAttempts(), fetchAllHomework()])
+      : [[], []];
+    const uname = currentStudent ? currentStudent.username.trim().toLowerCase() : '';
     const myRetakenDayKeys = new Set(
       myAttempts
-        .filter(a => currentStudent && (a.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase() && a.retakeDayKey)
+        .filter(a => (a.username || '').trim().toLowerCase() === uname && a.retakeDayKey)
         .map(a => a.retakeDayKey)
     );
+    // Any later correct answer on the same lesson — from any homework, exam,
+    // or skill practice — counts as having fixed it, not just the specific
+    // "Retake as exam" button.
+    const myLaterCorrect = [];
+    function collectCorrect(items, dateField){
+      items.forEach(item=>{
+        if((item.username||'').trim().toLowerCase() !== uname) return;
+        if(!Array.isArray(item.results)) return;
+        const ts = item[dateField] || item.ts;
+        if(!ts) return;
+        item.results.forEach(r=>{
+          if(r.correct) myLaterCorrect.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts });
+        });
+      });
+    }
+    collectCorrect(myHw.filter(h => h.status === 'completed'), 'submittedAt');
+    collectCorrect(myAttempts, 'ts');
 
     const todayStr = new Date().toDateString();
     const days = Object.keys(byDay).sort((a,b)=> new Date(b) - new Date(a));
@@ -4813,7 +4833,14 @@
         .join(' ');
       const isPastDay = day !== todayStr;
       const dayLabel = new Date(day).toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
-      const retaken = isPastDay && myRetakenDayKeys.has(day);
+
+      let retaken = isPastDay && myRetakenDayKeys.has(day);
+      if(isPastDay && !retaken){
+        const dayEnd = new Date(day);
+        dayEnd.setHours(23, 59, 59, 999);
+        const dayLessons = new Set(dayRows.map(r => (r.lesson || 'General').trim().toLowerCase()));
+        retaken = myLaterCorrect.some(entry => dayLessons.has(entry.lesson) && new Date(entry.ts) > dayEnd);
+      }
 
       // Only questions with full detail (options + a known correct answer) can
       // be turned back into an answerable exam.
@@ -5513,28 +5540,61 @@
     const tbody = document.getElementById('complianceBody');
     const emptyState = document.getElementById('complianceEmpty');
     const summaryGrid = document.getElementById('complianceSummaryGrid');
-    const [rows, attempts] = await Promise.all([gatherAllMistakeRows(null), fetchAllAttempts()]);
+    const [rows, attempts, allHw] = await Promise.all([gatherAllMistakeRows(null), fetchAllAttempts(), fetchAllHomework()]);
 
-    const groups = {}; // "username|day" -> { username, day, count }
+    const groups = {}; // "username|day" -> { username, day, count, lessons:Set }
     rows.forEach(r=>{
       if(!r.ts || !r.username) return;
       const day = new Date(r.ts).toDateString();
       const key = `${r.username}|${day}`;
-      if(!groups[key]) groups[key] = { username: r.username, day, count: 0 };
+      if(!groups[key]) groups[key] = { username: r.username, day, count: 0, lessons: new Set() };
       groups[key].count++;
+      groups[key].lessons.add((r.lesson || 'General').trim().toLowerCase());
     });
 
     const todayStr = new Date().toDateString();
     const list = Object.values(groups).filter(g => g.day !== todayStr);
     list.sort((a,b)=> new Date(b.day) - new Date(a.day));
 
-    // Tag each day-group with its retaken status once, reuse for both the
-    // detailed table and the quick per-student summary above it.
+    // Build every later "got it right" moment per student — from ANY
+    // homework, exam, or skill-practice submission, not just the specific
+    // "Retake as exam" button — so a student who fixed the lesson a
+    // different way still shows as retaken, honestly reflecting reality.
+    const laterCorrectByStudent = {};
+    function addCorrectEntries(items, dateField){
+      items.forEach(item=>{
+        if(!Array.isArray(item.results)) return;
+        const uname = (item.username || '').trim().toLowerCase();
+        const ts = item[dateField] || item.ts;
+        if(!uname || !ts) return;
+        if(!laterCorrectByStudent[uname]) laterCorrectByStudent[uname] = [];
+        item.results.forEach(r=>{
+          if(r.correct){
+            laterCorrectByStudent[uname].push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts });
+          }
+        });
+      });
+    }
+    addCorrectEntries(allHw.filter(h => h.status === 'completed'), 'submittedAt');
+    addCorrectEntries(attempts, 'ts');
+
+    // Tag each day-group: retaken if EITHER the exact "Retake as exam" flow
+    // was used for that day, OR the student later answered that same lesson
+    // correctly through any other homework/exam/skill practice since then.
     list.forEach(g=>{
-      g.retaken = attempts.some(a =>
+      const exactRetake = attempts.some(a =>
         (a.username || '').trim().toLowerCase() === g.username.trim().toLowerCase() &&
         a.retakeDayKey === g.day
       );
+      if(exactRetake){
+        g.retaken = true;
+        return;
+      }
+      const dayEnd = new Date(g.day);
+      dayEnd.setHours(23, 59, 59, 999);
+      const uname = g.username.trim().toLowerCase();
+      const laterCorrect = laterCorrectByStudent[uname] || [];
+      g.retaken = laterCorrect.some(entry => g.lessons.has(entry.lesson) && new Date(entry.ts) > dayEnd);
     });
 
     // Per-student rollup: anyone with at least one un-retaken day goes in
