@@ -5149,7 +5149,7 @@
       if(btn.dataset.dashtab === 'tabLeaderboard') renderDashboardLeaderboard();
       if(btn.dataset.dashtab === 'tabExams') renderPublicExams();
       if(btn.dataset.dashtab === 'tabSkills') renderStudentSkills();
-      if(btn.dataset.dashtab === 'tabHw') renderWeakPoints();
+      if(btn.dataset.dashtab === 'tabHw'){ renderStudentHomework(); renderWeakPoints(); }
       if(btn.dataset.dashtab === 'tabMistakes') renderMistakeHistory();
       if(btn.dataset.dashtab === 'tabOverview') renderOverview();
     });
