@@ -2514,6 +2514,47 @@
       return rows;
     }catch(err){ console.error(`dbGetAllByIdPrefix(${collection}) failed:`, err); return []; }
   }
+  async function getRowCount(collection, likePattern){
+    if(!storageAvailable()) return 0;
+    try{
+      let query = supabaseClient.from(collection).select('id', { count: 'exact', head: true });
+      if(likePattern) query = query.like('id', likePattern);
+      const { count, error } = await query;
+      if(error) throw error;
+      return count || 0;
+    }catch(err){ console.error(`getRowCount(${collection}) failed:`, err); return 0; }
+  }
+
+  // Self-heals a gap left by introducing the lightweight-index system:
+  // any skill/exam saved *before* that existed has no "idx-" companion
+  // record, so it'd be invisible in every grid that now reads only the
+  // index. This runs a cheap count check first (two small queries, no
+  // question/image content) and only does the expensive reconciliation
+  // if something's actually missing — so once healed, it stays cheap.
+  const _backfillDone = { skills: false, exams: false };
+  async function ensureIndexBackfilled(collection, buildIndexRecord){
+    if(_backfillDone[collection]) return;
+    const [totalCount, idxCount] = await Promise.all([
+      getRowCount(collection, null),
+      getRowCount(collection, 'idx-%')
+    ]);
+    const fullCount = totalCount - idxCount;
+    if(fullCount <= idxCount){
+      _backfillDone[collection] = true;
+      return;
+    }
+    const [fullRows, idxRows] = await Promise.all([
+      dbGetAll(collection).then(rows => rows.filter(r => !r._index)),
+      dbGetAllByIdPrefix(collection, 'idx-')
+    ]);
+    const indexedIds = new Set(idxRows.map(r => r.id));
+    const missing = fullRows.filter(r => !indexedIds.has(r.id));
+    for(const row of missing){
+      await dbSet(collection, `idx-${row.id}`, buildIndexRecord(row));
+    }
+    if(missing.length > 0) invalidateDbCache(collection);
+    _backfillDone[collection] = true;
+  }
   async function dbDelete(collection, docId){
     if(!storageAvailable()) return false;
     try{
@@ -2826,6 +2867,10 @@
   // no question content or images. Use fetchAllExams()/dbGet('exams', id) when
   // you actually need the questions (starting or editing a specific exam).
   async function fetchExamsIndex(){
+    await ensureIndexBackfilled('exams', (exam)=> ({
+      _index: true, id: exam.id, title: exam.title, course: exam.course,
+      description: exam.description, questionCount: (exam.questions || []).length, ts: exam.ts
+    }));
     const rows = await dbGetAllByIdPrefix('exams', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
     return rows;
@@ -3779,6 +3824,9 @@
   // Lightweight version for grids/dropdowns — skill name + question count only,
   // no question content or images.
   async function fetchSkillsIndex(){
+    await ensureIndexBackfilled('skills', (skill)=> ({
+      _index: true, id: skill.id, skill: skill.skill, questionCount: (skill.questions || []).length, ts: skill.ts
+    }));
     const rows = await dbGetAllByIdPrefix('skills', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
     return rows;
