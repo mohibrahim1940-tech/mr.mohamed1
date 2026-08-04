@@ -3470,7 +3470,8 @@
         saveExamAttempt({
           username: currentStudent.username, examTitle: exam.title,
           correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
-          retakeRequired: hasMistakes, retakeDeadline
+          retakeRequired: hasMistakes, retakeDeadline,
+          retakeDayKey: exam.retakeDayKey || null
         });
       }
 
@@ -4771,10 +4772,10 @@
     });
 
     const myAttempts = currentStudent ? await fetchAllAttempts() : [];
-    const myAttemptTitles = new Set(
+    const myRetakenDayKeys = new Set(
       myAttempts
-        .filter(a => currentStudent && (a.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase())
-        .map(a => a.examTitle)
+        .filter(a => currentStudent && (a.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase() && a.retakeDayKey)
+        .map(a => a.retakeDayKey)
     );
 
     const todayStr = new Date().toDateString();
@@ -4788,7 +4789,7 @@
         .join(' ');
       const isPastDay = day !== todayStr;
       const dayLabel = new Date(day).toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
-      const retaken = isPastDay && myAttemptTitles.has(`Review — ${dayLabel}`);
+      const retaken = isPastDay && myRetakenDayKeys.has(day);
 
       // Only questions with full detail (options + a known correct answer) can
       // be turned back into an answerable exam.
@@ -4821,7 +4822,7 @@
       const retakeBtn = row.querySelector('.retake-day-btn');
       if(retakeBtn){
         retakeBtn.addEventListener('click', ()=>{
-          startExam({ title: `Review — ${dayLabel}`, questions: retakeQuestions });
+          startExam({ title: `Review — ${dayLabel}`, questions: retakeQuestions, retakeDayKey: day });
         });
       }
       container.appendChild(row);
@@ -5482,8 +5483,8 @@
   // For every student+day that had at least one mistake (excluding today,
   // since the retake window for today hasn't closed yet), checks whether
   // they've actually completed the "Retake as exam" for that day — matched
-  // by looking for an attempt titled exactly like the retake exam
-  // (e.g. "Review — Monday, Aug 4") that the dashboard button creates.
+  // by a stable date key saved on the attempt (not by comparing formatted
+  // title text, which can silently mismatch across locales/timezones).
   async function renderRetakeCompliance(){
     const tbody = document.getElementById('complianceBody');
     const emptyState = document.getElementById('complianceEmpty');
@@ -5511,10 +5512,9 @@
 
     list.forEach(g=>{
       const dayLabel = new Date(g.day).toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
-      const expectedTitle = `Review — ${dayLabel}`;
       const retaken = attempts.some(a =>
         (a.username || '').trim().toLowerCase() === g.username.trim().toLowerCase() &&
-        a.examTitle === expectedTitle
+        a.retakeDayKey === g.day
       );
       const tr = document.createElement('tr');
       tr.innerHTML = `
