@@ -1207,6 +1207,11 @@
   .lb-rank.top1{color:#FFD166;}
   .lb-rank.top2{color:#C7CBD1;}
   .lb-rank.top3{color:#E0A458;}
+  .gift-badge{
+    display:inline-block; font-size:0.72rem; font-family:'IBM Plex Mono',monospace;
+    background:rgba(255,209,102,0.15); color:#FFD166; padding:2px 8px;
+    border-radius:20px; margin-left:8px; vertical-align:middle;
+  }
   .lb-avatar{
     width:34px;height:34px;border-radius:50%;flex-shrink:0;
     background:linear-gradient(135deg,var(--signal),var(--ember));
@@ -2319,6 +2324,16 @@
     </div>
 
     <div class="admin-panel" id="mistakesPanel">
+      <div class="admin-note">See who's actually retaking their daily mistakes below — the full wrong-answer log is further down.</div>
+      <div class="hw-section-title">Daily retake compliance</div>
+      <div class="admin-table-wrap" style="margin-bottom:28px;">
+        <table class="admin-table" id="complianceTable">
+          <thead><tr><th>Student</th><th>Day</th><th>Mistakes</th><th>Retaken?</th></tr></thead>
+          <tbody id="complianceBody"></tbody>
+        </table>
+        <div class="admin-empty" id="complianceEmpty" style="display:none;">No past days with mistakes yet.</div>
+      </div>
+
       <div class="admin-note">Every wrong answer across every student's homework, exams, and skill practice — newest first.</div>
       <div class="admin-actions">
         <select id="mistakesFilterSelect" style="max-width:220px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
@@ -4136,6 +4151,21 @@
   document.getElementById('refreshCourses').addEventListener('click', ()=>{ invalidateDbCache('courses'); renderAdminCourseList(); });
 
   /* ---------------- ADMIN: Leaderboard tab (ranked by homework average) ---------------- */
+  // Records a gift/reward given to a student for their leaderboard standing.
+  // Stored right on the student's own record (a running list), so "how many
+  // gifts has this student gotten" is always visible alongside their rank.
+  async function giveGift(username){
+    const note = prompt(`What gift are you giving ${username}? (e.g. "Book voucher", "Certificate") — leave blank if just marking a reward.`, '');
+    if(note === null) return false;
+    const student = await getStudent(username);
+    if(!student){ alert('Could not find that student — please try again.'); return false; }
+    const gifts = Array.isArray(student.gifts) ? student.gifts.slice() : [];
+    gifts.push({ note: note.trim() || 'Reward', date: new Date().toISOString() });
+    const ok = await dbSet('students', studentKey(username), { ...student, gifts });
+    if(!ok) alert('Could not save the gift — check your connection and try again.');
+    return ok;
+  }
+
   async function renderAdminLeaderboard(){
     const wrap = document.getElementById('adminLeaderboardWrap');
     const all = await fetchHomeworkIndex();
@@ -4158,21 +4188,36 @@
       .sort((a,b)=> b.avg - a.avg)
       .slice(0, 20);
 
+    const allStudents = await fetchAllStudents();
+    const giftCountByUsername = {};
+    allStudents.forEach(s => {
+      giftCountByUsername[(s.username || '').trim().toLowerCase()] = Array.isArray(s.gifts) ? s.gifts.length : 0;
+    });
+
     wrap.innerHTML = '';
     ranked.forEach((r, i)=>{
       const rank = i + 1;
       const rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
+      const giftCount = giftCountByUsername[r.username.trim().toLowerCase()] || 0;
       const row = document.createElement('div');
       row.className = 'leaderboard-row';
       row.innerHTML = `
         <span class="lb-rank ${rankClass}">#${rank}</span>
         <div class="lb-avatar"></div>
         <div class="lb-info">
-          <div class="lb-name">${esc(r.username)}</div>
+          <div class="lb-name">${esc(r.username)} ${giftCount > 0 ? `<span class="gift-badge" title="${giftCount} gift${giftCount===1?'':'s'} given">🎁 ${giftCount}</span>` : ''}</div>
           <div class="lb-exam">${r.count} homework completed</div>
         </div>
         <div class="lb-score">${r.avg}%</div>
+        <button class="btn btn-ghost give-gift-btn" style="padding:7px 14px;font-size:0.8rem;flex-shrink:0;">🎁 Give gift</button>
       `;
+      row.querySelector('.give-gift-btn').addEventListener('click', async ()=>{
+        const btn = row.querySelector('.give-gift-btn');
+        btn.disabled = true;
+        const ok = await giveGift(r.username);
+        btn.disabled = false;
+        if(ok) await renderAdminLeaderboard();
+      });
       wrap.appendChild(row);
     });
   }
@@ -5287,11 +5332,18 @@
       .sort((a,b)=> b.avg - a.avg)
       .slice(0, 20);
 
+    const allStudents = await fetchAllStudents();
+    const giftCountByUsername = {};
+    allStudents.forEach(s => {
+      giftCountByUsername[(s.username || '').trim().toLowerCase()] = Array.isArray(s.gifts) ? s.gifts.length : 0;
+    });
+
     wrap.innerHTML = '';
     ranked.forEach((r, i)=>{
       const rank = i + 1;
       const rankClass = rank === 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
       const isMe = currentStudent && r.username.trim().toLowerCase() === currentStudent.username.trim().toLowerCase();
+      const giftCount = giftCountByUsername[r.username.trim().toLowerCase()] || 0;
       const row = document.createElement('div');
       row.className = 'leaderboard-row';
       if(isMe) row.style.background = 'rgba(76,111,255,0.1)';
@@ -5299,7 +5351,7 @@
         <span class="lb-rank ${rankClass}">#${rank}</span>
         <div class="lb-avatar"></div>
         <div class="lb-info">
-          <div class="lb-name">${esc(r.username)}${isMe ? ' (you)' : ''}</div>
+          <div class="lb-name">${esc(r.username)}${isMe ? ' (you)' : ''} ${giftCount > 0 ? `<span class="gift-badge" title="${giftCount} gift${giftCount===1?'':'s'} received">🎁 ${giftCount}</span>` : ''}</div>
           <div class="lb-exam">${r.count} homework completed</div>
         </div>
         <div class="lb-score">${r.avg}%</div>
@@ -5401,7 +5453,56 @@
     const deleteAllBtn = document.getElementById('deleteAllMistakesBtn');
     if(deleteAllBtn) deleteAllBtn.style.display = (currentAdminRole === 'assistant') ? 'none' : '';
 
+    await renderRetakeCompliance();
     await renderAdminMistakesTable();
+  }
+
+  // For every student+day that had at least one mistake (excluding today,
+  // since the retake window for today hasn't closed yet), checks whether
+  // they've actually completed the "Retake as exam" for that day — matched
+  // by looking for an attempt titled exactly like the retake exam
+  // (e.g. "Review — Monday, Aug 4") that the dashboard button creates.
+  async function renderRetakeCompliance(){
+    const tbody = document.getElementById('complianceBody');
+    const emptyState = document.getElementById('complianceEmpty');
+    const [rows, attempts] = await Promise.all([gatherAllMistakeRows(null), fetchAllAttempts()]);
+
+    const groups = {}; // "username|day" -> { username, day, count }
+    rows.forEach(r=>{
+      if(!r.ts || !r.username) return;
+      const day = new Date(r.ts).toDateString();
+      const key = `${r.username}|${day}`;
+      if(!groups[key]) groups[key] = { username: r.username, day, count: 0 };
+      groups[key].count++;
+    });
+
+    const todayStr = new Date().toDateString();
+    const list = Object.values(groups).filter(g => g.day !== todayStr);
+    list.sort((a,b)=> new Date(b.day) - new Date(a.day));
+
+    tbody.innerHTML = '';
+    if(list.length === 0){
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    list.forEach(g=>{
+      const dayLabel = new Date(g.day).toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+      const expectedTitle = `Review — ${dayLabel}`;
+      const retaken = attempts.some(a =>
+        (a.username || '').trim().toLowerCase() === g.username.trim().toLowerCase() &&
+        a.examTitle === expectedTitle
+      );
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${esc(g.username)}</td>
+        <td>${esc(dayLabel)}</td>
+        <td>${g.count}</td>
+        <td><span class="status-pill ${retaken ? 'status-approved' : 'status-pending'}">${retaken ? '✓ Retaken' : '✕ Not yet'}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
   }
 
   async function renderAdminMistakesTable(){
