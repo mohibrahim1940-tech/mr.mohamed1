@@ -2424,12 +2424,25 @@
   // attempts/leaderboard, students, homework, skills, asks, sessions,
   // reviews). Each "collection" name is a Supabase table with columns
   // (id text primary key, data jsonb).
+  //
+  // dbGetAll caches its results for a short window per collection, since many
+  // tabs/screens call fetchAllExams()/fetchAllSkills()/etc. repeatedly (every
+  // tab switch, every re-render) and those rows can be large once questions
+  // carry embedded images. Any write (set/add/delete) to a collection clears
+  // its cache immediately, so admins always see their own changes right away.
+  const _dbCache = {}; // collection -> { data, ts }
+  const DB_CACHE_TTL = 20000; // 20s — long enough to skip redundant re-fetches within a session, short enough that other people's changes show up quickly
+  function invalidateDbCache(collection){
+    delete _dbCache[collection];
+  }
+
   async function dbSet(collection, docId, data, attempt){
     attempt = attempt || 1;
     if(!storageAvailable()) return false;
     try{
       const { error } = await supabaseClient.from(collection).upsert({ id: docId, data });
       if(error) throw error;
+      invalidateDbCache(collection);
       return true;
     }catch(err){
       console.error(`dbSet(${collection}) failed (attempt ${attempt}):`, err);
@@ -2447,6 +2460,7 @@
       const id = generateId(collection);
       const { error } = await supabaseClient.from(collection).insert({ id, data });
       if(error) throw error;
+      invalidateDbCache(collection);
       return true;
     }catch(err){
       console.error(`dbAdd(${collection}) failed (attempt ${attempt}):`, err);
@@ -2467,10 +2481,16 @@
   }
   async function dbGetAll(collection){
     if(!storageAvailable()) return [];
+    const cached = _dbCache[collection];
+    if(cached && (Date.now() - cached.ts) < DB_CACHE_TTL){
+      return cached.data;
+    }
     try{
       const { data, error } = await supabaseClient.from(collection).select('data');
       if(error) throw error;
-      return (data || []).map(row => row.data);
+      const rows = (data || []).map(row => row.data);
+      _dbCache[collection] = { data: rows, ts: Date.now() };
+      return rows;
     }catch(err){ console.error(`dbGetAll(${collection}) failed:`, err); return []; }
   }
   async function dbDelete(collection, docId){
@@ -2478,6 +2498,7 @@
     try{
       const { error } = await supabaseClient.from(collection).delete().eq('id', docId);
       if(error) throw error;
+      invalidateDbCache(collection);
       return true;
     }catch(err){ console.error(`dbDelete(${collection}) failed:`, err); return false; }
   }
@@ -2685,7 +2706,7 @@
     }
   }
 
-  document.getElementById('refreshLeads').addEventListener('click', renderAdminDash);
+  document.getElementById('refreshLeads').addEventListener('click', ()=>{ invalidateDbCache('leads'); renderAdminDash(); });
 
   document.getElementById('exportLeads').addEventListener('click', async ()=>{
     const leads = await fetchAllLeads();
@@ -3041,7 +3062,7 @@
     });
   }
 
-  document.getElementById('refreshExams').addEventListener('click', renderAdminExamList);
+  document.getElementById('refreshExams').addEventListener('click', ()=>{ invalidateDbCache('exams'); renderAdminExamList(); });
 
   /* ---------------- PUBLIC: practice exams list ---------------- */
   async function renderPublicExams(){
@@ -3672,7 +3693,7 @@
     }
   });
 
-  document.getElementById('refreshHomework').addEventListener('click', renderAdminHomework);
+  document.getElementById('refreshHomework').addEventListener('click', ()=>{ invalidateDbCache('homework'); renderAdminHomework(); });
   document.getElementById('hwFilterSelect').addEventListener('change', renderAdminHomework);
 
   // if the student currently signed in on this browser is the one being edited,
@@ -3827,7 +3848,7 @@
     }
   });
 
-  document.getElementById('refreshSkills').addEventListener('click', renderAdminSkillList);
+  document.getElementById('refreshSkills').addEventListener('click', ()=>{ invalidateDbCache('skills'); renderAdminSkillList(); });
 
   /* ---------------- COURSES (admin-managed course list) ---------------- */
   async function saveCourse(id, data){
@@ -3930,7 +3951,7 @@
     }
   });
 
-  document.getElementById('refreshCourses').addEventListener('click', renderAdminCourseList);
+  document.getElementById('refreshCourses').addEventListener('click', ()=>{ invalidateDbCache('courses'); renderAdminCourseList(); });
 
   /* ---------------- ADMIN: Leaderboard tab (ranked by homework average) ---------------- */
   async function renderAdminLeaderboard(){
@@ -3973,7 +3994,7 @@
       wrap.appendChild(row);
     });
   }
-  document.getElementById('refreshAdminLeaderboard').addEventListener('click', renderAdminLeaderboard);
+  document.getElementById('refreshAdminLeaderboard').addEventListener('click', ()=>{ invalidateDbCache('attempts'); invalidateDbCache('homework'); renderAdminLeaderboard(); });
 
   /* ---------------- ASK A QUESTION (student -> admin, per homework question) ---------------- */
   async function saveAsk(entry){
@@ -4042,7 +4063,7 @@
       tbody.appendChild(tr);
     });
   }
-  document.getElementById('refreshAsks').addEventListener('click', renderAdminAsks);
+  document.getElementById('refreshAsks').addEventListener('click', ()=>{ invalidateDbCache('asks'); renderAdminAsks(); });
 
   /* ---------------- SESSIONS (Supabase) ---------------- */
   async function saveSessionRecord(id, data){
@@ -4136,7 +4157,7 @@
     }
   });
 
-  document.getElementById('refreshSessions').addEventListener('click', renderAdminSessions);
+  document.getElementById('refreshSessions').addEventListener('click', ()=>{ invalidateDbCache('sessions'); renderAdminSessions(); });
   document.getElementById('sessFilterSelect').addEventListener('change', renderAdminSessions);
 
   /* ---------------- DASHBOARD: student's next-session reminder + history ---------------- */
@@ -4273,7 +4294,7 @@
     }
   });
 
-  document.getElementById('refreshReviews').addEventListener('click', renderAdminReviews);
+  document.getElementById('refreshReviews').addEventListener('click', ()=>{ invalidateDbCache('reviews'); renderAdminReviews(); });
   document.getElementById('revFilterSelect').addEventListener('change', renderAdminReviews);
 
   /* ---------------- DASHBOARD: student's reviews ---------------- */
@@ -5229,7 +5250,7 @@
     }
   }
 
-  document.getElementById('refreshMistakesPanel').addEventListener('click', renderAdminMistakesTable);
+  document.getElementById('refreshMistakesPanel').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); renderAdminMistakesTable(); });
 
   document.getElementById('deleteAllMistakesBtn').addEventListener('click', async ()=>{
     const filterVal = document.getElementById('mistakesFilterSelect').value;
@@ -5326,7 +5347,7 @@
     });
   }
 
-  document.getElementById('refreshReminders').addEventListener('click', renderAdminReminders);
+  document.getElementById('refreshReminders').addEventListener('click', ()=>{ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminReminders(); });
   document.getElementById('mistakesFilterSelect').addEventListener('change', renderAdminMistakesTable);
 
   async function openStudentAnalysis(username){
@@ -5532,7 +5553,7 @@
     });
   }
 
-  document.getElementById('refreshStudents').addEventListener('click', renderAdminStudents);
+  document.getElementById('refreshStudents').addEventListener('click', ()=>{ invalidateDbCache('students'); renderAdminStudents(); });
 
   document.getElementById('exportStudents').addEventListener('click', async ()=>{
     const students = await fetchAllStudents();
