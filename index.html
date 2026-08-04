@@ -2326,6 +2326,9 @@
     <div class="admin-panel" id="mistakesPanel">
       <div class="admin-note">See who's actually retaking their daily mistakes below — the full wrong-answer log is further down.</div>
       <div class="hw-section-title">Daily retake compliance</div>
+      <div class="admin-actions" style="margin-bottom:12px;">
+        <button class="btn btn-ghost" id="refreshCompliance">🔄 Refresh (some students say they retook it — check now)</button>
+      </div>
       <div class="admin-table-wrap" style="margin-bottom:28px;">
         <table class="admin-table" id="complianceTable">
           <thead><tr><th>Student</th><th>Day</th><th>Mistakes</th><th>Retaken?</th></tr></thead>
@@ -4721,7 +4724,7 @@
     const list = document.getElementById('mistakeHistoryList');
     const rows = await gatherAllMistakeRows(currentStudent.username);
 
-    renderDailyMistakeSummary(rows);
+    await renderDailyMistakeSummary(rows);
 
     if(rows.length === 0){
       list.innerHTML = '<div class="admin-empty">No mistakes yet.</div>';
@@ -4746,8 +4749,9 @@
 
   // Groups every mistake by the day it happened, and within each day by
   // which exam/homework/skill it came from — so "all exams I got wrong
-  // today" is one glance instead of scrolling the full list.
-  function renderDailyMistakeSummary(rows){
+  // today" is one glance instead of scrolling the full list. Also shows the
+  // student their own retake status per day, same signal the admin sees.
+  async function renderDailyMistakeSummary(rows){
     const container = document.getElementById('dailyMistakeSummary');
     if(!container) return;
 
@@ -4766,6 +4770,13 @@
       byDay[day].rows.push(r);
     });
 
+    const myAttempts = currentStudent ? await fetchAllAttempts() : [];
+    const myAttemptTitles = new Set(
+      myAttempts
+        .filter(a => currentStudent && (a.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase())
+        .map(a => a.examTitle)
+    );
+
     const todayStr = new Date().toDateString();
     const days = Object.keys(byDay).sort((a,b)=> new Date(b) - new Date(a));
     container.innerHTML = '';
@@ -4776,6 +4787,8 @@
         .map(([src, count]) => `<span class="tag-pill">${esc(src)} (${count})</span>`)
         .join(' ');
       const isPastDay = day !== todayStr;
+      const dayLabel = new Date(day).toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+      const retaken = isPastDay && myAttemptTitles.has(`Review — ${dayLabel}`);
 
       // Only questions with full detail (options + a known correct answer) can
       // be turned back into an answerable exam.
@@ -4786,15 +4799,24 @@
       const row = document.createElement('div');
       row.className = 'hw-row';
       row.style.flexWrap = 'wrap';
-      const dayLabel = new Date(day).toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
+      let rightSideHtml;
+      if(!isPastDay){
+        rightSideHtml = `<span class="hw-mark" style="color:var(--muted);">Retake unlocks tomorrow</span>`;
+      } else if(retaken){
+        rightSideHtml = `<span class="status-pill status-approved">✓ Retaken</span>`;
+      } else if(retakeQuestions.length > 0){
+        rightSideHtml = `
+          <span class="status-pill status-pending">✕ Not yet</span>
+          <button class="btn btn-ghost retake-day-btn" style="padding:6px 14px;font-size:0.8rem;">Retake as exam</button>
+        `;
+      } else {
+        rightSideHtml = '';
+      }
       row.innerHTML = `
         <span class="hw-date">${esc(dayLabel)}</span>
         <span class="hw-title" style="flex:1; display:flex; gap:8px; flex-wrap:wrap;">${pillsHtml}</span>
         <span class="hw-mark">${totalForDay} total</span>
-        ${isPastDay
-          ? (retakeQuestions.length > 0 ? `<button class="btn btn-ghost retake-day-btn" style="padding:6px 14px;font-size:0.8rem;">Retake as exam</button>` : '')
-          : `<span class="hw-mark" style="color:var(--muted);">Retake unlocks tomorrow</span>`
-        }
+        ${rightSideHtml}
       `;
       const retakeBtn = row.querySelector('.retake-day-btn');
       if(retakeBtn){
@@ -5592,6 +5614,14 @@
   }
 
   document.getElementById('refreshMistakesPanel').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); renderAdminMistakesTable(); });
+  document.getElementById('refreshCompliance').addEventListener('click', async ()=>{
+    const btn = document.getElementById('refreshCompliance');
+    btn.disabled = true; btn.textContent = '🔄 Checking…';
+    invalidateDbCache('mistakes');
+    invalidateDbCache('attempts');
+    await renderRetakeCompliance();
+    btn.disabled = false; btn.textContent = '🔄 Refresh (some students say they retook it — check now)';
+  });
 
   document.getElementById('deleteAllMistakesBtn').addEventListener('click', async ()=>{
     const filterVal = document.getElementById('mistakesFilterSelect').value;
