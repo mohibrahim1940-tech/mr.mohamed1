@@ -2430,10 +2430,12 @@
   // tab switch, every re-render) and those rows can be large once questions
   // carry embedded images. Any write (set/add/delete) to a collection clears
   // its cache immediately, so admins always see their own changes right away.
-  const _dbCache = {}; // collection -> { data, ts }
+  const _dbCache = {}; // key -> { data, ts }  (key is either "collection" or "collection||prefix")
   const DB_CACHE_TTL = 20000; // 20s — long enough to skip redundant re-fetches within a session, short enough that other people's changes show up quickly
   function invalidateDbCache(collection){
-    delete _dbCache[collection];
+    Object.keys(_dbCache).forEach(k=>{
+      if(k === collection || k.startsWith(collection + '||')) delete _dbCache[k];
+    });
   }
 
   async function dbSet(collection, docId, data, attempt){
@@ -2492,6 +2494,25 @@
       _dbCache[collection] = { data: rows, ts: Date.now() };
       return rows;
     }catch(err){ console.error(`dbGetAll(${collection}) failed:`, err); return []; }
+  }
+  // Fetches only rows whose id starts with the given prefix — used to pull
+  // lightweight "index" records (title/count, no images) for grid/list views,
+  // instead of downloading every question and embedded image in the table
+  // just to render a card.
+  async function dbGetAllByIdPrefix(collection, prefix){
+    if(!storageAvailable()) return [];
+    const cacheKey = `${collection}||${prefix}`;
+    const cached = _dbCache[cacheKey];
+    if(cached && (Date.now() - cached.ts) < DB_CACHE_TTL){
+      return cached.data;
+    }
+    try{
+      const { data, error } = await supabaseClient.from(collection).select('data').like('id', `${prefix}%`);
+      if(error) throw error;
+      const rows = (data || []).map(row => row.data);
+      _dbCache[cacheKey] = { data: rows, ts: Date.now() };
+      return rows;
+    }catch(err){ console.error(`dbGetAllByIdPrefix(${collection}) failed:`, err); return []; }
   }
   async function dbDelete(collection, docId){
     if(!storageAvailable()) return false;
@@ -2783,15 +2804,37 @@
   }
 
   async function saveExam(examId, examData){
-    return await dbSet('exams', examId, { id: examId, ...examData });
+    const ok = await dbSet('exams', examId, { id: examId, ...examData });
+    if(ok){
+      // Lightweight companion record (no questions/images) so grid views don't
+      // have to download every exam's full content just to show a title card.
+      await dbSet('exams', `idx-${examId}`, {
+        _index: true, id: examId, title: examData.title, course: examData.course,
+        description: examData.description, questionCount: (examData.questions || []).length,
+        ts: examData.ts
+      });
+    }
+    return ok;
   }
 
   async function fetchAllExams(){
-    return await dbGetAll('exams');
+    const rows = await dbGetAll('exams');
+    return rows.filter(r => !r._index);
+  }
+
+  // Lightweight version for grids/lists — title, course, question count only,
+  // no question content or images. Use fetchAllExams()/dbGet('exams', id) when
+  // you actually need the questions (starting or editing a specific exam).
+  async function fetchExamsIndex(){
+    const rows = await dbGetAllByIdPrefix('exams', 'idx-');
+    rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+    return rows;
   }
 
   async function deleteExam(examId){
-    return await dbDelete('exams', examId);
+    const ok = await dbDelete('exams', examId);
+    if(ok) await dbDelete('exams', `idx-${examId}`);
+    return ok;
   }
 
   /* ---------------- EXAM EDITOR (admin) ---------------- */
@@ -2832,7 +2875,7 @@
   // this question" dropdown in every question builder (Exams, Homework, Skills).
   let cachedSkillNames = [];
   async function refreshSkillNamesCache(){
-    const sets = await fetchAllSkills();
+    const sets = await fetchSkillsIndex();
     cachedSkillNames = sets.map(s => s.skill).filter(Boolean);
   }
   function buildSkillOptionsHtml(selectedLesson){
@@ -3013,7 +3056,9 @@
     }
   });
 
-  async function editExam(exam){
+  async function editExam(examId){
+    const exam = await dbGet('exams', examId);
+    if(!exam){ alert('Could not load that exam — please try again.'); return; }
     editingExamId = exam.id;
     examTitleInput.value = exam.title;
     populateExamCourseSelect(exam.course || '');
@@ -3028,7 +3073,7 @@
   async function renderAdminExamList(){
     const wrap = document.getElementById('examListWrap');
     const emptyState = document.getElementById('examListEmpty');
-    const exams = await fetchAllExams();
+    const exams = await fetchExamsIndex();
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
 
@@ -3044,14 +3089,14 @@
       row.innerHTML = `
         <div>
           <h4>${esc(exam.title)}</h4>
-          <div class="meta">${exam.course ? esc(exam.course) + ' · ' : ''}${exam.questions.length} question${exam.questions.length===1?'':'s'}</div>
+          <div class="meta">${exam.course ? esc(exam.course) + ' · ' : ''}${exam.questionCount} question${exam.questionCount===1?'':'s'}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-exam-btn">Edit</button>
           <button class="danger delete-exam-btn">Delete</button>
         </div>
       `;
-      row.querySelector('.edit-exam-btn').addEventListener('click', ()=> editExam(exam));
+      row.querySelector('.edit-exam-btn').addEventListener('click', ()=> editExam(exam.id));
       row.querySelector('.delete-exam-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete "${exam.title}"? This can't be undone.`)) return;
         await deleteExam(exam.id);
@@ -3068,7 +3113,7 @@
   async function renderPublicExams(){
     const grid = document.getElementById('examsGrid');
     if(!grid) return; // Practice Exams section removed from the homepage
-    const exams = await fetchAllExams();
+    const exams = await fetchExamsIndex();
 
     if(exams.length === 0){
       grid.innerHTML = '<div class="exams-empty">No practice exams published yet — check back soon.</div>';
@@ -3085,22 +3130,28 @@
       const needsRetake = latest && latest.retakeRequired;
       const overdue = needsRetake && latest.retakeDeadline && new Date(latest.retakeDeadline) < new Date();
 
-      let buttonLabel = currentStudent ? `Start exam (${exam.questions.length} Q)` : 'Sign in to start';
+      let buttonLabel = currentStudent ? `Start exam (${exam.questionCount} Q)` : 'Sign in to start';
       if(needsRetake) buttonLabel = 'Retake now';
 
       card.innerHTML = `
         ${exam.course ? `<span class="resource-type">${esc(exam.course)}</span>` : ''}
         <h3>${esc(exam.title)}</h3>
-        <p>${esc(exam.description || (exam.questions.length + ' quick questions to check your knowledge.'))}</p>
+        <p>${esc(exam.description || (exam.questionCount + ' quick questions to check your knowledge.'))}</p>
         ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin:8px 0 -4px;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
         <button class="btn btn-ghost start-exam-btn">${buttonLabel}</button>
       `;
-      card.querySelector('.start-exam-btn').addEventListener('click', ()=>{
+      card.querySelector('.start-exam-btn').addEventListener('click', async ()=>{
         if(!currentStudent){
           openAuthModal('signinForm');
           return;
         }
-        startExam(exam);
+        const btn = card.querySelector('.start-exam-btn');
+        const originalLabel = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Loading…';
+        const fullExam = await dbGet('exams', exam.id);
+        btn.disabled = false; btn.textContent = originalLabel;
+        if(!fullExam){ alert('Could not load that exam — please try again.'); return; }
+        startExam(fullExam);
       });
       grid.appendChild(card);
     });
@@ -3563,9 +3614,9 @@
       students.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('');
     if(students.some(s => s.username === currentFilterVal)) filterSelect.value = currentFilterVal;
 
-    const skillSets = await fetchAllSkills();
+    const skillSets = await fetchSkillsIndex();
     loadSkillSelect.innerHTML = '<option value="">— Start blank, or pick a skill below —</option>' +
-      skillSets.map(s => `<option value="${esc(s.skill)}">${esc(s.skill)} (${(s.questions||[]).length} question${(s.questions||[]).length===1?'':'s'})</option>`).join('');
+      skillSets.map(s => `<option value="${esc(s.id)}">${esc(s.skill)} (${s.questionCount} question${s.questionCount===1?'':'s'})</option>`).join('');
     loadSkillSelect.value = '';
 
     if(hwQuestionsContainer.children.length === 0){
@@ -3576,11 +3627,14 @@
   }
 
   document.getElementById('hwLoadSkillSelect').addEventListener('change', async (e)=>{
-    const skillName = e.target.value;
-    if(!skillName) return;
-    const skillSets = await fetchAllSkills();
-    const match = skillSets.find(s => s.skill === skillName);
-    if(!match) return;
+    const skillId = e.target.value;
+    if(!skillId) return;
+    const select = e.target;
+    const originalLabel = select.options[select.selectedIndex].textContent;
+    select.disabled = true;
+    const match = await dbGet('skills', skillId);
+    select.disabled = false;
+    if(!match){ alert('Could not load that skill — please try again.'); return; }
 
     hwQuestionsContainer.innerHTML = '';
     match.questions.forEach(q => addQuestionBlock(q, hwQuestionsContainer));
@@ -3708,15 +3762,31 @@
 
   /* ---------------- ADMIN: Skills tab (classified question bank) ---------------- */
   async function saveSkillSet(id, data){
-    return await dbSet('skills', id, { id, ...data });
+    const ok = await dbSet('skills', id, { id, ...data });
+    if(ok){
+      await dbSet('skills', `idx-${id}`, {
+        _index: true, id, skill: data.skill, questionCount: (data.questions || []).length, ts: data.ts
+      });
+    }
+    return ok;
   }
   async function fetchAllSkills(){
-    const sets = await dbGetAll('skills');
+    const rows = await dbGetAll('skills');
+    const sets = rows.filter(r => !r._index);
     sets.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
     return sets;
   }
+  // Lightweight version for grids/dropdowns — skill name + question count only,
+  // no question content or images.
+  async function fetchSkillsIndex(){
+    const rows = await dbGetAllByIdPrefix('skills', 'idx-');
+    rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+    return rows;
+  }
   async function deleteSkillSet(id){
-    return await dbDelete('skills', id);
+    const ok = await dbDelete('skills', id);
+    if(ok) await dbDelete('skills', `idx-${id}`);
+    return ok;
   }
 
   const skillQuestionsContainer = document.getElementById('skillQuestionsContainer');
@@ -3762,7 +3832,7 @@
   async function renderAdminSkillList(){
     const wrap = document.getElementById('skillListWrap');
     const emptyState = document.getElementById('skillListEmpty');
-    const sets = await fetchAllSkills();
+    const sets = await fetchSkillsIndex();
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
 
@@ -3778,14 +3848,14 @@
       row.innerHTML = `
         <div>
           <h4>${esc(set.skill)}</h4>
-          <div class="meta">${(set.questions || []).length} classified question${(set.questions || []).length === 1 ? '' : 's'}</div>
+          <div class="meta">${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-skill-btn" title="Edit this skill set" aria-label="Edit this skill set">✏️ Edit</button>
           <button class="danger delete-skill-btn">Delete</button>
         </div>
       `;
-      row.querySelector('.edit-skill-btn').addEventListener('click', ()=> editSkill(set));
+      row.querySelector('.edit-skill-btn').addEventListener('click', ()=> editSkill(set.id));
       row.querySelector('.delete-skill-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete the "${set.skill}" skill set?`)) return;
         await deleteSkillSet(set.id);
@@ -3797,7 +3867,9 @@
     });
   }
 
-  function editSkill(set){
+  async function editSkill(skillId){
+    const set = await dbGet('skills', skillId);
+    if(!set){ alert('Could not load that skill — please try again.'); return; }
     editingSkillId = set.id;
     document.getElementById('skillNameInput').value = set.skill;
     skillQuestionsContainer.innerHTML = '';
@@ -4332,7 +4404,7 @@
   async function renderStudentSkills(){
     const grid = document.getElementById('skillsGrid');
     if(!grid) return;
-    const sets = await fetchAllSkills();
+    const sets = await fetchSkillsIndex();
 
     if(sets.length === 0){
       grid.innerHTML = '<div class="exams-empty">No skills published yet — check back soon.</div>';
@@ -4351,12 +4423,18 @@
 
       card.innerHTML = `
         <h3>${esc(set.skill)}</h3>
-        <p>${(set.questions || []).length} question${(set.questions || []).length === 1 ? '' : 's'} to practice.</p>
+        <p>${set.questionCount} question${set.questionCount === 1 ? '' : 's'} to practice.</p>
         ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin:8px 0 -4px;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
         <button class="btn btn-ghost start-skill-btn">${needsRetake ? 'Retake now' : 'Start practice'}</button>
       `;
-      card.querySelector('.start-skill-btn').addEventListener('click', ()=>{
-        startExam({ title: set.skill, questions: set.questions || [] });
+      card.querySelector('.start-skill-btn').addEventListener('click', async ()=>{
+        const btn = card.querySelector('.start-skill-btn');
+        const originalLabel = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Loading…';
+        const full = await dbGet('skills', set.id);
+        btn.disabled = false; btn.textContent = originalLabel;
+        if(!full){ alert('Could not load that skill — please try again.'); return; }
+        startExam({ title: full.skill, questions: full.questions || [] });
       });
       grid.appendChild(card);
     });
@@ -4442,7 +4520,7 @@
       return;
     }
 
-    const skillSets = await fetchAllSkills();
+    const skillSets = await fetchSkillsIndex();
     const maxCount = weak[0][1];
 
     wpList.innerHTML = '';
@@ -4458,8 +4536,14 @@
         ${matchingSet ? `<button class="btn btn-ghost practice-weak-btn" style="padding:6px 14px;font-size:0.8rem;">Practice</button>` : ''}
       `;
       if(matchingSet){
-        row.querySelector('.practice-weak-btn').addEventListener('click', ()=>{
-          startExam({ title: matchingSet.skill, questions: matchingSet.questions || [] });
+        row.querySelector('.practice-weak-btn').addEventListener('click', async ()=>{
+          const btn = row.querySelector('.practice-weak-btn');
+          const originalLabel = btn.textContent;
+          btn.disabled = true; btn.textContent = 'Loading…';
+          const full = await dbGet('skills', matchingSet.id);
+          btn.disabled = false; btn.textContent = originalLabel;
+          if(!full){ alert('Could not load that skill — please try again.'); return; }
+          startExam({ title: full.skill, questions: full.questions || [] });
         });
       }
       wpList.appendChild(row);
