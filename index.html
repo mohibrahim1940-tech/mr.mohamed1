@@ -901,6 +901,44 @@
     margin-bottom:8px;display:block;
   }
   .field-row{margin-bottom:20px;}
+  .student-multiselect{
+    border:1px solid var(--line); border-radius:10px; background:var(--ink); overflow:hidden;
+  }
+  .student-multiselect-actions{
+    display:flex; align-items:center; gap:8px; padding:10px 12px;
+    border-bottom:1px solid var(--line); background:var(--panel-2);
+  }
+  .student-multiselect-count{margin-left:auto; color:var(--muted); font-size:0.78rem;}
+  .student-multiselect-list{max-height:220px; overflow-y:auto; padding:6px 4px;}
+  .student-checkbox-row{
+    display:flex; align-items:center; gap:10px; padding:8px 12px;
+    border-radius:6px; cursor:pointer; font-size:0.88rem;
+  }
+  .student-checkbox-row:hover{background:var(--panel-2);}
+  .student-checkbox-row input{width:16px; height:16px; flex-shrink:0; accent-color:var(--signal);}
+  .bulk-wa-stepper{
+    display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+    background:rgba(76,111,255,0.1); border:1px solid var(--signal); border-radius:12px;
+    padding:14px 18px; margin-bottom:18px;
+  }
+  .bulk-wa-title{font-family:'Space Grotesk',sans-serif; font-size:0.92rem; margin-bottom:4px;}
+  .bulk-wa-hint{color:var(--muted); font-size:0.78rem;}
+
+  /* ---------- parent view (read-only, no login) ---------- */
+  #parentViewPage{
+    min-height:100vh; background:var(--ink); color:var(--text);
+    font-family:'Inter',sans-serif;
+  }
+  .parent-view-wrap{max-width:900px; margin:0 auto; padding:28px 24px 80px;}
+  .parent-view-header{
+    display:flex; justify-content:space-between; align-items:center;
+    padding-bottom:20px; margin-bottom:24px; border-bottom:1px solid var(--line);
+  }
+  .parent-view-logo span{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1.1rem;}
+  .parent-view-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--muted);
+    border:1px solid var(--line); padding:5px 12px; border-radius:20px;
+  }
   .field-row input[type="text"], .field-row textarea{
     width:100%;padding:12px 14px;border-radius:8px;
     border:1px solid var(--line);background:var(--ink);color:var(--text);
@@ -1461,6 +1499,41 @@
   .achievement-badge .label{font-size:0.72rem; color:var(--muted);}
   .achievement-badge.unlocked .label{color:var(--text);}
 
+  /* ---------- level/XP card ---------- */
+  .level-card{
+    display:flex; align-items:center; gap:14px;
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:16px 20px; min-width:220px; flex:1;
+  }
+  .level-badge{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.1rem;
+    background:linear-gradient(135deg, var(--signal), var(--ember)); color:#fff;
+  }
+  .level-top-row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;}
+  .level-label{font-family:'Space Grotesk',sans-serif; font-size:0.9rem;}
+  .level-xp{color:var(--muted); font-size:0.76rem; font-family:'IBM Plex Mono',monospace;}
+  .level-bar-outer{height:6px; background:var(--panel-2); border-radius:6px; overflow:hidden;}
+  .level-bar-fill{height:100%; background:linear-gradient(90deg, var(--signal), var(--ember)); border-radius:6px; transition:width .3s;}
+
+  /* ---------- topic mastery ---------- */
+  .mastery-row{display:flex; align-items:center; gap:14px; padding:9px 0;}
+  .mastery-lesson{width:150px; flex-shrink:0; font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mastery-bar-outer{flex:1; height:10px; background:var(--panel-2); border-radius:6px; overflow:hidden;}
+  .mastery-bar-fill{height:100%; border-radius:6px; transition:width .3s;}
+  .mastery-pct{width:44px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:0.8rem; color:var(--muted); flex-shrink:0;}
+
+  /* ---------- activity heatmap ---------- */
+  .heatmap-grid{display:flex; gap:3px; overflow-x:auto; padding-bottom:6px;}
+  .heatmap-week{display:flex; flex-direction:column; gap:3px;}
+  .heatmap-cell{width:12px; height:12px; border-radius:3px; background:var(--panel-2); flex-shrink:0;}
+  .heatmap-cell.level-1{background:rgba(76,111,255,0.3);}
+  .heatmap-cell.level-2{background:rgba(76,111,255,0.6);}
+  .heatmap-cell.level-3{background:var(--signal);}
+  .heatmap-legend{display:flex; align-items:center; gap:6px; margin-top:10px; font-size:0.75rem; color:var(--muted);}
+  .heatmap-legend .heatmap-cell{width:10px; height:10px;}
+
   /* ---------- progress chart (Student Analysis) ---------- */
   .progress-chart{
     display:flex; align-items:flex-end; gap:10px; overflow-x:auto;
@@ -1475,10 +1548,91 @@
   .progress-bar-fill{width:100%; border-radius:6px 6px 0 0; transition:height .3s;}
   .progress-bar-pct{font-size:0.68rem; color:var(--text); margin-top:6px; font-family:'IBM Plex Mono',monospace;}
   .progress-bar-date{font-size:0.6rem; color:var(--muted); margin-top:2px; text-align:center;}
+
+  /* ---------- graphing tool ---------- */
+  .graph-controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .graph-controls input[type="text"]{
+    flex:1; min-width:220px; padding:11px 14px; border-radius:8px;
+    border:1px solid var(--line); background:var(--ink); color:var(--text);
+    font-family:'IBM Plex Mono',monospace; font-size:0.9rem;
+  }
+  .graph-controls .btn{padding:10px 18px; font-size:0.85rem; flex-shrink:0;}
+  .graph-hint{color:var(--muted); font-size:0.78rem; margin-left:auto;}
+  .graph-canvas-wrap{
+    margin-top:16px; background:var(--ink); border:1px solid var(--line);
+    border-radius:14px; padding:12px; overflow:hidden;
+  }
+  #graphCanvas{width:100%; height:auto; display:block; border-radius:8px; cursor:grab; touch-action:none;}
+  #graphCanvas:active{cursor:grabbing;}
+  .graph-error{
+    margin-top:12px; padding:10px 14px; border-radius:8px;
+    background:rgba(255,107,74,0.12); border:1px solid var(--ember); color:var(--ember);
+    font-size:0.82rem;
+  }
 </style>
 </head>
 <body>
 
+<!-- PARENT VIEW: shown instead of the whole site when ?parentView=<token> is in the URL.
+     Read-only, no login needed — a link the admin generates and shares directly. -->
+<div id="parentViewPage" style="display:none;">
+  <div class="parent-view-wrap">
+    <div class="parent-view-header">
+      <div class="parent-view-logo">
+        <span>🎓 Mr. Mohamed Ibrahim</span>
+      </div>
+      <span class="parent-view-tag">Parent view · read-only</span>
+    </div>
+
+    <div id="parentViewLoading" class="admin-empty" style="margin:60px auto; text-align:center;">Loading…</div>
+
+    <div id="parentViewContent" style="display:none;">
+      <div class="section-head reveal" style="margin-bottom:24px;">
+        <div class="eyebrow">Student progress</div>
+        <h2 id="parentViewName">—</h2>
+        <p id="parentViewMeta">—</p>
+      </div>
+
+      <div class="dash-overview-top" style="margin-bottom:28px;">
+        <div class="streak-card">
+          <div class="streak-flame">🔥</div>
+          <div>
+            <div class="streak-num"><span id="parentViewStreak">0</span></div>
+            <div class="streak-label">day streak</div>
+          </div>
+        </div>
+        <div class="dash-card">
+          <span class="field-label">Homework completed</span>
+          <div class="dash-value" id="parentViewHwProgress">—</div>
+        </div>
+        <div class="dash-card">
+          <span class="field-label">Average score</span>
+          <div class="dash-value" id="parentViewAvgScore">—</div>
+        </div>
+        <div class="dash-card">
+          <span class="field-label">Pending retakes</span>
+          <div class="dash-value" id="parentViewPendingRetakes">—</div>
+        </div>
+      </div>
+
+      <div class="hw-section-title">Homework</div>
+      <div class="hw-list" id="parentViewHwList">
+        <div class="admin-empty">No homework yet.</div>
+      </div>
+
+      <div class="hw-section-title">Recent exams &amp; skill practice</div>
+      <div class="hw-list" id="parentViewAttemptsList">
+        <div class="admin-empty">No practice recorded yet.</div>
+      </div>
+    </div>
+
+    <div id="parentViewError" class="admin-empty" style="display:none; margin:60px auto; text-align:center;">
+      This link isn't valid — please ask for a new one.
+    </div>
+  </div>
+</div>
+
+<div id="mainSiteWrap">
 <header id="siteHeader">
   <div class="wrap">
     <nav>
@@ -1588,6 +1742,7 @@
           <button class="dash-tab-btn" data-dashtab="tabLeaderboard">🏆 Leaderboard</button>
           <button class="dash-tab-btn" data-dashtab="tabExams">📝 Exams</button>
           <button class="dash-tab-btn" data-dashtab="tabMistakes">🧾 Mistake History</button>
+          <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
         </nav>
         <div class="dash-sidebar-actions">
           <button class="btn btn-primary" id="dashMyScoresBtn">View my scores</button>
@@ -1618,6 +1773,16 @@
                 <div class="streak-label">day streak</div>
               </div>
             </div>
+            <div class="level-card">
+              <div class="level-badge" id="levelBadge">1</div>
+              <div style="flex:1;">
+                <div class="level-top-row">
+                  <span class="level-label">Level <span id="levelNum">1</span></span>
+                  <span class="level-xp" id="levelXpText">0 XP</span>
+                </div>
+                <div class="level-bar-outer"><div class="level-bar-fill" id="levelBarFill"></div></div>
+              </div>
+            </div>
             <div class="dash-card">
               <span class="field-label">Course</span>
               <div class="dash-value" id="dashCourse">—</div>
@@ -1643,6 +1808,16 @@
 
           <div class="hw-section-title">Achievements</div>
           <div class="achievements-row" id="achievementsRow"></div>
+
+          <div class="hw-section-title">Topic mastery</div>
+          <div id="topicMasteryWrap">
+            <div class="admin-empty">No graded questions yet — this fills in as you practice.</div>
+          </div>
+
+          <div class="hw-section-title">Activity</div>
+          <div id="activityHeatmapWrap">
+            <div class="admin-empty">Loading…</div>
+          </div>
         </div>
 
         <div class="dash-tab-panel" id="tabSkills">
@@ -1705,6 +1880,25 @@
           <div class="hw-list" id="mistakeHistoryList">
             <div class="admin-empty">No mistakes yet.</div>
           </div>
+        </div>
+
+        <div class="dash-tab-panel" id="tabGraph">
+          <div class="hw-section-title">Graphing tool</div>
+          <p style="color:var(--muted); font-size:0.86rem; margin:-10px 0 18px;">Type any function of x to see it plotted instantly — great for building intuition before an exam.</p>
+          <div class="graph-controls">
+            <input type="text" id="graphFnInput" placeholder="e.g. x^2 - 4  or  sin(x)  or  sqrt(x+2)" value="x^2 - 4">
+            <button class="btn btn-primary" id="graphPlotBtn">Plot</button>
+          </div>
+          <div class="graph-controls" style="margin-top:10px;">
+            <button class="btn btn-ghost" id="graphZoomInBtn">🔍+ Zoom in</button>
+            <button class="btn btn-ghost" id="graphZoomOutBtn">🔍− Zoom out</button>
+            <button class="btn btn-ghost" id="graphResetBtn">Reset view</button>
+            <span class="graph-hint">Drag to pan</span>
+          </div>
+          <div class="graph-canvas-wrap">
+            <canvas id="graphCanvas" width="900" height="480"></canvas>
+          </div>
+          <div id="graphError" class="graph-error" style="display:none;"></div>
         </div>
       </div>
     </div>
@@ -2128,19 +2322,32 @@
     </div>
 
     <div class="admin-panel" id="homeworkPanel">
-      <div class="admin-note">Build homework as questions and assign it to one student. They'll see it on their dashboard, answer it, and their score appears the moment they submit.</div>
+      <div class="admin-note">Build homework as questions and assign it to one or more students at once. They'll see it on their dashboard, answer it, and their score appears the moment they submit.</div>
 
       <div class="exam-editor" style="margin-top:0;">
         <div class="field-row">
-          <label class="field-label">Student</label>
-          <select id="hwStudentSelect">
-            <option value="" disabled selected>Choose a student</option>
-          </select>
+          <label class="field-label">Student(s)</label>
+          <div class="student-multiselect" id="hwStudentMultiselect">
+            <div class="student-multiselect-actions">
+              <button type="button" class="btn btn-ghost" id="hwSelectAllBtn" style="padding:6px 12px;font-size:0.78rem;">Select all</button>
+              <button type="button" class="btn btn-ghost" id="hwSelectNoneBtn" style="padding:6px 12px;font-size:0.78rem;">Clear</button>
+              <span class="student-multiselect-count" id="hwSelectedCount">0 selected</span>
+            </div>
+            <div class="student-multiselect-list" id="hwStudentCheckboxList">
+              <div class="admin-empty" style="padding:12px;">Loading students…</div>
+            </div>
+          </div>
         </div>
         <div class="field-row">
           <label class="field-label">Load questions from a skill (optional)</label>
           <select id="hwLoadSkillSelect">
             <option value="">— Start blank, or pick a skill below —</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Load questions from an exam (optional)</label>
+          <select id="hwLoadExamSelect">
+            <option value="">— Or pick an exam instead —</option>
           </select>
         </div>
         <div class="field-row">
@@ -2382,6 +2589,18 @@
       <div class="admin-note">Every student with a homework retake still pending or overdue — one tap opens WhatsApp with their parent's number and a message already written for you.</div>
       <div class="admin-actions">
         <button class="btn btn-ghost" id="refreshReminders">Refresh</button>
+        <button class="btn btn-primary" id="messageAllBtn" style="display:none;">📤 Message all pending</button>
+      </div>
+      <div class="bulk-wa-stepper" id="bulkWaStepper" style="display:none;">
+        <div>
+          <div class="bulk-wa-title">Messaging <span id="bulkWaIndex">1</span> of <span id="bulkWaTotal">1</span> — <span id="bulkWaName"></span></div>
+          <div class="bulk-wa-hint">WhatsApp opened in a new tab with the message ready. Hit "Next" once you've sent it.</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost" id="bulkWaSkipBtn">Skip</button>
+          <button class="btn btn-primary" id="bulkWaNextBtn">Next →</button>
+          <button class="btn btn-ghost" id="bulkWaDoneBtn">Done</button>
+        </div>
       </div>
       <div id="remindersListWrap">
         <div class="admin-empty">Loading…</div>
@@ -2478,6 +2697,104 @@
 
   function storageAvailable(){
     return supabaseReady && supabaseClient !== null;
+  }
+
+  // PARENT VIEW: if a parentView token is in the URL, hide the whole site
+  // and show only the read-only parent summary instead. No login needed —
+  // this is the link the admin generates and shares directly.
+  const parentViewToken = new URLSearchParams(window.location.search).get('parentView');
+  if(parentViewToken){
+    document.getElementById('mainSiteWrap').style.display = 'none';
+    document.getElementById('parentViewPage').style.display = 'block';
+    // Deferred so the rest of this script (including const declarations
+    // further down, like the cache) finishes initializing first — calling
+    // straight through here would hit them before they exist.
+    setTimeout(()=> renderParentView(parentViewToken), 0);
+  }
+
+  async function renderParentView(token){
+    const loading = document.getElementById('parentViewLoading');
+    const content = document.getElementById('parentViewContent');
+    const errorBox = document.getElementById('parentViewError');
+    try{
+      const students = await fetchAllStudents();
+      const student = students.find(s => s.parentViewToken === token);
+      if(!student){
+        loading.style.display = 'none';
+        errorBox.style.display = 'block';
+        return;
+      }
+
+      document.getElementById('parentViewName').textContent = student.username;
+      document.getElementById('parentViewMeta').textContent = `${student.course || ''} · ${student.grade || ''}`;
+
+      const uname = student.username.trim().toLowerCase();
+      const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts()]);
+      const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname);
+      const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
+      const completedHw = mineHw.filter(h => h.status === 'completed');
+
+      document.getElementById('parentViewHwProgress').textContent = `${completedHw.length} of ${mineHw.length}`;
+
+      const allPct = [...completedHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
+      const avgPct = allPct.length ? Math.round(allPct.reduce((s,p)=> s+p, 0) / allPct.length) : 0;
+      document.getElementById('parentViewAvgScore').textContent = allPct.length ? `${avgPct}%` : '—';
+
+      const pendingCount = completedHw.filter(h => h.retakeRequired).length + mineAttempts.filter(a => a.retakeRequired).length;
+      document.getElementById('parentViewPendingRetakes').textContent = pendingCount;
+
+      const dates = new Set();
+      completedHw.forEach(h => { if(h.submittedAt) dates.add(new Date(h.submittedAt).toDateString()); });
+      mineAttempts.forEach(a => { if(a.ts) dates.add(new Date(a.ts).toDateString()); });
+      let streak = 0;
+      const cursor = new Date();
+      if(!dates.has(cursor.toDateString())) cursor.setDate(cursor.getDate() - 1);
+      while(dates.has(cursor.toDateString())){ streak++; cursor.setDate(cursor.getDate() - 1); }
+      document.getElementById('parentViewStreak').textContent = streak;
+
+      const hwListEl = document.getElementById('parentViewHwList');
+      if(mineHw.length === 0){
+        hwListEl.innerHTML = '<div class="admin-empty">No homework yet.</div>';
+      } else {
+        const sorted = mineHw.slice().sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+        hwListEl.innerHTML = sorted.slice(0, 15).map(h=>{
+          const isCompleted = h.status === 'completed';
+          return `
+            <div class="hw-row">
+              <span class="hw-date">${esc(h.dueDate || '')}</span>
+              <span class="hw-title">${esc(h.title || '')}</span>
+              ${isCompleted && h.score
+                ? `<span class="hw-mark">${h.score.correct}/${h.score.total} (${h.score.pct}%)</span>`
+                : `<span class="hw-mark" style="color:var(--muted);">Not done yet</span>`}
+            </div>
+          `;
+        }).join('');
+      }
+
+      const attemptsListEl = document.getElementById('parentViewAttemptsList');
+      if(mineAttempts.length === 0){
+        attemptsListEl.innerHTML = '<div class="admin-empty">No practice recorded yet.</div>';
+      } else {
+        const sortedAttempts = mineAttempts.slice().sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+        attemptsListEl.innerHTML = sortedAttempts.slice(0, 15).map(a=>{
+          const dateLabel = a.ts ? new Date(a.ts).toLocaleDateString() : '';
+          return `
+            <div class="hw-row">
+              <span class="hw-date">${esc(dateLabel)}</span>
+              <span class="hw-title">${esc(a.examTitle || '')}</span>
+              <span class="hw-mark">${a.correct}/${a.total} (${a.pct}%)</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      loading.style.display = 'none';
+      content.style.display = 'block';
+    }catch(err){
+      console.error('Parent view failed:', err);
+      loading.style.display = 'none';
+      errorBox.style.display = 'block';
+    }
   }
 
   // Generic Supabase helpers used by every feature below (leads, exams,
@@ -3456,29 +3773,36 @@
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
         if(current > 0){ current--; renderQuestion(); }
       });
-      document.getElementById('examNextBtn').addEventListener('click', ()=>{
-        if(current === exam.questions.length-1){ renderScore(); }
+      document.getElementById('examNextBtn').addEventListener('click', async ()=>{
+        if(current === exam.questions.length-1){ await renderScore(); }
         else { current++; renderQuestion(); }
       });
     }
 
-    function renderScore(){
+    async function renderScore(){
       stopActiveTimer();
       unlockQuiz();
       const correctCount = exam.questions.reduce((sum,q,i)=> sum + (answers[i]===q.correct ? 1 : 0), 0);
       const pct = Math.round((correctCount / exam.questions.length) * 100);
       const hasMistakes = correctCount < exam.questions.length;
       let reviewResults = null;
+      let saveSucceeded = true;
 
+      // Show the score immediately with a "Saving…" state, then update once
+      // we actually know whether it was saved — instead of claiming success
+      // before we've checked.
       if(currentStudent){
+        examPlayer.innerHTML = `<div class="exam-score"><div class="big-num">${pct}%</div><p style="color:var(--muted);">Saving your result…</p></div>`;
+
+        const mistakeSaves = [];
         exam.questions.forEach((q,i)=>{
           if(answers[i] !== q.correct){
-            saveMistake({
+            mistakeSaves.push(saveMistake({
               username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
               options: q.options, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: exam.questions.length
-            });
+            }));
           }
         });
         reviewResults = exam.questions.map((q,i) => ({
@@ -3491,12 +3815,16 @@
           correct: answers[i] === q.correct
         }));
         const retakeDeadline = hasMistakes ? new Date(Date.now() + 24*60*60*1000).toISOString() : null;
-        saveExamAttempt({
-          username: currentStudent.username, examTitle: exam.title,
-          correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
-          retakeRequired: hasMistakes, retakeDeadline,
-          retakeDayKey: exam.retakeDayKey || null
-        });
+        const [attemptResult] = await Promise.all([
+          saveExamAttempt({
+            username: currentStudent.username, examTitle: exam.title,
+            correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
+            retakeRequired: hasMistakes, retakeDeadline,
+            retakeDayKey: exam.retakeDayKey || null
+          }),
+          ...mistakeSaves
+        ]);
+        saveSucceeded = attemptResult !== false;
       }
 
       const feedback = pct >= 75
@@ -3520,13 +3848,21 @@
         ${currentStudent ? `<div class="retake-notice">You must retake this within 24 hours. It'll show up on your dashboard until you do.</div>` : ''}
       ` : '';
 
+      const savedNoticeHtml = currentStudent
+        ? (saveSucceeded
+            ? `<p style="color:var(--muted);font-size:0.82rem;margin-top:-4px;margin-bottom:24px;">Saved to your account.</p>`
+            : `<div class="retake-notice" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);">⚠ This result did NOT save — check your connection and tap "Retry save" below, or Mr. Mohamed Ibrahim won't see it.</div>`)
+        : '';
+
       examPlayer.innerHTML = `
         <div class="exam-score">
           ${feedback}
           <div class="big-num">${pct}%</div>
           <p style="color:var(--muted);margin-bottom:24px;">${correctCount} of ${exam.questions.length} correct on “${esc(exam.title)}”.</p>
           ${reviewHtml}
-          ${currentStudent ? `<p style="color:var(--muted);font-size:0.82rem;margin-top:-4px;margin-bottom:24px;">Saved to your account.</p>` : `
+          ${savedNoticeHtml}
+          ${!saveSucceeded && currentStudent ? `<button class="btn btn-primary" id="retrySaveBtn" style="width:100%;margin-bottom:10px;">Retry save</button>` : ''}
+          ${currentStudent ? '' : `
             <div class="field-row" style="text-align:left;">
               <label class="field-label">Add your name to the leaderboard (optional)</label>
               <input type="text" id="leaderboardNameInput" placeholder="Your name">
@@ -3536,6 +3872,13 @@
           <button class="btn btn-ghost" id="examCloseBtn" style="margin-top:10px;width:100%;">Close</button>
         </div>
       `;
+      const retryBtn = document.getElementById('retrySaveBtn');
+      if(retryBtn){
+        retryBtn.addEventListener('click', async ()=>{
+          retryBtn.disabled = true; retryBtn.textContent = 'Retrying…';
+          await renderScore();
+        });
+      }
       const saveScoreBtn = document.getElementById('saveScoreBtn');
       if(saveScoreBtn){
         saveScoreBtn.addEventListener('click', async ()=>{
@@ -3640,6 +3983,14 @@
     return await dbGet('students', studentKey(username));
   }
 
+  function generateRandomToken(len){
+    len = len || 20;
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let out = '';
+    for(let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+    return out;
+  }
+
   async function registerStudentAccount(data){
     if(!storageAvailable()) return { ok:false, reason:'nostorage' };
     const existing = await getStudent(data.username);
@@ -3653,6 +4004,7 @@
       studentNumber: data.studentNumber,
       parentNumber: data.parentNumber,
       status: 'pending',
+      parentViewToken: generateRandomToken(),
       ts: new Date().toISOString()
     };
     const ok = await dbSet('students', studentKey(data.username), record);
@@ -3744,13 +4096,28 @@
 
   async function initHomeworkPanel(){
     const students = await fetchAllStudents();
-    const studentSelect = document.getElementById('hwStudentSelect');
+    const checkboxList = document.getElementById('hwStudentCheckboxList');
     const filterSelect = document.getElementById('hwFilterSelect');
     const loadSkillSelect = document.getElementById('hwLoadSkillSelect');
+    const loadExamSelect = document.getElementById('hwLoadExamSelect');
 
     const currentFilterVal = filterSelect.value;
-    studentSelect.innerHTML = '<option value="" disabled selected>Choose a student</option>' +
-      students.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('');
+    const previouslyChecked = new Set(
+      Array.from(checkboxList.querySelectorAll('input:checked')).map(el => el.value)
+    );
+    if(students.length === 0){
+      checkboxList.innerHTML = '<div class="admin-empty" style="padding:12px;">No approved students yet.</div>';
+    } else {
+      checkboxList.innerHTML = students.map(s => `
+        <label class="student-checkbox-row">
+          <input type="checkbox" value="${esc(s.username)}" ${previouslyChecked.has(s.username) ? 'checked' : ''}>
+          <span>${esc(s.username)}</span>
+        </label>
+      `).join('');
+      checkboxList.querySelectorAll('input').forEach(cb => cb.addEventListener('change', updateHwSelectedCount));
+    }
+    updateHwSelectedCount();
+
     filterSelect.innerHTML = '<option value="">All students</option>' +
       students.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('');
     if(students.some(s => s.username === currentFilterVal)) filterSelect.value = currentFilterVal;
@@ -3760,6 +4127,11 @@
       skillSets.map(s => `<option value="${esc(s.id)}">${esc(s.skill)} (${s.questionCount} question${s.questionCount===1?'':'s'})</option>`).join('');
     loadSkillSelect.value = '';
 
+    const examSets = await fetchExamsIndex();
+    loadExamSelect.innerHTML = '<option value="">— Or pick an exam instead —</option>' +
+      examSets.map(e => `<option value="${esc(e.id)}">${esc(e.title)} (${e.questionCount} question${e.questionCount===1?'':'s'})</option>`).join('');
+    loadExamSelect.value = '';
+
     if(hwQuestionsContainer.children.length === 0){
       addQuestionBlock(null, hwQuestionsContainer);
     }
@@ -3767,9 +4139,26 @@
     await renderAdminHomework();
   }
 
+  function updateHwSelectedCount(){
+    const checkboxList = document.getElementById('hwStudentCheckboxList');
+    const countEl = document.getElementById('hwSelectedCount');
+    if(!checkboxList || !countEl) return;
+    const count = checkboxList.querySelectorAll('input:checked').length;
+    countEl.textContent = `${count} selected`;
+  }
+  document.getElementById('hwSelectAllBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#hwStudentCheckboxList input').forEach(cb => cb.checked = true);
+    updateHwSelectedCount();
+  });
+  document.getElementById('hwSelectNoneBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#hwStudentCheckboxList input').forEach(cb => cb.checked = false);
+    updateHwSelectedCount();
+  });
+
   document.getElementById('hwLoadSkillSelect').addEventListener('change', async (e)=>{
     const skillId = e.target.value;
     if(!skillId) return;
+    document.getElementById('hwLoadExamSelect').value = '';
     const select = e.target;
     const originalLabel = select.options[select.selectedIndex].textContent;
     select.disabled = true;
@@ -3781,6 +4170,24 @@
     match.questions.forEach(q => addQuestionBlock(q, hwQuestionsContainer));
     if(!document.getElementById('hwTitleInput').value.trim()){
       document.getElementById('hwTitleInput').value = match.skill;
+    }
+  });
+
+  document.getElementById('hwLoadExamSelect').addEventListener('change', async (e)=>{
+    const examId = e.target.value;
+    if(!examId) return;
+    document.getElementById('hwLoadSkillSelect').value = '';
+    const select = e.target;
+    const originalLabel = select.options[select.selectedIndex].textContent;
+    select.disabled = true;
+    const match = await dbGet('exams', examId);
+    select.disabled = false;
+    if(!match){ alert('Could not load that exam — please try again.'); return; }
+
+    hwQuestionsContainer.innerHTML = '';
+    match.questions.forEach(q => addQuestionBlock(q, hwQuestionsContainer));
+    if(!document.getElementById('hwTitleInput').value.trim()){
+      document.getElementById('hwTitleInput').value = match.title;
     }
   });
 
@@ -3857,15 +4264,15 @@
   }
 
   document.getElementById('saveHwBtn').addEventListener('click', async ()=>{
-    const username = document.getElementById('hwStudentSelect').value;
+    const usernames = Array.from(document.querySelectorAll('#hwStudentCheckboxList input:checked')).map(cb => cb.value);
     const title = document.getElementById('hwTitleInput').value.trim();
     const dueDate = document.getElementById('hwDateInput').value;
     const timeLimitRaw = document.getElementById('hwTimeLimitInput').value;
     const timeLimit = timeLimitRaw ? parseInt(timeLimitRaw, 10) : null;
     const questions = collectQuestionsFrom(hwQuestionsContainer);
 
-    if(!username || !title){
-      alert('Choose a student and give the homework a title.');
+    if(usernames.length === 0 || !title){
+      alert('Choose at least one student and give the homework a title.');
       return;
     }
     if(questions.length === 0){
@@ -3874,26 +4281,37 @@
     }
 
     const btn = document.getElementById('saveHwBtn');
-    btn.disabled = true; btn.textContent = 'Assigning…';
-    const id = generateId('hw');
-    const ok = await saveHomeworkAssignment(id, {
-      username, title, dueDate, timeLimit, questions,
-      status: 'assigned', score: null, submittedAt: null,
-      ts: new Date().toISOString()
-    });
+    btn.disabled = true;
+    let successCount = 0;
+    for(const username of usernames){
+      btn.textContent = `Assigning… (${successCount + 1}/${usernames.length})`;
+      const id = generateId('hw');
+      const ok = await saveHomeworkAssignment(id, {
+        username, title, dueDate, timeLimit, questions,
+        status: 'assigned', score: null, submittedAt: null,
+        ts: new Date().toISOString()
+      });
+      if(ok) successCount++;
+    }
     btn.disabled = false; btn.textContent = 'Assign homework';
 
-    if(ok){
+    if(successCount === usernames.length){
       document.getElementById('hwTitleInput').value = '';
       document.getElementById('hwDateInput').value = '';
       document.getElementById('hwTimeLimitInput').value = '';
       document.getElementById('hwLoadSkillSelect').value = '';
+      document.getElementById('hwLoadExamSelect').value = '';
+      document.querySelectorAll('#hwStudentCheckboxList input').forEach(cb => cb.checked = false);
+      updateHwSelectedCount();
       hwQuestionsContainer.innerHTML = '';
       addQuestionBlock(null, hwQuestionsContainer);
       await renderAdminHomework();
-      await refreshDashboardIfSignedInAs(username);
+      for(const username of usernames){
+        await refreshDashboardIfSignedInAs(username);
+      }
     } else {
-      alert('Could not assign the homework — please try again.');
+      alert(`Assigned to ${successCount} of ${usernames.length} students — check your connection and try again for the rest.`);
+      await renderAdminHomework();
     }
   });
 
@@ -4913,13 +5331,29 @@
     const streakEl = document.getElementById('streakCount');
     if(streakEl) streakEl.textContent = streak;
 
-    const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts()]);
+    const [hw, attempts, fullHw] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts(), fetchAllHomework()]);
     const uname = currentStudent.username.trim().toLowerCase();
     const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
     const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
+    // Full (with per-question results) versions, needed for topic mastery below —
+    // the lightweight list above is enough for everything else.
+    const myFullHw = fullHw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
     const totalCompleted = mineHw.length + mineAttempts.length;
     const allPct = [...mineHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
     const bestPct = allPct.length ? Math.max(...allPct) : 0;
+
+    // ---- Level & XP ----
+    const perfectCount = allPct.filter(p => p >= 100).length;
+    const xp = totalCompleted * 10 + perfectCount * 15 + streak * 2;
+    const level = Math.floor(xp / 100) + 1;
+    const xpIntoLevel = xp % 100;
+    const levelBadge = document.getElementById('levelBadge');
+    if(levelBadge){
+      levelBadge.textContent = level;
+      document.getElementById('levelNum').textContent = level;
+      document.getElementById('levelXpText').textContent = `${xp} XP`;
+      document.getElementById('levelBarFill').style.width = xpIntoLevel + '%';
+    }
 
     const chartWrap = document.getElementById('myProgressChartWrap');
     if(chartWrap){
@@ -4964,6 +5398,92 @@
           <div class="label">${esc(b.label)}</div>
         </div>
       `).join('');
+    }
+
+    // ---- Topic mastery: per-lesson accuracy across every graded question ----
+    const masteryWrap = document.getElementById('topicMasteryWrap');
+    if(masteryWrap){
+      const lessonStats = {};
+      function tallyResults(items){
+        items.forEach(item=>{
+          if(!Array.isArray(item.results)) return;
+          item.results.forEach(r=>{
+            const lesson = (r.lesson || 'General').trim();
+            if(!lessonStats[lesson]) lessonStats[lesson] = { correct:0, total:0 };
+            lessonStats[lesson].total++;
+            if(r.correct) lessonStats[lesson].correct++;
+          });
+        });
+      }
+      tallyResults(myFullHw);
+      tallyResults(mineAttempts);
+
+      const lessons = Object.entries(lessonStats).sort((a,b)=> b[1].total - a[1].total).slice(0, 8);
+      if(lessons.length === 0){
+        masteryWrap.innerHTML = '<div class="admin-empty">No graded questions yet — this fills in as you practice.</div>';
+      } else {
+        masteryWrap.innerHTML = lessons.map(([lesson, s])=>{
+          const pct = Math.round((s.correct / s.total) * 100);
+          const color = pct >= 75 ? '#39D98A' : (pct >= 50 ? 'var(--signal)' : 'var(--ember)');
+          return `
+            <div class="mastery-row">
+              <span class="mastery-lesson" title="${esc(lesson)}">${esc(lesson)}</span>
+              <div class="mastery-bar-outer"><div class="mastery-bar-fill" style="width:${pct}%; background:${color};"></div></div>
+              <span class="mastery-pct">${pct}%</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // ---- Activity heatmap: last 12 weeks, GitHub-style ----
+    const heatmapWrap = document.getElementById('activityHeatmapWrap');
+    if(heatmapWrap){
+      const activityCounts = {};
+      myFullHw.forEach(h=>{
+        if(h.submittedAt){ const d = new Date(h.submittedAt).toDateString(); activityCounts[d] = (activityCounts[d]||0) + 1; }
+      });
+      mineAttempts.forEach(a=>{
+        if(a.ts){ const d = new Date(a.ts).toDateString(); activityCounts[d] = (activityCounts[d]||0) + 1; }
+      });
+
+      const today = new Date();
+      const days = [];
+      for(let i = 83; i >= 0; i--){
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = d.toDateString();
+        const count = activityCounts[key] || 0;
+        const level = count === 0 ? 0 : count === 1 ? 1 : count === 2 ? 2 : 3;
+        days.push({ date: d, level, count });
+      }
+      const startDow = days[0].date.getDay();
+      const padded = Array(startDow).fill(null).concat(days);
+      const weeks = [];
+      for(let i = 0; i < padded.length; i += 7){
+        weeks.push(padded.slice(i, i + 7));
+      }
+
+      heatmapWrap.innerHTML = `
+        <div class="heatmap-grid">
+          ${weeks.map(week => `
+            <div class="heatmap-week">
+              ${week.map(day => day
+                ? `<div class="heatmap-cell ${day.level > 0 ? 'level-'+day.level : ''}" title="${day.date.toLocaleDateString()}: ${day.count} activit${day.count===1?'y':'ies'}"></div>`
+                : `<div class="heatmap-cell" style="visibility:hidden;"></div>`
+              ).join('')}
+            </div>
+          `).join('')}
+        </div>
+        <div class="heatmap-legend">
+          <span>Less</span>
+          <div class="heatmap-cell"></div>
+          <div class="heatmap-cell level-1"></div>
+          <div class="heatmap-cell level-2"></div>
+          <div class="heatmap-cell level-3"></div>
+          <span>More</span>
+        </div>
+      `;
     }
   }
 
@@ -5139,11 +5659,23 @@
         <div class="exam-score">
           ${feedback}
           <div class="big-num">${pct}%</div>
-          <p style="color:var(--muted);margin-bottom:24px;">${correctCount} of ${hw.questions.length} correct on “${esc(hw.title)}”.${ok ? '' : ' (Could not save — check your connection and try again.)'}</p>
+          <p style="color:var(--muted);margin-bottom:24px;">${correctCount} of ${hw.questions.length} correct on “${esc(hw.title)}”.</p>
           ${reviewHtml}
+          ${ok
+            ? `<p style="color:var(--muted);font-size:0.82rem;margin-top:-4px;margin-bottom:24px;">Saved to your account.</p>`
+            : `<div class="retake-notice" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);">⚠ This result did NOT save — check your connection and tap "Retry save" below, or Mr. Mohamed Ibrahim won't see it.</div>
+               <button class="btn btn-primary" id="retrySaveBtn" style="width:100%;margin-bottom:10px;">Retry save</button>`
+          }
           <button class="btn btn-primary" id="examCloseBtn" style="width:100%;">Close</button>
         </div>
       `;
+      const retryBtn = document.getElementById('retrySaveBtn');
+      if(retryBtn){
+        retryBtn.addEventListener('click', async ()=>{
+          retryBtn.disabled = true; retryBtn.textContent = 'Retrying…';
+          await submitHomework();
+        });
+      }
       document.getElementById('examCloseBtn').addEventListener('click', async ()=>{
         examModal.classList.remove('open');
         await renderStudentHomework();
@@ -5341,6 +5873,7 @@
       if(btn.dataset.dashtab === 'tabSkills') renderStudentSkills();
       if(btn.dataset.dashtab === 'tabHw'){ renderStudentHomework(); renderWeakPoints(); }
       if(btn.dataset.dashtab === 'tabMistakes') renderMistakeHistory();
+      if(btn.dataset.dashtab === 'tabGraph' && typeof drawGraph === 'function') drawGraph();
       if(btn.dataset.dashtab === 'tabOverview') renderOverview();
     });
   });
@@ -5796,9 +6329,13 @@
     return digits ? `+20${digits}` : '';
   }
 
+  let bulkWaQueue = [];
+  let bulkWaIndex = 0;
+
   async function renderAdminReminders(){
     const wrap = document.getElementById('remindersListWrap');
     wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
+    document.getElementById('bulkWaStepper').style.display = 'none';
 
     const [allHw, allAttempts, allStudents] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts(), fetchAllStudents()]);
     const studentsByUsername = {};
@@ -5822,12 +6359,17 @@
     const pending = [...pendingHw, ...pendingAttempts];
     pending.sort((a,b)=> new Date(a.retakeDeadline || 0) - new Date(b.retakeDeadline || 0));
 
+    const messageAllBtn = document.getElementById('messageAllBtn');
+
     if(pending.length === 0){
       wrap.innerHTML = '<div class="admin-empty">No pending retakes right now — nice and clear.</div>';
+      messageAllBtn.style.display = 'none';
+      bulkWaQueue = [];
       return;
     }
 
     wrap.innerHTML = '';
+    bulkWaQueue = [];
     pending.forEach(item=>{
       const student = studentsByUsername[(item.username||'').trim().toLowerCase()];
       const overdue = item.retakeDeadline && new Date(item.retakeDeadline) < new Date();
@@ -5842,6 +6384,8 @@
       const message = `Hi, please ask ${item.username} to retake their ${item.kind.toLowerCase()} "${item.title}" — it's ${overdue ? 'overdue' : `due by ${deadlineLabel}`}.`;
       const waLink = parentDigits ? `https://wa.me/${parentDigits}?text=${encodeURIComponent(message)}` : null;
 
+      if(waLink) bulkWaQueue.push({ username: item.username, title: item.title, waLink });
+
       row.innerHTML = `
         <div class="reminder-info">
           <div class="name">${esc(item.username)} — ${esc(item.title)}</div>
@@ -5855,7 +6399,48 @@
       `;
       wrap.appendChild(row);
     });
+
+    messageAllBtn.style.display = bulkWaQueue.length > 1 ? 'inline-flex' : 'none';
+    if(messageAllBtn) messageAllBtn.textContent = `📤 Message all pending (${bulkWaQueue.length})`;
   }
+
+  // Steps through every pending reminder one at a time — WhatsApp can't send
+  // to multiple people in one action from a browser link, so this opens each
+  // parent's chat pre-filled in its own tab as the admin clicks "Next".
+  function showBulkWaStep(){
+    const stepper = document.getElementById('bulkWaStepper');
+    if(bulkWaIndex >= bulkWaQueue.length){
+      stepper.style.display = 'none';
+      return;
+    }
+    const item = bulkWaQueue[bulkWaIndex];
+    document.getElementById('bulkWaIndex').textContent = bulkWaIndex + 1;
+    document.getElementById('bulkWaTotal').textContent = bulkWaQueue.length;
+    document.getElementById('bulkWaName').textContent = `${item.username} — ${item.title}`;
+    stepper.style.display = 'flex';
+  }
+
+  document.getElementById('messageAllBtn').addEventListener('click', ()=>{
+    if(bulkWaQueue.length === 0) return;
+    bulkWaIndex = 0;
+    showBulkWaStep();
+    window.open(bulkWaQueue[0].waLink, '_blank', 'noopener');
+  });
+  document.getElementById('bulkWaNextBtn').addEventListener('click', ()=>{
+    bulkWaIndex++;
+    if(bulkWaIndex < bulkWaQueue.length){
+      window.open(bulkWaQueue[bulkWaIndex].waLink, '_blank', 'noopener');
+    }
+    showBulkWaStep();
+  });
+  document.getElementById('bulkWaSkipBtn').addEventListener('click', ()=>{
+    bulkWaIndex++;
+    showBulkWaStep();
+  });
+  document.getElementById('bulkWaDoneBtn').addEventListener('click', ()=>{
+    bulkWaIndex = bulkWaQueue.length;
+    document.getElementById('bulkWaStepper').style.display = 'none';
+  });
 
   document.getElementById('refreshReminders').addEventListener('click', ()=>{ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminReminders(); });
   document.getElementById('mistakesFilterSelect').addEventListener('change', renderAdminMistakesTable);
@@ -6026,10 +6611,35 @@
           ${!isAssistant ? `<button class="student-action-btn decline-btn" ${status==='declined' ? 'disabled' : ''}>Decline</button>` : ''}
           <button class="student-action-btn analysis-btn">Analysis</button>
           ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="student-action-btn" style="color:#39D98A;border-color:#39D98A;text-decoration:none;display:inline-block;">WhatsApp</a>` : ''}
+          <button class="student-action-btn parent-link-btn" title="Get a shareable, read-only link for this student's parent — no login needed">👨‍👩‍👧 Parent link</button>
           ${!isAssistant ? `<button class="student-action-btn reset-pass-btn" title="Passwords are stored securely and can't be viewed — set a new one instead">Reset password</button>` : ''}
           ${!isAssistant ? `<button class="student-action-btn delete-student-btn">Delete</button>` : ''}
         </td>
       `;
+      tr.querySelector('.parent-link-btn').addEventListener('click', async ()=>{
+        const btn = tr.querySelector('.parent-link-btn');
+        btn.disabled = true; btn.textContent = 'Getting link…';
+        let token = s.parentViewToken;
+        if(!token){
+          // Students registered before this feature existed don't have a
+          // token yet — generate and save one now, the first time it's needed.
+          token = generateRandomToken();
+          const ok = await dbSet('students', studentKey(s.username), { ...s, parentViewToken: token });
+          if(!ok){
+            btn.disabled = false; btn.textContent = '👨‍👩‍👧 Parent link';
+            alert('Could not create the link — check your connection and try again.');
+            return;
+          }
+        }
+        const url = `${window.location.origin}${window.location.pathname}?parentView=${token}`;
+        btn.disabled = false; btn.textContent = '👨‍👩‍👧 Parent link';
+        try{
+          await navigator.clipboard.writeText(url);
+          alert(`Link copied! Send this to ${s.username}'s parent — no account needed:\n\n${url}`);
+        }catch(err){
+          prompt(`Copy this link to send to ${s.username}'s parent (no account needed):`, url);
+        }
+      });
       tr.querySelector('.reset-pass-btn')?.addEventListener('click', async ()=>{
         const newPass = prompt(`Set a new password for "${s.username}". They'll need to use this the next time they sign in.\n\n(Passwords are stored securely, so the old one can't be shown — only reset.)`, '');
         if(newPass === null) return;
@@ -6087,7 +6697,267 @@
       tab.addEventListener('click', renderAdminStudents);
     }
   });
+
+  /* ---------------- GRAPHING TOOL (safe expression parser + canvas plot) ----------------
+     No eval() — a small hand-written tokenizer + recursive-descent parser that
+     understands +,-,*,/,^, parentheses, implicit multiplication (2x, x(x+1)),
+     unary minus, sin/cos/tan/asin/acos/atan/sqrt/abs/log/ln/exp, and pi/e. */
+  const GRAPH_FUNCS = {
+    sin: Math.sin, cos: Math.cos, tan: Math.tan,
+    asin: Math.asin, acos: Math.acos, atan: Math.atan,
+    sqrt: Math.sqrt, abs: Math.abs,
+    log: (v)=> Math.log(v)/Math.LN10, ln: Math.log,
+    exp: Math.exp
+  };
+  const GRAPH_CONSTS = { pi: Math.PI, e: Math.E };
+
+  function tokenizeExpr(str){
+    const tokens = [];
+    let i = 0;
+    while(i < str.length){
+      const c = str[i];
+      if(/\s/.test(c)){ i++; continue; }
+      if(/[0-9.]/.test(c)){
+        let num = '';
+        while(i < str.length && /[0-9.]/.test(str[i])){ num += str[i]; i++; }
+        tokens.push({ type:'num', value: parseFloat(num) });
+        continue;
+      }
+      if(/[a-zA-Z]/.test(c)){
+        let name = '';
+        while(i < str.length && /[a-zA-Z]/.test(str[i])){ name += str[i]; i++; }
+        tokens.push({ type:'ident', value: name.toLowerCase() });
+        continue;
+      }
+      if('+-*/^(),'.includes(c)){
+        tokens.push({ type:'op', value: c });
+        i++;
+        continue;
+      }
+      throw new Error(`Unexpected character "${c}"`);
+    }
+    return tokens;
+  }
+
+  function parseExprToFn(str){
+    const tokens = tokenizeExpr(str);
+    let pos = 0;
+    const peek = () => tokens[pos];
+    const next = () => tokens[pos++];
+
+    function parseExpression(){
+      let node = parseTerm();
+      while(peek() && peek().type === 'op' && (peek().value === '+' || peek().value === '-')){
+        const op = next().value; const right = parseTerm(); const left = node;
+        node = (x) => op === '+' ? left(x) + right(x) : left(x) - right(x);
+      }
+      return node;
+    }
+    function parseTerm(){
+      let node = parseImplicit();
+      while(peek() && peek().type === 'op' && (peek().value === '*' || peek().value === '/')){
+        const op = next().value; const right = parseImplicit(); const left = node;
+        node = (x) => op === '*' ? left(x) * right(x) : left(x) / right(x);
+      }
+      return node;
+    }
+    function parseImplicit(){
+      let node = parseUnary();
+      while(peek() && (peek().type === 'num' || peek().type === 'ident' || (peek().type === 'op' && peek().value === '('))){
+        const right = parseUnary(); const left = node;
+        node = (x) => left(x) * right(x);
+      }
+      return node;
+    }
+    function parseUnary(){
+      if(peek() && peek().type === 'op' && peek().value === '-'){
+        next();
+        const inner = parseUnary();
+        return (x) => -inner(x);
+      }
+      return parsePower();
+    }
+    function parsePower(){
+      let node = parsePrimary();
+      if(peek() && peek().type === 'op' && peek().value === '^'){
+        next();
+        const right = parseUnary(); const left = node; // parseUnary lets exponents like x^-2 work
+        node = (x) => Math.pow(left(x), right(x));
+      }
+      return node;
+    }
+    function parsePrimary(){
+      const tok = peek();
+      if(!tok) throw new Error('unexpected end of expression');
+      if(tok.type === 'num'){ next(); return () => tok.value; }
+      if(tok.type === 'op' && tok.value === '('){
+        next();
+        const node = parseExpression();
+        if(!peek() || peek().value !== ')') throw new Error('missing closing parenthesis');
+        next();
+        return node;
+      }
+      if(tok.type === 'ident'){
+        next();
+        const name = tok.value;
+        if(name === 'x') return (x) => x;
+        if(name in GRAPH_CONSTS){ const v = GRAPH_CONSTS[name]; return () => v; }
+        if(name in GRAPH_FUNCS){
+          if(!peek() || peek().value !== '(') throw new Error(`expected "(" after ${name}`);
+          next();
+          const arg = parseExpression();
+          if(!peek() || peek().value !== ')') throw new Error('missing closing parenthesis');
+          next();
+          const fn = GRAPH_FUNCS[name];
+          return (x) => fn(arg(x));
+        }
+        throw new Error(`unknown name "${name}"`);
+      }
+      throw new Error(`unexpected "${tok.value}"`);
+    }
+
+    const fn = parseExpression();
+    if(pos < tokens.length) throw new Error('unexpected extra input');
+    fn(1); // sanity check it actually runs
+    return fn;
+  }
+
+  function niceStep(range){
+    const raw = range / 10;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    const step = norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10;
+    return step * mag;
+  }
+
+  let graphView = { xMin:-10, xMax:10, yMin:-6, yMax:6 };
+  let graphFn = null;
+
+  function drawGraph(){
+    const canvas = document.getElementById('graphCanvas');
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0B0D12';
+    ctx.fillRect(0, 0, W, H);
+
+    const { xMin, xMax, yMin, yMax } = graphView;
+    const sx = (x) => (x - xMin) / (xMax - xMin) * W;
+    const sy = (y) => H - (y - yMin) / (yMax - yMin) * H;
+
+    const xStep = niceStep(xMax - xMin);
+    const yStep = niceStep(yMax - yMin);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+    ctx.lineWidth = 1;
+    for(let gx = Math.ceil(xMin/xStep)*xStep; gx <= xMax; gx += xStep){
+      ctx.beginPath(); ctx.moveTo(sx(gx), 0); ctx.lineTo(sx(gx), H); ctx.stroke();
+    }
+    for(let gy = Math.ceil(yMin/yStep)*yStep; gy <= yMax; gy += yStep){
+      ctx.beginPath(); ctx.moveTo(0, sy(gy)); ctx.lineTo(W, sy(gy)); ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(sx(0), 0); ctx.lineTo(sx(0), H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, sy(0)); ctx.lineTo(W, sy(0)); ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '11px monospace';
+    for(let gx = Math.ceil(xMin/xStep)*xStep; gx <= xMax; gx += xStep){
+      if(Math.abs(gx) > xStep/10) ctx.fillText(String(Math.round(gx*100)/100), sx(gx)+3, sy(0)+12);
+    }
+    for(let gy = Math.ceil(yMin/yStep)*yStep; gy <= yMax; gy += yStep){
+      if(Math.abs(gy) > yStep/10) ctx.fillText(String(Math.round(gy*100)/100), sx(0)+4, sy(gy)-3);
+    }
+
+    if(!graphFn) return;
+    ctx.strokeStyle = '#4C6FFF';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let started = false;
+    for(let i = 0; i <= W; i++){
+      const x = xMin + (xMax - xMin) * (i / W);
+      let y;
+      try{ y = graphFn(x); }catch(e){ started = false; continue; }
+      if(!isFinite(y)){ started = false; continue; }
+      const py = sy(y);
+      if(py < -H*3 || py > H*4){ started = false; continue; }
+      if(!started){ ctx.moveTo(sx(x), py); started = true; }
+      else ctx.lineTo(sx(x), py);
+    }
+    ctx.stroke();
+  }
+
+  function plotGraphFromInput(){
+    const input = document.getElementById('graphFnInput');
+    const errorBox = document.getElementById('graphError');
+    if(!input) return;
+    try{
+      graphFn = parseExprToFn(input.value.trim() || 'x');
+      errorBox.style.display = 'none';
+      drawGraph();
+    }catch(err){
+      errorBox.textContent = `Couldn't understand that — ${err.message}. Try things like x^2-4, sin(x), or sqrt(x+2).`;
+      errorBox.style.display = 'block';
+    }
+  }
+
+  const graphPlotBtn = document.getElementById('graphPlotBtn');
+  if(graphPlotBtn){
+    graphPlotBtn.addEventListener('click', plotGraphFromInput);
+    document.getElementById('graphFnInput').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') plotGraphFromInput(); });
+    document.getElementById('graphZoomInBtn').addEventListener('click', ()=>{
+      const { xMin, xMax, yMin, yMax } = graphView;
+      const cx = (xMin+xMax)/2, cy = (yMin+yMax)/2, w = (xMax-xMin)*0.35, h = (yMax-yMin)*0.35;
+      graphView = { xMin: cx-w, xMax: cx+w, yMin: cy-h, yMax: cy+h };
+      drawGraph();
+    });
+    document.getElementById('graphZoomOutBtn').addEventListener('click', ()=>{
+      const { xMin, xMax, yMin, yMax } = graphView;
+      const cx = (xMin+xMax)/2, cy = (yMin+yMax)/2, w = (xMax-xMin)*0.65, h = (yMax-yMin)*0.65;
+      graphView = { xMin: cx-w, xMax: cx+w, yMin: cy-h, yMax: cy+h };
+      drawGraph();
+    });
+    document.getElementById('graphResetBtn').addEventListener('click', ()=>{
+      graphView = { xMin:-10, xMax:10, yMin:-6, yMax:6 };
+      drawGraph();
+    });
+
+    const graphCanvas = document.getElementById('graphCanvas');
+    let graphDragging = false, lastX = 0, lastY = 0;
+    function panBy(dx, dy, rectW, rectH){
+      const scaleX = (graphView.xMax - graphView.xMin) / rectW;
+      const scaleY = (graphView.yMax - graphView.yMin) / rectH;
+      graphView.xMin -= dx * scaleX; graphView.xMax -= dx * scaleX;
+      graphView.yMin += dy * scaleY; graphView.yMax += dy * scaleY;
+      drawGraph();
+    }
+    graphCanvas.addEventListener('mousedown', (e)=>{ graphDragging = true; lastX = e.clientX; lastY = e.clientY; });
+    window.addEventListener('mouseup', ()=>{ graphDragging = false; });
+    window.addEventListener('mousemove', (e)=>{
+      if(!graphDragging) return;
+      const dx = e.clientX - lastX, dy = e.clientY - lastY;
+      lastX = e.clientX; lastY = e.clientY;
+      const rect = graphCanvas.getBoundingClientRect();
+      panBy(dx, dy, rect.width, rect.height);
+    });
+    graphCanvas.addEventListener('touchstart', (e)=>{ const t = e.touches[0]; graphDragging = true; lastX = t.clientX; lastY = t.clientY; }, {passive:true});
+    graphCanvas.addEventListener('touchend', ()=>{ graphDragging = false; });
+    graphCanvas.addEventListener('touchmove', (e)=>{
+      if(!graphDragging) return;
+      const t = e.touches[0];
+      const dx = t.clientX - lastX, dy = t.clientY - lastY;
+      lastX = t.clientX; lastY = t.clientY;
+      const rect = graphCanvas.getBoundingClientRect();
+      panBy(dx, dy, rect.width, rect.height);
+    }, {passive:true});
+
+    plotGraphFromInput(); // draw the default example on load
+  }
 </script>
 
+</div>
 </body>
 </html>
