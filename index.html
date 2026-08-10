@@ -1039,6 +1039,31 @@
     border-radius:8px;margin-top:10px;border:1px solid var(--line);
     object-fit:cover;
   }
+  .paste-hint{
+    display:block; color:var(--muted); font-size:0.74rem; margin-top:6px;
+  }
+
+  .option-row{align-items:flex-start;}
+  .option-row input[type="radio"]{margin-top:9px;}
+  .option-text-wrap{flex:1; display:flex; flex-direction:column; gap:6px;}
+  .option-image-controls{display:flex; align-items:center; gap:8px;}
+  .option-image-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    background:none; border:1px solid var(--line); color:var(--muted);
+    padding:5px 10px; border-radius:6px; font-size:0.74rem; cursor:pointer; flex-shrink:0;
+  }
+  .option-image-btn:hover{color:var(--text); border-color:rgba(255,255,255,0.3);}
+  .option-image-btn input[type="file"]{display:none;}
+  .remove-option-image-btn{
+    background:none; border:1px solid var(--line); color:var(--muted);
+    padding:5px 9px; border-radius:6px; font-size:0.72rem; cursor:pointer; flex-shrink:0;
+    display:none;
+  }
+  .remove-option-image-btn:hover{color:var(--ember); border-color:var(--ember);}
+  .q-option-image-preview{
+    display:none; max-width:90px; max-height:60px;
+    border-radius:6px; border:1px solid var(--line); object-fit:cover;
+  }
 
   /* ---------- public practice exams ---------- */
   .exam-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
@@ -1110,8 +1135,10 @@
   }
   .exam-option:hover{border-color:rgba(76,111,255,0.5);}
   .exam-option.selected{border-color:var(--signal);background:rgba(76,111,255,0.08);}
-  .exam-option input{accent-color:var(--signal);grid-column:1;justify-self:start;}
+  .exam-option input{accent-color:var(--signal);grid-column:1;justify-self:start;align-self:start;margin-top:4px;}
   .exam-option span{grid-column:2;text-align:center;}
+  .exam-option .option-content{grid-column:2; display:flex; flex-direction:column; align-items:center; gap:8px;}
+  .exam-option .option-content img{max-width:100%; max-height:160px; border-radius:6px; object-fit:contain;}
   .exam-nav{display:flex;justify-content:space-between;margin-top:22px;gap:12px;}
   .q-nav-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
   .q-nav-btn{
@@ -1709,7 +1736,6 @@
   <!-- HERO -->
   <section class="hero wrap">
     <div>
-      <div class="eyebrow">3,000+ students taught</div>
       <h1>Master math with a plan that <em>works</em>.</h1>
       <p class="lead">One-on-one and small-group math courses for EST, SAT, and ACT — taught by Mr. Mohamed Ibrahim, with clear explanations and real practice, not just formulas to memorize.</p>
       <div class="hero-stats">
@@ -3378,6 +3404,9 @@
     block.className = 'question-block';
     block.dataset.qid = qCounter;
     block._imageData = (data && data.image) || null;
+    block._optionImages = (data && Array.isArray(data.optionImages)) ? data.optionImages.slice(0, 4) : [null, null, null, null];
+    while(block._optionImages.length < 4) block._optionImages.push(null);
+
     block.innerHTML = `
       <button type="button" class="remove-q-btn" aria-label="Remove question">✕</button>
       <span class="q-num">Question ${container.children.length + 1}</span>
@@ -3387,6 +3416,7 @@
           <input type="file" accept="image/*" class="q-image-input">
           <button type="button" class="remove-image-btn" style="${block._imageData ? '' : 'display:none;'}">Remove image</button>
         </div>
+        <span class="paste-hint">📋 You can also just paste (Ctrl+V) a copied image anywhere in this question box.</span>
         <img class="q-image-preview" style="${block._imageData ? 'display:block;' : ''}" src="${block._imageData || ''}">
       </div>
       <div class="field-row" style="margin-bottom:14px;">
@@ -3398,12 +3428,24 @@
       <div class="field-row" style="margin-bottom:14px;">
         <input type="text" class="q-text" placeholder="Question text (optional if you added an image)" value="${data ? esc(data.text || '') : ''}">
       </div>
-      ${[0,1,2,3].map(i => `
+      ${[0,1,2,3].map(i => {
+        const optImg = block._optionImages[i];
+        return `
         <div class="option-row">
           <input type="radio" name="${groupName}" class="q-correct" value="${i}" ${data && data.correct===i ? 'checked' : ''}>
-          <input type="text" class="q-option" placeholder="Option ${i+1}" value="${data && data.options[i] ? esc(data.options[i]) : ''}">
+          <div class="option-text-wrap">
+            <input type="text" class="q-option" placeholder="Option ${i+1} (optional if you add an image)" value="${data && data.options[i] ? esc(data.options[i]) : ''}">
+            <div class="option-image-controls">
+              <label class="option-image-btn">📷 ${optImg ? 'Change' : 'Add'} image
+                <input type="file" accept="image/*" class="q-option-image-input" data-idx="${i}">
+              </label>
+              <button type="button" class="remove-option-image-btn" data-idx="${i}" style="${optImg ? 'display:inline-block;' : ''}">✕ Remove</button>
+              <img class="q-option-image-preview" data-idx="${i}" style="${optImg ? 'display:block;' : ''}" src="${optImg || ''}">
+            </div>
+          </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     `;
     block.querySelector('.remove-q-btn').addEventListener('click', ()=>{
       block.remove();
@@ -3414,8 +3456,7 @@
     const preview = block.querySelector('.q-image-preview');
     const removeImageBtn = block.querySelector('.remove-image-btn');
 
-    fileInput.addEventListener('change', async (e)=>{
-      const file = e.target.files[0];
+    async function setQuestionImageFromFile(file){
       if(!file) return;
       try{
         const dataUrl = await resizeImageToDataUrl(file, 700, 0.7);
@@ -3426,13 +3467,75 @@
       }catch(err){
         alert('Could not load that image — try a different file.');
       }
-    });
+    }
+
+    fileInput.addEventListener('change', (e)=> setQuestionImageFromFile(e.target.files[0]));
     removeImageBtn.addEventListener('click', ()=>{
       block._imageData = null;
       preview.src = '';
       preview.style.display = 'none';
       removeImageBtn.style.display = 'none';
       fileInput.value = '';
+    });
+
+    // Paste an image anywhere in this question box → becomes the question
+    // image, unless the paste happened inside a specific option's controls
+    // (handled separately below) or the clipboard has no image at all (in
+    // which case normal text pasting is left alone).
+    block.addEventListener('paste', (e)=>{
+      if(e.target.closest('.option-text-wrap')) return; // option paste handler takes it instead
+      const items = (e.clipboardData || window.clipboardData)?.items;
+      if(!items) return;
+      for(const item of items){
+        if(item.type && item.type.startsWith('image/')){
+          e.preventDefault();
+          setQuestionImageFromFile(item.getAsFile());
+          return;
+        }
+      }
+    });
+
+    // Wire each option's image upload, paste, and remove controls.
+    block.querySelectorAll('.option-text-wrap').forEach(wrap=>{
+      const idx = parseInt(wrap.querySelector('.q-option-image-input').dataset.idx, 10);
+      const optFileInput = wrap.querySelector('.q-option-image-input');
+      const optPreview = wrap.querySelector('.q-option-image-preview');
+      const optRemoveBtn = wrap.querySelector('.remove-option-image-btn');
+      const optBtnLabel = wrap.querySelector('.option-image-btn');
+
+      async function setOptionImageFromFile(file){
+        if(!file) return;
+        try{
+          const dataUrl = await resizeImageToDataUrl(file, 400, 0.7);
+          block._optionImages[idx] = dataUrl;
+          optPreview.src = dataUrl;
+          optPreview.style.display = 'block';
+          optRemoveBtn.style.display = 'inline-block';
+          optBtnLabel.innerHTML = `📷 Change image<input type="file" accept="image/*" class="q-option-image-input" data-idx="${idx}">`;
+          optBtnLabel.querySelector('input').addEventListener('change', (e)=> setOptionImageFromFile(e.target.files[0]));
+        }catch(err){
+          alert('Could not load that image — try a different file.');
+        }
+      }
+
+      optFileInput.addEventListener('change', (e)=> setOptionImageFromFile(e.target.files[0]));
+      optRemoveBtn.addEventListener('click', ()=>{
+        block._optionImages[idx] = null;
+        optPreview.src = '';
+        optPreview.style.display = 'none';
+        optRemoveBtn.style.display = 'none';
+      });
+      wrap.addEventListener('paste', (e)=>{
+        const items = (e.clipboardData || window.clipboardData)?.items;
+        if(!items) return;
+        for(const item of items){
+          if(item.type && item.type.startsWith('image/')){
+            e.preventDefault();
+            setOptionImageFromFile(item.getAsFile());
+            return;
+          }
+        }
+      });
     });
 
     container.appendChild(block);
@@ -3452,16 +3555,34 @@
       const text = block.querySelector('.q-text').value.trim();
       const image = block._imageData || null;
       const options = Array.from(block.querySelectorAll('.q-option')).map(i => i.value.trim());
+      const optionImages = (block._optionImages || [null,null,null,null]).slice(0, 4);
       const correctRadio = block.querySelector('.q-correct:checked');
       const correct = correctRadio ? parseInt(correctRadio.value, 10) : null;
-      if((text || image) && options.every(o => o) && correct !== null){
-        questions.push({ lesson: lesson || 'General', text, image, options, correct });
+      const optionsComplete = options.every((o, i) => o || optionImages[i]);
+      if((text || image) && optionsComplete && correct !== null){
+        const hasAnyOptionImage = optionImages.some(Boolean);
+        questions.push({
+          lesson: lesson || 'General', text, image, options, correct,
+          ...(hasAnyOptionImage ? { optionImages } : {})
+        });
       }
     });
     return questions;
   }
 
   function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // For "Your answer / Correct answer" style review lines — shows the
+  // option's text if it has any, otherwise a small thumbnail if that option
+  // was an image, otherwise a plain dash.
+  function formatOptionAnswer(row, index){
+    if(index == null || index < 0) return '—';
+    const text = row.options && row.options[index];
+    if(text) return esc(text);
+    const img = row.optionImages && row.optionImages[index];
+    if(img) return `<img src="${img}" alt="Option ${index+1}" style="max-width:70px;max-height:46px;border-radius:4px;vertical-align:middle;object-fit:contain;">`;
+    return '—';
+  }
 
   document.getElementById('addQuestionBtn').addEventListener('click', ()=> addQuestionBlock(null));
 
@@ -3786,7 +3907,14 @@
       q.options.forEach((opt, i)=>{
         const row = document.createElement('label');
         row.className = 'exam-option' + (answers[current]===i ? ' selected' : '');
-        row.innerHTML = `<input type="radio" name="exam-answer" value="${i}" ${answers[current]===i ? 'checked' : ''}> <span>${esc(opt)}</span>`;
+        const optImg = q.optionImages && q.optionImages[i];
+        row.innerHTML = `
+          <input type="radio" name="exam-answer" value="${i}" ${answers[current]===i ? 'checked' : ''}>
+          <div class="option-content">
+            ${optImg ? `<img src="${optImg}" alt="Option ${i+1}">` : ''}
+            ${opt ? `<span>${esc(opt)}</span>` : ''}
+          </div>
+        `;
         row.addEventListener('click', ()=>{
           answers[current] = i;
           optionsWrap.querySelectorAll('.exam-option').forEach(o=>o.classList.remove('selected'));
@@ -3858,7 +3986,7 @@
             mistakeSaves.push(saveMistake({
               username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: exam.questions.length
             }));
           }
@@ -3868,6 +3996,7 @@
           text: q.text || (q.image ? '(question with image)' : ''),
           image: q.image || null,
           options: q.options,
+          optionImages: q.optionImages || null,
           chosenAnswer: answers[i],
           correctAnswer: q.correct,
           correct: answers[i] === q.correct
@@ -3885,6 +4014,21 @@
         saveSucceeded = attemptResult !== false;
       }
 
+      // Anonymized — just a number, no other students' names or identities.
+      let classAverageHtml = '';
+      if(currentStudent){
+        try{
+          const allAttempts = await fetchAllAttempts();
+          const sameTitle = allAttempts.filter(a => a.examTitle === exam.title && typeof a.pct === 'number');
+          if(sameTitle.length > 1){
+            const avgPct = Math.round(sameTitle.reduce((s,a)=> s + a.pct, 0) / sameTitle.length);
+            const diff = pct - avgPct;
+            const compareText = diff > 0 ? `${diff}% above average 📈` : diff < 0 ? `${Math.abs(diff)}% below average` : 'right at the average';
+            classAverageHtml = `<p style="color:var(--muted);font-size:0.82rem;margin-top:-16px;margin-bottom:20px;">Class average: ${avgPct}% · You're ${compareText}</p>`;
+          }
+        }catch(err){ console.error('Could not compute class average:', err); }
+      }
+
       const feedback = pct >= 75
         ? `<div class="result-feedback happy">🎉 I'm happy — great work on this one!</div>`
         : `<div class="result-feedback sad">😔 I'm sad — let's go over this together next session.</div>`;
@@ -3897,8 +4041,8 @@
               ${r.image ? `<img src="${r.image}" alt="Question image">` : ''}
               <div>${esc(r.text)}</div>
               <div class="score-review-answers">
-                Your answer: <span class="wrong">${esc((r.options && r.options[r.chosenAnswer]) ?? '—')}</span> ·
-                Correct answer: <span class="right">${esc((r.options && r.options[r.correctAnswer]) ?? '—')}</span>
+                Your answer: <span class="wrong">${formatOptionAnswer(r, r.chosenAnswer)}</span> ·
+                Correct answer: <span class="right">${formatOptionAnswer(r, r.correctAnswer)}</span>
               </div>
             </div>
           `).join('')}
@@ -3917,6 +4061,7 @@
           ${feedback}
           <div class="big-num">${pct}%</div>
           <p style="color:var(--muted);margin-bottom:24px;">${correctCount} of ${exam.questions.length} correct on “${esc(exam.title)}”.</p>
+          ${classAverageHtml}
           ${reviewHtml}
           ${savedNoticeHtml}
           ${!saveSucceeded && currentStudent ? `<button class="btn btn-primary" id="retrySaveBtn" style="width:100%;margin-bottom:10px;">Retry save</button>` : ''}
@@ -5454,6 +5599,25 @@
         });
       }
 
+      // Study reminder: nudge them if it's been a couple of days since their
+      // last homework/exam/skill activity.
+      const allActivityDates = [
+        ...mineHw.map(h => h.submittedAt || h.ts).filter(Boolean),
+        ...mineAttempts.map(a => a.ts).filter(Boolean)
+      ].map(d => new Date(d));
+      if(allActivityDates.length > 0){
+        const mostRecent = new Date(Math.max(...allActivityDates));
+        const daysSince = Math.floor((new Date() - mostRecent) / (1000 * 60 * 60 * 24));
+        if(daysSince >= 2){
+          suggestions.push({
+            icon:'⏰', urgent: daysSince >= 4,
+            title: daysSince === 1 ? "It's been a day since you practiced" : `It's been ${daysSince} days since you practiced`,
+            desc:'Jump back in to keep your momentum going.',
+            cta:'Practice skills', tab:'tabSkills'
+          });
+        }
+      }
+
       const weakestLessons = Object.entries(lessonStats)
         .filter(([,s]) => s.total >= 2)
         .map(([lesson, s]) => ({ lesson, pct: Math.round((s.correct / s.total) * 100) }))
@@ -5775,7 +5939,14 @@
       q.options.forEach((opt, i)=>{
         const row = document.createElement('label');
         row.className = 'exam-option' + (answers[current]===i ? ' selected' : '');
-        row.innerHTML = `<input type="radio" name="hw-answer" value="${i}" ${answers[current]===i ? 'checked' : ''}> <span>${esc(opt)}</span>`;
+        const optImg = q.optionImages && q.optionImages[i];
+        row.innerHTML = `
+          <input type="radio" name="hw-answer" value="${i}" ${answers[current]===i ? 'checked' : ''}>
+          <div class="option-content">
+            ${optImg ? `<img src="${optImg}" alt="Option ${i+1}">` : ''}
+            ${opt ? `<span>${esc(opt)}</span>` : ''}
+          </div>
+        `;
         row.addEventListener('click', ()=>{
           answers[current] = i;
           optionsWrap.querySelectorAll('.exam-option').forEach(o=>o.classList.remove('selected'));
@@ -5837,6 +6008,7 @@
         text: q.text || (q.image ? '(question with image)' : ''),
         image: q.image || null,
         options: q.options,
+        optionImages: q.optionImages || null,
         chosenAnswer: answers[i],
         correctAnswer: q.correct,
         correct: answers[i] === q.correct
@@ -5849,7 +6021,7 @@
             saveMistake({
               username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: hw.questions.length
             });
           }
@@ -5867,6 +6039,19 @@
         retakeRequired: hasMistakes, retakeDeadline
       });
 
+      // Anonymized — just a number, no other students' names or identities.
+      let classAverageHtml = '';
+      try{
+        const allHw = await fetchAllHomework();
+        const sameTitle = allHw.filter(h => h.title === hw.title && h.status === 'completed' && h.score && typeof h.score.pct === 'number');
+        if(sameTitle.length > 1){
+          const avgPct = Math.round(sameTitle.reduce((s,h)=> s + h.score.pct, 0) / sameTitle.length);
+          const diff = pct - avgPct;
+          const compareText = diff > 0 ? `${diff}% above average 📈` : diff < 0 ? `${Math.abs(diff)}% below average` : 'right at the average';
+          classAverageHtml = `<p style="color:var(--muted);font-size:0.82rem;margin-top:-16px;margin-bottom:20px;">Class average: ${avgPct}% · You're ${compareText}</p>`;
+        }
+      }catch(err){ console.error('Could not compute class average:', err); }
+
       const feedback = pct >= 75
         ? `<div class="result-feedback happy">🎉 I'm happy — great work on this one!</div>`
         : `<div class="result-feedback sad">😔 I'm sad — let's go over this together next session.</div>`;
@@ -5879,8 +6064,8 @@
               ${r.image ? `<img src="${r.image}" alt="Question image">` : ''}
               <div>${esc(r.text)}</div>
               <div class="score-review-answers">
-                Your answer: <span class="wrong">${esc((r.options && r.options[r.chosenAnswer]) ?? '—')}</span> ·
-                Correct answer: <span class="right">${esc((r.options && r.options[r.correctAnswer]) ?? '—')}</span>
+                Your answer: <span class="wrong">${formatOptionAnswer(r, r.chosenAnswer)}</span> ·
+                Correct answer: <span class="right">${formatOptionAnswer(r, r.correctAnswer)}</span>
               </div>
             </div>
           `).join('')}
@@ -5893,6 +6078,7 @@
           ${feedback}
           <div class="big-num">${pct}%</div>
           <p style="color:var(--muted);margin-bottom:24px;">${correctCount} of ${hw.questions.length} correct on “${esc(hw.title)}”.</p>
+          ${classAverageHtml}
           ${reviewHtml}
           ${ok
             ? `<p style="color:var(--muted);font-size:0.82rem;margin-top:-4px;margin-bottom:24px;">Saved to your account.</p>`
@@ -6575,7 +6761,11 @@
       let tag = '';
       if(i === row.chosenAnswer){ cls = 'chosen-wrong'; tag = `<span class="qview-tag chosen-wrong">${esc(row.username)} chose</span>`; }
       if(i === row.correctAnswer){ cls = (cls ? cls + ' ' : '') + 'is-correct'; tag = (tag ? tag + ' ' : '') + `<span class="qview-tag is-correct">Correct</span>`; }
-      return `<div class="qview-option ${cls}"><span style="flex:1;">${esc(opt)}</span>${tag}</div>`;
+      const optImg = row.optionImages && row.optionImages[i];
+      const bodyHtml = optImg
+        ? `<img src="${optImg}" alt="Option ${i+1}" style="max-width:140px;max-height:90px;border-radius:6px;object-fit:contain;vertical-align:middle;">${opt ? ` <span>${esc(opt)}</span>` : ''}`
+        : `<span>${esc(opt)}</span>`;
+      return `<div class="qview-option ${cls}"><span style="flex:1;">${bodyHtml}</span>${tag}</div>`;
     }).join('');
 
     content.innerHTML = `
