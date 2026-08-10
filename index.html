@@ -953,6 +953,39 @@
   .suggestion-card .title{font-family:'Space Grotesk',sans-serif; font-size:0.9rem; margin-bottom:2px;}
   .suggestion-card .desc{color:var(--muted); font-size:0.8rem;}
   .suggestion-card .btn{flex-shrink:0; padding:8px 16px; font-size:0.8rem;}
+
+  /* ---------- highlights: personal best + week comparison ---------- */
+  .highlights-row{display:flex; gap:16px; flex-wrap:wrap; margin:20px 0 8px;}
+  .highlight-card{
+    flex:1; min-width:220px;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 20px; display:flex; align-items:center; gap:14px;
+  }
+  .highlight-card .icon{font-size:1.6rem; flex-shrink:0;}
+  .highlight-card .title{font-family:'Space Grotesk',sans-serif; font-size:1.05rem; margin-bottom:2px;}
+  .highlight-card .desc{color:var(--muted); font-size:0.78rem;}
+  .highlight-card .trend-up{color:#39D98A;}
+  .highlight-card .trend-down{color:var(--ember);}
+
+  /* ---------- section title with an action button ---------- */
+  .hw-section-title-row{display:flex; align-items:center; justify-content:space-between; margin:32px 0 16px; flex-wrap:wrap; gap:10px;}
+
+  /* ---------- next achievement preview ---------- */
+  .next-achievement-card{
+    display:flex; align-items:center; gap:16px; margin-top:14px;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:14px 20px;
+  }
+  .next-achievement-card .icon{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+    background:var(--ink); border:1px solid var(--line);
+  }
+  .next-achievement-card .text{flex:1;}
+  .next-achievement-card .title{font-family:'Space Grotesk',sans-serif; font-size:0.88rem; margin-bottom:6px;}
+  .next-achievement-card .bar-outer{height:6px; background:var(--panel-2); border-radius:6px; overflow:hidden;}
+  .next-achievement-card .bar-fill{height:100%; background:linear-gradient(90deg, var(--signal), var(--ember)); border-radius:6px;}
+  .next-achievement-card .count{color:var(--muted); font-size:0.76rem; flex-shrink:0;}
   .field-row input[type="text"], .field-row textarea{
     width:100%;padding:12px 14px;border-radius:8px;
     border:1px solid var(--line);background:var(--ink);color:var(--text);
@@ -1820,13 +1853,19 @@
             <div class="admin-empty">Loading…</div>
           </div>
 
+          <div class="highlights-row" id="highlightsRow"></div>
+
           <div class="hw-section-title">Progress over time</div>
           <div id="myProgressChartWrap">
             <div class="admin-empty">No graded homework or exams yet — this fills in as you practice.</div>
           </div>
 
-          <div class="hw-section-title">Achievements</div>
+          <div class="hw-section-title-row">
+            <div class="hw-section-title" style="margin:0;">Achievements</div>
+            <button class="btn btn-ghost" id="shareProgressBtn" style="padding:7px 14px;font-size:0.78rem;">📥 Share my progress</button>
+          </div>
           <div class="achievements-row" id="achievementsRow"></div>
+          <div id="nextAchievementWrap"></div>
 
           <div class="hw-section-title">Topic mastery</div>
           <div id="topicMasteryWrap">
@@ -5486,13 +5525,61 @@
       }
     }
 
+    // Shared chronological list of every graded homework/exam/skill result —
+    // used by the progress chart below and the Highlights cards.
+    const timeline = [
+      ...mineHw.map(h => ({ title: h.title, date: h.submittedAt || h.ts, pct: h.score ? h.score.pct : null })),
+      ...attempts.filter(a => (a.username||'').trim().toLowerCase() === uname).map(a => ({ title: a.examTitle, date: a.ts, pct: a.pct }))
+    ].filter(t => t.date && t.pct != null).sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+    // ---- Highlights: personal best + week-over-week ----
+    const highlightsRow = document.getElementById('highlightsRow');
+    if(highlightsRow){
+      const cards = [];
+      if(timeline.length > 0){
+        const best = timeline.slice().sort((a,b)=> b.pct - a.pct)[0];
+        cards.push({
+          icon:'🏆',
+          title:`Personal best: ${best.pct}%`,
+          desc:`on "${best.title}"`
+        });
+      }
+
+      const now = new Date();
+      const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+      const twoWeeksAgo = new Date(now); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      const thisWeek = timeline.filter(t => new Date(t.date) >= weekAgo);
+      const lastWeek = timeline.filter(t => new Date(t.date) >= twoWeeksAgo && new Date(t.date) < weekAgo);
+      if(thisWeek.length > 0){
+        const thisWeekAvg = Math.round(thisWeek.reduce((s,t)=> s+t.pct, 0) / thisWeek.length);
+        if(lastWeek.length > 0){
+          const lastWeekAvg = Math.round(lastWeek.reduce((s,t)=> s+t.pct, 0) / lastWeek.length);
+          const delta = thisWeekAvg - lastWeekAvg;
+          const trendClass = delta > 0 ? 'trend-up' : (delta < 0 ? 'trend-down' : '');
+          const trendSymbol = delta > 0 ? '📈' : (delta < 0 ? '📉' : '➡️');
+          cards.push({
+            icon: trendSymbol,
+            title:`${thisWeekAvg}% avg this week`,
+            desc:`<span class="${trendClass}">${delta > 0 ? '+' : ''}${delta}% vs last week (${lastWeekAvg}%)</span>`
+          });
+        } else {
+          cards.push({ icon:'📊', title:`${thisWeekAvg}% avg this week`, desc:'First week of activity — keep it up!' });
+        }
+      }
+
+      highlightsRow.innerHTML = cards.length === 0 ? '' : cards.map(c => `
+        <div class="highlight-card">
+          <div class="icon">${c.icon}</div>
+          <div>
+            <div class="title">${esc(c.title)}</div>
+            <div class="desc">${c.desc}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
     const chartWrap = document.getElementById('myProgressChartWrap');
     if(chartWrap){
-      const timeline = [
-        ...mineHw.map(h => ({ title: h.title, date: h.submittedAt || h.ts, pct: h.score ? h.score.pct : null })),
-        ...attempts.filter(a => (a.username||'').trim().toLowerCase() === uname).map(a => ({ title: a.examTitle, date: a.ts, pct: a.pct }))
-      ].filter(t => t.date && t.pct != null).sort((a,b)=> new Date(a.date) - new Date(b.date));
-
       if(timeline.length === 0){
         chartWrap.innerHTML = '<div class="admin-empty">No graded homework or exams yet — this fills in as you practice.</div>';
       } else {
@@ -5513,13 +5600,13 @@
     }
 
     const badges = [
-      { icon:'🎯', label:'First Steps', unlocked: totalCompleted >= 1 },
-      { icon:'📚', label:'Skill Builder', unlocked: totalCompleted >= 5 },
-      { icon:'🏅', label:'Dedicated', unlocked: totalCompleted >= 10 },
-      { icon:'🌟', label:'Perfect Score', unlocked: bestPct >= 100 },
-      { icon:'🔥', label:'3 in a Row', unlocked: streak >= 3 },
-      { icon:'🚀', label:'On Fire (7)', unlocked: streak >= 7 },
-    ];
+      { icon:'🎯', label:'First Steps', current: totalCompleted, target: 1 },
+      { icon:'📚', label:'Skill Builder', current: totalCompleted, target: 5 },
+      { icon:'🏅', label:'Dedicated', current: totalCompleted, target: 10 },
+      { icon:'🌟', label:'Perfect Score', current: bestPct, target: 100 },
+      { icon:'🔥', label:'3 in a Row', current: streak, target: 3 },
+      { icon:'🚀', label:'On Fire (7)', current: streak, target: 7 },
+    ].map(b => ({ ...b, unlocked: b.current >= b.target }));
 
     const row = document.getElementById('achievementsRow');
     if(row){
@@ -5529,6 +5616,36 @@
           <div class="label">${esc(b.label)}</div>
         </div>
       `).join('');
+    }
+
+    const nextAchievementWrap = document.getElementById('nextAchievementWrap');
+    if(nextAchievementWrap){
+      const locked = badges.filter(b => !b.unlocked);
+      if(locked.length === 0){
+        nextAchievementWrap.innerHTML = `
+          <div class="next-achievement-card">
+            <div class="icon">🏆</div>
+            <div class="text"><div class="title" style="margin-bottom:0;">All achievements unlocked — amazing work!</div></div>
+          </div>
+        `;
+      } else {
+        const closest = locked.slice().sort((a,b)=> (b.current / b.target) - (a.current / a.target))[0];
+        const pct = Math.min(100, Math.round((closest.current / closest.target) * 100));
+        const remaining = Math.max(0, closest.target - closest.current);
+        const noun = closest.label === 'Perfect Score' ? '% to reach 100%'
+          : (closest.label.includes('Row') || closest.label.includes('Fire')) ? ' more in a row'
+          : ' more completed';
+        nextAchievementWrap.innerHTML = `
+          <div class="next-achievement-card">
+            <div class="icon">${closest.icon}</div>
+            <div class="text">
+              <div class="title">Next up: ${esc(closest.label)} — ${remaining}${noun} to go</div>
+              <div class="bar-outer"><div class="bar-fill" style="width:${pct}%;"></div></div>
+            </div>
+            <div class="count">${closest.current}/${closest.target}</div>
+          </div>
+        `;
+      }
     }
 
     // ---- Topic mastery: per-lesson accuracy across every graded question ----
@@ -6030,6 +6147,87 @@
       ? `Refreshed at ${now} — one part had trouble loading, check your connection.`
       : `Up to date as of ${now}.`;
   });
+
+  // Draws a shareable "progress card" image (level, streak, best score) and
+  // triggers a download — something a student could actually save or send.
+  document.getElementById('shareProgressBtn').addEventListener('click', async ()=>{
+    if(!currentStudent) return;
+    const btn = document.getElementById('shareProgressBtn');
+    btn.disabled = true; btn.textContent = 'Generating…';
+    try{
+      await downloadProgressCard();
+    }catch(err){
+      console.error('Could not generate progress card:', err);
+      alert('Could not generate the image — please try again.');
+    }
+    btn.disabled = false; btn.textContent = '📥 Share my progress';
+  });
+
+  async function downloadProgressCard(){
+    const streak = await getStreakCount();
+    const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts()]);
+    const uname = currentStudent.username.trim().toLowerCase();
+    const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
+    const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
+    const totalCompleted = mineHw.length + mineAttempts.length;
+    const allPct = [...mineHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
+    const bestPct = allPct.length ? Math.max(...allPct) : 0;
+    const perfectCount = allPct.filter(p => p >= 100).length;
+    const xp = totalCompleted * 10 + perfectCount * 15 + streak * 2;
+    const level = Math.floor(xp / 100) + 1;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 800; canvas.height = 450;
+    const ctx = canvas.getContext('2d');
+
+    const bgGrad = ctx.createLinearGradient(0, 0, 800, 450);
+    bgGrad.addColorStop(0, '#0B0D12');
+    bgGrad.addColorStop(1, '#14171F');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 800, 450);
+
+    const accentGrad = ctx.createLinearGradient(0, 0, 800, 0);
+    accentGrad.addColorStop(0, '#4C6FFF');
+    accentGrad.addColorStop(1, '#FF6B4A');
+    ctx.fillStyle = accentGrad;
+    ctx.fillRect(0, 0, 800, 8);
+
+    ctx.fillStyle = '#F5F6F8';
+    ctx.font = '700 34px Arial, sans-serif';
+    ctx.fillText(currentStudent.username, 50, 92);
+
+    ctx.fillStyle = '#9AA1AE';
+    ctx.font = '500 15px monospace';
+    ctx.fillText('MR. MOHAMED IBRAHIM · MATH PROGRESS', 50, 122);
+
+    function drawStat(x, y, label, value, color){
+      ctx.fillStyle = color;
+      ctx.font = '700 50px Arial, sans-serif';
+      ctx.fillText(value, x, y);
+      ctx.fillStyle = '#9AA1AE';
+      ctx.font = '500 14px Arial, sans-serif';
+      ctx.fillText(label, x, y + 28);
+    }
+    drawStat(50, 250, 'LEVEL', String(level), '#4C6FFF');
+    drawStat(300, 250, 'STREAK', streak + ' 🔥', '#FF6B4A');
+    drawStat(550, 250, 'BEST SCORE', bestPct + '%', '#39D98A');
+
+    ctx.fillStyle = '#9AA1AE';
+    ctx.font = '400 15px Arial, sans-serif';
+    ctx.fillText(`${totalCompleted} homework & practice sessions completed`, 50, 320);
+
+    ctx.fillStyle = '#5A6072';
+    ctx.font = '400 12px monospace';
+    ctx.fillText(new Date().toLocaleDateString(), 50, 410);
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `${currentStudent.username}-progress.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
 
   // Same ranking as the admin leaderboard (average % across completed homework),
   // shown to the student with their own row highlighted.
