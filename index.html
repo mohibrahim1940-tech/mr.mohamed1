@@ -939,6 +939,20 @@
     font-family:'IBM Plex Mono',monospace; font-size:0.72rem; color:var(--muted);
     border:1px solid var(--line); padding:5px 12px; border-radius:20px;
   }
+
+  /* ---------- suggested for you ---------- */
+  .suggestions-row{display:flex; flex-direction:column; gap:10px; margin-bottom:8px;}
+  .suggestion-card{
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--signal);
+    border-radius:10px; padding:14px 18px;
+  }
+  .suggestion-card.urgent{border-left-color:var(--ember);}
+  .suggestion-card .icon{font-size:1.5rem; flex-shrink:0;}
+  .suggestion-card .text{flex:1; min-width:180px;}
+  .suggestion-card .title{font-family:'Space Grotesk',sans-serif; font-size:0.9rem; margin-bottom:2px;}
+  .suggestion-card .desc{color:var(--muted); font-size:0.8rem;}
+  .suggestion-card .btn{flex-shrink:0; padding:8px 16px; font-size:0.8rem;}
   .field-row input[type="text"], .field-row textarea{
     width:100%;padding:12px 14px;border-radius:8px;
     border:1px solid var(--line);background:var(--ink);color:var(--text);
@@ -1598,7 +1612,7 @@
           <div class="streak-flame">🔥</div>
           <div>
             <div class="streak-num"><span id="parentViewStreak">0</span></div>
-            <div class="streak-label">day streak</div>
+            <div class="streak-label">homework streak</div>
           </div>
         </div>
         <div class="dash-card">
@@ -1770,7 +1784,7 @@
               <div class="streak-flame">🔥</div>
               <div>
                 <div class="streak-num"><span id="streakCount">0</span></div>
-                <div class="streak-label">day streak</div>
+                <div class="streak-label">homework streak</div>
               </div>
             </div>
             <div class="level-card">
@@ -1799,6 +1813,11 @@
               <span class="field-label">Status</span>
               <div class="dash-value"><span class="status-pill status-approved">approved</span></div>
             </div>
+          </div>
+
+          <div class="hw-section-title">Suggested for you</div>
+          <div class="suggestions-row" id="suggestionsRow">
+            <div class="admin-empty">Loading…</div>
           </div>
 
           <div class="hw-section-title">Progress over time</div>
@@ -5298,29 +5317,37 @@
     });
   }
 
-  /* ---------------- OVERVIEW: streak (like TikTok/Snapchat) + achievements ---------------- */
-  // Counts consecutive calendar days (ending today or yesterday, so the streak
-  // doesn't wipe out the instant midnight passes) on which the student
-  // submitted homework or took an exam/skill practice.
+  /* ---------------- OVERVIEW: streak (per homework, not per day) + achievements ---------------- */
+  // Goes through every homework assigned to the student in order and counts
+  // up by 1 for each one they completed. The moment any homework is found
+  // overdue — never submitted by its due date, or a required retake missed
+  // its deadline — the streak resets to 0 from that point on. So the streak
+  // reflects "how many in a row have I kept up with," not "how many days in
+  // a row have I opened the app."
   async function getStreakCount(){
     if(!currentStudent) return 0;
-    const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts()]);
+    const hw = await fetchHomeworkIndex();
     const uname = currentStudent.username.trim().toLowerCase();
-    const dates = new Set();
-    hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.submittedAt)
-      .forEach(h => dates.add(new Date(h.submittedAt).toDateString()));
-    attempts.filter(a => (a.username||'').trim().toLowerCase() === uname && a.ts)
-      .forEach(a => dates.add(new Date(a.ts).toDateString()));
+    const mine = hw.filter(h => (h.username||'').trim().toLowerCase() === uname);
+    mine.sort((a,b)=> new Date(a.ts || 0) - new Date(b.ts || 0));
 
+    const now = new Date();
     let streak = 0;
-    const cursor = new Date();
-    if(!dates.has(cursor.toDateString())){
-      cursor.setDate(cursor.getDate() - 1); // grace period: today doesn't have to be done yet
-    }
-    while(dates.has(cursor.toDateString())){
-      streak++;
-      cursor.setDate(cursor.getDate() - 1);
-    }
+    mine.forEach(h=>{
+      let dueDateEnd = null;
+      if(h.dueDate){
+        dueDateEnd = new Date(h.dueDate);
+        dueDateEnd.setHours(23, 59, 59, 999); // due "by end of" that day, not literally midnight
+      }
+      const missedDueDate = h.status !== 'completed' && dueDateEnd && dueDateEnd < now;
+      const completedLate = h.status === 'completed' && dueDateEnd && h.submittedAt && new Date(h.submittedAt) > dueDateEnd;
+      const missedRetake = h.status === 'completed' && h.retakeRequired && h.retakeDeadline && new Date(h.retakeDeadline) < now;
+      if(missedDueDate || completedLate || missedRetake){
+        streak = 0;
+      } else if(h.status === 'completed'){
+        streak++;
+      }
+    });
     return streak;
   }
 
@@ -5342,6 +5369,23 @@
     const allPct = [...mineHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
     const bestPct = allPct.length ? Math.max(...allPct) : 0;
 
+    // Per-lesson accuracy across every graded question — computed once here,
+    // used both for the weakest-topic suggestion below and the mastery bars.
+    const lessonStats = {};
+    function tallyResults(items){
+      items.forEach(item=>{
+        if(!Array.isArray(item.results)) return;
+        item.results.forEach(r=>{
+          const lesson = (r.lesson || 'General').trim();
+          if(!lessonStats[lesson]) lessonStats[lesson] = { correct:0, total:0 };
+          lessonStats[lesson].total++;
+          if(r.correct) lessonStats[lesson].correct++;
+        });
+      });
+    }
+    tallyResults(myFullHw);
+    tallyResults(mineAttempts);
+
     // ---- Level & XP ----
     const perfectCount = allPct.filter(p => p >= 100).length;
     const xp = totalCompleted * 10 + perfectCount * 15 + streak * 2;
@@ -5353,6 +5397,93 @@
       document.getElementById('levelNum').textContent = level;
       document.getElementById('levelXpText').textContent = `${xp} XP`;
       document.getElementById('levelBarFill').style.width = xpIntoLevel + '%';
+    }
+
+    // ---- Suggested for you: a few dynamic, personalized nudges ----
+    const suggestionsRow = document.getElementById('suggestionsRow');
+    if(suggestionsRow){
+      const suggestions = [];
+      const pendingRetakeCount = mineHw.filter(h => h.retakeRequired).length
+        + mineAttempts.filter(a => a.retakeRequired).length;
+
+      if(pendingRetakeCount > 0){
+        suggestions.push({
+          icon:'🔥', urgent:true,
+          title:`You have ${pendingRetakeCount} pending retake${pendingRetakeCount===1?'':'s'}!`,
+          desc:'Finish it now to keep your streak alive.',
+          cta:'Go to Mistake History', tab:'tabMistakes'
+        });
+      }
+
+      const weakestLessons = Object.entries(lessonStats)
+        .filter(([,s]) => s.total >= 2)
+        .map(([lesson, s]) => ({ lesson, pct: Math.round((s.correct / s.total) * 100) }))
+        .sort((a,b)=> a.pct - b.pct);
+      if(weakestLessons.length > 0 && weakestLessons[0].pct < 70){
+        suggestions.push({
+          icon:'📚', urgent:false,
+          title:`Brush up on ${weakestLessons[0].lesson}`,
+          desc:`You're at ${weakestLessons[0].pct}% there — your weakest topic right now.`,
+          cta:'Practice skills', tab:'tabSkills'
+        });
+      }
+
+      const xpToNext = 100 - xpIntoLevel;
+      if(xpToNext <= 30){
+        suggestions.push({
+          icon:'⭐', urgent:false,
+          title:`Only ${xpToNext} XP to Level ${level+1}!`,
+          desc:'One more homework or practice session gets you there.',
+          cta:'View homework', tab:'tabHw'
+        });
+      }
+
+      if(streak === 0 && totalCompleted > 0 && pendingRetakeCount === 0){
+        suggestions.push({
+          icon:'💪', urgent:false,
+          title:'Start a new streak today',
+          desc:'Complete your next homework on time to start building it back up.',
+          cta:'View homework', tab:'tabHw'
+        });
+      }
+      if(totalCompleted === 0){
+        suggestions.push({
+          icon:'🚀', urgent:false,
+          title:'Ready to get started?',
+          desc:'Try your first skill practice — it only takes a few minutes.',
+          cta:'Browse skills', tab:'tabSkills'
+        });
+      }
+
+      const topSuggestions = suggestions.slice(0, 3);
+      if(topSuggestions.length === 0){
+        suggestionsRow.innerHTML = `
+          <div class="suggestion-card">
+            <div class="icon">🎉</div>
+            <div class="text">
+              <div class="title">You're all caught up!</div>
+              <div class="desc">No pending items right now — keep up the great work.</div>
+            </div>
+          </div>
+        `;
+      } else {
+        suggestionsRow.innerHTML = topSuggestions.map(s => `
+          <div class="suggestion-card ${s.urgent ? 'urgent' : ''}">
+            <div class="icon">${s.icon}</div>
+            <div class="text">
+              <div class="title">${esc(s.title)}</div>
+              <div class="desc">${esc(s.desc)}</div>
+            </div>
+            <button class="btn btn-ghost suggestion-cta-btn" data-tab="${s.tab}">${esc(s.cta)}</button>
+          </div>
+        `).join('');
+        suggestionsRow.querySelectorAll('.suggestion-cta-btn').forEach(btn=>{
+          btn.addEventListener('click', ()=>{
+            const targetTab = document.querySelector(`.dash-tab-btn[data-dashtab="${btn.dataset.tab}"]`);
+            if(targetTab) targetTab.click();
+          });
+        });
+      }
     }
 
     const chartWrap = document.getElementById('myProgressChartWrap');
@@ -5386,8 +5517,8 @@
       { icon:'📚', label:'Skill Builder', unlocked: totalCompleted >= 5 },
       { icon:'🏅', label:'Dedicated', unlocked: totalCompleted >= 10 },
       { icon:'🌟', label:'Perfect Score', unlocked: bestPct >= 100 },
-      { icon:'🔥', label:'3-Day Streak', unlocked: streak >= 3 },
-      { icon:'🚀', label:'Week Warrior', unlocked: streak >= 7 },
+      { icon:'🔥', label:'3 in a Row', unlocked: streak >= 3 },
+      { icon:'🚀', label:'On Fire (7)', unlocked: streak >= 7 },
     ];
 
     const row = document.getElementById('achievementsRow');
@@ -5403,21 +5534,6 @@
     // ---- Topic mastery: per-lesson accuracy across every graded question ----
     const masteryWrap = document.getElementById('topicMasteryWrap');
     if(masteryWrap){
-      const lessonStats = {};
-      function tallyResults(items){
-        items.forEach(item=>{
-          if(!Array.isArray(item.results)) return;
-          item.results.forEach(r=>{
-            const lesson = (r.lesson || 'General').trim();
-            if(!lessonStats[lesson]) lessonStats[lesson] = { correct:0, total:0 };
-            lessonStats[lesson].total++;
-            if(r.correct) lessonStats[lesson].correct++;
-          });
-        });
-      }
-      tallyResults(myFullHw);
-      tallyResults(mineAttempts);
-
       const lessons = Object.entries(lessonStats).sort((a,b)=> b[1].total - a[1].total).slice(0, 8);
       if(lessons.length === 0){
         masteryWrap.innerHTML = '<div class="admin-empty">No graded questions yet — this fills in as you practice.</div>';
