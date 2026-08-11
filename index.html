@@ -3816,6 +3816,41 @@
   const examPlayer = document.getElementById('examPlayer');
   let activeTimerInterval = null; // countdown for whichever exam/homework is currently open
   let quizLocked = false; // true while a question is showing — prevents accidental exits mid-quiz
+
+  // Saves in-progress quiz state to localStorage (per student) so a page
+  // refresh or accidental close resumes exactly where they left off, instead
+  // of losing their answers and letting them dodge a bad start by reloading.
+  function quizProgressKey(){
+    return currentStudent ? `quizProgress_${currentStudent.username.trim().toLowerCase()}` : null;
+  }
+  function saveQuizProgress(kind, data, answers, current){
+    const key = quizProgressKey();
+    if(!key) return;
+    try{
+      localStorage.setItem(key, JSON.stringify({ kind, data, answers, current, savedAt: new Date().toISOString() }));
+    }catch(err){ console.error('Could not save quiz progress:', err); }
+  }
+  function loadQuizProgress(){
+    const key = quizProgressKey();
+    if(!key) return null;
+    try{
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    }catch(err){ return null; }
+  }
+  function clearQuizProgress(){
+    const key = quizProgressKey();
+    if(key) localStorage.removeItem(key);
+  }
+  // Extra friction against leaving mid-quiz — browsers show their own native
+  // "leave site?" prompt here, the text itself can't be customized.
+  window.addEventListener('beforeunload', (e)=>{
+    if(quizLocked){
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
   function stopActiveTimer(){
     if(activeTimerInterval){ clearInterval(activeTimerInterval); activeTimerInterval = null; }
   }
@@ -3853,13 +3888,16 @@
     if(e.target === examModal){ stopActiveTimer(); examModal.classList.remove('open'); }
   });
 
-  function startExam(exam){
-    let current = 0;
-    const answers = new Array(exam.questions.length).fill(null);
+  function startExam(exam, resume){
+    let current = (resume && typeof resume.current === 'number') ? resume.current : 0;
+    const answers = (resume && Array.isArray(resume.answers) && resume.answers.length === exam.questions.length)
+      ? resume.answers.slice()
+      : new Array(exam.questions.length).fill(null);
     let remainingSeconds = exam.timeLimit ? exam.timeLimit * 60 : null;
 
     quizLocked = true;
     examModal.classList.add('quiz-locked');
+    if(!resume) saveQuizProgress('exam', exam, answers, current);
     stopActiveTimer();
     if(remainingSeconds !== null){
       activeTimerInterval = setInterval(()=>{
@@ -3919,6 +3957,7 @@
           answers[current] = i;
           optionsWrap.querySelectorAll('.exam-option').forEach(o=>o.classList.remove('selected'));
           row.classList.add('selected');
+          saveQuizProgress('exam', exam, answers, current);
         });
         optionsWrap.appendChild(row);
       });
@@ -3957,11 +3996,11 @@
       });
 
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
-        if(current > 0){ current--; renderQuestion(); }
+        if(current > 0){ current--; renderQuestion(); saveQuizProgress('exam', exam, answers, current); }
       });
       document.getElementById('examNextBtn').addEventListener('click', async ()=>{
         if(current === exam.questions.length-1){ await renderScore(); }
-        else { current++; renderQuestion(); }
+        else { current++; renderQuestion(); saveQuizProgress('exam', exam, answers, current); }
       });
     }
 
@@ -4012,6 +4051,7 @@
           ...mistakeSaves
         ]);
         saveSucceeded = attemptResult !== false;
+        if(saveSucceeded) clearQuizProgress();
       }
 
       // Anonymized — just a number, no other students' names or identities.
@@ -5885,13 +5925,16 @@
   }
 
   /* ---------------- HOMEWORK PLAYER (student answers, auto-graded) ---------------- */
-  function startHomework(hw){
-    let current = 0;
-    const answers = new Array(hw.questions.length).fill(null);
+  function startHomework(hw, resume){
+    let current = (resume && typeof resume.current === 'number') ? resume.current : 0;
+    const answers = (resume && Array.isArray(resume.answers) && resume.answers.length === hw.questions.length)
+      ? resume.answers.slice()
+      : new Array(hw.questions.length).fill(null);
     let remainingSeconds = hw.timeLimit ? hw.timeLimit * 60 : null;
 
     quizLocked = true;
     examModal.classList.add('quiz-locked');
+    if(!resume) saveQuizProgress('homework', hw, answers, current);
     stopActiveTimer();
     if(remainingSeconds !== null){
       activeTimerInterval = setInterval(()=>{
@@ -5951,6 +5994,7 @@
           answers[current] = i;
           optionsWrap.querySelectorAll('.exam-option').forEach(o=>o.classList.remove('selected'));
           row.classList.add('selected');
+          saveQuizProgress('homework', hw, answers, current);
         });
         optionsWrap.appendChild(row);
       });
@@ -5989,11 +6033,11 @@
       });
 
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
-        if(current > 0){ current--; renderQuestion(); }
+        if(current > 0){ current--; renderQuestion(); saveQuizProgress('homework', hw, answers, current); }
       });
       document.getElementById('examNextBtn').addEventListener('click', ()=>{
         if(current === hw.questions.length-1){ submitHomework(); }
-        else { current++; renderQuestion(); }
+        else { current++; renderQuestion(); saveQuizProgress('homework', hw, answers, current); }
       });
     }
 
@@ -6038,6 +6082,7 @@
         ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
         retakeRequired: hasMistakes, retakeDeadline
       });
+      if(ok) clearQuizProgress();
 
       // Anonymized — just a number, no other students' names or identities.
       let classAverageHtml = '';
@@ -6175,6 +6220,7 @@
       return;
     }
     currentStudent = result.student;
+    try{ localStorage.setItem('signedInUsername', currentStudent.username); }catch(err){}
     applySignedInState();
     closeAuthModal();
     signinForm.reset();
@@ -6244,6 +6290,7 @@
       oldBtns.forEach((b, i) => { if(i > 0) b.remove(); });
       pill.querySelector('#logoutBtn').addEventListener('click', ()=>{
         currentStudent = null;
+        try{ localStorage.removeItem('signedInUsername'); }catch(err){}
         location.reload();
       });
       pill.querySelector('#myScoresBtn').addEventListener('click', ()=>{
@@ -6276,6 +6323,14 @@
 
     // exam cards (if any exist elsewhere) were rendered as locked before sign-in — refresh so they unlock
     renderPublicExams();
+
+    // If they had a quiz open when they refreshed or got disconnected,
+    // drop them straight back into it instead of losing their answers.
+    const saved = loadQuizProgress();
+    if(saved && saved.kind && saved.data){
+      if(saved.kind === 'exam') startExam(saved.data, { answers: saved.answers, current: saved.current });
+      else if(saved.kind === 'homework') startHomework(saved.data, { answers: saved.answers, current: saved.current });
+    }
   }
 
   document.getElementById('dashMyScoresBtn').addEventListener('click', openMyScores);
@@ -7460,6 +7515,22 @@
 
     plotGraphFromInput(); // draw the default example on load
   }
+
+  // Restore a signed-in session after a page refresh — without this, a
+  // refresh would sign the student out entirely and the in-progress quiz
+  // resume (further up) would never get a chance to run.
+  (async ()=>{
+    let savedUsername = null;
+    try{ savedUsername = localStorage.getItem('signedInUsername'); }catch(err){}
+    if(!savedUsername) return;
+    const student = await getStudent(savedUsername);
+    if(student && student.status === 'approved'){
+      currentStudent = student;
+      applySignedInState();
+    } else {
+      try{ localStorage.removeItem('signedInUsername'); }catch(err){}
+    }
+  })();
 </script>
 
 </div>
