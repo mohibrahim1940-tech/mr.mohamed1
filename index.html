@@ -800,6 +800,45 @@
   }
   .admin-stat-card .num{font-family:'IBM Plex Mono',monospace;font-size:1.8rem;}
   .admin-stat-card .lbl{color:var(--muted);font-size:0.8rem;margin-top:6px;}
+
+  /* ---------- admin overview dashboard ---------- */
+  .admin-overview-col .hw-section-title{margin-bottom:14px;}
+  .admin-overview-cols{
+    display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:12px;
+  }
+  @media(max-width:820px){ .admin-overview-cols{grid-template-columns:1fr;} }
+  .ov-performer-row{
+    display:flex; align-items:center; gap:12px; padding:11px 0;
+    border-top:1px solid var(--line-soft);
+  }
+  .ov-performer-row:first-child{border-top:none;}
+  .ov-performer-rank{
+    width:26px; font-family:'IBM Plex Mono',monospace; color:var(--muted); font-size:0.85rem; flex-shrink:0;
+  }
+  .ov-performer-name{flex:1; font-size:0.9rem;}
+  .ov-performer-detail{color:var(--muted); font-size:0.76rem; margin-top:2px;}
+  .ov-performer-pct{
+    font-family:'IBM Plex Mono',monospace; font-size:0.95rem; font-weight:600; flex-shrink:0;
+  }
+  .ov-class-chart-wrap{
+    display:flex; align-items:flex-end; gap:6px; min-height:180px;
+    overflow-x:auto; padding:12px 4px 0;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+  }
+  .ov-class-bar-col{
+    display:flex; flex-direction:column; align-items:center;
+    min-width:34px; flex-shrink:0;
+  }
+  .ov-class-bar-track{
+    width:20px; height:120px; background:var(--panel-2); border-radius:4px;
+    display:flex; align-items:flex-end; overflow:hidden;
+  }
+  .ov-class-bar-fill{width:100%; border-radius:4px 4px 0 0; transition:height .3s;}
+  .ov-class-bar-pct{font-size:0.62rem; color:var(--muted); margin-bottom:4px; font-family:'IBM Plex Mono',monospace;}
+  .ov-class-bar-name{
+    font-size:0.62rem; color:var(--muted); margin-top:6px; max-width:40px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;
+  }
   .admin-table-wrap{
     background:var(--panel);
     border:1px solid var(--line);
@@ -2423,7 +2462,8 @@
 
   <div class="wrap admin-dash" id="adminDash">
     <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="leadsPanel" data-roles="admin">Leads</button>
+      <button class="admin-tab active" data-tab="adminOverviewPanel" data-roles="admin,assistant">📊 Overview</button>
+      <button class="admin-tab" data-tab="leadsPanel" data-roles="admin">Leads</button>
       <button class="admin-tab" data-tab="examsPanel" data-roles="admin">Exams &amp; Questions</button>
       <button class="admin-tab" data-tab="studentsPanel" data-roles="admin,assistant">Students</button>
       <button class="admin-tab" data-tab="homeworkPanel" data-roles="admin,assistant">Homework</button>
@@ -2439,7 +2479,25 @@
       <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant">Weekly Updates</button>
     </div>
 
-    <div class="admin-panel active" id="leadsPanel">
+    <div class="admin-panel active" id="adminOverviewPanel">
+      <div class="admin-stats" id="ovStatsRow"></div>
+
+      <div class="admin-overview-cols">
+        <div class="admin-overview-col">
+          <div class="hw-section-title" style="margin-top:0;">🌟 Top performers</div>
+          <div id="ovTopPerformers"><div class="admin-empty">Loading…</div></div>
+        </div>
+        <div class="admin-overview-col">
+          <div class="hw-section-title" style="margin-top:0;">⚠️ Needs attention</div>
+          <div id="ovNeedsAttention"><div class="admin-empty">Loading…</div></div>
+        </div>
+      </div>
+
+      <div class="hw-section-title">Class performance</div>
+      <div id="ovClassChart"><div class="admin-empty">Loading…</div></div>
+    </div>
+
+    <div class="admin-panel" id="leadsPanel">
       <div class="admin-note">Leads are stored in your Supabase database. With the default open policies from the setup instructions, anyone with your Supabase URL and anon key could technically read them — tighten the policies before handling sensitive data at scale.</div>
       <div class="admin-stats">
         <div class="admin-stat-card"><div class="num" id="statTotal">0</div><div class="lbl">Total leads captured</div></div>
@@ -3453,7 +3511,7 @@
       adminGate.style.display = 'none';
       adminDash.classList.add('open');
       applyAdminRoleVisibility();
-      await renderAdminDash();
+      await renderAdminOverviewDashboard();
     } else {
       adminError.classList.add('show');
     }
@@ -3473,6 +3531,109 @@
     a.click();
     URL.revokeObjectURL(url);
   });
+
+  // The admin landing page: site-wide stats, who's doing best, who needs
+  // attention, and a visual bar chart of every student's average score —
+  // all from lightweight summary data, never full question/image content.
+  async function renderAdminOverviewDashboard(){
+    const [students, hw, attempts] = await Promise.all([
+      fetchAllStudents(), fetchHomeworkIndex(), fetchAttemptsIndex()
+    ]);
+    const approved = students.filter(s => s.status === 'approved');
+
+    const now = new Date();
+    const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+
+    const perStudent = approved.map(s=>{
+      const uname = s.username.trim().toLowerCase();
+      const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
+      const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
+      const allPct = [...mineHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
+      const avgPct = allPct.length ? Math.round(allPct.reduce((s,p)=> s+p, 0) / allPct.length) : null;
+      const totalDone = mineHw.length + mineAttempts.length;
+      const pendingRetakes = mineHw.filter(h => h.retakeRequired).length + mineAttempts.filter(a => a.retakeRequired).length;
+      const lastActivity = [...mineHw.map(h => h.submittedAt), ...mineAttempts.map(a => a.ts)]
+        .filter(Boolean).map(d => new Date(d)).sort((a,b)=> b - a)[0] || null;
+      const activeThisWeek = !!(lastActivity && lastActivity >= weekAgo);
+      return { username: s.username, avgPct, totalDone, pendingRetakes, lastActivity, activeThisWeek };
+    });
+
+    const withScores = perStudent.filter(p => p.avgPct != null);
+    const overallAvg = withScores.length ? Math.round(withScores.reduce((s,p)=> s+p.avgPct, 0) / withScores.length) : 0;
+    const totalCompleted = perStudent.reduce((s,p)=> s+p.totalDone, 0);
+    const totalPendingRetakes = perStudent.reduce((s,p)=> s+p.pendingRetakes, 0);
+    const activeCount = perStudent.filter(p => p.activeThisWeek).length;
+
+    const statsRow = document.getElementById('ovStatsRow');
+    if(statsRow){
+      statsRow.innerHTML = `
+        <div class="admin-stat-card"><div class="num">${approved.length}</div><div class="lbl">Active students</div></div>
+        <div class="admin-stat-card"><div class="num">${totalCompleted}</div><div class="lbl">Homework &amp; practice completed</div></div>
+        <div class="admin-stat-card"><div class="num">${overallAvg}%</div><div class="lbl">Overall average score</div></div>
+        <div class="admin-stat-card"><div class="num">${totalPendingRetakes}</div><div class="lbl">Pending retakes</div></div>
+        <div class="admin-stat-card"><div class="num">${activeCount} / ${approved.length}</div><div class="lbl">Active this week</div></div>
+      `;
+    }
+
+    const withScoresSorted = withScores.slice().sort((a,b)=> b.avgPct - a.avgPct);
+    const topPerformers = withScoresSorted.slice(0, 5);
+    const needsAttention = perStudent
+      .filter(p => (p.avgPct != null && p.avgPct < 60) || p.pendingRetakes > 0 || !p.activeThisWeek)
+      .sort((a,b)=>{
+        if((b.pendingRetakes > 0) !== (a.pendingRetakes > 0)) return (b.pendingRetakes > 0) ? 1 : -1;
+        const aPct = a.avgPct == null ? 999 : a.avgPct;
+        const bPct = b.avgPct == null ? 999 : b.avgPct;
+        return aPct - bPct;
+      })
+      .slice(0, 5);
+
+    const topWrap = document.getElementById('ovTopPerformers');
+    if(topWrap){
+      topWrap.innerHTML = topPerformers.length === 0
+        ? '<div class="admin-empty">No graded work yet.</div>'
+        : topPerformers.map((p,i)=> `
+            <div class="ov-performer-row">
+              <span class="ov-performer-rank">#${i+1}</span>
+              <div class="ov-performer-name">${esc(p.username)}<div class="ov-performer-detail">${p.totalDone} completed</div></div>
+              <span class="ov-performer-pct" style="color:#39D98A;">${p.avgPct}%</span>
+            </div>
+          `).join('');
+    }
+
+    const attnWrap = document.getElementById('ovNeedsAttention');
+    if(attnWrap){
+      attnWrap.innerHTML = needsAttention.length === 0
+        ? '<div class="admin-empty">Nobody flagged — everyone is on track. 🎉</div>'
+        : needsAttention.map(p=>{
+            const reasons = [];
+            if(p.pendingRetakes > 0) reasons.push(`${p.pendingRetakes} pending retake${p.pendingRetakes===1?'':'s'}`);
+            if(p.avgPct != null && p.avgPct < 60) reasons.push(`${p.avgPct}% average`);
+            if(!p.activeThisWeek) reasons.push(p.lastActivity ? `inactive since ${p.lastActivity.toLocaleDateString()}` : 'no activity yet');
+            return `
+              <div class="ov-performer-row">
+                <span class="ov-performer-rank">⚠️</span>
+                <div class="ov-performer-name">${esc(p.username)}<div class="ov-performer-detail">${esc(reasons.join(' · '))}</div></div>
+              </div>
+            `;
+          }).join('');
+    }
+
+    const chartWrap = document.getElementById('ovClassChart');
+    if(chartWrap){
+      chartWrap.innerHTML = withScoresSorted.length === 0
+        ? '<div class="admin-empty">No graded work yet — this fills in as students practice.</div>'
+        : `<div class="ov-class-chart-wrap">${withScoresSorted.map(p=>{
+            const color = p.avgPct >= 75 ? '#39D98A' : (p.avgPct >= 50 ? 'var(--signal)' : 'var(--ember)');
+            return `
+              <div class="ov-class-bar-col" title="${esc(p.username)}: ${p.avgPct}%">
+                <span class="ov-class-bar-pct">${p.avgPct}%</span>
+                <div class="ov-class-bar-track"><div class="ov-class-bar-fill" style="height:${Math.max(4, p.avgPct)}%; background:${color};"></div></div>
+                <span class="ov-class-bar-name">${esc(p.username)}</span>
+              </div>
+            `;
+          }).join('')}</div>`;
+    }
+  }
 
   async function renderAdminDash(){
     const leads = await fetchAllLeads();
@@ -3513,6 +3674,10 @@
       document.getElementById(tab.dataset.tab).classList.add('active');
       if(['examsPanel','homeworkPanel','skillsPanel'].includes(tab.dataset.tab)){
         await refreshSkillNamesCache();
+      }
+      if(tab.dataset.tab === 'adminOverviewPanel'){
+        invalidateDbCache('students'); invalidateDbCache('homework'); invalidateDbCache('attempts');
+        renderAdminOverviewDashboard();
       }
       if(tab.dataset.tab === 'examsPanel'){
         await refreshCourseNamesCache();
