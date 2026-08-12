@@ -7557,6 +7557,12 @@
     const allAttempts = await fetchAllAttempts();
     const mineHw = allHw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed' && Array.isArray(h.results));
     const mineAttempts = allAttempts.filter(a => (a.username||'').trim().toLowerCase() === uname && Array.isArray(a.results));
+    // The authoritative, complete mistake log — every wrong answer ever
+    // recorded for this student, from any source (homework, exams, skill
+    // practice, retakes). This is the same source your main Mistakes tab
+    // uses, so it can include mistakes the homework/exam summaries above
+    // don't fully capture.
+    const myMistakes = await gatherAllMistakeRows(username);
 
     let totalCorrect = 0, totalWrong = 0;
     [...mineHw, ...mineAttempts].forEach(item=>{
@@ -7567,7 +7573,7 @@
 
     document.getElementById('analysisSummary').textContent = totalQ > 0
       ? `${totalCorrect} correct, ${totalWrong} incorrect out of ${totalQ} questions (${acc}% overall).`
-      : 'No graded homework or exams yet for this student.';
+      : (myMistakes.length > 0 ? `${myMistakes.length} mistake${myMistakes.length===1?'':'s'} on record.` : 'No graded homework or exams yet for this student.');
 
     const content = document.getElementById('analysisContent');
     content.innerHTML = '';
@@ -7622,7 +7628,7 @@
       content.appendChild(div);
     }
 
-    if(mineHw.length === 0 && mineAttempts.length === 0) return;
+    if(mineHw.length === 0 && mineAttempts.length === 0 && myMistakes.length === 0) return;
 
     // A quick visual of score trend over time — every graded homework/exam,
     // in chronological order, as a bar chart.
@@ -7668,6 +7674,42 @@
       h.textContent = 'Exams & skill practice';
       content.appendChild(h);
       mineAttempts.forEach(a => renderAnalysisItem(a.examTitle, a));
+    }
+
+    if(myMistakes.length){
+      const h = document.createElement('div');
+      h.className = 'hw-section-title';
+      h.textContent = `All mistakes (${myMistakes.length})`;
+      content.appendChild(h);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'analysis-item';
+      myMistakes.forEach(m=>{
+        const row = document.createElement('div');
+        row.className = 'analysis-q-row';
+        const dateLabel = m.ts ? new Date(m.ts).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : '';
+        row.innerHTML = `
+          <span class="analysis-q-icon incorrect">✕</span>
+          ${m.image ? `<img class="mistake-thumb" src="${m.image}" alt="Question photo">` : ''}
+          <div class="analysis-q-text">
+            ${esc(m.text || '(question)')}
+            <div class="analysis-q-meta">${esc(m.source || 'Unknown')} · ${esc(m.lesson || 'General')} · chose "${esc(m.chosenText)}", correct was "${esc(m.correctText)}" · ${esc(dateLabel)}</div>
+          </div>
+          <button class="student-action-btn goto-question-btn" style="flex-shrink:0;">Go to the question</button>
+        `;
+        function openThisMistake(){
+          openQuestionView({
+            username, source: m.source, lesson: m.lesson || 'General',
+            questionNumber: m.questionNumber, questionTotal: m.questionTotal,
+            text: m.text, image: m.image, options: m.options,
+            chosenAnswer: m.chosenAnswer, correctAnswer: m.correctAnswer
+          });
+        }
+        if(m.image) row.querySelector('.mistake-thumb').addEventListener('click', openThisMistake);
+        row.querySelector('.goto-question-btn').addEventListener('click', openThisMistake);
+        wrap.appendChild(row);
+      });
+      content.appendChild(wrap);
     }
   }
 
