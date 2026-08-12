@@ -1743,9 +1743,11 @@
         <a href="#courses">Courses</a>
         <button class="open-auth-btn" data-tab="signinForm" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Sign in</button>
         <button class="open-auth-btn" data-tab="registerForm" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Register</button>
+        <button class="open-assistant-auth-btn" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Academic Assistant</button>
         <button class="open-admin-btn" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Admin</button>
       </div>
       <div class="nav-cta" id="navCta">
+        <button class="btn btn-ghost open-assistant-auth-btn" style="padding:10px 18px;">Academic Assistant</button>
         <button class="btn btn-ghost open-admin-btn" style="padding:10px 18px;">Admin</button>
         <button class="btn btn-ghost open-auth-btn" data-tab="signinForm" style="padding:10px 20px;">Sign in</button>
         <button class="btn btn-primary open-auth-btn" data-tab="registerForm" style="padding:10px 20px;">Register</button>
@@ -2275,6 +2277,48 @@
   </div>
 </div>
 
+<!-- ACADEMIC ASSISTANT AUTH MODAL -->
+<div class="modal-overlay" id="assistantAuthModal">
+  <div class="modal-box auth-modal-box">
+    <button class="modal-close" id="closeAssistantAuthModal" aria-label="Close">×</button>
+    <h3 style="margin-bottom:6px;">Academic assistant account</h3>
+    <p style="color:var(--muted); font-size:0.84rem; margin-bottom:18px;">Your own account, scoped to just the students Mr. Mohamed Ibrahim assigns you.</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-form="assistantSigninForm">Sign in</button>
+      <button class="auth-tab" data-form="assistantRegisterForm">Register</button>
+    </div>
+
+    <form class="auth-form active" id="assistantSigninForm">
+      <input type="text" id="assistantSigninUsername" placeholder="Username" required autocomplete="username">
+      <input type="password" id="assistantSigninPassword" placeholder="Password" required autocomplete="current-password">
+      <div class="auth-error" id="assistantSigninError">Incorrect username or password.</div>
+      <button type="submit" class="btn btn-primary" id="assistantSigninSubmitBtn">Sign in</button>
+      <p class="auth-note">New assistant? <a href="#" id="gotoAssistantRegister" style="text-decoration:underline;">Create an account</a>.</p>
+    </form>
+
+    <form class="auth-form" id="assistantRegisterForm">
+      <input type="text" id="assistantRegUsername" placeholder="Choose a username" required autocomplete="username">
+      <input type="password" id="assistantRegPassword" placeholder="Choose a password" required autocomplete="new-password">
+      <div class="auth-error" id="assistantRegisterError">Something's not right — check the fields above.</div>
+      <div class="auth-success" id="assistantRegisterSuccess">Request received! Mr. Mohamed Ibrahim will approve your account and assign you students soon.</div>
+      <button type="submit" class="btn btn-primary" id="assistantRegisterSubmitBtn">Request account</button>
+      <p class="auth-note">You won't see anything until Mr. Mohamed Ibrahim approves your account and assigns you students.</p>
+    </form>
+  </div>
+</div>
+
+<!-- ACADEMIC ASSISTANT DASHBOARD (shown after signing into an individual
+     assistant account — separate from the shared-passcode full admin panel) -->
+<div class="modal-overlay" id="assistantDashModal">
+  <div class="modal-box exam-modal-box" style="max-width:760px;">
+    <button class="modal-close" id="closeAssistantDashModal" aria-label="Close">×</button>
+    <h3 style="margin-bottom:4px;" id="assistantDashTitle">Welcome</h3>
+    <p style="color:var(--muted); font-size:0.86rem; margin-bottom:20px;">Your assigned students — progress, scores, and mistakes.</p>
+    <div id="assistantDashContent" style="max-height:65vh; overflow-y:auto;"></div>
+  </div>
+</div>
+
 <!-- MY SCORES MODAL -->
 <div class="modal-overlay" id="myScoresModal">
   <div class="modal-box exam-modal-box">
@@ -2291,6 +2335,26 @@
     <h3 style="margin-bottom:6px;" id="analysisStudentName">Student analysis</h3>
     <p style="color:var(--muted); font-size:0.9rem; margin-bottom:20px;" id="analysisSummary"></p>
     <div id="analysisContent" style="max-height:60vh; overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- ADMIN: ASSIGN STUDENTS TO AN ACADEMIC ASSISTANT -->
+<div class="modal-overlay" id="assignStudentsModal" style="z-index:500;">
+  <div class="modal-box auth-modal-box">
+    <button class="modal-close" id="closeAssignStudentsModal" aria-label="Close">×</button>
+    <h3 style="margin-bottom:4px;" id="assignStudentsTitle">Assign students</h3>
+    <p style="color:var(--muted); font-size:0.84rem; margin-bottom:18px;">Only the students checked below will be visible to this assistant.</p>
+    <div class="student-multiselect">
+      <div class="student-multiselect-actions">
+        <button type="button" class="btn btn-ghost" id="assignSelectAllBtn" style="padding:6px 12px;font-size:0.78rem;">Select all</button>
+        <button type="button" class="btn btn-ghost" id="assignSelectNoneBtn" style="padding:6px 12px;font-size:0.78rem;">Clear</button>
+        <span class="student-multiselect-count" id="assignSelectedCount">0 selected</span>
+      </div>
+      <div class="student-multiselect-list" id="assignStudentsCheckboxList">
+        <div class="admin-empty" style="padding:12px;">Loading students…</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="saveAssignedStudentsBtn" style="width:100%; margin-top:16px;">Save assignment</button>
   </div>
 </div>
 
@@ -2352,6 +2416,7 @@
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
       <button class="admin-tab" data-tab="mistakesPanel" data-roles="admin,assistant">Mistakes</button>
       <button class="admin-tab" data-tab="remindersPanel" data-roles="admin,assistant">Reminders</button>
+      <button class="admin-tab" data-tab="assistantAcctsPanel" data-roles="admin">Assistants</button>
     </div>
 
     <div class="admin-panel active" id="leadsPanel">
@@ -2729,6 +2794,20 @@
         <div class="admin-empty">Loading…</div>
       </div>
     </div>
+
+    <div class="admin-panel" id="assistantAcctsPanel">
+      <div class="admin-note">Academic assistants with their own individual accounts — each one only sees the students you assign them, not the whole roster. (Separate from the shared assistant2026 passcode, which still grants full access to everything.)</div>
+      <div class="admin-actions">
+        <button class="btn btn-ghost" id="refreshAssistantAccts">Refresh</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="assistantAcctsTable">
+          <thead><tr><th>Username</th><th>Status</th><th>Assigned students</th><th></th></tr></thead>
+          <tbody id="assistantAcctsBody"></tbody>
+        </table>
+        <div class="admin-empty" id="assistantAcctsEmpty" style="display:none;">No assistant accounts registered yet.</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2810,6 +2889,23 @@
         question's explanation, and students can watch them. Keep
         videos short (a minute or two) — the free Supabase plan
         includes 1GB of file storage total.
+     6. (Only needed if you want academic assistants to have their own
+        individual accounts, scoped to specific students, instead of
+        sharing one passcode.) Go to SQL Editor → New query → paste
+        this and Run:
+
+         create table assistants (
+           id text primary key,
+           data jsonb not null,
+           created_at timestamptz default now()
+         );
+         alter table assistants enable row level security;
+         create policy "public access" on assistants for all using (true) with check (true);
+
+        That's it — the "Academic Assistant" sign-in/register link
+        will now work, and you'll see a new "Assistants" tab in the
+        admin panel to approve them and choose which students each
+        one can see.
 
      SECURITY NOTE: the policies above make every record (student
      passwords — already hashed — parent phone numbers, exam answers)
@@ -3359,6 +3455,7 @@
       if(tab.dataset.tab === 'coursesPanel'){ invalidateDbCache('courses'); renderAdminCourseList(); }
       if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(); }
       if(tab.dataset.tab === 'remindersPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminReminders(); }
+      if(tab.dataset.tab === 'assistantAcctsPanel'){ invalidateDbCache('assistants'); renderAssistantAcctsTable(); }
     });
   });
 
@@ -4432,6 +4529,56 @@
     const students = await dbGetAll('students');
     students.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
     return students;
+  }
+
+  /* ---------------- ACADEMIC ASSISTANT ACCOUNTS ----------------
+     Individual assistant accounts, each scoped to a specific list of
+     assigned students (set by the admin) — separate from the shared
+     ADMIN_PASSCODE / ASSISTANT_PASSCODE full-admin-panel login. */
+  function assistantAcctKey(username){
+    return username.trim().toLowerCase();
+  }
+  async function getAssistantAccount(username){
+    return await dbGet('assistants', assistantAcctKey(username));
+  }
+  async function registerAssistantAccount(data){
+    if(!storageAvailable()) return { ok:false, reason:'nostorage' };
+    const existing = await getAssistantAccount(data.username);
+    if(existing) return { ok:false, reason:'taken' };
+    const passwordHash = await hashPassword(data.password);
+    const record = {
+      username: data.username.trim(),
+      passwordHash,
+      status: 'pending',
+      assignedStudents: [],
+      ts: new Date().toISOString()
+    };
+    const ok = await dbSet('assistants', assistantAcctKey(data.username), record);
+    return { ok, reason: ok ? undefined : 'error' };
+  }
+  async function setAssistantAccountStatus(username, status){
+    const a = await getAssistantAccount(username);
+    if(!a) return false;
+    a.status = status;
+    return await dbSet('assistants', assistantAcctKey(username), a);
+  }
+  async function signInAssistantAccount(username, password){
+    if(!storageAvailable()) return { ok:false, reason:'nostorage' };
+    const a = await getAssistantAccount(username);
+    if(!a) return { ok:false, reason:'notfound' };
+    const hash = await hashPassword(password);
+    if(hash !== a.passwordHash) return { ok:false, reason:'wrongpass' };
+    if(a.status === 'declined') return { ok:false, reason:'declined' };
+    if(a.status !== 'approved') return { ok:false, reason:'pending' };
+    return { ok:true, assistant: a };
+  }
+  async function fetchAllAssistantAccounts(){
+    const rows = await dbGetAll('assistants');
+    rows.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
+    return rows;
+  }
+  async function deleteAssistantAccount(username){
+    return await dbDelete('assistants', assistantAcctKey(username));
   }
 
   async function deleteStudentAccount(username){
@@ -6329,6 +6476,150 @@
     switchAuthTab('registerForm');
   });
 
+  /* ---------------- ACADEMIC ASSISTANT AUTH MODAL: UI wiring ---------------- */
+  const assistantAuthModal = document.getElementById('assistantAuthModal');
+  const assistantSigninForm = document.getElementById('assistantSigninForm');
+  const assistantRegisterForm = document.getElementById('assistantRegisterForm');
+  let currentAssistantAccount = null; // the signed-in individual assistant, if any (separate from the shared admin/assistant passcode)
+
+  function openAssistantAuthModal(){
+    assistantAuthModal.classList.add('open');
+    switchAssistantAuthTab('assistantSigninForm');
+  }
+  function closeAssistantAuthModal(){ assistantAuthModal.classList.remove('open'); }
+  function switchAssistantAuthTab(formId){
+    assistantAuthModal.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.form === formId));
+    assistantAuthModal.querySelectorAll('.auth-form').forEach(f => f.classList.toggle('active', f.id === formId));
+  }
+  assistantAuthModal.querySelectorAll('.auth-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=> switchAssistantAuthTab(tab.dataset.form));
+  });
+  document.getElementById('gotoAssistantRegister').addEventListener('click', (e)=>{
+    e.preventDefault();
+    switchAssistantAuthTab('assistantRegisterForm');
+  });
+  document.querySelectorAll('.open-assistant-auth-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      navLinks.classList.remove('open');
+      openAssistantAuthModal();
+    });
+  });
+  document.getElementById('closeAssistantAuthModal').addEventListener('click', closeAssistantAuthModal);
+  assistantAuthModal.addEventListener('click', (e)=>{ if(e.target === assistantAuthModal) closeAssistantAuthModal(); });
+
+  assistantRegisterForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const errEl = document.getElementById('assistantRegisterError');
+    const okEl = document.getElementById('assistantRegisterSuccess');
+    errEl.classList.remove('show'); okEl.classList.remove('show');
+
+    const username = document.getElementById('assistantRegUsername').value.trim();
+    const password = document.getElementById('assistantRegPassword').value;
+    if(!username || !password){
+      errEl.textContent = 'Please fill in both fields.';
+      errEl.classList.add('show');
+      return;
+    }
+    const btn = document.getElementById('assistantRegisterSubmitBtn');
+    btn.disabled = true;
+    const result = await registerAssistantAccount({ username, password });
+    btn.disabled = false;
+
+    if(!result.ok){
+      if(result.reason === 'taken') errEl.textContent = 'That username is already taken — pick another.';
+      else if(result.reason === 'nostorage') errEl.textContent = "Sign-up isn't connected yet — the site owner needs to add a Supabase config.";
+      else errEl.textContent = 'Something went wrong — please try again.';
+      errEl.classList.add('show');
+      return;
+    }
+    okEl.classList.add('show');
+    assistantRegisterForm.reset();
+  });
+
+  assistantSigninForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const errEl = document.getElementById('assistantSigninError');
+    errEl.classList.remove('show');
+    const username = document.getElementById('assistantSigninUsername').value.trim();
+    const password = document.getElementById('assistantSigninPassword').value;
+    const btn = document.getElementById('assistantSigninSubmitBtn');
+    btn.disabled = true;
+    const result = await signInAssistantAccount(username, password);
+    btn.disabled = false;
+
+    if(!result.ok){
+      if(result.reason === 'pending') errEl.textContent = "Your account is still waiting for approval — check back soon.";
+      else if(result.reason === 'declined') errEl.textContent = 'This account was declined. Contact Mr. Mohamed Ibrahim.';
+      else if(result.reason === 'nostorage') errEl.textContent = "Sign-in isn't connected yet — the site owner needs to add a Supabase config.";
+      else errEl.textContent = 'Incorrect username or password.';
+      errEl.classList.add('show');
+      return;
+    }
+    currentAssistantAccount = result.assistant;
+    closeAssistantAuthModal();
+    assistantSigninForm.reset();
+    await openAssistantDashboard();
+  });
+
+  document.getElementById('closeAssistantDashModal').addEventListener('click', ()=>{
+    document.getElementById('assistantDashModal').classList.remove('open');
+  });
+  document.getElementById('assistantDashModal').addEventListener('click', (e)=>{
+    if(e.target === document.getElementById('assistantDashModal')) document.getElementById('assistantDashModal').classList.remove('open');
+  });
+
+  // Shows the signed-in assistant's own scoped view — only their assigned
+  // students, each with a button that opens the same full progress+mistakes
+  // breakdown admins see (openStudentAnalysis), just restricted to students
+  // this specific assistant was actually given access to.
+  async function openAssistantDashboard(){
+    if(!currentAssistantAccount) return;
+    document.getElementById('assistantDashTitle').textContent = `Welcome, ${currentAssistantAccount.username}`;
+    const content = document.getElementById('assistantDashContent');
+    content.innerHTML = '<div class="admin-empty">Loading…</div>';
+    document.getElementById('assistantDashModal').classList.add('open');
+
+    const fresh = await getAssistantAccount(currentAssistantAccount.username);
+    if(fresh) currentAssistantAccount = fresh;
+    const assigned = currentAssistantAccount.assignedStudents || [];
+
+    if(assigned.length === 0){
+      content.innerHTML = '<div class="admin-empty">No students assigned to you yet — ask Mr. Mohamed Ibrahim to assign some in the admin panel.</div>';
+      return;
+    }
+
+    const allStudents = await fetchAllStudents();
+    const allHw = await fetchHomeworkIndex();
+    const allAttempts = await fetchAllAttempts();
+    const assignedLower = assigned.map(u => u.trim().toLowerCase());
+
+    const rows = assignedLower.map(uname=>{
+      const student = allStudents.find(s => (s.username||'').trim().toLowerCase() === uname);
+      const displayName = student ? student.username : uname;
+      const mineHw = allHw.filter(h => (h.username||'').trim().toLowerCase() === uname);
+      const completedHw = mineHw.filter(h => h.status === 'completed');
+      const mineAttempts = allAttempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
+      const allPct = [...completedHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
+      const avgPct = allPct.length ? Math.round(allPct.reduce((s,p)=> s+p, 0) / allPct.length) : null;
+      const pendingRetakes = completedHw.filter(h => h.retakeRequired).length + mineAttempts.filter(a => a.retakeRequired).length;
+      return { username: displayName, uname, hwProgress: `${completedHw.length} of ${mineHw.length}`, avgPct, pendingRetakes };
+    });
+
+    content.innerHTML = rows.map(r => `
+      <div class="reminder-row">
+        <div class="reminder-info">
+          <div class="name">${esc(r.username)}</div>
+          <div class="detail">Homework: ${r.hwProgress} · Avg score: ${r.avgPct != null ? r.avgPct + '%' : '—'}${r.pendingRetakes > 0 ? ` · ${r.pendingRetakes} pending retake${r.pendingRetakes===1?'':'s'}` : ''}</div>
+        </div>
+        <button class="btn btn-ghost view-assistant-student-btn" data-username="${esc(r.uname)}" style="padding:9px 16px;font-size:0.85rem;">View progress &amp; mistakes</button>
+      </div>
+    `).join('');
+
+    content.querySelectorAll('.view-assistant-student-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> openStudentAnalysis(btn.dataset.username));
+    });
+  }
+
   document.querySelectorAll('.open-auth-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       navLinks.classList.remove('open');
@@ -7033,6 +7324,114 @@
 
   let bulkWaQueue = [];
   let bulkWaIndex = 0;
+
+  /* ---------------- ADMIN: Academic Assistant accounts ---------------- */
+  async function renderAssistantAcctsTable(){
+    const tbody = document.getElementById('assistantAcctsBody');
+    const emptyState = document.getElementById('assistantAcctsEmpty');
+    const accounts = await fetchAllAssistantAccounts();
+
+    tbody.innerHTML = '';
+    if(accounts.length === 0){
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+
+    accounts.forEach(a=>{
+      const assignedCount = (a.assignedStudents || []).length;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${esc(a.username)}</td>
+        <td><span class="status-pill ${a.status === 'approved' ? 'status-approved' : a.status === 'declined' ? 'status-declined' : 'status-pending'}">${esc(a.status)}</span></td>
+        <td>${assignedCount === 0 ? 'None yet' : `${assignedCount} student${assignedCount===1?'':'s'}`}</td>
+        <td style="white-space:nowrap;">
+          ${a.status !== 'approved' ? `<button class="student-action-btn approve-assistant-btn">Approve</button>` : ''}
+          ${a.status !== 'declined' ? `<button class="student-action-btn decline-assistant-btn">Decline</button>` : ''}
+          <button class="student-action-btn manage-students-btn">Manage students</button>
+          <button class="student-action-btn delete-assistant-btn">Delete</button>
+        </td>
+      `;
+      tr.querySelector('.approve-assistant-btn')?.addEventListener('click', async ()=>{
+        await setAssistantAccountStatus(a.username, 'approved');
+        await renderAssistantAcctsTable();
+      });
+      tr.querySelector('.decline-assistant-btn')?.addEventListener('click', async ()=>{
+        await setAssistantAccountStatus(a.username, 'declined');
+        await renderAssistantAcctsTable();
+      });
+      tr.querySelector('.manage-students-btn').addEventListener('click', ()=> openAssignStudentsModal(a.username));
+      tr.querySelector('.delete-assistant-btn').addEventListener('click', async ()=>{
+        if(!confirm(`Delete the assistant account "${a.username}"? This can't be undone.`)) return;
+        await deleteAssistantAccount(a.username);
+        await renderAssistantAcctsTable();
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  const assignStudentsModal = document.getElementById('assignStudentsModal');
+  let assignStudentsTargetUsername = null;
+
+  function updateAssignSelectedCount(){
+    const count = document.querySelectorAll('#assignStudentsCheckboxList input:checked').length;
+    document.getElementById('assignSelectedCount').textContent = `${count} selected`;
+  }
+
+  async function openAssignStudentsModal(assistantUsername){
+    assignStudentsTargetUsername = assistantUsername;
+    document.getElementById('assignStudentsTitle').textContent = `Assign students to ${assistantUsername}`;
+    const checkboxList = document.getElementById('assignStudentsCheckboxList');
+    checkboxList.innerHTML = '<div class="admin-empty" style="padding:12px;">Loading students…</div>';
+    assignStudentsModal.classList.add('open');
+
+    const [account, students] = await Promise.all([
+      getAssistantAccount(assistantUsername),
+      fetchAllStudents()
+    ]);
+    const assignedSet = new Set((account && account.assignedStudents || []).map(u => u.trim().toLowerCase()));
+
+    if(students.length === 0){
+      checkboxList.innerHTML = '<div class="admin-empty" style="padding:12px;">No approved students yet.</div>';
+    } else {
+      checkboxList.innerHTML = students.map(s => `
+        <label class="student-checkbox-row">
+          <input type="checkbox" value="${esc(s.username)}" ${assignedSet.has(s.username.trim().toLowerCase()) ? 'checked' : ''}>
+          <span>${esc(s.username)}</span>
+        </label>
+      `).join('');
+      checkboxList.querySelectorAll('input').forEach(cb => cb.addEventListener('change', updateAssignSelectedCount));
+    }
+    updateAssignSelectedCount();
+  }
+
+  document.getElementById('closeAssignStudentsModal').addEventListener('click', ()=>{
+    assignStudentsModal.classList.remove('open');
+  });
+  assignStudentsModal.addEventListener('click', (e)=>{
+    if(e.target === assignStudentsModal) assignStudentsModal.classList.remove('open');
+  });
+  document.getElementById('assignSelectAllBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#assignStudentsCheckboxList input').forEach(cb => cb.checked = true);
+    updateAssignSelectedCount();
+  });
+  document.getElementById('assignSelectNoneBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#assignStudentsCheckboxList input').forEach(cb => cb.checked = false);
+    updateAssignSelectedCount();
+  });
+  document.getElementById('saveAssignedStudentsBtn').addEventListener('click', async ()=>{
+    if(!assignStudentsTargetUsername) return;
+    const btn = document.getElementById('saveAssignedStudentsBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const selected = Array.from(document.querySelectorAll('#assignStudentsCheckboxList input:checked')).map(cb => cb.value);
+    const account = await getAssistantAccount(assignStudentsTargetUsername);
+    if(account){
+      await dbSet('assistants', assistantAcctKey(assignStudentsTargetUsername), { ...account, assignedStudents: selected });
+    }
+    btn.disabled = false; btn.textContent = 'Save assignment';
+    assignStudentsModal.classList.remove('open');
+    await renderAssistantAcctsTable();
+  });
 
   async function renderAdminReminders(){
     const wrap = document.getElementById('remindersListWrap');
