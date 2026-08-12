@@ -640,6 +640,7 @@
      public-facing page. */
   #studentAnalysisModal{ z-index:500; }
   #questionViewModal{ z-index:500; }
+  #studentPreviewModal{ z-index:500; }
   .modal-overlay.open{opacity:1;pointer-events:auto;}
   .modal-box{
     background:var(--panel);
@@ -1016,6 +1017,17 @@
     cursor:pointer;font-size:1rem;
   }
   .remove-q-btn:hover{color:var(--ember);}
+  .preview-q-btn{
+    position:absolute;top:14px;right:46px;
+    background:none;border:1px solid var(--line);color:var(--muted);
+    cursor:pointer;font-size:0.76rem;padding:5px 10px;border-radius:6px;
+  }
+  .preview-q-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.3);}
+  .preview-badge{
+    display:inline-block; background:rgba(76,111,255,0.15); color:var(--signal);
+    font-family:'IBM Plex Mono',monospace; font-size:0.72rem; padding:6px 14px;
+    border-radius:20px; margin-bottom:18px;
+  }
   .add-q-btn{
     background:none;border:1px dashed var(--line);color:var(--muted);
     width:100%;padding:14px;border-radius:10px;cursor:pointer;
@@ -2198,6 +2210,17 @@
   <div class="modal-box exam-modal-box">
     <button class="modal-close" id="closeExamModal" aria-label="Close">×</button>
     <div id="examPlayer"></div>
+  </div>
+</div>
+
+<!-- STUDENT PREVIEW MODAL (admin-only) — shows one question exactly as a
+     student would see it during a quiz, with no admin chrome, so it's clean
+     enough to screenshot for explanations, worksheets, etc. -->
+<div class="modal-overlay" id="studentPreviewModal">
+  <div class="modal-box exam-modal-box">
+    <button class="modal-close" id="closeStudentPreviewModal" aria-label="Close">×</button>
+    <div class="preview-badge">👁 Student preview — this is exactly what they see</div>
+    <div id="studentPreviewContent"></div>
   </div>
 </div>
 
@@ -3455,6 +3478,7 @@
 
     block.innerHTML = `
       <button type="button" class="remove-q-btn" aria-label="Remove question">✕</button>
+      <button type="button" class="preview-q-btn" aria-label="Preview as student">👁 Preview</button>
       <span class="q-num">Question ${container.children.length + 1}</span>
       <div class="q-image-row">
         <label class="field-label" style="margin-bottom:6px;">Question image (optional)</label>
@@ -3505,6 +3529,9 @@
     block.querySelector('.remove-q-btn').addEventListener('click', ()=>{
       block.remove();
       renumberQuestions(container);
+    });
+    block.querySelector('.preview-q-btn').addEventListener('click', ()=>{
+      previewQuestionAsStudent(block);
     });
 
     const fileInput = block.querySelector('.q-image-input');
@@ -3661,6 +3688,53 @@
     });
     return questions;
   }
+
+  // Shows one question exactly as a student would see it mid-quiz — reads
+  // live from the builder's current inputs (works even before saving), and
+  // renders with the same markup/styling as the real exam player, so admins
+  // get a clean, screenshot-ready view for explanations or worksheets.
+  const studentPreviewModal = document.getElementById('studentPreviewModal');
+  function previewQuestionAsStudent(block){
+    const text = block.querySelector('.q-text').value.trim();
+    const image = block._imageData || null;
+    const options = Array.from(block.querySelectorAll('.q-option')).map(i => i.value.trim());
+    const optionImages = (block._optionImages || [null,null,null,null]).slice(0, 4);
+
+    if(!text && !image){
+      alert('Add question text or an image first, then preview it.');
+      return;
+    }
+
+    const content = document.getElementById('studentPreviewContent');
+    content.innerHTML = `
+      <div class="exam-q-count">PREVIEW</div>
+      ${image ? `<img class="exam-q-image" src="${image}" alt="Question image">` : ''}
+      ${text ? `<div class="exam-q-text">${esc(text)}</div>` : ''}
+      <div id="studentPreviewOptions"></div>
+    `;
+    const optionsWrap = document.getElementById('studentPreviewOptions');
+    options.forEach((opt, i)=>{
+      const row = document.createElement('div');
+      row.className = 'exam-option';
+      const optImg = optionImages[i];
+      row.innerHTML = `
+        <input type="radio" disabled>
+        <div class="option-content">
+          ${optImg ? `<img src="${optImg}" alt="Option ${i+1}">` : ''}
+          ${opt ? `<span>${esc(opt)}</span>` : ''}
+        </div>
+      `;
+      optionsWrap.appendChild(row);
+    });
+
+    studentPreviewModal.classList.add('open');
+  }
+  document.getElementById('closeStudentPreviewModal').addEventListener('click', ()=>{
+    studentPreviewModal.classList.remove('open');
+  });
+  studentPreviewModal.addEventListener('click', (e)=>{
+    if(e.target === studentPreviewModal) studentPreviewModal.classList.remove('open');
+  });
 
   function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -3921,40 +3995,6 @@
   let activeTimerInterval = null; // countdown for whichever exam/homework is currently open
   let quizLocked = false; // true while a question is showing — prevents accidental exits mid-quiz
 
-  // Saves in-progress quiz state to localStorage (per student) so a page
-  // refresh or accidental close resumes exactly where they left off, instead
-  // of losing their answers and letting them dodge a bad start by reloading.
-  function quizProgressKey(){
-    return currentStudent ? `quizProgress_${currentStudent.username.trim().toLowerCase()}` : null;
-  }
-  function saveQuizProgress(kind, data, answers, current){
-    const key = quizProgressKey();
-    if(!key) return;
-    try{
-      localStorage.setItem(key, JSON.stringify({ kind, data, answers, current, savedAt: new Date().toISOString() }));
-    }catch(err){ console.error('Could not save quiz progress:', err); }
-  }
-  function loadQuizProgress(){
-    const key = quizProgressKey();
-    if(!key) return null;
-    try{
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : null;
-    }catch(err){ return null; }
-  }
-  function clearQuizProgress(){
-    const key = quizProgressKey();
-    if(key) localStorage.removeItem(key);
-  }
-  // Extra friction against leaving mid-quiz — browsers show their own native
-  // "leave site?" prompt here, the text itself can't be customized.
-  window.addEventListener('beforeunload', (e)=>{
-    if(quizLocked){
-      e.preventDefault();
-      e.returnValue = '';
-    }
-  });
-
   function stopActiveTimer(){
     if(activeTimerInterval){ clearInterval(activeTimerInterval); activeTimerInterval = null; }
   }
@@ -3992,16 +4032,13 @@
     if(e.target === examModal){ stopActiveTimer(); examModal.classList.remove('open'); }
   });
 
-  function startExam(exam, resume){
-    let current = (resume && typeof resume.current === 'number') ? resume.current : 0;
-    const answers = (resume && Array.isArray(resume.answers) && resume.answers.length === exam.questions.length)
-      ? resume.answers.slice()
-      : new Array(exam.questions.length).fill(null);
+  function startExam(exam){
+    let current = 0;
+    const answers = new Array(exam.questions.length).fill(null);
     let remainingSeconds = exam.timeLimit ? exam.timeLimit * 60 : null;
 
     quizLocked = true;
     examModal.classList.add('quiz-locked');
-    if(!resume) saveQuizProgress('exam', exam, answers, current);
     stopActiveTimer();
     if(remainingSeconds !== null){
       activeTimerInterval = setInterval(()=>{
@@ -4061,7 +4098,6 @@
           answers[current] = i;
           optionsWrap.querySelectorAll('.exam-option').forEach(o=>o.classList.remove('selected'));
           row.classList.add('selected');
-          saveQuizProgress('exam', exam, answers, current);
         });
         optionsWrap.appendChild(row);
       });
@@ -4100,11 +4136,11 @@
       });
 
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
-        if(current > 0){ current--; renderQuestion(); saveQuizProgress('exam', exam, answers, current); }
+        if(current > 0){ current--; renderQuestion(); }
       });
       document.getElementById('examNextBtn').addEventListener('click', async ()=>{
         if(current === exam.questions.length-1){ await renderScore(); }
-        else { current++; renderQuestion(); saveQuizProgress('exam', exam, answers, current); }
+        else { current++; renderQuestion(); }
       });
     }
 
@@ -4156,7 +4192,6 @@
           ...mistakeSaves
         ]);
         saveSucceeded = attemptResult !== false;
-        if(saveSucceeded) clearQuizProgress();
       }
 
       // Anonymized — just a number, no other students' names or identities.
@@ -6031,16 +6066,13 @@
   }
 
   /* ---------------- HOMEWORK PLAYER (student answers, auto-graded) ---------------- */
-  function startHomework(hw, resume){
-    let current = (resume && typeof resume.current === 'number') ? resume.current : 0;
-    const answers = (resume && Array.isArray(resume.answers) && resume.answers.length === hw.questions.length)
-      ? resume.answers.slice()
-      : new Array(hw.questions.length).fill(null);
+  function startHomework(hw){
+    let current = 0;
+    const answers = new Array(hw.questions.length).fill(null);
     let remainingSeconds = hw.timeLimit ? hw.timeLimit * 60 : null;
 
     quizLocked = true;
     examModal.classList.add('quiz-locked');
-    if(!resume) saveQuizProgress('homework', hw, answers, current);
     stopActiveTimer();
     if(remainingSeconds !== null){
       activeTimerInterval = setInterval(()=>{
@@ -6100,7 +6132,6 @@
           answers[current] = i;
           optionsWrap.querySelectorAll('.exam-option').forEach(o=>o.classList.remove('selected'));
           row.classList.add('selected');
-          saveQuizProgress('homework', hw, answers, current);
         });
         optionsWrap.appendChild(row);
       });
@@ -6139,11 +6170,11 @@
       });
 
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
-        if(current > 0){ current--; renderQuestion(); saveQuizProgress('homework', hw, answers, current); }
+        if(current > 0){ current--; renderQuestion(); }
       });
       document.getElementById('examNextBtn').addEventListener('click', ()=>{
         if(current === hw.questions.length-1){ submitHomework(); }
-        else { current++; renderQuestion(); saveQuizProgress('homework', hw, answers, current); }
+        else { current++; renderQuestion(); }
       });
     }
 
@@ -6189,8 +6220,6 @@
         ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
         retakeRequired: hasMistakes, retakeDeadline
       });
-      if(ok) clearQuizProgress();
-
       // Anonymized — just a number, no other students' names or identities.
       let classAverageHtml = '';
       try{
@@ -6328,7 +6357,6 @@
       return;
     }
     currentStudent = result.student;
-    try{ localStorage.setItem('signedInUsername', currentStudent.username); }catch(err){}
     applySignedInState();
     closeAuthModal();
     signinForm.reset();
@@ -6398,7 +6426,6 @@
       oldBtns.forEach((b, i) => { if(i > 0) b.remove(); });
       pill.querySelector('#logoutBtn').addEventListener('click', ()=>{
         currentStudent = null;
-        try{ localStorage.removeItem('signedInUsername'); }catch(err){}
         location.reload();
       });
       pill.querySelector('#myScoresBtn').addEventListener('click', ()=>{
@@ -6431,14 +6458,6 @@
 
     // exam cards (if any exist elsewhere) were rendered as locked before sign-in — refresh so they unlock
     renderPublicExams();
-
-    // If they had a quiz open when they refreshed or got disconnected,
-    // drop them straight back into it instead of losing their answers.
-    const saved = loadQuizProgress();
-    if(saved && saved.kind && saved.data){
-      if(saved.kind === 'exam') startExam(saved.data, { answers: saved.answers, current: saved.current });
-      else if(saved.kind === 'homework') startHomework(saved.data, { answers: saved.answers, current: saved.current });
-    }
   }
 
   document.getElementById('dashMyScoresBtn').addEventListener('click', openMyScores);
@@ -7624,22 +7643,6 @@
 
     plotGraphFromInput(); // draw the default example on load
   }
-
-  // Restore a signed-in session after a page refresh — without this, a
-  // refresh would sign the student out entirely and the in-progress quiz
-  // resume (further up) would never get a chance to run.
-  (async ()=>{
-    let savedUsername = null;
-    try{ savedUsername = localStorage.getItem('signedInUsername'); }catch(err){}
-    if(!savedUsername) return;
-    const student = await getStudent(savedUsername);
-    if(student && student.status === 'approved'){
-      currentStudent = student;
-      applySignedInState();
-    } else {
-      try{ localStorage.removeItem('signedInUsername'); }catch(err){}
-    }
-  })();
 </script>
 
 </div>
