@@ -2966,7 +2966,7 @@
       document.getElementById('parentViewMeta').textContent = `${student.course || ''} · ${student.grade || ''}`;
 
       const uname = student.username.trim().toLowerCase();
-      const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts()]);
+      const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
       const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname);
       const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
       const completedHw = mineHw.filter(h => h.status === 'completed');
@@ -3044,11 +3044,12 @@
   // tab switch, every re-render) and those rows can be large once questions
   // carry embedded images. Any write (set/add/delete) to a collection clears
   // its cache immediately, so admins always see their own changes right away.
-  const _dbCache = {}; // key -> { data, ts }  (key is either "collection" or "collection||prefix")
+  const _dbCache = {}; // key -> { data, ts }  (key is "collection", "collection||prefix", or "collection:docId")
+  const _inFlightRequests = {}; // key -> in-progress promise, so concurrent identical fetches share one request
   const DB_CACHE_TTL = 20000; // 20s — long enough to skip redundant re-fetches within a session, short enough that other people's changes show up quickly
   function invalidateDbCache(collection){
     Object.keys(_dbCache).forEach(k=>{
-      if(k === collection || k.startsWith(collection + '||')) delete _dbCache[k];
+      if(k === collection || k.startsWith(collection + '||') || k.startsWith(collection + ':')) delete _dbCache[k];
     });
   }
 
@@ -3089,11 +3090,24 @@
   }
   async function dbGet(collection, docId){
     if(!storageAvailable()) return null;
-    try{
-      const { data, error } = await supabaseClient.from(collection).select('data').eq('id', docId).maybeSingle();
-      if(error) throw error;
-      return data ? data.data : null;
-    }catch(err){ console.error(`dbGet(${collection}) failed:`, err); return null; }
+    const cacheKey = `${collection}:${docId}`;
+    const cached = _dbCache[cacheKey];
+    if(cached && (Date.now() - cached.ts) < DB_CACHE_TTL){
+      return cached.data;
+    }
+    if(_inFlightRequests[cacheKey]) return _inFlightRequests[cacheKey];
+    const promise = (async ()=>{
+      try{
+        const { data, error } = await supabaseClient.from(collection).select('data').eq('id', docId).maybeSingle();
+        if(error) throw error;
+        const result = data ? data.data : null;
+        _dbCache[cacheKey] = { data: result, ts: Date.now() };
+        return result;
+      }catch(err){ console.error(`dbGet(${collection}) failed:`, err); return null; }
+      finally{ delete _inFlightRequests[cacheKey]; }
+    })();
+    _inFlightRequests[cacheKey] = promise;
+    return promise;
   }
   async function dbGetAll(collection){
     if(!storageAvailable()) return [];
@@ -3101,13 +3115,19 @@
     if(cached && (Date.now() - cached.ts) < DB_CACHE_TTL){
       return cached.data;
     }
-    try{
-      const { data, error } = await supabaseClient.from(collection).select('data');
-      if(error) throw error;
-      const rows = (data || []).map(row => row.data);
-      _dbCache[collection] = { data: rows, ts: Date.now() };
-      return rows;
-    }catch(err){ console.error(`dbGetAll(${collection}) failed:`, err); return []; }
+    if(_inFlightRequests[collection]) return _inFlightRequests[collection];
+    const promise = (async ()=>{
+      try{
+        const { data, error } = await supabaseClient.from(collection).select('data');
+        if(error) throw error;
+        const rows = (data || []).map(row => row.data);
+        _dbCache[collection] = { data: rows, ts: Date.now() };
+        return rows;
+      }catch(err){ console.error(`dbGetAll(${collection}) failed:`, err); return []; }
+      finally{ delete _inFlightRequests[collection]; }
+    })();
+    _inFlightRequests[collection] = promise;
+    return promise;
   }
   // Fetches only rows whose id starts with the given prefix — used to pull
   // lightweight "index" records (title/count, no images) for grid/list views,
@@ -3120,13 +3140,19 @@
     if(cached && (Date.now() - cached.ts) < DB_CACHE_TTL){
       return cached.data;
     }
-    try{
-      const { data, error } = await supabaseClient.from(collection).select('data').like('id', `${prefix}%`);
-      if(error) throw error;
-      const rows = (data || []).map(row => row.data);
-      _dbCache[cacheKey] = { data: rows, ts: Date.now() };
-      return rows;
-    }catch(err){ console.error(`dbGetAllByIdPrefix(${collection}) failed:`, err); return []; }
+    if(_inFlightRequests[cacheKey]) return _inFlightRequests[cacheKey];
+    const promise = (async ()=>{
+      try{
+        const { data, error } = await supabaseClient.from(collection).select('data').like('id', `${prefix}%`);
+        if(error) throw error;
+        const rows = (data || []).map(row => row.data);
+        _dbCache[cacheKey] = { data: rows, ts: Date.now() };
+        return rows;
+      }catch(err){ console.error(`dbGetAllByIdPrefix(${collection}) failed:`, err); return []; }
+      finally{ delete _inFlightRequests[cacheKey]; }
+    })();
+    _inFlightRequests[cacheKey] = promise;
+    return promise;
   }
   async function getRowCount(collection, likePattern){
     if(!storageAvailable()) return 0;
@@ -3146,32 +3172,37 @@
   // question/image content) and only does the expensive reconciliation
   // if something's actually missing — so once healed, it stays cheap.
   const _backfillDone = { skills: false, exams: false };
+  const _backfillInFlight = {}; // collection -> in-progress promise, so concurrent callers share one check instead of each starting their own
   async function ensureIndexBackfilled(collection, buildIndexRecord){
     if(_backfillDone[collection]) return;
-    try{
-      const [totalCount, idxCount] = await Promise.all([
-        getRowCount(collection, null),
-        getRowCount(collection, 'idx-%')
-      ]);
-      const fullCount = totalCount - idxCount;
-      if(fullCount <= idxCount){
-        _backfillDone[collection] = true;
-        return;
+    if(_backfillInFlight[collection]) return _backfillInFlight[collection];
+    _backfillInFlight[collection] = (async ()=>{
+      try{
+        const [totalCount, idxCount] = await Promise.all([
+          getRowCount(collection, null),
+          getRowCount(collection, 'idx-%')
+        ]);
+        const fullCount = totalCount - idxCount;
+        if(fullCount <= idxCount){
+          _backfillDone[collection] = true;
+          return;
+        }
+        const [fullRows, idxRows] = await Promise.all([
+          dbGetAll(collection).then(rows => rows.filter(r => !r._index)),
+          dbGetAllByIdPrefix(collection, 'idx-')
+        ]);
+        const indexedIds = new Set(idxRows.map(r => r.id));
+        const missing = fullRows.filter(r => !indexedIds.has(r.id));
+        for(const row of missing){
+          await dbSet(collection, `idx-${row.id}`, buildIndexRecord(row));
+        }
+        if(missing.length > 0) invalidateDbCache(collection);
+      }catch(err){
+        console.error(`ensureIndexBackfilled(${collection}) failed:`, err);
       }
-      const [fullRows, idxRows] = await Promise.all([
-        dbGetAll(collection).then(rows => rows.filter(r => !r._index)),
-        dbGetAllByIdPrefix(collection, 'idx-')
-      ]);
-      const indexedIds = new Set(idxRows.map(r => r.id));
-      const missing = fullRows.filter(r => !indexedIds.has(r.id));
-      for(const row of missing){
-        await dbSet(collection, `idx-${row.id}`, buildIndexRecord(row));
-      }
-      if(missing.length > 0) invalidateDbCache(collection);
-    }catch(err){
-      console.error(`ensureIndexBackfilled(${collection}) failed:`, err);
-    }
-    _backfillDone[collection] = true;
+      _backfillDone[collection] = true;
+    })();
+    return _backfillInFlight[collection];
   }
   async function dbDelete(collection, docId){
     if(!storageAvailable()) return false;
@@ -4057,7 +4088,7 @@
   // title, so exam and skill cards can show a "Retake now" badge when needed.
   async function getLatestAttemptsByTitle(){
     if(!currentStudent) return {};
-    const attempts = await fetchAllAttempts();
+    const attempts = await fetchAttemptsIndex();
     const mine = attempts.filter(a => (a.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
     const latestByTitle = {};
     mine.forEach(a=>{
@@ -4310,7 +4341,7 @@
       let classAverageHtml = '';
       if(currentStudent){
         try{
-          const allAttempts = await fetchAllAttempts();
+          const allAttempts = await fetchAttemptsIndex();
           const sameTitle = allAttempts.filter(a => a.examTitle === exam.title && typeof a.pct === 'number');
           if(sameTitle.length > 1){
             const avgPct = Math.round(sameTitle.reduce((s,a)=> s + a.pct, 0) / sameTitle.length);
@@ -4406,17 +4437,48 @@
 
   /* ---------------- LEADERBOARD (Supabase) ---------------- */
   async function saveExamAttempt(attempt){
-    return await dbAdd('attempts', { ...attempt, ts: new Date().toISOString() });
+    const id = generateId('attempts');
+    const fullData = { id, ...attempt, ts: new Date().toISOString() };
+    const ok = await dbSet('attempts', id, fullData);
+    if(ok){
+      // Lightweight companion — everything a leaderboard/streak/summary view
+      // needs (score, retake info) but never the per-question results or
+      // their images. Without this, every dashboard load was downloading
+      // every attempt's full image-laden results for every student.
+      await dbSet('attempts', `idx-${id}`, {
+        _index: true, id, username: fullData.username, examTitle: fullData.examTitle,
+        correct: fullData.correct, total: fullData.total, pct: fullData.pct,
+        retakeRequired: fullData.retakeRequired, retakeDeadline: fullData.retakeDeadline,
+        retakeDayKey: fullData.retakeDayKey || null, ts: fullData.ts
+      });
+    }
+    return ok;
   }
 
   async function fetchAllAttempts(){
-    return await dbGetAll('attempts');
+    const rows = await dbGetAll('attempts');
+    return rows.filter(r => !r._index);
+  }
+
+  // Lightweight version for leaderboards/streaks/summaries — no per-question
+  // results or images. Use fetchAllAttempts() when you actually need the
+  // detailed results (topic mastery, mistake review, admin analysis).
+  async function fetchAttemptsIndex(){
+    await ensureIndexBackfilled('attempts', (a)=> ({
+      _index: true, id: a.id, username: a.username, examTitle: a.examTitle,
+      correct: a.correct, total: a.total, pct: a.pct,
+      retakeRequired: a.retakeRequired, retakeDeadline: a.retakeDeadline,
+      retakeDayKey: a.retakeDayKey || null, ts: a.ts
+    }));
+    const rows = await dbGetAllByIdPrefix('attempts', 'idx-');
+    rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+    return rows;
   }
 
   async function renderLeaderboard(){
     const wrap = document.getElementById('leaderboardWrap');
     if(!wrap) return; // Leaderboard section removed from the homepage
-    const attempts = await fetchAllAttempts();
+    const attempts = await fetchAttemptsIndex();
 
     if(attempts.length === 0){
       wrap.innerHTML = '<div class="admin-empty">No scores yet — take a practice exam above to be the first on the board.</div>';
@@ -5762,17 +5824,19 @@
       byDay[day].rows.push(r);
     });
 
-    // Only this student's own completed homework, fetched individually by
-    // id — not everyone's homework. The old version called fetchAllHomework()
+    // Only this student's own data, fetched individually by id — not
+    // everyone's. The old version called fetchAllAttempts()/fetchAllHomework()
     // here, which downloaded every question and every embedded image for
     // every student in the whole system just to check retake status; that
     // could take minutes once a lot of image-heavy content had piled up.
-    const [myAttempts, myHwIndex] = currentStudent
-      ? await Promise.all([fetchAllAttempts(), fetchHomeworkIndex()])
+    const [myAttemptsIndex, myHwIndex] = currentStudent
+      ? await Promise.all([fetchAttemptsIndex(), fetchHomeworkIndex()])
       : [[], []];
     const uname = currentStudent ? currentStudent.username.trim().toLowerCase() : '';
     const myCompletedHwIndex = myHwIndex.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
     const myHw = (await Promise.all(myCompletedHwIndex.map(h => dbGet('homework', h.id)))).filter(Boolean);
+    const myOwnAttemptsIndex = myAttemptsIndex.filter(a => (a.username||'').trim().toLowerCase() === uname);
+    const myAttempts = (await Promise.all(myOwnAttemptsIndex.map(a => dbGet('attempts', a.id)))).filter(Boolean);
     const myRetakenDayKeys = new Set(
       myAttempts
         .filter(a => (a.username || '').trim().toLowerCase() === uname && a.retakeDayKey)
@@ -5895,13 +5959,15 @@
     const streakEl = document.getElementById('streakCount');
     if(streakEl) streakEl.textContent = streak;
 
-    const [hw, attempts, fullHw] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts(), fetchAllHomework()]);
+    const [hw, attemptsIndex] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
     const uname = currentStudent.username.trim().toLowerCase();
     const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
-    const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
+    const myOwnAttemptsIndex = attemptsIndex.filter(a => (a.username||'').trim().toLowerCase() === uname);
     // Full (with per-question results) versions, needed for topic mastery below —
-    // the lightweight list above is enough for everything else.
-    const myFullHw = fullHw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
+    // fetched individually by id for just this student's own homework/attempts,
+    // not everyone's — the lightweight lists above are enough for everything else.
+    const myFullHw = (await Promise.all(mineHw.map(h => dbGet('homework', h.id)))).filter(Boolean);
+    const mineAttempts = (await Promise.all(myOwnAttemptsIndex.map(a => dbGet('attempts', a.id)))).filter(Boolean);
     const totalCompleted = mineHw.length + mineAttempts.length;
     const allPct = [...mineHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
     const bestPct = allPct.length ? Math.max(...allPct) : 0;
@@ -6046,7 +6112,7 @@
     // used by the progress chart below and the Highlights cards.
     const timeline = [
       ...mineHw.map(h => ({ title: h.title, date: h.submittedAt || h.ts, pct: h.score ? h.score.pct : null })),
-      ...attempts.filter(a => (a.username||'').trim().toLowerCase() === uname).map(a => ({ title: a.examTitle, date: a.ts, pct: a.pct }))
+      ...mineAttempts.map(a => ({ title: a.examTitle, date: a.ts, pct: a.pct }))
     ].filter(t => t.date && t.pct != null).sort((a,b)=> new Date(a.date) - new Date(b.date));
 
     // ---- Highlights: personal best + week-over-week ----
@@ -6600,7 +6666,7 @@
 
     const allStudents = await fetchAllStudents();
     const allHw = await fetchHomeworkIndex();
-    const allAttempts = await fetchAllAttempts();
+    const allAttempts = await fetchAttemptsIndex();
     const assignedLower = assigned.map(u => u.trim().toLowerCase());
 
     const rows = assignedLower.map(uname=>{
@@ -6849,7 +6915,7 @@
 
   async function downloadProgressCard(){
     const streak = await getStreakCount();
-    const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts()]);
+    const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
     const uname = currentStudent.username.trim().toLowerCase();
     const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
     const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
@@ -6972,7 +7038,7 @@
     list.innerHTML = '<div class="admin-empty">Loading your scores…</div>';
     modal.classList.add('open');
 
-    const attempts = await fetchAllAttempts();
+    const attempts = await fetchAttemptsIndex();
     const mine = attempts
       .filter(a => (a.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase())
       .sort((a,b)=> new Date(b.ts) - new Date(a.ts));
@@ -7447,7 +7513,7 @@
     wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
     document.getElementById('bulkWaStepper').style.display = 'none';
 
-    const [allHw, allAttempts, allStudents] = await Promise.all([fetchHomeworkIndex(), fetchAllAttempts(), fetchAllStudents()]);
+    const [allHw, allAttempts, allStudents] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex(), fetchAllStudents()]);
     const studentsByUsername = {};
     allStudents.forEach(s => { studentsByUsername[(s.username||'').trim().toLowerCase()] = s; });
 
