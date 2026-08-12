@@ -1497,6 +1497,25 @@
   .score-review-answers .wrong{color:var(--ember);}
   .score-review-answers .right{color:#39D98A;}
 
+  .est-score-badge{
+    display:inline-block; margin:-10px auto 20px; padding:10px 20px;
+    background:rgba(76,111,255,0.12); border:1px solid rgba(76,111,255,0.3);
+    border-radius:10px; font-size:0.9rem; color:var(--text);
+  }
+  .est-score-badge strong{color:var(--signal); font-size:1.1rem;}
+  .score-sticker{
+    font-size:3.2rem; line-height:1; margin-bottom:4px;
+    animation:stickerPop .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .score-sticker-label{
+    font-family:'Space Grotesk',sans-serif; font-size:0.95rem; color:var(--muted);
+    margin-bottom:14px;
+  }
+  @keyframes stickerPop{
+    0%{transform:scale(0.3) rotate(-15deg); opacity:0;}
+    60%{transform:scale(1.15) rotate(5deg); opacity:1;}
+    100%{transform:scale(1) rotate(0);}
+  }
   .retake-notice{
     background:rgba(255,107,74,0.12); border:1px solid rgba(255,107,74,0.35);
     color:var(--ember); border-radius:10px; padding:14px 16px;
@@ -2417,6 +2436,7 @@
       <button class="admin-tab" data-tab="mistakesPanel" data-roles="admin,assistant">Mistakes</button>
       <button class="admin-tab" data-tab="remindersPanel" data-roles="admin,assistant">Reminders</button>
       <button class="admin-tab" data-tab="assistantAcctsPanel" data-roles="admin">Assistants</button>
+      <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant">Weekly Updates</button>
     </div>
 
     <div class="admin-panel active" id="leadsPanel">
@@ -2806,6 +2826,28 @@
           <tbody id="assistantAcctsBody"></tbody>
         </table>
         <div class="admin-empty" id="assistantAcctsEmpty" style="display:none;">No assistant accounts registered yet.</div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="weeklyUpdatesPanel">
+      <div class="admin-note">A week-in-review message for each student, generated automatically from their real activity — WhatsApp can't send these for you without a paid business API, so this gets each message ready and steps you through sending them with one tap each.</div>
+      <div class="admin-actions">
+        <button class="btn btn-ghost" id="refreshWeeklyUpdates">Refresh</button>
+        <button class="btn btn-primary" id="messageAllWeeklyBtn" style="display:none;">📤 Send all weekly updates</button>
+      </div>
+      <div class="bulk-wa-stepper" id="weeklyWaStepper" style="display:none;">
+        <div>
+          <div class="bulk-wa-title">Sending <span id="weeklyWaIndex">1</span> of <span id="weeklyWaTotal">1</span> — <span id="weeklyWaName"></span></div>
+          <div class="bulk-wa-hint">WhatsApp opened in a new tab with this week's update ready. Hit "Next" once you've sent it.</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost" id="weeklyWaSkipBtn">Skip</button>
+          <button class="btn btn-primary" id="weeklyWaNextBtn">Next →</button>
+          <button class="btn btn-ghost" id="weeklyWaDoneBtn">Done</button>
+        </div>
+      </div>
+      <div id="weeklyUpdatesListWrap">
+        <div class="admin-empty">Loading…</div>
       </div>
     </div>
   </div>
@@ -3487,6 +3529,7 @@
       if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(); }
       if(tab.dataset.tab === 'remindersPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminReminders(); }
       if(tab.dataset.tab === 'assistantAcctsPanel'){ invalidateDbCache('assistants'); renderAssistantAcctsTable(); }
+      if(tab.dataset.tab === 'weeklyUpdatesPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); invalidateDbCache('students'); renderWeeklyUpdates(); }
     });
   });
 
@@ -3880,6 +3923,27 @@
   });
 
   function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  // Converts a percentage-correct score into an EST-style scaled score
+  // (200–800, always a whole multiple of 10 — matching how real EST/SAT
+  // Math scores are reported, e.g. 790, 780, 760, never 765).
+  function pctToEstScore(pct){
+    const raw = 200 + (pct / 100) * 600;
+    return Math.round(raw / 10) * 10;
+  }
+  function isEstCourse(course){
+    return !!(course && course.trim().toLowerCase().includes('est'));
+  }
+
+  // Fun reward "sticker" shown on the score screen based on how they did —
+  // small motivational visual touch, not a formal grade.
+  function getScoreSticker(pct){
+    if(pct >= 100) return { emoji:'🏆', label:'Perfect!' };
+    if(pct >= 90) return { emoji:'🌟', label:'Amazing!' };
+    if(pct >= 75) return { emoji:'👍', label:'Great job!' };
+    if(pct >= 50) return { emoji:'💪', label:'Keep going!' };
+    return { emoji:'🌱', label:'Growing!' };
+  }
 
   // For "Your answer / Correct answer" style review lines — shows the
   // option's text if it has any, otherwise a small thumbnail if that option
@@ -4380,11 +4444,19 @@
             : `<div class="retake-notice" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);">⚠ This result did NOT save — check your connection and tap "Retry save" below, or Mr. Mohamed Ibrahim won't see it.</div>`)
         : '';
 
+      const sticker = getScoreSticker(pct);
+      const estScoreHtml = (currentStudent && isEstCourse(currentStudent.course))
+        ? `<div class="est-score-badge">Expected EST score: <strong>${pctToEstScore(pct)}</strong> / 800</div>`
+        : '';
+
       examPlayer.innerHTML = `
         <div class="exam-score">
+          <div class="score-sticker">${sticker.emoji}</div>
+          <div class="score-sticker-label">${sticker.label}</div>
           ${feedback}
           <div class="big-num">${pct}%</div>
           <p style="color:var(--muted);margin-bottom:24px;">${correctCount} of ${exam.questions.length} correct on “${esc(exam.title)}”.</p>
+          ${estScoreHtml}
           ${classAverageHtml}
           ${reviewHtml}
           ${savedNoticeHtml}
@@ -5672,11 +5744,43 @@
       return;
     }
 
+    // For any homework still flagged as needing a retake, check whether the
+    // student has already fixed the same lesson through their Mistake
+    // History — if so, it's already handled and shouldn't nag them again.
+    const pendingCandidates = mine.filter(e => e.status === 'completed' && e.retakeRequired);
+    const uname = currentStudent.username.trim().toLowerCase();
+    let fullPendingById = {};
+    let myLaterCorrect = [];
+    if(pendingCandidates.length > 0){
+      const [fullRecords, signals] = await Promise.all([
+        Promise.all(pendingCandidates.map(e => dbGet('homework', e.id))),
+        getMyRetakeSignals()
+      ]);
+      fullRecords.forEach((rec, i) => { if(rec) fullPendingById[pendingCandidates[i].id] = rec; });
+      myLaterCorrect = signals.myLaterCorrect;
+    }
+
     list.innerHTML = '';
     mine.forEach(entry=>{
       const isCompleted = entry.status === 'completed';
-      const needsRetake = isCompleted && entry.retakeRequired;
-      const overdue = needsRetake && entry.retakeDeadline && new Date(entry.retakeDeadline) < new Date();
+      let needsRetake = isCompleted && entry.retakeRequired;
+
+      // Already fixed via Mistake History? Check every wrong lesson from
+      // this homework against later correct answers, after it was submitted.
+      if(needsRetake && fullPendingById[entry.id]){
+        const full = fullPendingById[entry.id];
+        const submittedAt = entry.submittedAt ? new Date(entry.submittedAt) : null;
+        const wrongLessons = (full.results || [])
+          .filter(r => !r.correct)
+          .map(r => (r.lesson || 'General').trim().toLowerCase());
+        if(wrongLessons.length > 0 && submittedAt){
+          const allFixed = wrongLessons.every(lesson =>
+            myLaterCorrect.some(c => c.lesson === lesson && new Date(c.ts) > submittedAt)
+          );
+          if(allFixed) needsRetake = false;
+        }
+      }
+
       const row = document.createElement('div');
       row.className = 'hw-row';
       row.style.flexWrap = 'wrap';
@@ -5685,14 +5789,14 @@
       if(!isCompleted){
         statusHtml = `<button class="btn btn-ghost start-hw-btn" style="padding:6px 14px; font-size:0.82rem;">Start homework</button>`;
       } else if(needsRetake){
-        const deadlineLabel = entry.retakeDeadline ? new Date(entry.retakeDeadline).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'}) : '';
         statusHtml = `
           <span class="hw-mark">${entry.score ? `${entry.score.correct}/${entry.score.total} (${entry.score.pct}%)` : ''}</span>
-          <span class="retake-badge ${overdue ? 'overdue' : ''}">${overdue ? 'Retake overdue' : 'Retake by ' + deadlineLabel}</span>
-          <button class="btn btn-ghost start-hw-btn" style="padding:6px 14px; font-size:0.82rem;">Retake now</button>
+          <span class="retake-badge">📋 Answer these in Mistake History</span>
+          <button class="btn btn-ghost goto-mistakes-btn" style="padding:6px 14px; font-size:0.82rem;">Go to Mistake History</button>
         `;
       } else {
-        statusHtml = `<span class="hw-status-icon done">✓</span><span class="hw-mark">${entry.score ? `${entry.score.correct}/${entry.score.total} (${entry.score.pct}%)` : ''}</span>`;
+        const hwSticker = entry.score ? getScoreSticker(entry.score.pct) : null;
+        statusHtml = `<span class="hw-status-icon done" title="${hwSticker ? hwSticker.label : 'Done'}">${hwSticker ? hwSticker.emoji : '✓'}</span><span class="hw-mark">${entry.score ? `${entry.score.correct}/${entry.score.total} (${entry.score.pct}%)` : ''}</span>`;
       }
 
       row.innerHTML = `
@@ -5700,7 +5804,7 @@
         <span class="hw-title">${esc(entry.title || '')}</span>
         ${statusHtml}
       `;
-      if(!isCompleted || needsRetake){
+      if(!isCompleted){
         row.querySelector('.start-hw-btn').addEventListener('click', async ()=>{
           const btn = row.querySelector('.start-hw-btn');
           const originalLabel = btn.textContent;
@@ -5709,6 +5813,11 @@
           btn.disabled = false; btn.textContent = originalLabel;
           if(!full){ alert('Could not load this homework — please try again.'); return; }
           startHomework(full);
+        });
+      } else if(needsRetake){
+        row.querySelector('.goto-mistakes-btn').addEventListener('click', ()=>{
+          const tab = document.querySelector('.dash-tab-btn[data-dashtab="tabMistakes"]');
+          if(tab) tab.click();
         });
       }
       list.appendChild(row);
@@ -5805,6 +5914,41 @@
   // which exam/homework/skill it came from — so "all exams I got wrong
   // today" is one glance instead of scrolling the full list. Also shows the
   // student their own retake status per day, same signal the admin sees.
+  // Only this student's own data, fetched individually by id — not
+  // everyone's. Shared by the homework list and Mistake History, so both
+  // agree on whether a lesson has already been fixed since a mistake.
+  async function getMyRetakeSignals(){
+    if(!currentStudent) return { myHw:[], myAttempts:[], myRetakenDayKeys:new Set(), myLaterCorrect:[] };
+    const [myAttemptsIndex, myHwIndex] = await Promise.all([fetchAttemptsIndex(), fetchHomeworkIndex()]);
+    const uname = currentStudent.username.trim().toLowerCase();
+    const myCompletedHwIndex = myHwIndex.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
+    const myHw = (await Promise.all(myCompletedHwIndex.map(h => dbGet('homework', h.id)))).filter(Boolean);
+    const myOwnAttemptsIndex = myAttemptsIndex.filter(a => (a.username||'').trim().toLowerCase() === uname);
+    const myAttempts = (await Promise.all(myOwnAttemptsIndex.map(a => dbGet('attempts', a.id)))).filter(Boolean);
+    const myRetakenDayKeys = new Set(
+      myAttempts
+        .filter(a => (a.username || '').trim().toLowerCase() === uname && a.retakeDayKey)
+        .map(a => a.retakeDayKey)
+    );
+    // Any later correct answer on the same lesson — from any homework, exam,
+    // or skill practice — counts as having fixed it, not just one specific button.
+    const myLaterCorrect = [];
+    function collectCorrect(items, dateField){
+      items.forEach(item=>{
+        if((item.username||'').trim().toLowerCase() !== uname) return;
+        if(!Array.isArray(item.results)) return;
+        const ts = item[dateField] || item.ts;
+        if(!ts) return;
+        item.results.forEach(r=>{
+          if(r.correct) myLaterCorrect.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts });
+        });
+      });
+    }
+    collectCorrect(myHw.filter(h => h.status === 'completed'), 'submittedAt');
+    collectCorrect(myAttempts, 'ts');
+    return { myHw, myAttempts, myRetakenDayKeys, myLaterCorrect };
+  }
+
   async function renderDailyMistakeSummary(rows){
     const container = document.getElementById('dailyMistakeSummary');
     if(!container) return;
@@ -5824,41 +5968,8 @@
       byDay[day].rows.push(r);
     });
 
-    // Only this student's own data, fetched individually by id — not
-    // everyone's. The old version called fetchAllAttempts()/fetchAllHomework()
-    // here, which downloaded every question and every embedded image for
-    // every student in the whole system just to check retake status; that
-    // could take minutes once a lot of image-heavy content had piled up.
-    const [myAttemptsIndex, myHwIndex] = currentStudent
-      ? await Promise.all([fetchAttemptsIndex(), fetchHomeworkIndex()])
-      : [[], []];
     const uname = currentStudent ? currentStudent.username.trim().toLowerCase() : '';
-    const myCompletedHwIndex = myHwIndex.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
-    const myHw = (await Promise.all(myCompletedHwIndex.map(h => dbGet('homework', h.id)))).filter(Boolean);
-    const myOwnAttemptsIndex = myAttemptsIndex.filter(a => (a.username||'').trim().toLowerCase() === uname);
-    const myAttempts = (await Promise.all(myOwnAttemptsIndex.map(a => dbGet('attempts', a.id)))).filter(Boolean);
-    const myRetakenDayKeys = new Set(
-      myAttempts
-        .filter(a => (a.username || '').trim().toLowerCase() === uname && a.retakeDayKey)
-        .map(a => a.retakeDayKey)
-    );
-    // Any later correct answer on the same lesson — from any homework, exam,
-    // or skill practice — counts as having fixed it, not just the specific
-    // "Retake as exam" button.
-    const myLaterCorrect = [];
-    function collectCorrect(items, dateField){
-      items.forEach(item=>{
-        if((item.username||'').trim().toLowerCase() !== uname) return;
-        if(!Array.isArray(item.results)) return;
-        const ts = item[dateField] || item.ts;
-        if(!ts) return;
-        item.results.forEach(r=>{
-          if(r.correct) myLaterCorrect.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts });
-        });
-      });
-    }
-    collectCorrect(myHw.filter(h => h.status === 'completed'), 'submittedAt');
-    collectCorrect(myAttempts, 'ts');
+    const { myRetakenDayKeys, myLaterCorrect } = await getMyRetakeSignals();
 
     const todayStr = new Date().toDateString();
     const days = Object.keys(byDay).sort((a,b)=> new Date(b) - new Date(a));
@@ -6125,6 +6236,15 @@
           icon:'🏆',
           title:`Personal best: ${best.pct}%`,
           desc:`on "${best.title}"`
+        });
+      }
+
+      if(isEstCourse(currentStudent.course) && timeline.length > 0){
+        const overallAvgPct = Math.round(timeline.reduce((s,t)=> s+t.pct, 0) / timeline.length);
+        cards.push({
+          icon:'🎯',
+          title:`Expected EST score: ${pctToEstScore(overallAvgPct)} / 800`,
+          desc:`Based on your overall average (${overallAvgPct}%)`
         });
       }
 
@@ -6490,14 +6610,22 @@
             </div>
           `).join('')}
         </div>
-        <div class="retake-notice">You must answer this homework again within 24 hours. It'll show up on your dashboard until you retake it.</div>
+        <div class="retake-notice">📋 Your wrong answers have been added to your Mistake History — answer them there within 24 hours to clear this.</div>
       ` : '';
+
+      const sticker = getScoreSticker(pct);
+      const estScoreHtml = (currentStudent && isEstCourse(currentStudent.course))
+        ? `<div class="est-score-badge">Expected EST score: <strong>${pctToEstScore(pct)}</strong> / 800</div>`
+        : '';
 
       examPlayer.innerHTML = `
         <div class="exam-score">
+          <div class="score-sticker">${sticker.emoji}</div>
+          <div class="score-sticker-label">${sticker.label}</div>
           ${feedback}
           <div class="big-num">${pct}%</div>
           <p style="color:var(--muted);margin-bottom:24px;">${correctCount} of ${hw.questions.length} correct on “${esc(hw.title)}”.</p>
+          ${estScoreHtml}
           ${classAverageHtml}
           ${reviewHtml}
           ${ok
@@ -7620,6 +7748,117 @@
 
   document.getElementById('refreshReminders').addEventListener('click', ()=>{ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminReminders(); });
   document.getElementById('mistakesFilterSelect').addEventListener('change', renderAdminMistakesTable);
+
+  /* ---------------- WEEKLY PARENT UPDATES ---------------- */
+  let weeklyWaQueue = [];
+  let weeklyWaIndex = 0;
+
+  // Auto-generates a week-in-review message for every approved student from
+  // their real activity — no admin curation needed. True auto-send would
+  // require a paid WhatsApp Business API; this gets every message ready and
+  // steps through sending them with one tap each, same pattern as Reminders.
+  async function renderWeeklyUpdates(){
+    const wrap = document.getElementById('weeklyUpdatesListWrap');
+    wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
+    document.getElementById('weeklyWaStepper').style.display = 'none';
+
+    const [allStudents, allHw, allAttempts] = await Promise.all([
+      fetchAllStudents(), fetchHomeworkIndex(), fetchAttemptsIndex()
+    ]);
+    const approved = allStudents.filter(s => s.status === 'approved');
+    const messageAllBtn = document.getElementById('messageAllWeeklyBtn');
+
+    if(approved.length === 0){
+      wrap.innerHTML = '<div class="admin-empty">No approved students yet.</div>';
+      messageAllBtn.style.display = 'none';
+      weeklyWaQueue = [];
+      return;
+    }
+
+    const now = new Date();
+    const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+
+    wrap.innerHTML = '';
+    weeklyWaQueue = [];
+    approved.forEach(student=>{
+      const uname = student.username.trim().toLowerCase();
+      const mineHwThisWeek = allHw.filter(h =>
+        (h.username||'').trim().toLowerCase() === uname && h.status === 'completed' &&
+        h.submittedAt && new Date(h.submittedAt) >= weekAgo
+      );
+      const mineAttemptsThisWeek = allAttempts.filter(a =>
+        (a.username||'').trim().toLowerCase() === uname && a.ts && new Date(a.ts) >= weekAgo
+      );
+      const allPct = [...mineHwThisWeek.map(h => h.score ? h.score.pct : 0), ...mineAttemptsThisWeek.map(a => a.pct || 0)];
+      const totalDone = mineHwThisWeek.length + mineAttemptsThisWeek.length;
+      const avgPct = allPct.length ? Math.round(allPct.reduce((s,p)=> s+p, 0) / allPct.length) : null;
+
+      const row = document.createElement('div');
+      row.className = 'reminder-row';
+
+      const parentDigits = digitsOnly(formatEgyptNumber(student.parentNumber));
+      const summaryLine = totalDone === 0
+        ? `Hi! ${student.username} didn't complete any homework or practice this week — a gentle nudge might help.`
+        : `Hi! Here's ${student.username}'s week: ${totalDone} homework/practice item${totalDone===1?'':'s'} completed, averaging ${avgPct}%. Keep up the encouragement at home!`;
+      const waLink = parentDigits ? `https://wa.me/${parentDigits}?text=${encodeURIComponent(summaryLine)}` : null;
+
+      if(waLink) weeklyWaQueue.push({ username: student.username, waLink });
+
+      row.innerHTML = `
+        <div class="reminder-info">
+          <div class="name">${esc(student.username)}</div>
+          <div class="detail">${totalDone} item${totalDone===1?'':'s'} this week${avgPct != null ? ` · avg ${avgPct}%` : ''} · Parent #: ${esc(student.parentNumber || 'not on file')}</div>
+        </div>
+        ${waLink
+          ? `<a href="${waLink}" target="_blank" rel="noopener" class="btn btn-primary" style="padding:9px 16px;font-size:0.85rem;">Send update</a>`
+          : `<span class="btn btn-ghost" style="padding:9px 16px;font-size:0.85rem;opacity:0.6;cursor:default;">No parent number</span>`
+        }
+      `;
+      wrap.appendChild(row);
+    });
+
+    messageAllBtn.style.display = weeklyWaQueue.length > 1 ? 'inline-flex' : 'none';
+    if(messageAllBtn) messageAllBtn.textContent = `📤 Send all weekly updates (${weeklyWaQueue.length})`;
+  }
+
+  function showWeeklyWaStep(){
+    const stepper = document.getElementById('weeklyWaStepper');
+    if(weeklyWaIndex >= weeklyWaQueue.length){
+      stepper.style.display = 'none';
+      return;
+    }
+    const item = weeklyWaQueue[weeklyWaIndex];
+    document.getElementById('weeklyWaIndex').textContent = weeklyWaIndex + 1;
+    document.getElementById('weeklyWaTotal').textContent = weeklyWaQueue.length;
+    document.getElementById('weeklyWaName').textContent = item.username;
+    stepper.style.display = 'flex';
+  }
+
+  document.getElementById('messageAllWeeklyBtn').addEventListener('click', ()=>{
+    if(weeklyWaQueue.length === 0) return;
+    weeklyWaIndex = 0;
+    showWeeklyWaStep();
+    window.open(weeklyWaQueue[0].waLink, '_blank', 'noopener');
+  });
+  document.getElementById('weeklyWaNextBtn').addEventListener('click', ()=>{
+    weeklyWaIndex++;
+    if(weeklyWaIndex < weeklyWaQueue.length){
+      window.open(weeklyWaQueue[weeklyWaIndex].waLink, '_blank', 'noopener');
+    }
+    showWeeklyWaStep();
+  });
+  document.getElementById('weeklyWaSkipBtn').addEventListener('click', ()=>{
+    weeklyWaIndex++;
+    showWeeklyWaStep();
+  });
+  document.getElementById('weeklyWaDoneBtn').addEventListener('click', ()=>{
+    weeklyWaIndex = weeklyWaQueue.length;
+    document.getElementById('weeklyWaStepper').style.display = 'none';
+  });
+  document.getElementById('refreshWeeklyUpdates').addEventListener('click', ()=>{
+    invalidateDbCache('homework'); invalidateDbCache('attempts'); invalidateDbCache('students');
+    renderWeeklyUpdates();
+  });
 
   async function openStudentAnalysis(username){
     document.getElementById('analysisStudentName').textContent = `${username}'s analysis`;
