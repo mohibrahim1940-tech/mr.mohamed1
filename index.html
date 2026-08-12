@@ -3356,7 +3356,7 @@
       if(tab.dataset.tab === 'sessionsPanel') initSessionsPanel();
       if(tab.dataset.tab === 'reviewsPanel') initReviewsPanel();
       if(tab.dataset.tab === 'coursesPanel') renderAdminCourseList();
-      if(tab.dataset.tab === 'mistakesPanel') initMistakesPanel();
+      if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(); }
       if(tab.dataset.tab === 'remindersPanel') renderAdminReminders();
     });
   });
