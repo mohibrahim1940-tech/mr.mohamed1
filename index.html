@@ -2567,7 +2567,7 @@
     </div>
 
     <div class="admin-panel" id="studentsPanel">
-      <div class="admin-note">Student accounts are stored in your Supabase database. Passwords are hashed, never stored in plain text, and never shown here. New registrations start as "Pending" until you accept or decline them here.</div>
+      <div class="admin-note">Student accounts are stored in your Supabase database. Passwords are hashed, never stored in plain text, and never shown here. New registrations start as "Pending" until you accept or decline them here. The "Access" column shows how many different IP addresses each student has signed in from recently — a rough signal for account sharing, not proof. A student switching between home Wi-Fi and mobile data will naturally show up as more than one IP too, so treat "⚠ 2+ IPs" as something worth a quick check-in, not an accusation.</div>
       <div class="admin-stats">
         <div class="admin-stat-card"><div class="num" id="statStudents">0</div><div class="lbl">Registered students</div></div>
         <div class="admin-stat-card"><div class="num" id="statPending">0</div><div class="lbl">Pending requests</div></div>
@@ -2579,7 +2579,7 @@
       <div class="admin-table-wrap">
         <table class="admin-table" id="studentsTable">
           <thead>
-            <tr><th>Username</th><th>Grade</th><th>Course</th><th>Student #</th><th>Parent #</th><th>Registered</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>Username</th><th>Grade</th><th>Course</th><th>Student #</th><th>Parent #</th><th>Registered</th><th>Status</th><th>Access</th><th>Actions</th></tr>
           </thead>
           <tbody id="studentsBody"></tbody>
         </table>
@@ -7035,7 +7035,34 @@
     applySignedInState();
     closeAuthModal();
     signinForm.reset();
+    logStudentLogin(currentStudent.username); // fire-and-forget, never blocks sign-in
   });
+
+  // Browsers can't report their own public IP directly — this checks in
+  // with a free, no-signup IP-lookup service to find out. Used only to spot
+  // account sharing (the same login used from several different IPs), never
+  // to identify or track anyone beyond that.
+  async function getClientIp(){
+    try{
+      const res = await fetch('https://api.ipify.org?format=json');
+      if(!res.ok) return null;
+      const data = await res.json();
+      return data.ip || null;
+    }catch(err){ return null; } // offline or the lookup service is down — just skip it
+  }
+
+  async function logStudentLogin(username){
+    try{
+      const ip = await getClientIp();
+      if(!ip) return;
+      const student = await getStudent(username);
+      if(!student) return;
+      const history = Array.isArray(student.loginHistory) ? student.loginHistory.slice() : [];
+      history.push({ ip, ts: new Date().toISOString() });
+      while(history.length > 20) history.shift(); // keep only the most recent 20
+      await dbSet('students', studentKey(username), { ...student, loginHistory: history });
+    }catch(err){ console.error('Could not log sign-in IP:', err); }
+  }
 
   registerForm.addEventListener('submit', async (e)=>{
     e.preventDefault();
@@ -8220,6 +8247,13 @@
       const date = new Date(s.ts);
       const waDigits = digitsOnly(formatEgyptNumber(s.parentNumber));
       const waLink = waDigits ? `https://wa.me/${waDigits}` : null;
+      const loginHistory = Array.isArray(s.loginHistory) ? s.loginHistory : [];
+      const distinctIps = [...new Set(loginHistory.map(h => h.ip))];
+      const accessHtml = loginHistory.length === 0
+        ? `<span style="color:var(--muted); font-size:0.78rem;">No logins yet</span>`
+        : distinctIps.length > 1
+          ? `<span class="status-pill status-pending" title="Signed in from ${distinctIps.length} different IP addresses recently — could mean the account is being shared, or just the student using different networks (phone data, home, school Wi-Fi).">⚠ ${distinctIps.length} IPs</span>`
+          : `<span class="status-pill status-approved">1 IP</span>`;
       tr.innerHTML = `
         <td>${esc(s.username)}</td>
         <td>${esc(s.grade)}</td>
@@ -8228,6 +8262,7 @@
         <td>${esc(s.parentNumber)}</td>
         <td>${date.toLocaleDateString()}</td>
         <td><span class="status-pill status-${status}">${status}</span></td>
+        <td>${accessHtml} ${loginHistory.length > 0 ? `<button class="student-action-btn view-ip-history-btn" style="margin-top:4px;display:block;">Details</button>` : ''}</td>
         <td style="white-space:nowrap;">
           ${!isAssistant ? `<button class="student-action-btn accept-btn" ${status==='approved' ? 'disabled' : ''}>Accept</button>` : ''}
           ${!isAssistant ? `<button class="student-action-btn decline-btn" ${status==='declined' ? 'disabled' : ''}>Decline</button>` : ''}
@@ -8238,6 +8273,15 @@
           ${!isAssistant ? `<button class="student-action-btn delete-student-btn">Delete</button>` : ''}
         </td>
       `;
+      const viewIpBtn = tr.querySelector('.view-ip-history-btn');
+      if(viewIpBtn){
+        viewIpBtn.addEventListener('click', ()=>{
+          const lines = loginHistory.slice().reverse().map(h =>
+            `${new Date(h.ts).toLocaleString()} — ${h.ip}`
+          ).join('\n');
+          alert(`Recent sign-ins for ${s.username}:\n\n${lines}\n\n${distinctIps.length > 1 ? `⚠ ${distinctIps.length} different IP addresses seen — worth asking the student about if this seems unusual.` : 'Only 1 IP address seen — no sign of sharing.'}`);
+        });
+      }
       tr.querySelector('.parent-link-btn').addEventListener('click', async ()=>{
         const btn = tr.querySelector('.parent-link-btn');
         btn.disabled = true; btn.textContent = 'Getting link…';
