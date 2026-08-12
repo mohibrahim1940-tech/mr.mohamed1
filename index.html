@@ -2795,9 +2795,20 @@
      5. (Only needed if you want to upload explanation videos to
         questions.) Go to Storage (left sidebar) → "New bucket" → name
         it exactly  explanation-videos  → toggle "Public bucket" ON →
-        Create. That's it — the admin panel can now upload video files
-        for a question's explanation, and students can watch them.
-        Keep videos short (a minute or two) — the free Supabase plan
+        Create. Then go to SQL Editor → New query → paste this and
+        Run (the "Public" toggle above only allows students to WATCH
+        videos — this second step is what allows the admin panel to
+        UPLOAD them; skipping it causes a "row-level security policy"
+        error on upload):
+
+         create policy "public access explanation-videos"
+         on storage.objects for all
+         using (bucket_id = 'explanation-videos')
+         with check (bucket_id = 'explanation-videos');
+
+        That's it — the admin panel can now upload video files for a
+        question's explanation, and students can watch them. Keep
+        videos short (a minute or two) — the free Supabase plan
         includes 1GB of file storage total.
 
      SECURITY NOTE: the policies above make every record (student
@@ -3417,6 +3428,9 @@
     if(uploadError){
       if(/bucket not found/i.test(uploadError.message || '')){
         throw new Error('The "explanation-videos" storage bucket doesn\'t exist yet — create it in your Supabase dashboard first (see the SUPABASE SETUP comment near the top of this file).');
+      }
+      if(/row-level security|row level security/i.test(uploadError.message || '')){
+        throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy), not just the "Public bucket" toggle. See step 5 of the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
       }
       throw new Error(uploadError.message || 'Upload failed');
     }
