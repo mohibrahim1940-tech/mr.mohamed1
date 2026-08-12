@@ -1043,6 +1043,22 @@
     display:block; color:var(--muted); font-size:0.74rem; margin-top:6px;
   }
 
+  .q-video-row{margin-bottom:16px;}
+  .video-upload-status{display:block; font-size:0.76rem; margin-top:6px; min-height:1em;}
+  .q-video-preview{
+    display:none; max-width:320px; width:100%; margin-top:10px;
+    border-radius:8px; border:1px solid var(--line); background:#000;
+  }
+  .explanation-video-wrap{margin-top:14px;}
+  .explanation-video-wrap video{
+    max-width:100%; width:100%; max-width:400px; border-radius:8px;
+    border:1px solid var(--line); background:#000; display:block;
+  }
+  .explanation-video-label{
+    display:flex; align-items:center; gap:6px; color:var(--signal);
+    font-size:0.82rem; font-weight:600; margin-bottom:8px;
+  }
+
   .option-row{align-items:flex-start;}
   .option-row input[type="radio"]{margin-top:9px;}
   .option-text-wrap{flex:1; display:flex; flex-direction:column; gap:6px;}
@@ -2753,6 +2769,13 @@
         below, replacing the placeholder text, then upload this file
         wherever you host your site (Netlify, your own web host, etc. —
         any of them work, since Supabase is reached over the internet).
+     5. (Only needed if you want to upload explanation videos to
+        questions.) Go to Storage (left sidebar) → "New bucket" → name
+        it exactly  explanation-videos  → toggle "Public bucket" ON →
+        Create. That's it — the admin panel can now upload video files
+        for a question's explanation, and students can watch them.
+        Keep videos short (a minute or two) — the free Supabase plan
+        includes 1GB of file storage total.
 
      SECURITY NOTE: the policies above make every record (student
      passwords — already hashed — parent phone numbers, exam answers)
@@ -3356,6 +3379,28 @@
   let editingExamId = null;
   let qCounter = 0;
 
+  // Uploads an explanation video file to the "explanation-videos" Supabase
+  // Storage bucket and returns its public URL. Videos are never stored in
+  // the database itself (JSONB isn't built for large binary files) — this
+  // requires the one-time bucket setup described in the SUPABASE SETUP
+  // comment near the top of this script.
+  async function uploadExplanationVideo(file, onProgress){
+    if(!storageAvailable()) throw new Error('Storage is not connected — see the SUPABASE SETUP comment near the top of this file.');
+    const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: uploadError } = await supabaseClient.storage
+      .from('explanation-videos')
+      .upload(path, file, { contentType: file.type || 'video/mp4', upsert: false });
+    if(uploadError){
+      if(/bucket not found/i.test(uploadError.message || '')){
+        throw new Error('The "explanation-videos" storage bucket doesn\'t exist yet — create it in your Supabase dashboard first (see the SUPABASE SETUP comment near the top of this file).');
+      }
+      throw new Error(uploadError.message || 'Upload failed');
+    }
+    const { data: publicUrlData } = supabaseClient.storage.from('explanation-videos').getPublicUrl(path);
+    return publicUrlData.publicUrl;
+  }
+
   function resizeImageToDataUrl(file, maxWidth, quality){
     return new Promise((resolve, reject)=>{
       const reader = new FileReader();
@@ -3406,6 +3451,7 @@
     block._imageData = (data && data.image) || null;
     block._optionImages = (data && Array.isArray(data.optionImages)) ? data.optionImages.slice(0, 4) : [null, null, null, null];
     while(block._optionImages.length < 4) block._optionImages.push(null);
+    block._explanationVideo = (data && data.explanationVideo) || null;
 
     block.innerHTML = `
       <button type="button" class="remove-q-btn" aria-label="Remove question">✕</button>
@@ -3418,6 +3464,15 @@
         </div>
         <span class="paste-hint">📋 You can also just paste (Ctrl+V) a copied image anywhere in this question box.</span>
         <img class="q-image-preview" style="${block._imageData ? 'display:block;' : ''}" src="${block._imageData || ''}">
+      </div>
+      <div class="q-video-row">
+        <label class="field-label" style="margin-bottom:6px;">Explanation video (optional — shown to a student only if they get this wrong)</label>
+        <div class="q-image-controls">
+          <input type="file" accept="video/*" class="q-video-input">
+          <button type="button" class="remove-video-btn" style="${block._explanationVideo ? '' : 'display:none;'}">Remove video</button>
+        </div>
+        <span class="video-upload-status"></span>
+        <video class="q-video-preview" controls style="${block._explanationVideo ? 'display:block;' : ''}" ${block._explanationVideo ? `src="${block._explanationVideo}"` : ''}></video>
       </div>
       <div class="field-row" style="margin-bottom:14px;">
         <select class="q-lesson">
@@ -3476,6 +3531,41 @@
       preview.style.display = 'none';
       removeImageBtn.style.display = 'none';
       fileInput.value = '';
+    });
+
+    // Explanation video upload (goes to Supabase Storage, not the database).
+    const videoInput = block.querySelector('.q-video-input');
+    const videoPreview = block.querySelector('.q-video-preview');
+    const removeVideoBtn = block.querySelector('.remove-video-btn');
+    const videoStatus = block.querySelector('.video-upload-status');
+
+    videoInput.addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      videoInput.disabled = true;
+      videoStatus.textContent = 'Uploading…';
+      videoStatus.style.color = 'var(--muted)';
+      try{
+        const url = await uploadExplanationVideo(file);
+        block._explanationVideo = url;
+        videoPreview.src = url;
+        videoPreview.style.display = 'block';
+        removeVideoBtn.style.display = 'inline-block';
+        videoStatus.textContent = 'Uploaded ✓';
+        videoStatus.style.color = '#39D98A';
+      }catch(err){
+        videoStatus.textContent = err.message || 'Upload failed — try again.';
+        videoStatus.style.color = 'var(--ember)';
+      }
+      videoInput.disabled = false;
+      videoInput.value = '';
+    });
+    removeVideoBtn.addEventListener('click', ()=>{
+      block._explanationVideo = null;
+      videoPreview.src = '';
+      videoPreview.style.display = 'none';
+      removeVideoBtn.style.display = 'none';
+      videoStatus.textContent = '';
     });
 
     // Paste an image anywhere in this question box → becomes the question
@@ -3556,6 +3646,7 @@
       const image = block._imageData || null;
       const options = Array.from(block.querySelectorAll('.q-option')).map(i => i.value.trim());
       const optionImages = (block._optionImages || [null,null,null,null]).slice(0, 4);
+      const explanationVideo = block._explanationVideo || null;
       const correctRadio = block.querySelector('.q-correct:checked');
       const correct = correctRadio ? parseInt(correctRadio.value, 10) : null;
       const optionsComplete = options.every((o, i) => o || optionImages[i]);
@@ -3563,7 +3654,8 @@
         const hasAnyOptionImage = optionImages.some(Boolean);
         questions.push({
           lesson: lesson || 'General', text, image, options, correct,
-          ...(hasAnyOptionImage ? { optionImages } : {})
+          ...(hasAnyOptionImage ? { optionImages } : {}),
+          ...(explanationVideo ? { explanationVideo } : {})
         });
       }
     });
@@ -3582,6 +3674,18 @@
     const img = row.optionImages && row.optionImages[index];
     if(img) return `<img src="${img}" alt="Option ${index+1}" style="max-width:70px;max-height:46px;border-radius:4px;vertical-align:middle;object-fit:contain;">`;
     return '—';
+  }
+
+  // Only ever called on a wrong answer's review row — shows the explanation
+  // video Mr. Mohamed Ibrahim attached to that question, if there is one.
+  function explanationVideoHtml(row){
+    if(!row.explanationVideo) return '';
+    return `
+      <div class="explanation-video-wrap">
+        <div class="explanation-video-label">🎬 Watch the explanation</div>
+        <video controls src="${row.explanationVideo}"></video>
+      </div>
+    `;
   }
 
   document.getElementById('addQuestionBtn').addEventListener('click', ()=> addQuestionBlock(null));
@@ -4025,7 +4129,7 @@
             mistakeSaves.push(saveMistake({
               username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, optionImages: q.optionImages || null, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: exam.questions.length
             }));
           }
@@ -4036,6 +4140,7 @@
           image: q.image || null,
           options: q.options,
           optionImages: q.optionImages || null,
+          explanationVideo: q.explanationVideo || null,
           chosenAnswer: answers[i],
           correctAnswer: q.correct,
           correct: answers[i] === q.correct
@@ -4084,6 +4189,7 @@
                 Your answer: <span class="wrong">${formatOptionAnswer(r, r.chosenAnswer)}</span> ·
                 Correct answer: <span class="right">${formatOptionAnswer(r, r.correctAnswer)}</span>
               </div>
+              ${explanationVideoHtml(r)}
             </div>
           `).join('')}
         </div>
@@ -6053,6 +6159,7 @@
         image: q.image || null,
         options: q.options,
         optionImages: q.optionImages || null,
+        explanationVideo: q.explanationVideo || null,
         chosenAnswer: answers[i],
         correctAnswer: q.correct,
         correct: answers[i] === q.correct
@@ -6065,7 +6172,7 @@
             saveMistake({
               username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, optionImages: q.optionImages || null, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: hw.questions.length
             });
           }
@@ -6112,6 +6219,7 @@
                 Your answer: <span class="wrong">${formatOptionAnswer(r, r.chosenAnswer)}</span> ·
                 Correct answer: <span class="right">${formatOptionAnswer(r, r.correctAnswer)}</span>
               </div>
+              ${explanationVideoHtml(r)}
             </div>
           `).join('')}
         </div>
@@ -6828,6 +6936,7 @@
       ${row.image ? `<img class="exam-q-image" src="${row.image}" alt="Question image">` : ''}
       <div class="exam-q-text" style="margin-bottom:20px;">${esc(row.text)}</div>
       ${optionsHtml}
+      ${explanationVideoHtml(row)}
       <p style="color:var(--muted); font-size:0.82rem; margin-top:18px;">Student: <strong style="color:var(--text);">${esc(row.username)}</strong></p>
       ${allowDelete && row.id ? `<button class="btn btn-ghost" id="deleteMistakeFromViewBtn" style="width:100%;margin-top:16px;">Delete this mistake</button>` : ''}
     `;
