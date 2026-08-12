@@ -5762,10 +5762,17 @@
       byDay[day].rows.push(r);
     });
 
-    const [myAttempts, myHw] = currentStudent
-      ? await Promise.all([fetchAllAttempts(), fetchAllHomework()])
+    // Only this student's own completed homework, fetched individually by
+    // id — not everyone's homework. The old version called fetchAllHomework()
+    // here, which downloaded every question and every embedded image for
+    // every student in the whole system just to check retake status; that
+    // could take minutes once a lot of image-heavy content had piled up.
+    const [myAttempts, myHwIndex] = currentStudent
+      ? await Promise.all([fetchAllAttempts(), fetchHomeworkIndex()])
       : [[], []];
     const uname = currentStudent ? currentStudent.username.trim().toLowerCase() : '';
+    const myCompletedHwIndex = myHwIndex.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
+    const myHw = (await Promise.all(myCompletedHwIndex.map(h => dbGet('homework', h.id)))).filter(Boolean);
     const myRetakenDayKeys = new Set(
       myAttempts
         .filter(a => (a.username || '').trim().toLowerCase() === uname && a.retakeDayKey)
