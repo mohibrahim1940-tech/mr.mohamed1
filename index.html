@@ -1990,7 +1990,7 @@
             <div class="admin-empty">No mistakes yet.</div>
           </div>
 
-          <div class="hw-section-title">All mistakes</div>
+          <div class="hw-section-title" id="allMistakesTitle">All mistakes</div>
           <div class="hw-list" id="mistakeHistoryList">
             <div class="admin-empty">No mistakes yet.</div>
           </div>
@@ -5715,13 +5715,16 @@
 
     await renderDailyMistakeSummary(rows);
 
+    const titleEl = document.getElementById('allMistakesTitle');
+    if(titleEl) titleEl.textContent = `All mistakes (${rows.length})`;
+
     if(rows.length === 0){
       list.innerHTML = '<div class="admin-empty">No mistakes yet.</div>';
       return;
     }
 
     list.innerHTML = '';
-    rows.slice(0, 20).forEach(row=>{
+    rows.forEach(row=>{
       const date = row.ts ? new Date(row.ts) : null;
       const item = document.createElement('div');
       item.className = 'hw-row';
@@ -7040,10 +7043,9 @@
   async function initMistakesPanel(){
     const students = await fetchAllStudents();
     const filterSelect = document.getElementById('mistakesFilterSelect');
-    const currentVal = filterSelect.value;
     filterSelect.innerHTML = '<option value="">All students</option>' +
       students.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('');
-    if(students.some(s => s.username === currentVal)) filterSelect.value = currentVal;
+    filterSelect.value = ''; // always start on "All students" — never silently stay filtered to one person
 
     const deleteAllBtn = document.getElementById('deleteAllMistakesBtn');
     if(deleteAllBtn) deleteAllBtn.style.display = (currentAdminRole === 'assistant') ? 'none' : '';
