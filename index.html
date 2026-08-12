@@ -3347,17 +3347,18 @@
       }
       if(tab.dataset.tab === 'examsPanel'){
         await refreshCourseNamesCache();
+        invalidateDbCache('exams');
         renderAdminExamList();
       }
-      if(tab.dataset.tab === 'homeworkPanel') initHomeworkPanel();
-      if(tab.dataset.tab === 'skillsPanel') initSkillsPanel();
-      if(tab.dataset.tab === 'leaderboardPanel') renderAdminLeaderboard();
-      if(tab.dataset.tab === 'asksPanel') renderAdminAsks();
-      if(tab.dataset.tab === 'sessionsPanel') initSessionsPanel();
-      if(tab.dataset.tab === 'reviewsPanel') initReviewsPanel();
-      if(tab.dataset.tab === 'coursesPanel') renderAdminCourseList();
+      if(tab.dataset.tab === 'homeworkPanel'){ invalidateDbCache('homework'); initHomeworkPanel(); }
+      if(tab.dataset.tab === 'skillsPanel'){ invalidateDbCache('skills'); initSkillsPanel(); }
+      if(tab.dataset.tab === 'leaderboardPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminLeaderboard(); }
+      if(tab.dataset.tab === 'asksPanel'){ invalidateDbCache('asks'); renderAdminAsks(); }
+      if(tab.dataset.tab === 'sessionsPanel'){ invalidateDbCache('sessions'); initSessionsPanel(); }
+      if(tab.dataset.tab === 'reviewsPanel'){ invalidateDbCache('reviews'); initReviewsPanel(); }
+      if(tab.dataset.tab === 'coursesPanel'){ invalidateDbCache('courses'); renderAdminCourseList(); }
       if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(); }
-      if(tab.dataset.tab === 'remindersPanel') renderAdminReminders();
+      if(tab.dataset.tab === 'remindersPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminReminders(); }
     });
   });
 
@@ -7395,7 +7396,7 @@
   // hook the Students tab into the existing tab-switch logic
   document.querySelectorAll('.admin-tab').forEach(tab=>{
     if(tab.dataset.tab === 'studentsPanel'){
-      tab.addEventListener('click', renderAdminStudents);
+      tab.addEventListener('click', ()=>{ invalidateDbCache('students'); renderAdminStudents(); });
     }
   });
 
