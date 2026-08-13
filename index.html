@@ -6720,15 +6720,16 @@
       }));
       const hasMistakes = correctCount < hw.questions.length;
 
+      const mistakeSaves = [];
       if(currentStudent){
         hw.questions.forEach((q,i)=>{
           if(answers[i] !== q.correct){
-            saveMistake({
+            mistakeSaves.push(saveMistake({
               username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
               options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: hw.questions.length
-            });
+            }));
           }
         });
       }
@@ -6739,10 +6740,17 @@
       // Getting a clean pass clears that requirement.
       const retakeDeadline = hasMistakes ? new Date(Date.now() + 24*60*60*1000).toISOString() : null;
 
-      const ok = await saveHomeworkAssignment(hw.id, {
-        ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
-        retakeRequired: hasMistakes, retakeDeadline
-      });
+      // Wait for the mistake records too, not just the score — otherwise a
+      // student closing the tab right after seeing their mark (completely
+      // normal) could cut off the still-in-flight mistake saves, leaving the
+      // score recorded but the wrong answers themselves missing.
+      const [ok] = await Promise.all([
+        saveHomeworkAssignment(hw.id, {
+          ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
+          retakeRequired: hasMistakes, retakeDeadline
+        }),
+        ...mistakeSaves
+      ]);
       // Anonymized — just a number, no other students' names or identities.
       let classAverageHtml = '';
       try{
