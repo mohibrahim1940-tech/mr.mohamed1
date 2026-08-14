@@ -3715,6 +3715,7 @@
         description: examData.description, questionCount: (examData.questions || []).length,
         ts: examData.ts
       });
+      backfillExplanationVideos(examData.title, examData.questions || []);
     }
     return ok;
   }
@@ -4931,6 +4932,7 @@
         retakeDeadline: data.retakeDeadline, submittedAt: data.submittedAt, ts: data.ts,
         questionCount: (data.questions || []).length
       });
+      backfillExplanationVideos(data.title, data.questions || []);
     }
     return ok;
   }
@@ -5209,6 +5211,7 @@
       await dbSet('skills', `idx-${id}`, {
         _index: true, id, skill: data.skill, questionCount: (data.questions || []).length, ts: data.ts
       });
+      backfillExplanationVideos(data.skill, data.questions || []);
     }
     return ok;
   }
@@ -5569,6 +5572,32 @@
   }
   async function deleteMistakeRecord(id){
     return await dbDelete('mistakes', id);
+  }
+
+  // Whenever an exam/skill/homework is saved, this checks past mistake
+  // records from that same content and updates them with each question's
+  // CURRENT explanation video — so it doesn't matter whether the video was
+  // added before or after a student made that mistake; they always see
+  // whatever video is attached now.
+  async function backfillExplanationVideos(sourceTitle, questions){
+    if(!sourceTitle || !Array.isArray(questions) || questions.length === 0) return;
+    try{
+      const allMistakes = await fetchAllMistakes();
+      const matching = allMistakes.filter(m => !m._index && m.source === sourceTitle);
+      if(matching.length === 0) return;
+      const updates = [];
+      matching.forEach(m=>{
+        const match = questions.find(q=>{
+          const qLesson = (q.lesson || 'General').trim();
+          const qText = q.text || (q.image ? '(question with image)' : '');
+          return qLesson === (m.lesson || 'General').trim() && qText === (m.text || '');
+        });
+        if(match && match.explanationVideo && match.explanationVideo !== m.explanationVideo){
+          updates.push(dbSet('mistakes', m.id, { ...m, explanationVideo: match.explanationVideo }));
+        }
+      });
+      if(updates.length > 0) await Promise.all(updates);
+    }catch(err){ console.error('Could not backfill explanation videos:', err); }
   }
 
   async function renderAdminAsks(){
