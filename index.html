@@ -4621,17 +4621,22 @@
         // Each mistake is tracked individually — dbSet() never throws, it
         // just returns false on failure, so Promise.all alone can't tell us
         // if some silently failed while the overall submission looked fine.
+        // Mistakes are saved in small batches rather than one giant burst —
+        // firing dozens of saves at the exact same instant (a long homework
+        // with many wrong answers) can trigger backend rate limiting on the
+        // burst itself, and since every one of them then retries on a
+        // similar timeline, the retries can keep colliding too.
         isSavingResult = true;
         let attemptResult, mistakeResults;
         try{
-          [attemptResult, ...mistakeResults] = await Promise.all([
+          [attemptResult, mistakeResults] = await Promise.all([
             saveExamAttempt({
               username: currentStudent.username, examTitle: exam.title,
               correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
               retakeRequired: hasMistakes, retakeDeadline,
               retakeDayKey: exam.retakeDayKey || null
             }),
-            ...mistakeEntries.map(entry => saveMistake(entry))
+            saveMistakesInBatches(mistakeEntries, 4)
           ]);
         } finally {
           isSavingResult = false;
@@ -5632,6 +5637,24 @@
   async function saveMistake(entry){
     const id = generateId('mistake');
     return await dbSet('mistakes', id, { id, ...entry, ts: new Date().toISOString() });
+  }
+  // Saving many mistakes at once (a long homework with lots of wrong
+  // answers) by firing them ALL simultaneously can trigger backend rate
+  // limiting on the sudden burst — and since every one of them then retries
+  // on roughly the same timeline, retries can keep colliding too, causing
+  // most of a large batch to fail together instead of a random few. Saving
+  // in small waves, one wave finishing before the next starts, avoids that
+  // burst entirely while still being fast for the normal case of just a few
+  // mistakes.
+  async function saveMistakesInBatches(entries, batchSize){
+    batchSize = batchSize || 4;
+    const results = [];
+    for(let i = 0; i < entries.length; i += batchSize){
+      const batch = entries.slice(i, i + batchSize);
+      const batchResults = await Promise.all(batch.map(entry => saveMistake(entry)));
+      results.push(...batchResults);
+    }
+    return results;
   }
   async function fetchAllMistakes(){
     return await dbGetAll('mistakes');
@@ -7089,15 +7112,20 @@
       // mistake is tracked individually — dbSet() never throws, it just
       // returns false on failure, so Promise.all alone can't tell us if
       // some silently failed while the overall submission looked fine.
+      // Mistakes are saved in small batches rather than one giant burst —
+      // firing dozens of saves at the exact same instant (a long homework
+      // with many wrong answers) can trigger backend rate limiting on the
+      // burst itself, and since every one of them then retries on a similar
+      // timeline, the retries can keep colliding too.
       isSavingResult = true;
       let ok, mistakeResults;
       try{
-        [ok, ...mistakeResults] = await Promise.all([
+        [ok, mistakeResults] = await Promise.all([
           saveHomeworkAssignment(hw.id, {
             ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
             retakeRequired: hasMistakes, retakeDeadline
           }),
-          ...mistakeEntries.map(entry => saveMistake(entry))
+          saveMistakesInBatches(mistakeEntries, 4)
         ]);
       } finally {
         isSavingResult = false;
