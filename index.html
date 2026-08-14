@@ -1337,6 +1337,8 @@
     padding:14px 20px;border-bottom:1px solid var(--line-soft);
   }
   .hw-row:last-child{border-bottom:none;}
+  .mistake-history-row{display:block;}
+  .mistake-history-main{display:flex;align-items:center;gap:14px;}
   .hw-date{
     font-family:'IBM Plex Mono',monospace;font-size:0.76rem;
     color:var(--muted);width:88px;flex-shrink:0;
@@ -6090,12 +6092,20 @@
     rows.forEach(row=>{
       const date = row.ts ? new Date(row.ts) : null;
       const item = document.createElement('div');
-      item.className = 'hw-row';
+      item.className = 'hw-row mistake-history-row';
       item.innerHTML = `
-        <span class="hw-date">${date ? date.toLocaleDateString() : ''}</span>
-        ${row.image ? `<img class="mistake-thumb" src="${row.image}" alt="Question photo">` : ''}
-        <span class="hw-title">${esc(row.source || '')} · ${esc(row.text)}</span>
-        <button class="btn btn-ghost" style="padding:5px 12px;font-size:0.78rem;flex-shrink:0;">View</button>
+        <div class="mistake-history-main">
+          <span class="hw-date">${date ? date.toLocaleDateString() : ''}</span>
+          ${row.image ? `<img class="mistake-thumb" src="${row.image}" alt="Question photo">` : ''}
+          <span class="hw-title">${esc(row.source || '')} · ${esc(row.text)}</span>
+          <button class="btn btn-ghost" style="padding:5px 12px;font-size:0.78rem;flex-shrink:0;">View</button>
+        </div>
+        ${row.explanationVideo ? `
+          <div class="explanation-video-wrap" style="margin-top:10px;">
+            <div class="explanation-video-label">🎬 Watch the explanation</div>
+            <video controls preload="none" src="${row.explanationVideo}"></video>
+          </div>
+        ` : ''}
       `;
       item.querySelector('button').addEventListener('click', ()=> openQuestionView(row));
       list.appendChild(item);
@@ -7481,6 +7491,8 @@
       text: m.text || '(question)',
       image: m.image || null,
       options: m.options || [],
+      optionImages: m.optionImages || null,
+      explanationVideo: m.explanationVideo || null,
       chosenAnswer: m.chosenAnswer,
       correctAnswer: m.correctAnswer,
       chosenText: (m.options && m.chosenAnswer != null) ? (m.options[m.chosenAnswer] ?? '—') : '—',
