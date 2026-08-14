@@ -1731,6 +1731,32 @@
     background:rgba(255,107,74,0.12); border:1px solid var(--ember); color:var(--ember);
     font-size:0.82rem;
   }
+
+  /* ---------- study planner ---------- */
+  .planner-insights{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px 22px; margin-bottom:8px; line-height:1.7; font-size:0.92rem;
+  }
+  .planner-insights strong{color:var(--signal);}
+  .planner-schedule{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:12px; margin-bottom:8px;
+  }
+  .planner-day-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; display:flex; flex-direction:column; gap:8px;
+  }
+  .planner-day-card.today{border-color:var(--signal); background:rgba(76,111,255,0.07);}
+  .planner-day-name{
+    font-family:'Space Grotesk',sans-serif; font-size:0.82rem; color:var(--muted);
+    text-transform:uppercase; letter-spacing:0.03em;
+  }
+  .planner-day-card.today .planner-day-name{color:var(--signal);}
+  .planner-day-icon{font-size:1.3rem;}
+  .planner-day-task{font-size:0.85rem; line-height:1.4;}
+  .planner-day-meta{font-size:0.72rem; color:var(--muted);}
+  .planner-actions{display:flex; flex-wrap:wrap; gap:10px;}
+  .planner-actions .btn{padding:10px 18px; font-size:0.85rem;}
 </style>
 </head>
 <body>
@@ -1906,6 +1932,7 @@
           <button class="dash-tab-btn" data-dashtab="tabExams">📝 Exams</button>
           <button class="dash-tab-btn" data-dashtab="tabMistakes">🧾 Mistake History</button>
           <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
+          <button class="dash-tab-btn" data-dashtab="tabPlanner">🧠 Study Planner</button>
         </nav>
         <div class="dash-sidebar-actions">
           <button class="btn btn-primary" id="dashMyScoresBtn">View my scores</button>
@@ -2073,6 +2100,24 @@
             <canvas id="graphCanvas" width="900" height="480"></canvas>
           </div>
           <div id="graphError" class="graph-error" style="display:none;"></div>
+        </div>
+
+        <div class="dash-tab-panel" id="tabPlanner">
+          <div class="hw-section-title" style="margin-top:0;">🧠 Your study analysis</div>
+          <div id="plannerInsights" class="planner-insights">
+            <div class="admin-empty">Loading…</div>
+          </div>
+
+          <div class="hw-section-title-row">
+            <div class="hw-section-title" style="margin:0;">This week's plan</div>
+            <button class="btn btn-ghost" id="regeneratePlanBtn" style="padding:7px 14px;font-size:0.78rem;">🔄 Regenerate</button>
+          </div>
+          <div id="plannerSchedule" class="planner-schedule">
+            <div class="admin-empty">Loading…</div>
+          </div>
+
+          <div class="hw-section-title">Quick actions</div>
+          <div class="planner-actions" id="plannerActions"></div>
         </div>
       </div>
     </div>
@@ -6294,6 +6339,166 @@
     return streak;
   }
 
+  /* ---------------- STUDY PLANNER: data-driven schedule + insights ----------------
+     Not a real AI model — a static site with no backend can't safely call one
+     (the API key would sit exposed in the page for anyone to take). Instead
+     this builds a genuinely personalized plan from the student's own real
+     data: topic mastery, pending retakes, and recent activity. */
+
+  function esc_planner_safe(s){ return esc(s); } // alias kept for readability below
+
+  function generatePlannerInsightHtml(lessonStats, pendingRetakes, streak, daysSinceActivity){
+    const sortedLessons = Object.entries(lessonStats)
+      .filter(([,s]) => s.total >= 2)
+      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.correct / s.total) * 100) }))
+      .sort((a,b)=> b.pct - a.pct);
+
+    const parts = [];
+    if(sortedLessons.length === 0){
+      parts.push("You haven't practiced enough yet for a full breakdown — try a few skills or exams and check back here!");
+    } else {
+      const strongest = sortedLessons[0];
+      const weakest = sortedLessons[sortedLessons.length - 1];
+      parts.push(`You're strongest in <strong>${esc(strongest.lesson)}</strong> (${strongest.pct}%)`);
+      parts.push(weakest.lesson !== strongest.lesson
+        ? ` but <strong>${esc(weakest.lesson)}</strong> needs the most work right now (${weakest.pct}%).`
+        : `.`);
+    }
+    if(pendingRetakes > 0){
+      parts.push(` You have <strong>${pendingRetakes} pending retake${pendingRetakes===1?'':'s'}</strong> waiting in your Mistake History.`);
+    }
+    if(streak >= 3){
+      parts.push(` You're on a <strong>${streak}-homework streak</strong> — keep it going! 🔥`);
+    } else if(daysSinceActivity != null && daysSinceActivity >= 3){
+      parts.push(` It's been <strong>${daysSinceActivity} day${daysSinceActivity===1?'':'s'}</strong> since your last practice — a good time to jump back in.`);
+    } else if(daysSinceActivity == null){
+      parts.push(` Once you complete your first homework or practice set, this analysis gets a lot more specific.`);
+    }
+    return `<p>${parts.join('')}</p>`;
+  }
+
+  function generateWeeklyPlan(lessonStats, pendingRetakes){
+    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const todayIndex = new Date().getDay();
+
+    const weakLessons = Object.entries(lessonStats)
+      .filter(([,s]) => s.total >= 2)
+      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.correct / s.total) * 100) }))
+      .sort((a,b)=> a.pct - b.pct)
+      .slice(0, 3); // focus on the 3 weakest — rotate through them across the week
+
+    const brandNew = Object.keys(lessonStats).length === 0;
+    const plan = [];
+
+    for(let i = 0; i < 7; i++){
+      const dayIndex = (todayIndex + i) % 7;
+      const isToday = i === 0;
+      const isLastDay = i === 6;
+      let icon, task, meta;
+
+      if(isToday && pendingRetakes > 0){
+        icon = '🔥';
+        task = `Clear your ${pendingRetakes} pending retake${pendingRetakes===1?'':'s'}`;
+        meta = 'Priority — do this first';
+      } else if(isLastDay && !brandNew){
+        icon = '🌙';
+        task = 'Light review or rest — you earned it';
+        meta = 'Recovery day';
+      } else if(brandNew){
+        icon = '🚀';
+        task = i % 2 === 0 ? 'Try a skill set to see where you stand' : 'Take a practice exam';
+        meta = 'Getting started';
+      } else if(weakLessons.length > 0){
+        const pick = weakLessons[i % weakLessons.length];
+        icon = '📚';
+        task = `Practice ${pick.lesson} (currently ${pick.pct}%)`;
+        meta = pick.pct < 50 ? 'High priority' : 'Keep building';
+      } else {
+        icon = '✨';
+        task = 'Light review — revisit a skill you know well';
+        meta = 'Maintain your strengths';
+      }
+
+      plan.push({ dayName: dayNames[dayIndex], icon, task, meta, isToday });
+    }
+    return plan;
+  }
+
+  async function renderStudyPlanner(){
+    if(!currentStudent) return;
+    const insightsWrap = document.getElementById('plannerInsights');
+    const scheduleWrap = document.getElementById('plannerSchedule');
+    const actionsWrap = document.getElementById('plannerActions');
+    insightsWrap.innerHTML = '<div class="admin-empty">Loading…</div>';
+    scheduleWrap.innerHTML = '<div class="admin-empty">Loading…</div>';
+
+    const { myHw, myAttempts } = await getMyRetakeSignals();
+
+    const lessonStats = {};
+    function tally(items, dateField){
+      items.forEach(item=>{
+        if(!Array.isArray(item.results)) return;
+        item.results.forEach(r=>{
+          const lesson = (r.lesson || 'General').trim();
+          if(!lessonStats[lesson]) lessonStats[lesson] = { correct:0, total:0 };
+          lessonStats[lesson].total++;
+          if(r.correct) lessonStats[lesson].correct++;
+        });
+      });
+    }
+    tally(myHw, 'submittedAt');
+    tally(myAttempts, 'ts');
+
+    const pendingRetakes = myHw.filter(h => h.retakeRequired).length + myAttempts.filter(a => a.retakeRequired).length;
+    const streak = await getStreakCount();
+
+    const allDates = [...myHw.map(h => h.submittedAt), ...myAttempts.map(a => a.ts)]
+      .filter(Boolean).map(d => new Date(d));
+    const daysSinceActivity = allDates.length > 0
+      ? Math.floor((new Date() - new Date(Math.max(...allDates))) / (1000*60*60*24))
+      : null;
+
+    insightsWrap.innerHTML = generatePlannerInsightHtml(lessonStats, pendingRetakes, streak, daysSinceActivity);
+
+    const plan = generateWeeklyPlan(lessonStats, pendingRetakes);
+    scheduleWrap.innerHTML = plan.map(d => `
+      <div class="planner-day-card ${d.isToday ? 'today' : ''}">
+        <div class="planner-day-name">${d.isToday ? 'Today' : esc(d.dayName)}</div>
+        <div class="planner-day-icon">${d.icon}</div>
+        <div class="planner-day-task">${esc(d.task)}</div>
+        <div class="planner-day-meta">${esc(d.meta)}</div>
+      </div>
+    `).join('');
+
+    const sortedLessons = Object.entries(lessonStats)
+      .filter(([,s]) => s.total >= 2)
+      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.correct / s.total) * 100) }))
+      .sort((a,b)=> a.pct - b.pct);
+    const weakest = sortedLessons[0];
+
+    const actions = [];
+    if(pendingRetakes > 0) actions.push({ label: `📋 Clear ${pendingRetakes} pending retake${pendingRetakes===1?'':'s'}`, tab: 'tabMistakes' });
+    if(weakest) actions.push({ label: `📚 Practice ${weakest.lesson} (weakest)`, tab: 'tabSkills' });
+    actions.push({ label: '📊 View full analysis', tab: 'tabOverview' });
+    actions.push({ label: '📝 Check homework', tab: 'tabHw' });
+
+    actionsWrap.innerHTML = actions.map(a => `<button class="btn btn-ghost planner-action-btn" data-tab="${a.tab}">${esc(a.label)}</button>`).join('');
+    actionsWrap.querySelectorAll('.planner-action-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const tabBtn = document.querySelector(`.dash-tab-btn[data-dashtab="${btn.dataset.tab}"]`);
+        if(tabBtn) tabBtn.click();
+      });
+    });
+  }
+
+  document.getElementById('regeneratePlanBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('regeneratePlanBtn');
+    btn.disabled = true; btn.textContent = 'Regenerating…';
+    invalidateDbCache('homework'); invalidateDbCache('attempts');
+    await renderStudyPlanner();
+    btn.disabled = false; btn.textContent = '🔄 Regenerate';
+  });
+
   async function renderOverview(){
     if(!currentStudent) return;
 
@@ -7276,6 +7481,7 @@
       if(btn.dataset.dashtab === 'tabHw'){ renderStudentHomework(); renderWeakPoints(); }
       if(btn.dataset.dashtab === 'tabMistakes') renderMistakeHistory();
       if(btn.dataset.dashtab === 'tabGraph' && typeof drawGraph === 'function') drawGraph();
+      if(btn.dataset.dashtab === 'tabPlanner') renderStudyPlanner();
       if(btn.dataset.dashtab === 'tabOverview') renderOverview();
     });
   });
