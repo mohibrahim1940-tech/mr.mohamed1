@@ -2527,6 +2527,7 @@
     </div>
 
     <div class="admin-panel active" id="adminOverviewPanel">
+      <div id="dataIntegrityBanner"></div>
       <div class="admin-stats" id="ovStatsRow"></div>
 
       <div class="admin-overview-cols">
@@ -3277,6 +3278,8 @@
     _inFlightRequests[cacheKey] = promise;
     return promise;
   }
+  const _dataIntegrityWarnings = {}; // collection -> warning message, shown on the admin Overview dashboard
+
   async function dbGetAll(collection){
     if(!storageAvailable()) return [];
     const cached = _dbCache[collection];
@@ -3303,6 +3306,24 @@
           if(page.length < PAGE_SIZE) break; // fewer rows than a full page means this was the last one
           offset += PAGE_SIZE;
         }
+
+        // Safety net: independently confirm the paginated fetch actually
+        // got everything, instead of just trusting it. This is exactly the
+        // kind of check that would have caught the silent-truncation bug
+        // immediately instead of it surfacing weeks later as a confused
+        // parent report — if this ever mismatches again for any reason,
+        // it's now impossible to miss.
+        try{
+          const realCount = await getRowCount(collection, null);
+          if(realCount !== allRows.length){
+            const msg = `"${collection}" table: fetched ${allRows.length} rows but it actually has ${realCount} — some data may not be showing correctly. Try refreshing; if this keeps happening, tell Claude.`;
+            console.error('DATA INTEGRITY WARNING:', msg);
+            _dataIntegrityWarnings[collection] = msg;
+          } else {
+            delete _dataIntegrityWarnings[collection];
+          }
+        }catch(err){ /* the count check itself failing isn't critical — skip silently */ }
+
         _dbCache[collection] = { data: allRows, ts: Date.now() };
         return allRows;
       }catch(err){ console.error(`dbGetAll(${collection}) failed:`, err); return []; }
@@ -3338,6 +3359,18 @@
           if(page.length < PAGE_SIZE) break;
           offset += PAGE_SIZE;
         }
+
+        try{
+          const realCount = await getRowCount(collection, `${prefix}%`);
+          const warnKey = `${collection}||${prefix}`;
+          if(realCount !== allRows.length){
+            const msg = `"${collection}" list: fetched ${allRows.length} rows but there are actually ${realCount} — some data may not be showing correctly. Try refreshing; if this keeps happening, tell Claude.`;
+            console.error('DATA INTEGRITY WARNING:', msg);
+            _dataIntegrityWarnings[warnKey] = msg;
+          } else {
+            delete _dataIntegrityWarnings[warnKey];
+          }
+        }catch(err){ /* the count check itself failing isn't critical — skip silently */ }
         _dbCache[cacheKey] = { data: allRows, ts: Date.now() };
         return allRows;
       }catch(err){ console.error(`dbGetAllByIdPrefix(${collection}) failed:`, err); return []; }
@@ -3628,6 +3661,22 @@
   // attention, and a visual bar chart of every student's average score —
   // all from lightweight summary data, never full question/image content.
   async function renderAdminOverviewDashboard(){
+    const bannerEl = document.getElementById('dataIntegrityBanner');
+    function refreshIntegrityBanner(){
+      if(!bannerEl) return;
+      const warnings = Object.values(_dataIntegrityWarnings);
+      bannerEl.innerHTML = warnings.length > 0
+        ? `<div class="admin-note" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);margin-bottom:20px;">⚠ <strong>Data integrity warning:</strong><br>${warnings.map(w=>esc(w)).join('<br>')}</div>`
+        : '';
+    }
+    refreshIntegrityBanner();
+    // Mistakes is the table this specific safety net exists for — check it
+    // proactively the moment Overview loads (in the background, not
+    // blocking the rest of the dashboard) so a problem shows up the moment
+    // the admin logs in, not only after they happen to click into the
+    // Mistakes tab first.
+    fetchAllMistakes().then(refreshIntegrityBanner);
+
     const [students, hw, attempts] = await Promise.all([
       fetchAllStudents(), fetchHomeworkIndex(), fetchAttemptsIndex()
     ]);
