@@ -4415,6 +4415,19 @@
   let activeTimerInterval = null; // countdown for whichever exam/homework is currently open
   let quizLocked = false; // true while a question is showing — prevents accidental exits mid-quiz
 
+  // Scoped ONLY to the few seconds a score/mistakes are actively being saved
+  // (including retries, which can take several seconds on a slow
+  // connection) — NOT the whole quiz. Closing the tab in that narrow window
+  // can cut a save off even though the code correctly awaits it, since the
+  // await itself takes real time to resolve.
+  let isSavingResult = false;
+  window.addEventListener('beforeunload', (e)=>{
+    if(isSavingResult){
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
+
   function stopActiveTimer(){
     if(activeTimerInterval){ clearInterval(activeTimerInterval); activeTimerInterval = null; }
   }
@@ -4608,17 +4621,24 @@
         // Each mistake is tracked individually — dbSet() never throws, it
         // just returns false on failure, so Promise.all alone can't tell us
         // if some silently failed while the overall submission looked fine.
-        const [attemptResult, ...mistakeResults] = await Promise.all([
-          saveExamAttempt({
-            username: currentStudent.username, examTitle: exam.title,
-            correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
-            retakeRequired: hasMistakes, retakeDeadline,
-            retakeDayKey: exam.retakeDayKey || null
-          }),
-          ...mistakeEntries.map(entry => saveMistake(entry))
-        ]);
+        isSavingResult = true;
+        let attemptResult, mistakeResults;
+        try{
+          [attemptResult, ...mistakeResults] = await Promise.all([
+            saveExamAttempt({
+              username: currentStudent.username, examTitle: exam.title,
+              correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
+              retakeRequired: hasMistakes, retakeDeadline,
+              retakeDayKey: exam.retakeDayKey || null
+            }),
+            ...mistakeEntries.map(entry => saveMistake(entry))
+          ]);
+        } finally {
+          isSavingResult = false;
+        }
         saveSucceeded = attemptResult !== false;
         failedMistakeEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] === false);
+        failedMistakeEntries.forEach(entry => queueFailedMistakeSave(entry));
       }
 
       // Anonymized — just a number, no other students' names or identities.
@@ -4707,6 +4727,7 @@
           retryMistakesBtn.disabled = true; retryMistakesBtn.textContent = 'Retrying…';
           const retryResults = await Promise.all(failedMistakeEntries.map(entry => saveMistake(entry)));
           if(retryResults.every(r => r !== false)){
+            removeFromMistakeQueue(failedMistakeEntries); // already saved now — don't let the automatic queue save them again later
             retryMistakesBtn.textContent = '✓ Saved';
             setTimeout(()=>{
               const notice = retryMistakesBtn.previousElementSibling;
@@ -5617,6 +5638,56 @@
   }
   async function deleteMistakeRecord(id){
     return await dbDelete('mistakes', id);
+  }
+
+  // Extra safety net on top of the immediate retry-in-place flow: if a
+  // mistake still fails to save (even after dbSet's own internal retries),
+  // it gets queued here in localStorage — separate from the in-memory
+  // session, so it survives the tab closing entirely. It's automatically
+  // retried the next time this student signs in, with zero action needed
+  // from them, so a mistake is never permanently lost just because nobody
+  // was around to click "Retry."
+  const PENDING_MISTAKES_KEY = 'pendingMistakeSaves';
+  function queueFailedMistakeSave(entry){
+    try{
+      const raw = localStorage.getItem(PENDING_MISTAKES_KEY);
+      const queue = raw ? JSON.parse(raw) : [];
+      queue.push(entry);
+      localStorage.setItem(PENDING_MISTAKES_KEY, JSON.stringify(queue));
+    }catch(err){ console.error('Could not queue failed mistake save:', err); }
+  }
+  // Called after entries are saved successfully some OTHER way (e.g. the
+  // student manually tapped "Retry" right away) — without this, the same
+  // mistake could get saved twice: once from that manual retry, and again
+  // later when the automatic queue retry runs.
+  function removeFromMistakeQueue(entriesToRemove){
+    if(!entriesToRemove || entriesToRemove.length === 0) return;
+    try{
+      const raw = localStorage.getItem(PENDING_MISTAKES_KEY);
+      let queue = raw ? JSON.parse(raw) : [];
+      const toRemoveJson = new Set(entriesToRemove.map(e => JSON.stringify(e)));
+      queue = queue.filter(e => !toRemoveJson.has(JSON.stringify(e)));
+      if(queue.length > 0) localStorage.setItem(PENDING_MISTAKES_KEY, JSON.stringify(queue));
+      else localStorage.removeItem(PENDING_MISTAKES_KEY);
+    }catch(err){ console.error('Could not clean up the pending mistake queue:', err); }
+  }
+  async function retryQueuedMistakeSaves(){
+    let queue;
+    try{
+      const raw = localStorage.getItem(PENDING_MISTAKES_KEY);
+      queue = raw ? JSON.parse(raw) : [];
+    }catch(err){ return; }
+    if(!Array.isArray(queue) || queue.length === 0) return;
+
+    const stillFailed = [];
+    for(const entry of queue){
+      const ok = await saveMistake(entry);
+      if(!ok) stillFailed.push(entry);
+    }
+    try{
+      if(stillFailed.length > 0) localStorage.setItem(PENDING_MISTAKES_KEY, JSON.stringify(stillFailed));
+      else localStorage.removeItem(PENDING_MISTAKES_KEY);
+    }catch(err){ console.error('Could not update the pending mistake queue:', err); }
   }
 
   // Whenever an exam/skill/homework is saved, this checks past mistake
@@ -7018,18 +7089,25 @@
       // mistake is tracked individually — dbSet() never throws, it just
       // returns false on failure, so Promise.all alone can't tell us if
       // some silently failed while the overall submission looked fine.
-      const [ok, ...mistakeResults] = await Promise.all([
-        saveHomeworkAssignment(hw.id, {
-          ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
-          retakeRequired: hasMistakes, retakeDeadline
-        }),
-        ...mistakeEntries.map(entry => saveMistake(entry))
-      ]);
+      isSavingResult = true;
+      let ok, mistakeResults;
+      try{
+        [ok, ...mistakeResults] = await Promise.all([
+          saveHomeworkAssignment(hw.id, {
+            ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
+            retakeRequired: hasMistakes, retakeDeadline
+          }),
+          ...mistakeEntries.map(entry => saveMistake(entry))
+        ]);
+      } finally {
+        isSavingResult = false;
+      }
       const failedMistakeEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] === false);
+      failedMistakeEntries.forEach(entry => queueFailedMistakeSave(entry));
       // Anonymized — just a number, no other students' names or identities.
       let classAverageHtml = '';
       try{
-        const allHw = await fetchAllHomework();
+        const allHw = await fetchHomeworkIndex();
         const sameTitle = allHw.filter(h => h.title === hw.title && h.status === 'completed' && h.score && typeof h.score.pct === 'number');
         if(sameTitle.length > 1){
           const avgPct = Math.round(sameTitle.reduce((s,h)=> s + h.score.pct, 0) / sameTitle.length);
@@ -7101,6 +7179,7 @@
           retryMistakesBtn.disabled = true; retryMistakesBtn.textContent = 'Retrying…';
           const retryResults = await Promise.all(failedMistakeEntries.map(entry => saveMistake(entry)));
           if(retryResults.every(r => r !== false)){
+            removeFromMistakeQueue(failedMistakeEntries); // already saved now — don't let the automatic queue save them again later
             retryMistakesBtn.textContent = '✓ Saved';
             setTimeout(()=>{
               const notice = retryMistakesBtn.previousElementSibling;
@@ -7340,6 +7419,7 @@
     closeAuthModal();
     signinForm.reset();
     logStudentLogin(currentStudent.username); // fire-and-forget, never blocks sign-in
+    retryQueuedMistakeSaves(); // fire-and-forget, catches up anything left over from a previous session
   });
 
   // Browsers can't report their own public IP directly — this checks in
@@ -8366,10 +8446,13 @@
     document.getElementById('studentAnalysisModal').classList.add('open');
 
     const uname = username.trim().toLowerCase();
-    const allHw = await fetchAllHomework();
-    const allAttempts = await fetchAllAttempts();
-    const mineHw = allHw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed' && Array.isArray(h.results));
-    const mineAttempts = allAttempts.filter(a => (a.username||'').trim().toLowerCase() === uname && Array.isArray(a.results));
+    const [hwIndex, attemptsIndex] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
+    const myCompletedHwIndex = hwIndex.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
+    const myOwnAttemptsIndex = attemptsIndex.filter(a => (a.username||'').trim().toLowerCase() === uname);
+    const mineHw = (await Promise.all(myCompletedHwIndex.map(h => dbGet('homework', h.id))))
+      .filter(h => h && Array.isArray(h.results));
+    const mineAttempts = (await Promise.all(myOwnAttemptsIndex.map(a => dbGet('attempts', a.id))))
+      .filter(a => a && Array.isArray(a.results));
     // The authoritative, complete mistake log — every wrong answer ever
     // recorded for this student, from any source (homework, exams, skill
     // practice, retakes). This is the same source your main Mistakes tab
