@@ -2567,11 +2567,13 @@
     </div>
 
     <div class="admin-panel" id="examsPanel">
-      <div class="admin-note">Exams are stored in your Supabase database and immediately appear in the public "Practice exams" section for every visitor. Keep question images to a handful per exam so each row stays a reasonable size.</div>
+      <div class="admin-note">Exams are stored in your Supabase database and immediately appear in the public "Practice exams" section for every visitor. Question and option images now upload as real files instead of embedding as text — much lighter, and fixes the timeout issue some students hit.</div>
       <div class="admin-actions">
         <button class="btn btn-primary" id="newExamBtn">+ Add exam</button>
         <button class="btn btn-ghost" id="refreshExams">Refresh</button>
+        <button class="btn btn-ghost" id="optimizeImagesBtn" style="border-color:var(--signal);color:var(--signal);">🔧 Optimize existing images</button>
       </div>
+      <div id="optimizeImagesStatus" style="display:none; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:24px; font-size:0.85rem;"></div>
       <div class="admin-table-wrap" id="examListWrap">
         <div class="admin-empty" id="examListEmpty" style="display:none;">No exams yet — click "Add exam" to create your first one.</div>
       </div>
@@ -3036,6 +3038,25 @@
         question's explanation, and students can watch them. Keep
         videos short (a minute or two) — the free Supabase plan
         includes 1GB of file storage total.
+     5b. (Required — this is what fixed the "some mistakes/homework not
+        saving or not loading" problem.) Question and option images now
+        upload as real files instead of being embedded as giant text
+        blobs inside the database, which is what was causing some
+        reads to time out once enough images piled up. Set this up the
+        same way as step 5: Storage → "New bucket" → name it exactly
+        question-images → toggle "Public bucket" ON → Create. Then
+        SQL Editor → New query → run:
+
+         create policy "public access question-images"
+         on storage.objects for all
+         using (bucket_id = 'question-images')
+         with check (bucket_id = 'question-images');
+
+        Until this bucket exists, uploading a NEW question/option image
+        will show a clear error explaining exactly this. Existing
+        questions that already have images embedded the old way keep
+        working normally — the "Optimize existing images" button in
+        the admin Exams tab converts those over once this bucket is set up.
      6. (Only needed if you want academic assistants to have their own
         individual accounts, scoped to specific students, instead of
         sharing one passcode.) Go to SQL Editor → New query → paste
@@ -3823,6 +3844,73 @@
     return publicUrlData.publicUrl;
   }
 
+  // Uploads a question/option image to Supabase Storage instead of
+  // embedding it as base64 text directly in the database row. Storing raw
+  // base64 in a JSONB column bloats that row's size dramatically — once
+  // enough of these pile up (or even a single record with several images),
+  // Postgres can start timing out just trying to read that data back,
+  // which is what was actually causing entire mistakes/homework/attempts
+  // fetches to fail outright. A Storage URL is a tiny string by comparison.
+  // Same idea as uploadQuestionImage, but for an image that's ALREADY a
+  // base64 data URL sitting in an existing record — used by the "Optimize
+  // existing images" migration tool, not by new uploads.
+  async function uploadBase64ImageToStorage(dataUrl){
+    if(!storageAvailable()) throw new Error('Storage is not connected.');
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+    const { error: uploadError } = await supabaseClient.storage
+      .from('question-images')
+      .upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: false });
+    if(uploadError) throw new Error(uploadError.message || 'Upload failed');
+    const { data: publicUrlData } = supabaseClient.storage.from('question-images').getPublicUrl(path);
+    return publicUrlData.publicUrl;
+  }
+
+  async function uploadQuestionImage(file, maxWidth, quality){
+    if(!storageAvailable()) throw new Error('Storage is not connected — see the SUPABASE SETUP comment near the top of this file.');
+    const resizedBlob = await new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = (e)=>{
+        const img = new Image();
+        img.onload = ()=>{
+          let { width, height } = img;
+          if(width > maxWidth){
+            height = Math.round(height * (maxWidth / width));
+            width = maxWidth;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Could not process that image')), 'image/jpeg', quality);
+        };
+        img.onerror = () => reject(new Error('Could not read image'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.readAsDataURL(file);
+    });
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+    const { error: uploadError } = await supabaseClient.storage
+      .from('question-images')
+      .upload(path, resizedBlob, { contentType: 'image/jpeg', upsert: false });
+    if(uploadError){
+      if(/bucket not found/i.test(uploadError.message || '')){
+        throw new Error('The "question-images" storage bucket doesn\'t exist yet — create it in your Supabase dashboard first (see the SUPABASE SETUP comment near the top of this file).');
+      }
+      if(/row-level security|row level security/i.test(uploadError.message || '')){
+        throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy). See the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
+      }
+      throw new Error(uploadError.message || 'Upload failed');
+    }
+    const { data: publicUrlData } = supabaseClient.storage.from('question-images').getPublicUrl(path);
+    return publicUrlData.publicUrl;
+  }
+
+  // Kept only so any code path that still calls it (existing pasted base64,
+  // the print/export helpers) keeps working — new question/option images no
+  // longer use this.
   function resizeImageToDataUrl(file, maxWidth, quality){
     return new Promise((resolve, reject)=>{
       const reader = new FileReader();
@@ -3939,14 +4027,18 @@
 
     async function setQuestionImageFromFile(file){
       if(!file) return;
+      preview.style.opacity = '0.5';
+      preview.style.display = 'block';
+      preview.src = URL.createObjectURL(file); // instant local preview while the real upload runs
       try{
-        const dataUrl = await resizeImageToDataUrl(file, 700, 0.7);
-        block._imageData = dataUrl;
-        preview.src = dataUrl;
-        preview.style.display = 'block';
+        const url = await uploadQuestionImage(file, 700, 0.7);
+        block._imageData = url;
+        preview.src = url;
+        preview.style.opacity = '1';
         removeImageBtn.style.display = 'inline-block';
       }catch(err){
-        alert('Could not load that image — try a different file.');
+        preview.style.display = 'none';
+        alert(err.message || 'Could not upload that image — try a different file or check your connection.');
       }
     }
 
@@ -4021,16 +4113,20 @@
 
       async function setOptionImageFromFile(file){
         if(!file) return;
+        optPreview.style.opacity = '0.5';
+        optPreview.style.display = 'block';
+        optPreview.src = URL.createObjectURL(file); // instant local preview while the real upload runs
         try{
-          const dataUrl = await resizeImageToDataUrl(file, 400, 0.7);
-          block._optionImages[idx] = dataUrl;
-          optPreview.src = dataUrl;
-          optPreview.style.display = 'block';
+          const url = await uploadQuestionImage(file, 400, 0.7);
+          block._optionImages[idx] = url;
+          optPreview.src = url;
+          optPreview.style.opacity = '1';
           optRemoveBtn.style.display = 'inline-block';
           optBtnLabel.innerHTML = `📷 Change image<input type="file" accept="image/*" class="q-option-image-input" data-idx="${idx}">`;
           optBtnLabel.querySelector('input').addEventListener('change', (e)=> setOptionImageFromFile(e.target.files[0]));
         }catch(err){
-          alert('Could not load that image — try a different file.');
+          optPreview.style.display = 'none';
+          alert(err.message || 'Could not upload that image — try a different file or check your connection.');
         }
       }
 
@@ -4311,6 +4407,127 @@
   }
 
   document.getElementById('refreshExams').addEventListener('click', ()=>{ invalidateDbCache('exams'); renderAdminExamList(); });
+
+  // Converts every already-embedded base64 image (in exams, skills,
+  // homework, and mistakes) into a small Storage URL instead — this is
+  // what actually shrinks the bloated rows causing timeouts, since fixing
+  // new uploads alone doesn't touch content that already exists. Mistakes
+  // are fetched in small pages rather than all at once, since a full-table
+  // fetch of that table is exactly the kind of query that's been timing out.
+  async function optimizeExistingImages(){
+    const btn = document.getElementById('optimizeImagesBtn');
+    const status = document.getElementById('optimizeImagesStatus');
+    if(!storageAvailable()){
+      alert('Storage is not connected — check the SUPABASE SETUP comment near the top of this file.');
+      return;
+    }
+    btn.disabled = true;
+    status.style.display = 'block';
+    status.innerHTML = 'Starting…';
+
+    const results = { imagesConverted: 0, recordsUpdated: 0, errors: [] };
+
+    function isBase64Image(v){ return typeof v === 'string' && v.startsWith('data:'); }
+
+    async function convertQuestionsArray(questions){
+      let changed = false;
+      for(const q of (questions || [])){
+        if(isBase64Image(q.image)){
+          try{ q.image = await uploadBase64ImageToStorage(q.image); changed = true; results.imagesConverted++; }
+          catch(err){ results.errors.push(`A question image failed to convert — ${err.message}`); }
+        }
+        if(Array.isArray(q.optionImages)){
+          for(let i=0;i<q.optionImages.length;i++){
+            if(isBase64Image(q.optionImages[i])){
+              try{ q.optionImages[i] = await uploadBase64ImageToStorage(q.optionImages[i]); changed = true; results.imagesConverted++; }
+              catch(err){ results.errors.push(`An option image failed to convert — ${err.message}`); }
+            }
+          }
+        }
+      }
+      return changed;
+    }
+
+    async function processTemplateCollection(label, indexFetchFn, saveFn, nameField){
+      let indexRows;
+      try{ indexRows = await indexFetchFn(); }
+      catch(err){ results.errors.push(`Could not even list ${label} — ${err.message}`); return; }
+
+      for(const idxRow of indexRows){
+        const displayName = idxRow[nameField] || idxRow.title || idxRow.skill || idxRow.id;
+        status.innerHTML = `Checking ${label}: "${esc(String(displayName))}"…`;
+        let full;
+        try{ full = await dbGet(label === 'exams' ? 'exams' : label === 'skills' ? 'skills' : 'homework', idxRow.id); }
+        catch(err){ results.errors.push(`${label} "${displayName}": couldn't load it to check — ${err.message}`); continue; }
+        if(!full || !Array.isArray(full.questions)) continue;
+
+        const changed = await convertQuestionsArray(full.questions);
+        if(changed){
+          const saveOk = await saveFn(full.id, full);
+          if(saveOk) results.recordsUpdated++;
+          else results.errors.push(`${label} "${displayName}": images converted but saving it back failed — run this again to retry.`);
+        }
+      }
+    }
+
+    async function processMistakesPaginated(){
+      const PAGE_SIZE = 15;
+      let offset = 0;
+      while(true){
+        status.innerHTML = `Checking mistakes (${offset} checked so far)…`;
+        let page;
+        try{
+          const { data, error } = await supabaseClient.from('mistakes').select('data').range(offset, offset + PAGE_SIZE - 1);
+          if(error) throw error;
+          page = (data || []).map(row => row.data);
+        }catch(err){
+          results.errors.push(`Mistakes starting around row ${offset}: couldn't load that page — ${err.message}. Run this again later to pick up where it left off.`);
+          break;
+        }
+        if(page.length === 0) break;
+
+        for(const m of page){
+          let changed = false;
+          if(isBase64Image(m.image)){
+            try{ m.image = await uploadBase64ImageToStorage(m.image); changed = true; results.imagesConverted++; }
+            catch(err){ results.errors.push(`A mistake's image failed to convert — ${err.message}`); }
+          }
+          if(Array.isArray(m.optionImages)){
+            for(let i=0;i<m.optionImages.length;i++){
+              if(isBase64Image(m.optionImages[i])){
+                try{ m.optionImages[i] = await uploadBase64ImageToStorage(m.optionImages[i]); changed = true; results.imagesConverted++; }
+                catch(err){ results.errors.push(`A mistake's option image failed to convert — ${err.message}`); }
+              }
+            }
+          }
+          if(changed){
+            const saveOk = await dbSet('mistakes', m.id, m);
+            if(saveOk) results.recordsUpdated++;
+            else results.errors.push(`A mistake's images were converted but saving it back failed — run this again to retry.`);
+          }
+        }
+        offset += PAGE_SIZE;
+      }
+    }
+
+    try{
+      await processTemplateCollection('exams', fetchExamsIndex, saveExam, 'title');
+      await processTemplateCollection('skills', fetchSkillsIndex, saveSkillSet, 'skill');
+      await processTemplateCollection('homework', fetchHomeworkIndex, saveHomeworkAssignment, 'title');
+      await processMistakesPaginated();
+    }catch(err){
+      results.errors.push('Something interrupted the process: ' + err.message);
+    }
+
+    btn.disabled = false;
+    status.innerHTML = `
+      <strong>Done.</strong> Converted ${results.imagesConverted} image${results.imagesConverted===1?'':'s'} across ${results.recordsUpdated} record${results.recordsUpdated===1?'':'s'}.
+      ${results.errors.length > 0
+        ? `<br><br><strong style="color:var(--ember);">${results.errors.length} issue${results.errors.length===1?'':'s'} — safe to run this again to retry them:</strong><br>${results.errors.slice(0,20).map(e=>esc(e)).join('<br>')}`
+        : ' Everything converted cleanly.'}
+    `;
+  }
+  document.getElementById('optimizeImagesBtn').addEventListener('click', optimizeExistingImages);
 
   /* ---------------- PUBLIC: practice exams list ---------------- */
   async function renderPublicExams(){
@@ -4618,6 +4835,16 @@
           correct: answers[i] === q.correct
         }));
         const retakeDeadline = hasMistakes ? new Date(Date.now() + 24*60*60*1000).toISOString() : null;
+
+        // Pre-queue every mistake to localStorage BEFORE attempting to save
+        // any of them — this write is synchronous and effectively instant,
+        // so it's already safely on disk even if the tab gets suspended a
+        // moment later (phone screen locking, switching apps mid-save) —
+        // something no try/catch around the network call can protect
+        // against, since execution just stops rather than throwing. Entries
+        // are removed from this queue only once actually confirmed saved.
+        queueMistakeEntries(mistakeEntries);
+
         // Each mistake is tracked individually — dbSet() never throws, it
         // just returns false on failure, so Promise.all alone can't tell us
         // if some silently failed while the overall submission looked fine.
@@ -4642,8 +4869,9 @@
           isSavingResult = false;
         }
         saveSucceeded = attemptResult !== false;
+        const succeededEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] !== false);
+        removeFromMistakeQueue(succeededEntries); // only the ones actually confirmed saved — anything that failed (or never got a chance to run) stays queued
         failedMistakeEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] === false);
-        failedMistakeEntries.forEach(entry => queueFailedMistakeSave(entry));
       }
 
       // Anonymized — just a number, no other students' names or identities.
@@ -5678,6 +5906,23 @@
       queue.push(entry);
       localStorage.setItem(PENDING_MISTAKES_KEY, JSON.stringify(queue));
     }catch(err){ console.error('Could not queue failed mistake save:', err); }
+  }
+  // Same idea as queueFailedMistakeSave, but for several entries in one
+  // write — used to pre-queue an entire submission's mistakes BEFORE any
+  // network activity even starts (see submitHomework/renderScore). This is
+  // synchronous and effectively instant, so it completes even if the tab
+  // gets suspended a moment later (e.g. a phone's screen locking, or
+  // switching apps) — something no amount of catching failed network
+  // requests can protect against, since the code simply stops running at
+  // that point rather than throwing anything to catch.
+  function queueMistakeEntries(entries){
+    if(!entries || entries.length === 0) return;
+    try{
+      const raw = localStorage.getItem(PENDING_MISTAKES_KEY);
+      const queue = raw ? JSON.parse(raw) : [];
+      queue.push(...entries);
+      localStorage.setItem(PENDING_MISTAKES_KEY, JSON.stringify(queue));
+    }catch(err){ console.error('Could not pre-queue mistake entries:', err); }
   }
   // Called after entries are saved successfully some OTHER way (e.g. the
   // student manually tapped "Retry" right away) — without this, the same
@@ -7105,6 +7350,16 @@
       // Getting a clean pass clears that requirement.
       const retakeDeadline = hasMistakes ? new Date(Date.now() + 24*60*60*1000).toISOString() : null;
 
+      // Pre-queue every mistake to localStorage BEFORE attempting to save
+      // any of them — this write is synchronous and effectively instant, so
+      // it's already safely on disk even if the tab gets suspended a moment
+      // later (phone screen locking, switching apps mid-save, especially
+      // relevant on a long homework where saving many mistakes takes
+      // longer) — something no try/catch around the network call can
+      // protect against, since execution just stops rather than throwing.
+      // Entries are removed from this queue only once actually confirmed saved.
+      queueMistakeEntries(mistakeEntries);
+
       // Wait for the mistake records too, not just the score — otherwise a
       // student closing the tab right after seeing their mark (completely
       // normal) could cut off the still-in-flight mistake saves, leaving the
@@ -7130,8 +7385,9 @@
       } finally {
         isSavingResult = false;
       }
+      const succeededEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] !== false);
+      removeFromMistakeQueue(succeededEntries); // only the ones actually confirmed saved — anything that failed (or never got a chance to run) stays queued
       const failedMistakeEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] === false);
-      failedMistakeEntries.forEach(entry => queueFailedMistakeSave(entry));
       // Anonymized — just a number, no other students' names or identities.
       let classAverageHtml = '';
       try{
