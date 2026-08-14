@@ -4524,6 +4524,8 @@
       const hasMistakes = correctCount < exam.questions.length;
       let reviewResults = null;
       let saveSucceeded = true;
+      let failedMistakeEntries = [];
+      let totalMistakeCount = 0;
 
       // Show the score immediately with a "Saving…" state, then update once
       // we actually know whether it was saved — instead of claiming success
@@ -4531,17 +4533,18 @@
       if(currentStudent){
         examPlayer.innerHTML = `<div class="exam-score"><div class="big-num">${pct}%</div><p style="color:var(--muted);">Saving your result…</p></div>`;
 
-        const mistakeSaves = [];
+        const mistakeEntries = [];
         exam.questions.forEach((q,i)=>{
           if(answers[i] !== q.correct){
-            mistakeSaves.push(saveMistake({
+            mistakeEntries.push({
               username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
               options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: exam.questions.length
-            }));
+            });
           }
         });
+        totalMistakeCount = mistakeEntries.length;
         reviewResults = exam.questions.map((q,i) => ({
           lesson: q.lesson || 'General',
           text: q.text || (q.image ? '(question with image)' : ''),
@@ -4554,16 +4557,20 @@
           correct: answers[i] === q.correct
         }));
         const retakeDeadline = hasMistakes ? new Date(Date.now() + 24*60*60*1000).toISOString() : null;
-        const [attemptResult] = await Promise.all([
+        // Each mistake is tracked individually — dbSet() never throws, it
+        // just returns false on failure, so Promise.all alone can't tell us
+        // if some silently failed while the overall submission looked fine.
+        const [attemptResult, ...mistakeResults] = await Promise.all([
           saveExamAttempt({
             username: currentStudent.username, examTitle: exam.title,
             correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
             retakeRequired: hasMistakes, retakeDeadline,
             retakeDayKey: exam.retakeDayKey || null
           }),
-          ...mistakeSaves
+          ...mistakeEntries.map(entry => saveMistake(entry))
         ]);
         saveSucceeded = attemptResult !== false;
+        failedMistakeEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] === false);
       }
 
       // Anonymized — just a number, no other students' names or identities.
@@ -4604,9 +4611,12 @@
       ` : '';
 
       const savedNoticeHtml = currentStudent
-        ? (saveSucceeded
-            ? `<p style="color:var(--muted);font-size:0.82rem;margin-top:-4px;margin-bottom:24px;">Saved to your account.</p>`
-            : `<div class="retake-notice" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);">⚠ This result did NOT save — check your connection and tap "Retry save" below, or Mr. Mohamed Ibrahim won't see it.</div>`)
+        ? (!saveSucceeded
+            ? `<div class="retake-notice" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);">⚠ This result did NOT save — check your connection and tap "Retry save" below, or Mr. Mohamed Ibrahim won't see it.</div>`
+            : failedMistakeEntries.length > 0
+              ? `<div class="retake-notice" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);">⚠ Your score saved, but ${failedMistakeEntries.length} of your ${totalMistakeCount} wrong answer${totalMistakeCount===1?'':'s'} didn't save properly — tap below to fix that.</div>
+                 <button class="btn btn-primary" id="retryMistakesBtn" style="width:100%;margin-bottom:10px;">Retry saving mistakes</button>`
+              : `<p style="color:var(--muted);font-size:0.82rem;margin-top:-4px;margin-bottom:24px;">Saved to your account.</p>`)
         : '';
 
       const sticker = getScoreSticker(pct);
@@ -4641,6 +4651,23 @@
         retryBtn.addEventListener('click', async ()=>{
           retryBtn.disabled = true; retryBtn.textContent = 'Retrying…';
           await renderScore();
+        });
+      }
+      const retryMistakesBtn = document.getElementById('retryMistakesBtn');
+      if(retryMistakesBtn){
+        retryMistakesBtn.addEventListener('click', async ()=>{
+          retryMistakesBtn.disabled = true; retryMistakesBtn.textContent = 'Retrying…';
+          const retryResults = await Promise.all(failedMistakeEntries.map(entry => saveMistake(entry)));
+          if(retryResults.every(r => r !== false)){
+            retryMistakesBtn.textContent = '✓ Saved';
+            setTimeout(()=>{
+              const notice = retryMistakesBtn.previousElementSibling;
+              if(notice) notice.remove();
+              retryMistakesBtn.remove();
+            }, 900);
+          } else {
+            retryMistakesBtn.disabled = false; retryMistakesBtn.textContent = 'Retry saving mistakes';
+          }
         });
       }
       const saveScoreBtn = document.getElementById('saveScoreBtn');
@@ -6720,16 +6747,16 @@
       }));
       const hasMistakes = correctCount < hw.questions.length;
 
-      const mistakeSaves = [];
+      const mistakeEntries = [];
       if(currentStudent){
         hw.questions.forEach((q,i)=>{
           if(answers[i] !== q.correct){
-            mistakeSaves.push(saveMistake({
+            mistakeEntries.push({
               username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
               options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: hw.questions.length
-            }));
+            });
           }
         });
       }
@@ -6743,14 +6770,18 @@
       // Wait for the mistake records too, not just the score — otherwise a
       // student closing the tab right after seeing their mark (completely
       // normal) could cut off the still-in-flight mistake saves, leaving the
-      // score recorded but the wrong answers themselves missing.
-      const [ok] = await Promise.all([
+      // score recorded but the wrong answers themselves missing. Each
+      // mistake is tracked individually — dbSet() never throws, it just
+      // returns false on failure, so Promise.all alone can't tell us if
+      // some silently failed while the overall submission looked fine.
+      const [ok, ...mistakeResults] = await Promise.all([
         saveHomeworkAssignment(hw.id, {
           ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
           retakeRequired: hasMistakes, retakeDeadline
         }),
-        ...mistakeSaves
+        ...mistakeEntries.map(entry => saveMistake(entry))
       ]);
+      const failedMistakeEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] === false);
       // Anonymized — just a number, no other students' names or identities.
       let classAverageHtml = '';
       try{
@@ -6791,6 +6822,14 @@
         ? `<div class="est-score-badge">Expected EST score: <strong>${pctToEstScore(pct)}</strong> / 800</div>`
         : '';
 
+      const savedNoticeHtml = !ok
+        ? `<div class="retake-notice" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);">⚠ This result did NOT save — check your connection and tap "Retry save" below, or Mr. Mohamed Ibrahim won't see it.</div>
+           <button class="btn btn-primary" id="retrySaveBtn" style="width:100%;margin-bottom:10px;">Retry save</button>`
+        : failedMistakeEntries.length > 0
+          ? `<div class="retake-notice" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);">⚠ Your score saved, but ${failedMistakeEntries.length} of your ${mistakeEntries.length} wrong answer${mistakeEntries.length===1?'':'s'} didn't save properly — tap below to fix that.</div>
+             <button class="btn btn-primary" id="retryMistakesBtn" style="width:100%;margin-bottom:10px;">Retry saving mistakes</button>`
+          : `<p style="color:var(--muted);font-size:0.82rem;margin-top:-4px;margin-bottom:24px;">Saved to your account.</p>`;
+
       examPlayer.innerHTML = `
         <div class="exam-score">
           <div class="score-sticker">${sticker.emoji}</div>
@@ -6801,11 +6840,7 @@
           ${estScoreHtml}
           ${classAverageHtml}
           ${reviewHtml}
-          ${ok
-            ? `<p style="color:var(--muted);font-size:0.82rem;margin-top:-4px;margin-bottom:24px;">Saved to your account.</p>`
-            : `<div class="retake-notice" style="background:rgba(255,107,74,0.12);border-color:var(--ember);color:var(--ember);">⚠ This result did NOT save — check your connection and tap "Retry save" below, or Mr. Mohamed Ibrahim won't see it.</div>
-               <button class="btn btn-primary" id="retrySaveBtn" style="width:100%;margin-bottom:10px;">Retry save</button>`
-          }
+          ${savedNoticeHtml}
           <button class="btn btn-primary" id="examCloseBtn" style="width:100%;">Close</button>
         </div>
       `;
@@ -6814,6 +6849,23 @@
         retryBtn.addEventListener('click', async ()=>{
           retryBtn.disabled = true; retryBtn.textContent = 'Retrying…';
           await submitHomework();
+        });
+      }
+      const retryMistakesBtn = document.getElementById('retryMistakesBtn');
+      if(retryMistakesBtn){
+        retryMistakesBtn.addEventListener('click', async ()=>{
+          retryMistakesBtn.disabled = true; retryMistakesBtn.textContent = 'Retrying…';
+          const retryResults = await Promise.all(failedMistakeEntries.map(entry => saveMistake(entry)));
+          if(retryResults.every(r => r !== false)){
+            retryMistakesBtn.textContent = '✓ Saved';
+            setTimeout(()=>{
+              const notice = retryMistakesBtn.previousElementSibling;
+              if(notice) notice.remove();
+              retryMistakesBtn.remove();
+            }, 900);
+          } else {
+            retryMistakesBtn.disabled = false; retryMistakesBtn.textContent = 'Retry saving mistakes';
+          }
         });
       }
       document.getElementById('examCloseBtn').addEventListener('click', async ()=>{
