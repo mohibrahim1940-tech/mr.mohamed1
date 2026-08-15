@@ -8467,7 +8467,10 @@
       <div class="exam-q-text" style="margin-bottom:20px;">${esc(row.text)}</div>
       ${optionsHtml}
       ${explanationVideoHtml(row)}
-      ${row.explanationVideo && row.id ? `<button class="btn btn-ghost" id="removeWrongVideoBtn" style="width:100%;margin-top:10px;font-size:0.82rem;">🗑 This is the wrong video — remove it from this mistake</button>` : ''}
+      ${row.explanationVideo && row.id ? `
+        <button class="btn btn-ghost" id="removeWrongVideoBtn" style="width:100%;margin-top:10px;font-size:0.82rem;">🗑 Wrong video — remove from just this mistake</button>
+        <button class="btn btn-ghost" id="removeWrongVideoEverywhereBtn" style="width:100%;margin-top:8px;font-size:0.82rem;color:var(--ember);border-color:var(--ember);">🗑 Remove this video from EVERY mistake it's attached to</button>
+      ` : ''}
       <p style="color:var(--muted); font-size:0.82rem; margin-top:18px;">Student: <strong style="color:var(--text);">${esc(row.username)}</strong></p>
       ${allowDelete && row.id ? `<button class="btn btn-ghost" id="deleteMistakeFromViewBtn" style="width:100%;margin-top:16px;">Delete this mistake</button>` : ''}
     `;
@@ -8483,6 +8486,22 @@
           row.explanationVideo = null;
           openQuestionView(row, allowDelete); // re-render this same view without the video
         }
+      });
+    }
+
+    const removeEverywhereBtn = document.getElementById('removeWrongVideoEverywhereBtn');
+    if(removeEverywhereBtn){
+      removeEverywhereBtn.addEventListener('click', async ()=>{
+        const targetVideo = row.explanationVideo;
+        const allMistakes = await fetchAllMistakes();
+        const matches = allMistakes.filter(m => !m._index && m.explanationVideo === targetVideo);
+        if(!confirm(`Remove this video from all ${matches.length} mistake${matches.length===1?'':'s'} it's currently attached to — across every student? This can't be undone, though you can always re-attach a video later by saving the correct question again.`)) return;
+        removeEverywhereBtn.disabled = true; removeEverywhereBtn.textContent = 'Removing…';
+        await Promise.all(matches.map(m => dbSet('mistakes', m.id, { ...m, explanationVideo: null })));
+        invalidateDbCache('mistakes');
+        row.explanationVideo = null;
+        openQuestionView(row, allowDelete); // re-render this same view without the video
+        await renderAdminMistakesTable();
       });
     }
 
