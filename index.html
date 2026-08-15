@@ -535,24 +535,6 @@
   }
   .final-cta h2{font-size:clamp(1.8rem,4vw,2.6rem);position:relative;}
   .final-cta p{color:var(--muted);margin:18px auto 34px;max-width:480px;position:relative;}
-  .cta-form{
-    display:flex;gap:12px;
-    max-width:440px;margin:0 auto;
-    position:relative;
-    flex-wrap:wrap;
-    justify-content:center;
-  }
-  .cta-form input{
-    flex:1;min-width:220px;
-    padding:14px 18px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:var(--ink);
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    font-size:0.95rem;
-  }
-  .cta-form input:focus{outline:2px solid var(--signal);outline-offset:2px;}
 
   /* ---------- footer ---------- */
   footer{
@@ -675,7 +657,6 @@
   }
   .modal-box input:focus{outline:2px solid var(--signal);outline-offset:2px;}
   .modal-box .btn{width:100%;}
-  .modal-note{font-size:0.76rem;color:var(--muted);margin-top:14px;margin-bottom:0;}
 
   /* ---------- whatsapp fab ---------- */
   .wa-fab{
@@ -2248,11 +2229,8 @@
   <section class="section-pad wrap">
     <div class="final-cta reveal">
       <h2>Start improving your score.</h2>
-      <p>Get one free lesson from SAT Math Prep — no card required.</p>
-      <form class="cta-form" id="finalCtaForm">
-        <input type="email" id="finalCtaEmail" placeholder="you@email.com" required aria-label="Email address">
-        <button type="submit" class="btn btn-primary">Send me the lesson</button>
-      </form>
+      <p>Register free and get your first homework assigned.</p>
+      <button class="btn btn-primary open-auth-btn" data-tab="registerForm" style="padding:14px 32px; position:relative;">Register now</button>
     </div>
   </section>
 
@@ -2297,20 +2275,6 @@
     </div>
   </div>
 </footer>
-
-<!-- LEAD MODAL -->
-<div class="modal-overlay" id="leadModal">
-  <div class="modal-box">
-    <button class="modal-close" id="closeModal" aria-label="Close">×</button>
-    <h3 id="modalTitle">Get the resource</h3>
-    <p id="modalDesc">Tell us where to send it.</p>
-    <form id="leadForm">
-      <input type="email" id="leadEmail" placeholder="you@email.com" required aria-label="Email address">
-      <button type="submit" class="btn btn-primary" id="leadSubmitBtn">Send it to me</button>
-    </form>
-    <p class="modal-note">We'll only use this to send the resource and occasional course updates.</p>
-  </div>
-</div>
 
 <!-- EXAM TAKING MODAL -->
 <div class="modal-overlay" id="examModal">
@@ -2510,7 +2474,6 @@
   <div class="wrap admin-dash" id="adminDash">
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="adminOverviewPanel" data-roles="admin,assistant">📊 Overview</button>
-      <button class="admin-tab" data-tab="leadsPanel" data-roles="admin">Leads</button>
       <button class="admin-tab" data-tab="examsPanel" data-roles="admin">Exams &amp; Questions</button>
       <button class="admin-tab" data-tab="studentsPanel" data-roles="admin,assistant">Students</button>
       <button class="admin-tab" data-tab="homeworkPanel" data-roles="admin,assistant">Homework</button>
@@ -2521,7 +2484,6 @@
       <button class="admin-tab" data-tab="reviewsPanel" data-roles="admin,assistant">Reviews</button>
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
       <button class="admin-tab" data-tab="mistakesPanel" data-roles="admin,assistant">Mistakes</button>
-      <button class="admin-tab" data-tab="remindersPanel" data-roles="admin,assistant">Reminders</button>
       <button class="admin-tab" data-tab="assistantAcctsPanel" data-roles="admin">Assistants</button>
       <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant">Weekly Updates</button>
     </div>
@@ -2543,28 +2505,6 @@
 
       <div class="hw-section-title">Class performance</div>
       <div id="ovClassChart"><div class="admin-empty">Loading…</div></div>
-    </div>
-
-    <div class="admin-panel" id="leadsPanel">
-      <div class="admin-note">Leads are stored in your Supabase database. With the default open policies from the setup instructions, anyone with your Supabase URL and anon key could technically read them — tighten the policies before handling sensitive data at scale.</div>
-      <div class="admin-stats">
-        <div class="admin-stat-card"><div class="num" id="statTotal">0</div><div class="lbl">Total leads captured</div></div>
-        <div class="admin-stat-card"><div class="num" id="statResource">0</div><div class="lbl">Free resource requests</div></div>
-        <div class="admin-stat-card"><div class="num" id="statLesson">0</div><div class="lbl">Free lesson requests</div></div>
-      </div>
-      <div class="admin-actions">
-        <button class="btn btn-ghost" id="refreshLeads">Refresh</button>
-        <button class="btn btn-ghost" id="exportLeads">Export CSV</button>
-      </div>
-      <div class="admin-table-wrap">
-        <table class="admin-table" id="leadsTable">
-          <thead>
-            <tr><th>Email</th><th>Source</th><th>Captured</th></tr>
-          </thead>
-          <tbody id="leadsBody"></tbody>
-        </table>
-        <div class="admin-empty" id="leadsEmpty" style="display:none;">No leads captured yet — they'll show up here as visitors submit the free resource or free lesson forms.</div>
-      </div>
     </div>
 
     <div class="admin-panel" id="examsPanel">
@@ -2898,28 +2838,6 @@
           <tbody id="mistakesBody"></tbody>
         </table>
         <div class="admin-empty" id="mistakesTableEmpty" style="display:none;">No mistakes recorded yet.</div>
-      </div>
-    </div>
-
-    <div class="admin-panel" id="remindersPanel">
-      <div class="admin-note">Every student with a homework retake still pending or overdue — one tap opens WhatsApp with their parent's number and a message already written for you.</div>
-      <div class="admin-actions">
-        <button class="btn btn-ghost" id="refreshReminders">Refresh</button>
-        <button class="btn btn-primary" id="messageAllBtn" style="display:none;">📤 Message all pending</button>
-      </div>
-      <div class="bulk-wa-stepper" id="bulkWaStepper" style="display:none;">
-        <div>
-          <div class="bulk-wa-title">Messaging <span id="bulkWaIndex">1</span> of <span id="bulkWaTotal">1</span> — <span id="bulkWaName"></span></div>
-          <div class="bulk-wa-hint">WhatsApp opened in a new tab with the message ready. Hit "Next" once you've sent it.</div>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button class="btn btn-ghost" id="bulkWaSkipBtn">Skip</button>
-          <button class="btn btn-primary" id="bulkWaNextBtn">Next →</button>
-          <button class="btn btn-ghost" id="bulkWaDoneBtn">Done</button>
-        </div>
-      </div>
-      <div id="remindersListWrap">
-        <div class="admin-empty">Loading…</div>
       </div>
     </div>
 
@@ -3519,65 +3437,6 @@
     });
   });
 
-  /* ---------------- LEAD CAPTURE (Supabase) ---------------- */
-  async function saveLead(email, source){
-    return await dbAdd('leads', { email, source, ts: new Date().toISOString() });
-  }
-
-  async function fetchAllLeads(){
-    const leads = await dbGetAll('leads');
-    leads.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
-    return leads;
-  }
-
-  /* ---------------- RESOURCE MODAL ---------------- */
-  const leadModal = document.getElementById('leadModal');
-  const modalTitle = document.getElementById('modalTitle');
-  const modalDesc = document.getElementById('modalDesc');
-  const leadForm = document.getElementById('leadForm');
-  const leadEmail = document.getElementById('leadEmail');
-  const leadSubmitBtn = document.getElementById('leadSubmitBtn');
-  let currentSource = 'Free resource';
-
-  function openModal(resourceName){
-    currentSource = resourceName;
-    modalTitle.textContent = 'Get: ' + resourceName;
-    modalDesc.textContent = "Tell us where to send it — it lands in your inbox in a minute.";
-    leadForm.reset();
-    leadSubmitBtn.textContent = 'Send it to me';
-    leadSubmitBtn.disabled = false;
-    leadModal.classList.add('open');
-    leadEmail.focus();
-  }
-  function closeModal(){ leadModal.classList.remove('open'); }
-
-  document.querySelectorAll('.open-resource').forEach(btn=>{
-    btn.addEventListener('click', ()=> openModal(btn.dataset.resource));
-  });
-  document.getElementById('closeModal').addEventListener('click', closeModal);
-  leadModal.addEventListener('click', (e)=>{ if(e.target === leadModal) closeModal(); });
-
-  leadForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    leadSubmitBtn.disabled = true;
-    leadSubmitBtn.textContent = 'Sending…';
-    const ok = await saveLead(leadEmail.value, currentSource);
-    leadSubmitBtn.textContent = ok ? 'Check your inbox →' : 'Something went wrong — try again';
-    if(ok){ setTimeout(closeModal, 1400); } else { leadSubmitBtn.disabled = false; }
-  });
-
-  // final CTA form (free lesson) also saves as a lead
-  const finalCtaForm = document.getElementById('finalCtaForm');
-  finalCtaForm.addEventListener('submit', async (e)=>{
-    e.preventDefault();
-    const btn = finalCtaForm.querySelector('button');
-    const emailInput = document.getElementById('finalCtaEmail');
-    btn.disabled = true; btn.textContent = 'Sending…';
-    const ok = await saveLead(emailInput.value, 'Free lesson (final CTA)');
-    btn.textContent = ok ? 'Check your inbox →' : 'Something went wrong — try again';
-    if(!ok) btn.disabled = false;
-  });
-
   /* ---------------- WHATSAPP FAB ---------------- */
   const waFabBtn = document.getElementById('waFabBtn');
   const waCard = document.getElementById('waCard');
@@ -3662,21 +3521,6 @@
       adminError.classList.add('show');
     }
   }
-
-  document.getElementById('refreshLeads').addEventListener('click', ()=>{ invalidateDbCache('leads'); renderAdminDash(); });
-
-  document.getElementById('exportLeads').addEventListener('click', async ()=>{
-    const leads = await fetchAllLeads();
-    if(leads.length === 0) return;
-    const rows = [['email','source','captured_at'], ...leads.map(l=>[l.email, l.source, l.ts])];
-    const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], {type:'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'ibrahim-math-leads.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
 
   // The admin landing page: site-wide stats, who's doing best, who needs
   // attention, and a visual bar chart of every student's average score —
@@ -3797,36 +3641,6 @@
     }
   }
 
-  async function renderAdminDash(){
-    const leads = await fetchAllLeads();
-    document.getElementById('statTotal').textContent = leads.length;
-    document.getElementById('statResource').textContent = leads.filter(l => l.source !== 'Free lesson (final CTA)').length;
-    document.getElementById('statLesson').textContent = leads.filter(l => l.source === 'Free lesson (final CTA)').length;
-
-    const tbody = document.getElementById('leadsBody');
-    const emptyState = document.getElementById('leadsEmpty');
-    tbody.innerHTML = '';
-
-    if(leads.length === 0){
-      emptyState.style.display = 'block';
-      return;
-    }
-    emptyState.style.display = 'none';
-
-    const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-    leads.forEach(lead=>{
-      const tr = document.createElement('tr');
-      const date = new Date(lead.ts);
-      tr.innerHTML = `
-        <td>${esc(lead.email)}</td>
-        <td><span class="tag-pill">${esc(lead.source || 'Unknown')}</span></td>
-        <td>${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
   /* ---------------- ADMIN TABS ---------------- */
   document.querySelectorAll('.admin-tab').forEach(tab=>{
     tab.addEventListener('click', async ()=>{
@@ -3854,7 +3668,6 @@
       if(tab.dataset.tab === 'reviewsPanel'){ invalidateDbCache('reviews'); initReviewsPanel(); }
       if(tab.dataset.tab === 'coursesPanel'){ invalidateDbCache('courses'); renderAdminCourseList(); }
       if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(true); }
-      if(tab.dataset.tab === 'remindersPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminReminders(); }
       if(tab.dataset.tab === 'assistantAcctsPanel'){ invalidateDbCache('assistants'); renderAssistantAcctsTable(); }
       if(tab.dataset.tab === 'weeklyUpdatesPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); invalidateDbCache('students'); renderWeeklyUpdates(); }
     });
@@ -8672,8 +8485,7 @@
     return digits ? `+20${digits}` : '';
   }
 
-  let bulkWaQueue = [];
-  let bulkWaIndex = 0;
+  document.getElementById('mistakesFilterSelect').addEventListener('change', renderAdminMistakesTable);
 
   /* ---------------- ADMIN: Academic Assistant accounts ---------------- */
   async function renderAssistantAcctsTable(){
@@ -8783,117 +8595,6 @@
     await renderAssistantAcctsTable();
   });
 
-  async function renderAdminReminders(){
-    const wrap = document.getElementById('remindersListWrap');
-    wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
-    document.getElementById('bulkWaStepper').style.display = 'none';
-
-    const [allHw, allAttempts, allStudents] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex(), fetchAllStudents()]);
-    const studentsByUsername = {};
-    allStudents.forEach(s => { studentsByUsername[(s.username||'').trim().toLowerCase()] = s; });
-
-    const pendingHw = allHw
-      .filter(h => h.status === 'completed' && h.retakeRequired)
-      .map(h => ({ username: h.username, title: h.title, kind: 'Homework', retakeDeadline: h.retakeDeadline }));
-
-    // Only the most recent attempt per student+title matters for exams/skills —
-    // an older attempt's retake flag doesn't apply once they've tried again.
-    const latestAttemptKey = {};
-    allAttempts.forEach(a=>{
-      const key = `${(a.username||'').trim().toLowerCase()}|${a.examTitle}`;
-      if(!latestAttemptKey[key] || new Date(a.ts) > new Date(latestAttemptKey[key].ts)) latestAttemptKey[key] = a;
-    });
-    const pendingAttempts = Object.values(latestAttemptKey)
-      .filter(a => a.retakeRequired)
-      .map(a => ({ username: a.username, title: a.examTitle, kind: 'Exam / skill practice', retakeDeadline: a.retakeDeadline }));
-
-    const pending = [...pendingHw, ...pendingAttempts];
-    pending.sort((a,b)=> new Date(a.retakeDeadline || 0) - new Date(b.retakeDeadline || 0));
-
-    const messageAllBtn = document.getElementById('messageAllBtn');
-
-    if(pending.length === 0){
-      wrap.innerHTML = '<div class="admin-empty">No pending retakes right now — nice and clear.</div>';
-      messageAllBtn.style.display = 'none';
-      bulkWaQueue = [];
-      return;
-    }
-
-    wrap.innerHTML = '';
-    bulkWaQueue = [];
-    pending.forEach(item=>{
-      const student = studentsByUsername[(item.username||'').trim().toLowerCase()];
-      const overdue = item.retakeDeadline && new Date(item.retakeDeadline) < new Date();
-      const deadlineLabel = item.retakeDeadline
-        ? new Date(item.retakeDeadline).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})
-        : '';
-
-      const row = document.createElement('div');
-      row.className = 'reminder-row';
-
-      const parentDigits = student ? digitsOnly(formatEgyptNumber(student.parentNumber)) : '';
-      const message = `Hi, please ask ${item.username} to retake their ${item.kind.toLowerCase()} "${item.title}" — it's ${overdue ? 'overdue' : `due by ${deadlineLabel}`}.`;
-      const waLink = parentDigits ? `https://wa.me/${parentDigits}?text=${encodeURIComponent(message)}` : null;
-
-      if(waLink) bulkWaQueue.push({ username: item.username, title: item.title, waLink });
-
-      row.innerHTML = `
-        <div class="reminder-info">
-          <div class="name">${esc(item.username)} — ${esc(item.title)}</div>
-          <div class="detail">${esc(item.kind)} · ${student ? `Parent #: ${esc(student.parentNumber || 'not on file')}` : 'Student record not found'}</div>
-        </div>
-        <span class="retake-badge ${overdue ? 'overdue' : ''}">${overdue ? 'Overdue' : 'Due by ' + deadlineLabel}</span>
-        ${waLink
-          ? `<a href="${waLink}" target="_blank" rel="noopener" class="btn btn-primary" style="padding:9px 16px;font-size:0.85rem;">Message parent on WhatsApp</a>`
-          : `<span class="btn btn-ghost" style="padding:9px 16px;font-size:0.85rem;opacity:0.6;cursor:default;">No parent number</span>`
-        }
-      `;
-      wrap.appendChild(row);
-    });
-
-    messageAllBtn.style.display = bulkWaQueue.length > 1 ? 'inline-flex' : 'none';
-    if(messageAllBtn) messageAllBtn.textContent = `📤 Message all pending (${bulkWaQueue.length})`;
-  }
-
-  // Steps through every pending reminder one at a time — WhatsApp can't send
-  // to multiple people in one action from a browser link, so this opens each
-  // parent's chat pre-filled in its own tab as the admin clicks "Next".
-  function showBulkWaStep(){
-    const stepper = document.getElementById('bulkWaStepper');
-    if(bulkWaIndex >= bulkWaQueue.length){
-      stepper.style.display = 'none';
-      return;
-    }
-    const item = bulkWaQueue[bulkWaIndex];
-    document.getElementById('bulkWaIndex').textContent = bulkWaIndex + 1;
-    document.getElementById('bulkWaTotal').textContent = bulkWaQueue.length;
-    document.getElementById('bulkWaName').textContent = `${item.username} — ${item.title}`;
-    stepper.style.display = 'flex';
-  }
-
-  document.getElementById('messageAllBtn').addEventListener('click', ()=>{
-    if(bulkWaQueue.length === 0) return;
-    bulkWaIndex = 0;
-    showBulkWaStep();
-    window.open(bulkWaQueue[0].waLink, '_blank', 'noopener');
-  });
-  document.getElementById('bulkWaNextBtn').addEventListener('click', ()=>{
-    bulkWaIndex++;
-    if(bulkWaIndex < bulkWaQueue.length){
-      window.open(bulkWaQueue[bulkWaIndex].waLink, '_blank', 'noopener');
-    }
-    showBulkWaStep();
-  });
-  document.getElementById('bulkWaSkipBtn').addEventListener('click', ()=>{
-    bulkWaIndex++;
-    showBulkWaStep();
-  });
-  document.getElementById('bulkWaDoneBtn').addEventListener('click', ()=>{
-    bulkWaIndex = bulkWaQueue.length;
-    document.getElementById('bulkWaStepper').style.display = 'none';
-  });
-
-  document.getElementById('refreshReminders').addEventListener('click', ()=>{ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminReminders(); });
   document.getElementById('mistakesFilterSelect').addEventListener('change', renderAdminMistakesTable);
 
   /* ---------------- WEEKLY PARENT UPDATES ---------------- */
