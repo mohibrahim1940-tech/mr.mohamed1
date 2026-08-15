@@ -4336,17 +4336,32 @@
 
     function isBase64Image(v){ return typeof v === 'string' && v.startsWith('data:'); }
 
+    // Uploading the exact same photo twice (once from a question, once
+    // from a mistake record's snapshot copy of that same question) with no
+    // deduplication would give them two DIFFERENT URLs for identical
+    // content — which silently breaks the explanation-video matching that
+    // relies on comparing images to tell questions apart. This cache
+    // ensures the same base64 content always resolves to the same URL,
+    // uploaded only once, no matter how many records reference it.
+    const uploadCache = new Map();
+    async function uploadDeduped(dataUrl){
+      if(uploadCache.has(dataUrl)) return uploadCache.get(dataUrl);
+      const url = await uploadBase64ImageToStorage(dataUrl);
+      uploadCache.set(dataUrl, url);
+      return url;
+    }
+
     async function convertQuestionsArray(questions){
       let changed = false;
       for(const q of (questions || [])){
         if(isBase64Image(q.image)){
-          try{ q.image = await uploadBase64ImageToStorage(q.image); changed = true; results.imagesConverted++; }
+          try{ q.image = await uploadDeduped(q.image); changed = true; results.imagesConverted++; }
           catch(err){ results.errors.push(`A question image failed to convert — ${err.message}`); }
         }
         if(Array.isArray(q.optionImages)){
           for(let i=0;i<q.optionImages.length;i++){
             if(isBase64Image(q.optionImages[i])){
-              try{ q.optionImages[i] = await uploadBase64ImageToStorage(q.optionImages[i]); changed = true; results.imagesConverted++; }
+              try{ q.optionImages[i] = await uploadDeduped(q.optionImages[i]); changed = true; results.imagesConverted++; }
               catch(err){ results.errors.push(`An option image failed to convert — ${err.message}`); }
             }
           }
@@ -4411,13 +4426,13 @@
         for(const m of page){
           let changed = false;
           if(isBase64Image(m.image)){
-            try{ m.image = await uploadBase64ImageToStorage(m.image); changed = true; results.imagesConverted++; }
+            try{ m.image = await uploadDeduped(m.image); changed = true; results.imagesConverted++; }
             catch(err){ results.errors.push(`A mistake's image failed to convert — ${err.message}`); }
           }
           if(Array.isArray(m.optionImages)){
             for(let i=0;i<m.optionImages.length;i++){
               if(isBase64Image(m.optionImages[i])){
-                try{ m.optionImages[i] = await uploadBase64ImageToStorage(m.optionImages[i]); changed = true; results.imagesConverted++; }
+                try{ m.optionImages[i] = await uploadDeduped(m.optionImages[i]); changed = true; results.imagesConverted++; }
                 catch(err){ results.errors.push(`A mistake's option image failed to convert — ${err.message}`); }
               }
             }
@@ -8452,10 +8467,24 @@
       <div class="exam-q-text" style="margin-bottom:20px;">${esc(row.text)}</div>
       ${optionsHtml}
       ${explanationVideoHtml(row)}
+      ${row.explanationVideo && row.id ? `<button class="btn btn-ghost" id="removeWrongVideoBtn" style="width:100%;margin-top:10px;font-size:0.82rem;">🗑 This is the wrong video — remove it from this mistake</button>` : ''}
       <p style="color:var(--muted); font-size:0.82rem; margin-top:18px;">Student: <strong style="color:var(--text);">${esc(row.username)}</strong></p>
       ${allowDelete && row.id ? `<button class="btn btn-ghost" id="deleteMistakeFromViewBtn" style="width:100%;margin-top:16px;">Delete this mistake</button>` : ''}
     `;
     document.getElementById('questionViewModal').classList.add('open');
+
+    const removeVideoBtn = document.getElementById('removeWrongVideoBtn');
+    if(removeVideoBtn){
+      removeVideoBtn.addEventListener('click', async ()=>{
+        removeVideoBtn.disabled = true; removeVideoBtn.textContent = 'Removing…';
+        const record = await dbGet('mistakes', row.id);
+        if(record){
+          await dbSet('mistakes', row.id, { ...record, explanationVideo: null });
+          row.explanationVideo = null;
+          openQuestionView(row, allowDelete); // re-render this same view without the video
+        }
+      });
+    }
 
     const deleteBtn = document.getElementById('deleteMistakeFromViewBtn');
     if(deleteBtn){
