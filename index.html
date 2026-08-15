@@ -3660,7 +3660,7 @@
         invalidateDbCache('exams');
         renderAdminExamList();
       }
-      if(tab.dataset.tab === 'homeworkPanel'){ invalidateDbCache('homework'); initHomeworkPanel(); }
+      if(tab.dataset.tab === 'homeworkPanel'){ invalidateDbCache('homework'); initHomeworkPanel(true); }
       if(tab.dataset.tab === 'skillsPanel'){ invalidateDbCache('skills'); initSkillsPanel(); }
       if(tab.dataset.tab === 'leaderboardPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminLeaderboard(); }
       if(tab.dataset.tab === 'asksPanel'){ invalidateDbCache('asks'); renderAdminAsks(); }
@@ -5191,7 +5191,7 @@
 
   document.getElementById('addHwQuestionBtn').addEventListener('click', ()=> addQuestionBlock(null, hwQuestionsContainer));
 
-  async function initHomeworkPanel(){
+  async function initHomeworkPanel(resetLoaders){
     const students = await fetchAllStudents();
     const checkboxList = document.getElementById('hwStudentCheckboxList');
     const filterSelect = document.getElementById('hwFilterSelect');
@@ -5199,6 +5199,8 @@
     const loadExamSelect = document.getElementById('hwLoadExamSelect');
 
     const currentFilterVal = filterSelect.value;
+    const currentLoadSkillVal = loadSkillSelect.value;
+    const currentLoadExamVal = loadExamSelect.value;
     const previouslyChecked = new Set(
       Array.from(checkboxList.querySelectorAll('input:checked')).map(el => el.value)
     );
@@ -5222,12 +5224,15 @@
     const skillSets = await fetchSkillsIndex();
     loadSkillSelect.innerHTML = '<option value="">— Start blank, or pick a skill below —</option>' +
       skillSets.map(s => `<option value="${esc(s.id)}">${esc(s.skill)} (${s.questionCount} question${s.questionCount===1?'':'s'})</option>`).join('');
-    loadSkillSelect.value = '';
+    // Only force these back to blank on a genuine fresh tab-open — not on a
+    // background auto-refresh, which shouldn't silently reset a dropdown an
+    // admin is actively mid-way through using while building homework.
+    loadSkillSelect.value = resetLoaders ? '' : (skillSets.some(s => s.id === currentLoadSkillVal) ? currentLoadSkillVal : '');
 
     const examSets = await fetchExamsIndex();
     loadExamSelect.innerHTML = '<option value="">— Or pick an exam instead —</option>' +
       examSets.map(e => `<option value="${esc(e.id)}">${esc(e.title)} (${e.questionCount} question${e.questionCount===1?'':'s'})</option>`).join('');
-    loadExamSelect.value = '';
+    loadExamSelect.value = resetLoaders ? '' : (examSets.some(e => e.id === currentLoadExamVal) ? currentLoadExamVal : '');
 
     if(hwQuestionsContainer.children.length === 0){
       addQuestionBlock(null, hwQuestionsContainer);
