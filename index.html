@@ -6502,17 +6502,20 @@
         }
       }
 
-      // Already fixed via Mistake History? Check every wrong lesson from
-      // this homework against later correct answers, after it was submitted.
+      // Already fixed via Mistake History? Check every wrong question from
+      // this homework against later correct answers, after it was submitted
+      // — matched by lesson name OR the exact question text, since lesson
+      // names are free text typed by hand and can differ slightly across
+      // content, but the exact same question answered correctly later is unambiguous.
       if(needsRetake && fullPendingById[entry.id]){
         const full = fullPendingById[entry.id];
         const submittedAt = entry.submittedAt ? new Date(entry.submittedAt) : null;
-        const wrongLessons = (full.results || [])
+        const wrongOnes = (full.results || [])
           .filter(r => !r.correct)
-          .map(r => (r.lesson || 'General').trim().toLowerCase());
-        if(wrongLessons.length > 0 && submittedAt){
-          const allFixed = wrongLessons.every(lesson =>
-            myLaterCorrect.some(c => c.lesson === lesson && new Date(c.ts) > submittedAt)
+          .map(r => ({ lesson: (r.lesson || 'General').trim().toLowerCase(), text: (r.text || '').trim().toLowerCase() }));
+        if(wrongOnes.length > 0 && submittedAt){
+          const allFixed = wrongOnes.every(w =>
+            myLaterCorrect.some(c => (c.lesson === w.lesson || (w.text && c.text === w.text)) && new Date(c.ts) > submittedAt)
           );
           if(allFixed) needsRetake = false;
         }
@@ -6677,6 +6680,10 @@
     );
     // Any later correct answer on the same lesson — from any homework, exam,
     // or skill practice — counts as having fixed it, not just one specific button.
+    // Matched by lesson name OR the exact question text — lesson names are
+    // free text typed by hand and can differ slightly across content, but
+    // if the exact same question was answered correctly later, that's an
+    // unambiguous signal regardless of what lesson tag either one has.
     const myLaterCorrect = [];
     function collectCorrect(items, dateField){
       items.forEach(item=>{
@@ -6685,7 +6692,11 @@
         const ts = item[dateField] || item.ts;
         if(!ts) return;
         item.results.forEach(r=>{
-          if(r.correct) myLaterCorrect.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts });
+          if(r.correct) myLaterCorrect.push({
+            lesson: (r.lesson || 'General').trim().toLowerCase(),
+            text: (r.text || '').trim().toLowerCase(),
+            ts
+          });
         });
       });
     }
@@ -6720,11 +6731,11 @@
         if(overrideByDay[day] !== undefined) return !overrideByDay[day];
       }
       if(!Array.isArray(item.results) || !ts) return true;
-      const wrongLessons = item.results.filter(r => !r.correct).map(r => (r.lesson || 'General').trim().toLowerCase());
-      if(wrongLessons.length === 0) return true;
+      const wrongOnes = item.results.filter(r => !r.correct).map(r => ({ lesson: (r.lesson || 'General').trim().toLowerCase(), text: (r.text || '').trim().toLowerCase() }));
+      if(wrongOnes.length === 0) return true;
       const submittedAt = new Date(ts);
-      const allFixed = wrongLessons.every(lesson =>
-        myLaterCorrect.some(c => c.lesson === lesson && new Date(c.ts) > submittedAt)
+      const allFixed = wrongOnes.every(w =>
+        myLaterCorrect.some(c => (c.lesson === w.lesson || (w.text && c.text === w.text)) && new Date(c.ts) > submittedAt)
       );
       return !allFixed;
     }
@@ -6778,7 +6789,10 @@
           const dayEnd = new Date(day);
           dayEnd.setHours(23, 59, 59, 999);
           const dayLessons = new Set(dayRows.map(r => (r.lesson || 'General').trim().toLowerCase()));
-          retaken = myLaterCorrect.some(entry => dayLessons.has(entry.lesson) && new Date(entry.ts) > dayEnd);
+          const dayTexts = new Set(dayRows.map(r => (r.text || '').trim().toLowerCase()).filter(Boolean));
+          retaken = myLaterCorrect.some(entry =>
+            (dayLessons.has(entry.lesson) || (entry.text && dayTexts.has(entry.text))) && new Date(entry.ts) > dayEnd
+          );
         }
       }
 
@@ -6969,7 +6983,7 @@
       if(!Array.isArray(item.results)) return;
       const ts = item.submittedAt || item.ts;
       if(!ts) return;
-      item.results.forEach(r=>{ if(r.correct) myLaterCorrectForPlanner.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts }); });
+      item.results.forEach(r=>{ if(r.correct) myLaterCorrectForPlanner.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), text: (r.text || '').trim().toLowerCase(), ts }); });
     });
     const pendingRetakes = await countTrueResolvedPendingRetakes(currentStudent.username, myHw, myAttempts, myLaterCorrectForPlanner);
     const streak = await getStreakCount();
@@ -7084,7 +7098,7 @@
         if(!Array.isArray(item.results)) return;
         const ts = item.submittedAt || item.ts;
         if(!ts) return;
-        item.results.forEach(r=>{ if(r.correct) myLaterCorrectForCount.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts }); });
+        item.results.forEach(r=>{ if(r.correct) myLaterCorrectForCount.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), text: (r.text || '').trim().toLowerCase(), ts }); });
       });
       const pendingRetakeCount = await countTrueResolvedPendingRetakes(currentStudent.username, mineHw, mineAttempts, myLaterCorrectForCount);
 
@@ -7854,7 +7868,7 @@
         if(!Array.isArray(item.results)) return;
         const ts = item.submittedAt || item.ts;
         if(!ts) return;
-        item.results.forEach(res=>{ if(res.correct) myLaterCorrectForRow.push({ lesson: (res.lesson || 'General').trim().toLowerCase(), ts }); });
+        item.results.forEach(res=>{ if(res.correct) myLaterCorrectForRow.push({ lesson: (res.lesson || 'General').trim().toLowerCase(), text: (res.text || '').trim().toLowerCase(), ts }); });
       });
       const pendingRetakes = await countTrueResolvedPendingRetakes(r.uname, myFullHw, myFullAttempts, myLaterCorrectForRow);
       return { ...r, pendingRetakes };
@@ -8376,6 +8390,9 @@
     // homework, exam, or skill-practice submission, not just the specific
     // "Retake as exam" button — so a student who fixed the lesson a
     // different way still shows as retaken, honestly reflecting reality.
+    // Matched by lesson name OR exact question text — lesson names are free
+    // text typed by hand and can differ slightly across content, but the
+    // exact same question being answered correctly later is unambiguous.
     const laterCorrectByStudent = {};
     function addCorrectEntries(items, dateField){
       items.forEach(item=>{
@@ -8386,7 +8403,11 @@
         if(!laterCorrectByStudent[uname]) laterCorrectByStudent[uname] = [];
         item.results.forEach(r=>{
           if(r.correct){
-            laterCorrectByStudent[uname].push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts });
+            laterCorrectByStudent[uname].push({
+              lesson: (r.lesson || 'General').trim().toLowerCase(),
+              text: (r.text || '').trim().toLowerCase(),
+              ts
+            });
           }
         });
       });
@@ -8396,7 +8417,8 @@
 
     // Tag each day-group: retaken if EITHER the exact "Retake as exam" flow
     // was used for that day, OR the student later answered that same lesson
-    // correctly through any other homework/exam/skill practice since then.
+    // (or the exact same question) correctly through any other homework,
+    // exam, or skill practice since then.
     list.forEach(g=>{
       // A manual override always wins — the admin knows the ground truth
       // better than any automatic lesson-matching guess.
@@ -8418,7 +8440,10 @@
       dayEnd.setHours(23, 59, 59, 999);
       const uname = g.username.trim().toLowerCase();
       const laterCorrect = laterCorrectByStudent[uname] || [];
-      g.retaken = laterCorrect.some(entry => g.lessons.has(entry.lesson) && new Date(entry.ts) > dayEnd);
+      const dayTexts = new Set(g.rows.map(r => (r.text || '').trim().toLowerCase()).filter(Boolean));
+      g.retaken = laterCorrect.some(entry =>
+        (g.lessons.has(entry.lesson) || (entry.text && dayTexts.has(entry.text))) && new Date(entry.ts) > dayEnd
+      );
     });
 
     // Per-student rollup: anyone with at least one un-retaken day goes in
