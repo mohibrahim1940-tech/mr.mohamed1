@@ -2878,7 +2878,7 @@
       <div class="hw-section-title">Day-by-day detail</div>
       <div class="admin-table-wrap" style="margin-bottom:28px;">
         <table class="admin-table" id="complianceTable">
-          <thead><tr><th>Student</th><th>Day</th><th>Mistakes</th><th>Retaken?</th></tr></thead>
+          <thead><tr><th>Student</th><th>Day</th><th>Mistakes</th><th>Retaken?</th><th></th></tr></thead>
           <tbody id="complianceBody"></tbody>
         </table>
         <div class="admin-empty" id="complianceEmpty" style="display:none;">No past days with mistakes yet.</div>
@@ -3588,6 +3588,25 @@
   const ADMIN_PASSCODE = 'ibrahim2026'; // demo only — replace with real auth
   const ASSISTANT_PASSCODE = 'assistant2026'; // separate, lower-access login for teaching assistants
   let currentAdminRole = null; // 'admin' | 'assistant'
+
+  // Auto-refreshes the Homework and Mistakes tabs every 30s while they're
+  // the one actually open — without this, an admin who leaves the tab open
+  // (rather than clicking away and back) would see nothing change even
+  // after a student submits, with no obvious sign anything's stale.
+  let _adminAutoRefreshTimer = null;
+  function startAdminAutoRefresh(){
+    if(_adminAutoRefreshTimer) return;
+    _adminAutoRefreshTimer = setInterval(()=>{
+      const active = document.querySelector('.admin-tab.active');
+      if(!active || !document.getElementById('adminOverlay')?.classList.contains('open')) return;
+      const tab = active.dataset.tab;
+      if(tab === 'homeworkPanel'){ invalidateDbCache('homework'); initHomeworkPanel(); }
+      else if(tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(); }
+    }, 30000);
+  }
+  function stopAdminAutoRefresh(){
+    if(_adminAutoRefreshTimer){ clearInterval(_adminAutoRefreshTimer); _adminAutoRefreshTimer = null; }
+  }
   const adminOverlay = document.getElementById('adminOverlay');
   const adminGate = document.getElementById('adminGate');
   const adminDash = document.getElementById('adminDash');
@@ -3603,6 +3622,7 @@
   });
   document.getElementById('closeAdmin').addEventListener('click', ()=>{
     adminOverlay.classList.remove('open');
+    stopAdminAutoRefresh();
   });
 
   document.getElementById('adminSubmit').addEventListener('click', checkAdminPass);
@@ -3637,6 +3657,7 @@
       adminDash.classList.add('open');
       applyAdminRoleVisibility();
       await renderAdminOverviewDashboard();
+      startAdminAutoRefresh();
     } else {
       adminError.classList.add('show');
     }
@@ -3799,7 +3820,7 @@
       const date = new Date(lead.ts);
       tr.innerHTML = `
         <td>${esc(lead.email)}</td>
-        <td><span class="tag-pill">${esc(lead.source)}</span></td>
+        <td><span class="tag-pill">${esc(lead.source || 'Unknown')}</span></td>
         <td>${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
       `;
       tbody.appendChild(tr);
@@ -3832,7 +3853,7 @@
       if(tab.dataset.tab === 'sessionsPanel'){ invalidateDbCache('sessions'); initSessionsPanel(); }
       if(tab.dataset.tab === 'reviewsPanel'){ invalidateDbCache('reviews'); initReviewsPanel(); }
       if(tab.dataset.tab === 'coursesPanel'){ invalidateDbCache('courses'); renderAdminCourseList(); }
-      if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(); }
+      if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(true); }
       if(tab.dataset.tab === 'remindersPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminReminders(); }
       if(tab.dataset.tab === 'assistantAcctsPanel'){ invalidateDbCache('assistants'); renderAssistantAcctsTable(); }
       if(tab.dataset.tab === 'weeklyUpdatesPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); invalidateDbCache('students'); renderWeeklyUpdates(); }
@@ -5457,7 +5478,7 @@
   async function renderAdminHomework(){
     const filterVal = document.getElementById('hwFilterSelect').value;
     let entries = await fetchHomeworkIndex();
-    if(filterVal) entries = entries.filter(e => e.username === filterVal);
+    if(filterVal) entries = entries.filter(e => (e.username||'').trim().toLowerCase() === filterVal.trim().toLowerCase());
 
     const tbody = document.getElementById('homeworkBody');
     const emptyState = document.getElementById('homeworkEmpty');
@@ -6147,7 +6168,7 @@
   async function renderAdminSessions(){
     const filterVal = document.getElementById('sessFilterSelect').value;
     let sessions = await fetchAllSessions();
-    if(filterVal) sessions = sessions.filter(s => s.username === filterVal);
+    if(filterVal) sessions = sessions.filter(s => (s.username||'').trim().toLowerCase() === filterVal.trim().toLowerCase());
 
     const tbody = document.getElementById('sessionsBody');
     const emptyState = document.getElementById('sessionsEmpty');
@@ -6240,7 +6261,7 @@
       const row = document.createElement('div');
       row.className = 'hw-row';
       row.innerHTML = `
-        <span class="hw-date">${esc(sess.date)}</span>
+        <span class="hw-date">${esc(sess.date || '')}</span>
         <span class="hw-title">${esc(sess.topic || 'Session')}</span>
         <span class="hw-mark">${esc(sess.time || '')}</span>
       `;
@@ -6280,7 +6301,7 @@
   async function renderAdminReviews(){
     const filterVal = document.getElementById('revFilterSelect').value;
     let reviews = await fetchAllReviews();
-    if(filterVal) reviews = reviews.filter(r => r.username === filterVal);
+    if(filterVal) reviews = reviews.filter(r => (r.username||'').trim().toLowerCase() === filterVal.trim().toLowerCase());
 
     const tbody = document.getElementById('reviewsBody');
     const emptyState = document.getElementById('reviewsEmpty');
@@ -6686,12 +6707,18 @@
       const isPastDay = day !== todayStr;
       const dayLabel = new Date(day).toLocaleDateString(undefined, { weekday:'long', month:'short', day:'numeric' });
 
-      let retaken = isPastDay && myRetakenDayKeys.has(day);
-      if(isPastDay && !retaken){
-        const dayEnd = new Date(day);
-        dayEnd.setHours(23, 59, 59, 999);
-        const dayLessons = new Set(dayRows.map(r => (r.lesson || 'General').trim().toLowerCase()));
-        retaken = myLaterCorrect.some(entry => dayLessons.has(entry.lesson) && new Date(entry.ts) > dayEnd);
+      let retaken;
+      const overrideRow = dayRows.find(r => r.retakenOverride !== undefined);
+      if(overrideRow){
+        retaken = !!overrideRow.retakenOverride;
+      } else {
+        retaken = isPastDay && myRetakenDayKeys.has(day);
+        if(isPastDay && !retaken){
+          const dayEnd = new Date(day);
+          dayEnd.setHours(23, 59, 59, 999);
+          const dayLessons = new Set(dayRows.map(r => (r.lesson || 'General').trim().toLowerCase()));
+          retaken = myLaterCorrect.some(entry => dayLessons.has(entry.lesson) && new Date(entry.ts) > dayEnd);
+        }
       }
 
       // Only questions with full detail (options + a known correct answer) can
@@ -8184,6 +8211,7 @@
       correctAnswer: m.correctAnswer,
       chosenText: (m.options && m.chosenAnswer != null) ? (m.options[m.chosenAnswer] ?? '—') : '—',
       correctText: (m.options && m.correctAnswer != null) ? (m.options[m.correctAnswer] ?? '—') : '—',
+      retakenOverride: m.retakenOverride,
       ts: m.ts
     }));
 
@@ -8192,12 +8220,20 @@
   }
 
   /* ---------------- ADMIN: global Mistakes tab ---------------- */
-  async function initMistakesPanel(){
+  async function initMistakesPanel(resetFilter){
     const students = await fetchAllStudents();
     const filterSelect = document.getElementById('mistakesFilterSelect');
+    const currentVal = filterSelect.value;
     filterSelect.innerHTML = '<option value="">All students</option>' +
       students.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('');
-    filterSelect.value = ''; // always start on "All students" — never silently stay filtered to one person
+    // Only force back to "All students" on a genuine fresh tab-open — not
+    // on a background auto-refresh, which should never silently disrupt an
+    // admin who deliberately filtered down to review one student.
+    if(resetFilter){
+      filterSelect.value = '';
+    } else if(students.some(s => s.username === currentVal)){
+      filterSelect.value = currentVal;
+    }
 
     const deleteAllBtn = document.getElementById('deleteAllMistakesBtn');
     if(deleteAllBtn) deleteAllBtn.style.display = (currentAdminRole === 'assistant') ? 'none' : '';
@@ -8222,9 +8258,10 @@
       if(!r.ts || !r.username) return;
       const day = new Date(r.ts).toDateString();
       const key = `${r.username}|${day}`;
-      if(!groups[key]) groups[key] = { username: r.username, day, count: 0, lessons: new Set() };
+      if(!groups[key]) groups[key] = { username: r.username, day, count: 0, lessons: new Set(), rows: [] };
       groups[key].count++;
       groups[key].lessons.add((r.lesson || 'General').trim().toLowerCase());
+      groups[key].rows.push(r);
     });
 
     const todayStr = new Date().toDateString();
@@ -8257,6 +8294,14 @@
     // was used for that day, OR the student later answered that same lesson
     // correctly through any other homework/exam/skill practice since then.
     list.forEach(g=>{
+      // A manual override always wins — the admin knows the ground truth
+      // better than any automatic lesson-matching guess.
+      if(g.rows.some(r => r.retakenOverride !== undefined)){
+        const overrideRow = g.rows.find(r => r.retakenOverride !== undefined);
+        g.retaken = !!overrideRow.retakenOverride;
+        g.manualOverride = true;
+        return;
+      }
       const exactRetake = attempts.some(a =>
         (a.username || '').trim().toLowerCase() === g.username.trim().toLowerCase() &&
         a.retakeDayKey === g.day
@@ -8335,10 +8380,32 @@
         <td>${esc(g.username)}</td>
         <td>${esc(dayLabel)}</td>
         <td>${g.count}</td>
-        <td><span class="status-pill ${g.retaken ? 'status-approved' : 'status-pending'}">${g.retaken ? '✓ Retaken' : '✕ Not yet'}</span></td>
+        <td><span class="status-pill ${g.retaken ? 'status-approved' : 'status-pending'}">${g.retaken ? '✓ Retaken' : '✕ Not yet'}${g.manualOverride ? ' (set by you)' : ''}</span></td>
+        <td><button class="student-action-btn toggle-retaken-btn">Mark as ${g.retaken ? 'NOT retaken' : 'retaken'}</button></td>
       `;
+      tr.querySelector('.toggle-retaken-btn').addEventListener('click', async ()=>{
+        await setManualRetakeOverride(g.username, g.day, !g.retaken);
+        await renderRetakeCompliance();
+      });
       tbody.appendChild(tr);
     });
+  }
+
+  // Lets the admin directly correct the retaken/not-retaken status for a
+  // specific student's day when they know it's wrong — automatic detection
+  // (matching by lesson across any homework/exam/skill practice) can miss a
+  // genuine retake if lesson names aren't worded identically everywhere.
+  // The override is stored on that day's mistake records themselves and
+  // takes priority over the automatic guess, for both this admin view and
+  // the student's own Mistake History.
+  async function setManualRetakeOverride(username, day, value){
+    const allMistakes = await fetchAllMistakes();
+    const uname = username.trim().toLowerCase();
+    const dayMistakes = allMistakes.filter(m =>
+      !m._index && (m.username||'').trim().toLowerCase() === uname && m.ts && new Date(m.ts).toDateString() === day
+    );
+    await Promise.all(dayMistakes.map(m => dbSet('mistakes', m.id, { ...m, retakenOverride: value })));
+    invalidateDbCache('mistakes');
   }
 
   async function renderAdminMistakesTable(){
