@@ -6463,23 +6463,44 @@
     // For any homework still flagged as needing a retake, check whether the
     // student has already fixed the same lesson through their Mistake
     // History — if so, it's already handled and shouldn't nag them again.
+    // Also checks for a manual "Mark as retaken" override set by the admin
+    // in the Mistakes tab — without this, an admin manually confirming a
+    // retake there would leave the homework itself still stuck showing as
+    // pending, even though the admin just said it's done.
     const pendingCandidates = mine.filter(e => e.status === 'completed' && e.retakeRequired);
     const uname = currentStudent.username.trim().toLowerCase();
     let fullPendingById = {};
     let myLaterCorrect = [];
+    let overrideByDay = {};
     if(pendingCandidates.length > 0){
-      const [fullRecords, signals] = await Promise.all([
+      const [fullRecords, signals, myMistakes] = await Promise.all([
         Promise.all(pendingCandidates.map(e => dbGet('homework', e.id))),
-        getMyRetakeSignals()
+        getMyRetakeSignals(),
+        gatherAllMistakeRows(currentStudent.username)
       ]);
       fullRecords.forEach((rec, i) => { if(rec) fullPendingById[pendingCandidates[i].id] = rec; });
       myLaterCorrect = signals.myLaterCorrect;
+      myMistakes.forEach(m=>{
+        if(m.retakenOverride === undefined || !m.ts) return;
+        const day = new Date(m.ts).toDateString();
+        overrideByDay[day] = m.retakenOverride;
+      });
     }
 
     list.innerHTML = '';
     mine.forEach(entry=>{
       const isCompleted = entry.status === 'completed';
       let needsRetake = isCompleted && entry.retakeRequired;
+
+      // A manual override always wins, same as it does in the admin's
+      // compliance table — the admin knows the ground truth better than
+      // any automatic lesson-matching guess.
+      if(needsRetake && entry.submittedAt){
+        const day = new Date(entry.submittedAt).toDateString();
+        if(overrideByDay[day] !== undefined){
+          needsRetake = !overrideByDay[day];
+        }
+      }
 
       // Already fixed via Mistake History? Check every wrong lesson from
       // this homework against later correct answers, after it was submitted.
@@ -6671,6 +6692,46 @@
     collectCorrect(myHw.filter(h => h.status === 'completed'), 'submittedAt');
     collectCorrect(myAttempts, 'ts');
     return { myHw, myAttempts, myRetakenDayKeys, myLaterCorrect };
+  }
+
+  // The true, CURRENT count of still-pending retakes for this student — a
+  // raw retakeRequired flag never gets cleared once set, so counting it
+  // directly double-counts anything already resolved (either through
+  // Mistake History or a manual admin override). This checks both, exactly
+  // the same way the homework list itself does, so every "pending retakes"
+  // number shown anywhere on the site — Overview, Study Planner, wherever —
+  // agrees with what the homework list is actually showing.
+  async function countTrueResolvedPendingRetakes(username, myHw, myAttempts, myLaterCorrect){
+    if(!username) return 0;
+    const overrideByDay = {};
+    try{
+      const myMistakes = await gatherAllMistakeRows(username);
+      myMistakes.forEach(m=>{
+        if(m.retakenOverride === undefined || !m.ts) return;
+        overrideByDay[new Date(m.ts).toDateString()] = m.retakenOverride;
+      });
+    }catch(err){ /* if this fails, just fall back to the raw check below */ }
+
+    function isStillPending(item, dateField){
+      if(!item.retakeRequired) return false;
+      const ts = item[dateField];
+      if(ts){
+        const day = new Date(ts).toDateString();
+        if(overrideByDay[day] !== undefined) return !overrideByDay[day];
+      }
+      if(!Array.isArray(item.results) || !ts) return true;
+      const wrongLessons = item.results.filter(r => !r.correct).map(r => (r.lesson || 'General').trim().toLowerCase());
+      if(wrongLessons.length === 0) return true;
+      const submittedAt = new Date(ts);
+      const allFixed = wrongLessons.every(lesson =>
+        myLaterCorrect.some(c => c.lesson === lesson && new Date(c.ts) > submittedAt)
+      );
+      return !allFixed;
+    }
+
+    const pendingHw = myHw.filter(h => isStillPending(h, 'submittedAt')).length;
+    const pendingAttempts = myAttempts.filter(a => isStillPending(a, 'ts')).length;
+    return pendingHw + pendingAttempts;
   }
 
   async function renderDailyMistakeSummary(rows){
@@ -6903,7 +6964,14 @@
     tally(myHw, 'submittedAt');
     tally(myAttempts, 'ts');
 
-    const pendingRetakes = myHw.filter(h => h.retakeRequired).length + myAttempts.filter(a => a.retakeRequired).length;
+    const myLaterCorrectForPlanner = [];
+    [...myHw.filter(h => h.status === 'completed'), ...myAttempts].forEach(item=>{
+      if(!Array.isArray(item.results)) return;
+      const ts = item.submittedAt || item.ts;
+      if(!ts) return;
+      item.results.forEach(r=>{ if(r.correct) myLaterCorrectForPlanner.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts }); });
+    });
+    const pendingRetakes = await countTrueResolvedPendingRetakes(currentStudent.username, myHw, myAttempts, myLaterCorrectForPlanner);
     const streak = await getStreakCount();
 
     const allDates = [...myHw.map(h => h.submittedAt), ...myAttempts.map(a => a.ts)]
@@ -7007,8 +7075,18 @@
     const suggestionsRow = document.getElementById('suggestionsRow');
     if(suggestionsRow){
       const suggestions = [];
-      const pendingRetakeCount = mineHw.filter(h => h.retakeRequired).length
-        + mineAttempts.filter(a => a.retakeRequired).length;
+      // Reuses mineHw/mineAttempts already fetched above — computes the
+      // same "later correct answer" signal the homework list itself uses,
+      // so this count agrees with what a student actually sees as pending
+      // there, instead of the raw flag that never gets cleared once set.
+      const myLaterCorrectForCount = [];
+      [...mineHw.filter(h => h.status === 'completed'), ...mineAttempts].forEach(item=>{
+        if(!Array.isArray(item.results)) return;
+        const ts = item.submittedAt || item.ts;
+        if(!ts) return;
+        item.results.forEach(r=>{ if(r.correct) myLaterCorrectForCount.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), ts }); });
+      });
+      const pendingRetakeCount = await countTrueResolvedPendingRetakes(currentStudent.username, mineHw, mineAttempts, myLaterCorrectForCount);
 
       if(pendingRetakeCount > 0){
         suggestions.push({
@@ -7752,11 +7830,37 @@
       const mineAttempts = allAttempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
       const allPct = [...completedHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
       const avgPct = allPct.length ? Math.round(allPct.reduce((s,p)=> s+p, 0) / allPct.length) : null;
-      const pendingRetakes = completedHw.filter(h => h.retakeRequired).length + mineAttempts.filter(a => a.retakeRequired).length;
-      return { username: displayName, uname, hwProgress: `${completedHw.length} of ${mineHw.length}`, avgPct, pendingRetakes };
+      return { username: displayName, uname, hwProgress: `${completedHw.length} of ${mineHw.length}`, avgPct, completedHw, mineAttempts };
     });
 
-    content.innerHTML = rows.map(r => `
+    // Resolve each assigned student's TRUE pending count — a raw
+    // retakeRequired flag never gets cleared once set, so counting it
+    // directly would double-count anything already resolved through
+    // Mistake History or a manual admin override.
+    const resolvedRows = await Promise.all(rows.map(async r=>{
+      const pendingCandidates = r.completedHw.filter(h => h.retakeRequired);
+      const attemptCandidates = r.mineAttempts.filter(a => a.retakeRequired);
+      if(pendingCandidates.length === 0 && attemptCandidates.length === 0){
+        return { ...r, pendingRetakes: 0 };
+      }
+      const [fullHw, fullAttempts] = await Promise.all([
+        Promise.all(pendingCandidates.map(h => dbGet('homework', h.id))),
+        Promise.all(attemptCandidates.map(a => dbGet('attempts', a.id)))
+      ]);
+      const myFullHw = fullHw.filter(Boolean);
+      const myFullAttempts = fullAttempts.filter(Boolean);
+      const myLaterCorrectForRow = [];
+      [...myFullHw, ...myFullAttempts].forEach(item=>{
+        if(!Array.isArray(item.results)) return;
+        const ts = item.submittedAt || item.ts;
+        if(!ts) return;
+        item.results.forEach(res=>{ if(res.correct) myLaterCorrectForRow.push({ lesson: (res.lesson || 'General').trim().toLowerCase(), ts }); });
+      });
+      const pendingRetakes = await countTrueResolvedPendingRetakes(r.uname, myFullHw, myFullAttempts, myLaterCorrectForRow);
+      return { ...r, pendingRetakes };
+    }));
+
+    content.innerHTML = resolvedRows.map(r => `
       <div class="reminder-row">
         <div class="reminder-info">
           <div class="name">${esc(r.username)}</div>
