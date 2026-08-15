@@ -5893,11 +5893,28 @@
       if(matching.length === 0) return;
       const updates = [];
       matching.forEach(m=>{
-        const match = questions.find(q=>{
-          const qLesson = (q.lesson || 'General').trim();
-          const qText = q.text || (q.image ? '(question with image)' : '');
-          return qLesson === (m.lesson || 'General').trim() && qText === (m.text || '');
-        });
+        // Prefer matching by the mistake's exact recorded question position —
+        // unambiguous, and specifically avoids a real bug where multiple
+        // image-only questions in the same lesson all share the identical
+        // fallback text "(question with image)", which could otherwise
+        // cause a video meant for one question to get attached to a
+        // completely different question's mistakes. Position match is only
+        // trusted if the lesson still roughly agrees (in case questions
+        // were reordered or edited since the mistake was recorded) —
+        // otherwise falls back to the original lesson+text matching.
+        let match = null;
+        if(m.questionNumber && questions[m.questionNumber - 1]){
+          const candidate = questions[m.questionNumber - 1];
+          const qLesson = (candidate.lesson || 'General').trim();
+          if(qLesson === (m.lesson || 'General').trim()) match = candidate;
+        }
+        if(!match){
+          match = questions.find(q=>{
+            const qLesson = (q.lesson || 'General').trim();
+            const qText = q.text || (q.image ? '(question with image)' : '');
+            return qLesson === (m.lesson || 'General').trim() && qText === (m.text || '');
+          });
+        }
         if(match && match.explanationVideo && match.explanationVideo !== m.explanationVideo){
           updates.push(dbSet('mistakes', m.id, { ...m, explanationVideo: match.explanationVideo }));
         }
