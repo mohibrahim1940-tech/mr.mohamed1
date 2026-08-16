@@ -3482,6 +3482,7 @@
   document.getElementById('closeAdmin').addEventListener('click', ()=>{
     adminOverlay.classList.remove('open');
     stopAdminAutoRefresh();
+    currentAdminRole = null; // otherwise a stale admin state could leak into a student session later in the same tab, incorrectly showing admin-only controls
   });
 
   document.getElementById('adminSubmit').addEventListener('click', checkAdminPass);
@@ -8467,7 +8468,7 @@
       <div class="exam-q-text" style="margin-bottom:20px;">${esc(row.text)}</div>
       ${optionsHtml}
       ${explanationVideoHtml(row)}
-      ${row.explanationVideo && row.id ? `
+      ${row.explanationVideo && row.id && currentAdminRole ? `
         <button class="btn btn-ghost" id="removeWrongVideoBtn" style="width:100%;margin-top:10px;font-size:0.82rem;">🗑 Wrong video — remove from just this mistake</button>
         <button class="btn btn-ghost" id="removeWrongVideoEverywhereBtn" style="width:100%;margin-top:8px;font-size:0.82rem;color:var(--ember);border-color:var(--ember);">🗑 Remove this video from EVERY mistake it's attached to</button>
       ` : ''}
