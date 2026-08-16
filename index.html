@@ -146,7 +146,7 @@
     height:40px;width:40px;object-fit:cover;
     border-radius:10px;background:#fff;flex-shrink:0;
   }
-  .nav-links{display:flex;gap:36px;align-items:center;}
+  .nav-links{display:none;gap:36px;align-items:center;}
   .nav-links a{font-size:0.92rem;color:var(--muted);transition:color .2s;}
   .nav-links a:hover{color:var(--text);}
   .nav-cta{display:flex;align-items:center;gap:18px;}
@@ -154,6 +154,7 @@
 
   @media(max-width:860px){
     .nav-links{
+      display:flex;
       position:fixed;top:64px;left:0;right:0;
       background:var(--ink);
       border-bottom:1px solid var(--line);
@@ -1147,6 +1148,36 @@
 
   /* ---------- exam-taking modal ---------- */
   .exam-modal-box{max-width:520px;}
+
+  /* Exam-taking is a focused, full-screen experience on every device —
+     no floating box with page visible around it. The outer box fills the
+     entire viewport; an inner wrapper keeps the actual question content
+     at a comfortable reading width on wide laptop screens, while naturally
+     filling the full width on tablet and phone. */
+  #examModal{ padding:0; }
+  #examModal .modal-box{
+    width:100%; height:100%;
+    max-width:none; max-height:none;
+    border-radius:0;
+    display:flex; flex-direction:column;
+    padding:0;
+  }
+  #examModal #closeExamModal{
+    top:20px; right:20px;
+    width:40px; height:40px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--panel); border:1px solid var(--line); border-radius:50%;
+    font-size:1.4rem; z-index:2;
+  }
+  #examModal #examPlayer{
+    flex:1; overflow-y:auto;
+    width:100%; max-width:720px; margin:0 auto;
+    padding:72px 24px 40px;
+    box-sizing:border-box;
+  }
+  @media(min-width:640px){
+    #examModal #examPlayer{ padding:80px 40px 48px; }
+  }
   .exam-progress{
     height:4px;background:var(--line);border-radius:4px;
     margin-bottom:22px;overflow:hidden;
@@ -1194,10 +1225,26 @@
     border:1px solid var(--line);background:var(--ink);color:var(--muted);
     font-family:'IBM Plex Mono',monospace;font-size:0.8rem;cursor:pointer;
     transition:border-color .15s, color .15s;
+    position:relative;
   }
   .q-nav-btn:hover{border-color:rgba(255,255,255,0.3);color:var(--text);}
   .q-nav-btn.answered{border-color:rgba(57,217,138,0.4);color:#39D98A;}
   .q-nav-btn.current{border-color:var(--signal);color:var(--text);background:rgba(76,111,255,0.14);}
+  .q-nav-btn.flagged::after{
+    content:"";
+    position:absolute;top:-3px;right:-3px;
+    width:9px;height:9px;border-radius:50%;
+    background:#FFB020;border:1.5px solid var(--ink);
+  }
+  .flag-review-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    background:none;border:1px solid var(--line);border-radius:20px;
+    padding:6px 14px;font-size:0.8rem;color:var(--muted);cursor:pointer;
+    transition:border-color .15s, color .15s, background .15s;
+    margin-bottom:16px;
+  }
+  .flag-review-btn:hover{border-color:rgba(255,176,32,0.4);color:#FFB020;}
+  .flag-review-btn.active{border-color:rgba(255,176,32,0.5);color:#FFB020;background:rgba(255,176,32,0.1);}
   .exam-score{text-align:center;}
   .exam-score .big-num{
     font-family:'Space Grotesk',sans-serif;font-size:3rem;font-weight:700;
@@ -1814,6 +1861,7 @@
         <button class="open-admin-btn" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Admin</button>
       </div>
       <div class="nav-cta" id="navCta">
+        <a href="#courses" style="font-size:0.92rem;color:var(--muted);text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Courses</a>
         <button class="btn btn-ghost open-assistant-auth-btn" style="padding:10px 18px;">Academic Assistant</button>
         <button class="btn btn-ghost open-admin-btn" style="padding:10px 18px;">Admin</button>
         <button class="btn btn-ghost open-auth-btn" data-tab="signinForm" style="padding:10px 20px;">Sign in</button>
@@ -4593,15 +4641,18 @@
   }
   // Builds the row of numbered buttons that let a student jump straight to
   // any question (e.g. "go to question 6") instead of only stepping Back/Next.
-  function buildQuestionNav(total, currentIdx, answers, onJump){
+  function buildQuestionNav(total, currentIdx, answers, flagged, onJump){
     const wrap = document.createElement('div');
     wrap.className = 'q-nav-grid';
     for(let i=0; i<total; i++){
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'q-nav-btn' + (i === currentIdx ? ' current' : '') + (answers[i] != null ? ' answered' : '');
+      btn.className = 'q-nav-btn'
+        + (i === currentIdx ? ' current' : '')
+        + (answers[i] != null ? ' answered' : '')
+        + (flagged && flagged[i] ? ' flagged' : '');
       btn.textContent = i + 1;
-      btn.title = `Go to question ${i + 1}`;
+      btn.title = `Go to question ${i + 1}${flagged && flagged[i] ? ' (flagged for review)' : ''}`;
       btn.addEventListener('click', ()=> onJump(i));
       wrap.appendChild(btn);
     }
@@ -4623,6 +4674,7 @@
   function startExam(exam){
     let current = 0;
     const answers = new Array(exam.questions.length).fill(null);
+    const flagged = new Array(exam.questions.length).fill(false);
     let remainingSeconds = exam.timeLimit ? exam.timeLimit * 60 : null;
 
     quizLocked = true;
@@ -4650,7 +4702,10 @@
         ${remainingSeconds !== null ? `<div class="exam-timer"><span id="examTimerDisplay">${formatTimer(remainingSeconds)}</span></div>` : ''}
         <div class="exam-progress"><div class="exam-progress-fill" style="width:${progress}%"></div></div>
         <div id="qNavWrap"></div>
-        <div class="exam-q-count">QUESTION ${current+1} OF ${exam.questions.length}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div class="exam-q-count">QUESTION ${current+1} OF ${exam.questions.length}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
+          <button type="button" class="flag-review-btn${flagged[current] ? ' active' : ''}" id="flagReviewBtn">🚩 ${flagged[current] ? 'Flagged for review' : 'Flag for review'}</button>
+        </div>
         ${q.image ? `<img class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
         ${q.text ? `<div class="exam-q-text">${esc(q.text)}</div>` : ''}
         <div id="examOptions"></div>
@@ -4668,8 +4723,12 @@
         </div>
       `;
       document.getElementById('qNavWrap').appendChild(
-        buildQuestionNav(exam.questions.length, current, answers, (i)=>{ current = i; renderQuestion(); })
+        buildQuestionNav(exam.questions.length, current, answers, flagged, (i)=>{ current = i; renderQuestion(); })
       );
+      document.getElementById('flagReviewBtn').addEventListener('click', ()=>{
+        flagged[current] = !flagged[current];
+        renderQuestion();
+      });
       const optionsWrap = document.getElementById('examOptions');
       q.options.forEach((opt, i)=>{
         const row = document.createElement('label');
@@ -4686,6 +4745,8 @@
           answers[current] = i;
           optionsWrap.querySelectorAll('.exam-option').forEach(o=>o.classList.remove('selected'));
           row.classList.add('selected');
+          const currentNavBtn = document.querySelector('.q-nav-btn.current');
+          if(currentNavBtn) currentNavBtn.classList.add('answered');
         });
         optionsWrap.appendChild(row);
       });
@@ -7265,6 +7326,7 @@
   function startHomework(hw){
     let current = 0;
     const answers = new Array(hw.questions.length).fill(null);
+    const flagged = new Array(hw.questions.length).fill(false);
     let remainingSeconds = hw.timeLimit ? hw.timeLimit * 60 : null;
 
     quizLocked = true;
@@ -7292,7 +7354,10 @@
         ${remainingSeconds !== null ? `<div class="exam-timer"><span id="examTimerDisplay">${formatTimer(remainingSeconds)}</span></div>` : ''}
         <div class="exam-progress"><div class="exam-progress-fill" style="width:${progress}%"></div></div>
         <div id="qNavWrap"></div>
-        <div class="exam-q-count">QUESTION ${current+1} OF ${hw.questions.length}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div class="exam-q-count">QUESTION ${current+1} OF ${hw.questions.length}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
+          <button type="button" class="flag-review-btn${flagged[current] ? ' active' : ''}" id="flagReviewBtn">🚩 ${flagged[current] ? 'Flagged for review' : 'Flag for review'}</button>
+        </div>
         ${q.image ? `<img class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
         ${q.text ? `<div class="exam-q-text">${esc(q.text)}</div>` : ''}
         <div id="examOptions"></div>
@@ -7310,8 +7375,12 @@
         </div>
       `;
       document.getElementById('qNavWrap').appendChild(
-        buildQuestionNav(hw.questions.length, current, answers, (i)=>{ current = i; renderQuestion(); })
+        buildQuestionNav(hw.questions.length, current, answers, flagged, (i)=>{ current = i; renderQuestion(); })
       );
+      document.getElementById('flagReviewBtn').addEventListener('click', ()=>{
+        flagged[current] = !flagged[current];
+        renderQuestion();
+      });
       const optionsWrap = document.getElementById('examOptions');
       q.options.forEach((opt, i)=>{
         const row = document.createElement('label');
@@ -7328,6 +7397,8 @@
           answers[current] = i;
           optionsWrap.querySelectorAll('.exam-option').forEach(o=>o.classList.remove('selected'));
           row.classList.add('selected');
+          const currentNavBtn = document.querySelector('.q-nav-btn.current');
+          if(currentNavBtn) currentNavBtn.classList.add('answered');
         });
         optionsWrap.appendChild(row);
       });
