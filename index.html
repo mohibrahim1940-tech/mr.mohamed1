@@ -2132,7 +2132,7 @@
         </div>
 
         <div class="dash-tab-panel" id="tabPlanner">
-          <div class="hw-section-title" style="margin-top:0;">🧠 Your study analysis</div>
+          <div class="hw-section-title" style="margin-top:0;">🎯 Your Coach</div>
           <div id="plannerInsights" class="planner-insights">
             <div class="admin-empty">Loading…</div>
           </div>
@@ -6793,32 +6793,35 @@
 
   function esc_planner_safe(s){ return esc(s); } // alias kept for readability below
 
-  function generatePlannerInsightHtml(lessonStats, pendingRetakes, streak, daysSinceActivity){
+  function generatePlannerInsightHtml(lessonStats, pendingRetakes, streak, daysSinceActivity, progressNote){
     const sortedLessons = Object.entries(lessonStats)
       .filter(([,s]) => s.total >= 2)
-      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.correct / s.total) * 100) }))
+      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.weightedCorrect / s.weightedTotal) * 100) }))
       .sort((a,b)=> b.pct - a.pct);
 
     const parts = [];
     if(sortedLessons.length === 0){
-      parts.push("You haven't practiced enough yet for a full breakdown — try a few skills or exams and check back here!");
+      parts.push("Let's get started — try a few skills or exams, and I'll build you a real game plan based on how you do.");
     } else {
       const strongest = sortedLessons[0];
       const weakest = sortedLessons[sortedLessons.length - 1];
-      parts.push(`You're strongest in <strong>${esc(strongest.lesson)}</strong> (${strongest.pct}%)`);
+      parts.push(`You're doing well in <strong>${esc(strongest.lesson)}</strong> right now (${strongest.pct}%) — nice work`);
       parts.push(weakest.lesson !== strongest.lesson
-        ? ` but <strong>${esc(weakest.lesson)}</strong> needs the most work right now (${weakest.pct}%).`
+        ? `. Let's put our energy into <strong>${esc(weakest.lesson)}</strong> next (${weakest.pct}%) — that's where the biggest gains are waiting for you.`
         : `.`);
     }
+    if(progressNote){
+      parts.push(` ${progressNote}`);
+    }
     if(pendingRetakes > 0){
-      parts.push(` You have <strong>${pendingRetakes} pending retake${pendingRetakes===1?'':'s'}</strong> waiting in your Mistake History.`);
+      parts.push(` One thing first — you've got <strong>${pendingRetakes} pending retake${pendingRetakes===1?'':'s'}</strong> waiting. Let's clear those before anything else.`);
     }
     if(streak >= 3){
-      parts.push(` You're on a <strong>${streak}-homework streak</strong> — keep it going! 🔥`);
+      parts.push(` And you're on a <strong>${streak}-homework streak</strong> — that kind of consistency is exactly what moves the needle. 🔥`);
     } else if(daysSinceActivity != null && daysSinceActivity >= 3){
-      parts.push(` It's been <strong>${daysSinceActivity} day${daysSinceActivity===1?'':'s'}</strong> since your last practice — a good time to jump back in.`);
+      parts.push(` It's been <strong>${daysSinceActivity} day${daysSinceActivity===1?'':'s'}</strong> since we last practiced together — good time to jump back in.`);
     } else if(daysSinceActivity == null){
-      parts.push(` Once you complete your first homework or practice set, this analysis gets a lot more specific.`);
+      parts.push(` Once you finish your first homework or practice set, I'll have a lot more to work with.`);
     }
     return `<p>${parts.join('')}</p>`;
   }
@@ -6829,7 +6832,7 @@
 
     const weakLessons = Object.entries(lessonStats)
       .filter(([,s]) => s.total >= 2)
-      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.correct / s.total) * 100) }))
+      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.weightedCorrect / s.weightedTotal) * 100) }))
       .sort((a,b)=> a.pct - b.pct)
       .slice(0, 3); // focus on the 3 weakest — rotate through them across the week
 
@@ -6880,15 +6883,33 @@
 
     const { myHw, myAttempts } = await getMyRetakeSignals();
 
+    // Recency-weighted lesson stats: a mistake from 2 months ago shouldn't
+    // drag down "weakest topic" the same as one from yesterday if the
+    // student has since improved. Recent work (within 14 days) counts
+    // fully; older work fades out gradually, so the plan reflects current
+    // ability, not lifetime average.
     const lessonStats = {};
+    function weightForAge(ts){
+      if(!ts) return 0.4;
+      const daysAgo = (Date.now() - new Date(ts).getTime()) / (1000*60*60*24);
+      if(daysAgo <= 14) return 1.0;
+      if(daysAgo <= 30) return 0.6;
+      return 0.3;
+    }
     function tally(items, dateField){
       items.forEach(item=>{
         if(!Array.isArray(item.results)) return;
+        const ts = item[dateField] || item.ts;
+        const weight = weightForAge(ts);
         item.results.forEach(r=>{
           const lesson = (r.lesson || 'General').trim();
-          if(!lessonStats[lesson]) lessonStats[lesson] = { correct:0, total:0 };
+          if(!lessonStats[lesson]) lessonStats[lesson] = { correct:0, total:0, weightedCorrect:0, weightedTotal:0 };
           lessonStats[lesson].total++;
-          if(r.correct) lessonStats[lesson].correct++;
+          lessonStats[lesson].weightedTotal += weight;
+          if(r.correct){
+            lessonStats[lesson].correct++;
+            lessonStats[lesson].weightedCorrect += weight;
+          }
         });
       });
     }
@@ -6911,7 +6932,37 @@
       ? Math.floor((new Date() - new Date(Math.max(...allDates))) / (1000*60*60*24))
       : null;
 
-    insightsWrap.innerHTML = generatePlannerInsightHtml(lessonStats, pendingRetakes, streak, daysSinceActivity);
+    // Progress tracking: compare today's weakest topic against whatever was
+    // recorded the last time this student opened the planner, so it can
+    // actually say "you improved" instead of only ever describing the
+    // present moment. Stored locally per student/device — this is a
+    // motivational nudge, not graded data, so it doesn't need a database record.
+    let progressNote = '';
+    const currentSorted = Object.entries(lessonStats)
+      .filter(([,s]) => s.total >= 2)
+      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.weightedCorrect / s.weightedTotal) * 100) }))
+      .sort((a,b)=> a.pct - b.pct);
+    if(currentSorted.length > 0){
+      try{
+        const snapKey = `plannerSnapshot_${currentStudent.username.trim().toLowerCase()}`;
+        const raw = localStorage.getItem(snapKey);
+        const prev = raw ? JSON.parse(raw) : null;
+        if(prev && prev.lesson){
+          const sameNow = currentSorted.find(l => l.lesson === prev.lesson);
+          if(sameNow){
+            const delta = sameNow.pct - prev.pct;
+            if(delta >= 8){
+              progressNote = `Since last time, you've gone from ${prev.pct}% to ${sameNow.pct}% in <strong>${esc(prev.lesson)}</strong> — that's real progress, keep it up! 🎉`;
+            } else if(delta <= -8){
+              progressNote = `Your <strong>${esc(prev.lesson)}</strong> score dipped a bit since last time (${prev.pct}% → ${sameNow.pct}%) — nothing to worry about, let's just get some more reps in.`;
+            }
+          }
+        }
+        localStorage.setItem(snapKey, JSON.stringify({ lesson: currentSorted[0].lesson, pct: currentSorted[0].pct, ts: new Date().toISOString() }));
+      }catch(err){ /* localStorage unavailable — just skip the progress note, not critical */ }
+    }
+
+    insightsWrap.innerHTML = generatePlannerInsightHtml(lessonStats, pendingRetakes, streak, daysSinceActivity, progressNote);
 
     const plan = generateWeeklyPlan(lessonStats, pendingRetakes);
     scheduleWrap.innerHTML = plan.map(d => `
@@ -6925,7 +6976,7 @@
 
     const sortedLessons = Object.entries(lessonStats)
       .filter(([,s]) => s.total >= 2)
-      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.correct / s.total) * 100) }))
+      .map(([lesson, s]) => ({ lesson, pct: Math.round((s.weightedCorrect / s.weightedTotal) * 100) }))
       .sort((a,b)=> a.pct - b.pct);
     const weakest = sortedLessons[0];
 
