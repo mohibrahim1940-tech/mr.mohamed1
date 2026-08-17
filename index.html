@@ -2521,19 +2521,19 @@
 
   <div class="wrap admin-dash" id="adminDash">
     <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="adminOverviewPanel" data-roles="admin,assistant">📊 Overview</button>
-      <button class="admin-tab" data-tab="examsPanel" data-roles="admin">Exams &amp; Questions</button>
-      <button class="admin-tab" data-tab="studentsPanel" data-roles="admin,assistant">Students</button>
-      <button class="admin-tab" data-tab="homeworkPanel" data-roles="admin,assistant">Homework</button>
-      <button class="admin-tab" data-tab="skillsPanel" data-roles="admin">Skills</button>
-      <button class="admin-tab" data-tab="leaderboardPanel" data-roles="admin">Leaderboard</button>
-      <button class="admin-tab" data-tab="asksPanel" data-roles="admin,assistant">Questions asked</button>
-      <button class="admin-tab" data-tab="sessionsPanel" data-roles="admin">Sessions</button>
-      <button class="admin-tab" data-tab="reviewsPanel" data-roles="admin,assistant">Reviews</button>
+      <button class="admin-tab active" data-tab="adminOverviewPanel" data-roles="admin,assistant,act-admin">📊 Overview</button>
+      <button class="admin-tab" data-tab="examsPanel" data-roles="admin,act-admin">Exams &amp; Questions</button>
+      <button class="admin-tab" data-tab="studentsPanel" data-roles="admin,assistant,act-admin">Students</button>
+      <button class="admin-tab" data-tab="homeworkPanel" data-roles="admin,assistant,act-admin">Homework</button>
+      <button class="admin-tab" data-tab="skillsPanel" data-roles="admin,act-admin">Skills</button>
+      <button class="admin-tab" data-tab="leaderboardPanel" data-roles="admin,act-admin">Leaderboard</button>
+      <button class="admin-tab" data-tab="asksPanel" data-roles="admin,assistant,act-admin">Questions asked</button>
+      <button class="admin-tab" data-tab="sessionsPanel" data-roles="admin,act-admin">Sessions</button>
+      <button class="admin-tab" data-tab="reviewsPanel" data-roles="admin,assistant,act-admin">Reviews</button>
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
-      <button class="admin-tab" data-tab="mistakesPanel" data-roles="admin,assistant">Mistakes</button>
+      <button class="admin-tab" data-tab="mistakesPanel" data-roles="admin,assistant,act-admin">Mistakes</button>
       <button class="admin-tab" data-tab="assistantAcctsPanel" data-roles="admin">Assistants</button>
-      <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant">Weekly Updates</button>
+      <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant,act-admin">Weekly Updates</button>
     </div>
 
     <div class="admin-panel active" id="adminOverviewPanel">
@@ -2698,6 +2698,12 @@
         <div class="field-row">
           <label class="field-label">Skill / topic name</label>
           <input type="text" id="skillNameInput" placeholder="e.g. Quadratic Equations">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Course</label>
+          <select id="skillCourseInput">
+            <option value="">No course / general</option>
+          </select>
         </div>
 
         <label class="field-label">Questions</label>
@@ -3494,7 +3500,13 @@
   /* ---------------- ADMIN PANEL ---------------- */
   const ADMIN_PASSCODE = 'ibrahim2026'; // demo only — replace with real auth
   const ASSISTANT_PASSCODE = 'assistant2026'; // separate, lower-access login for teaching assistants
-  let currentAdminRole = null; // 'admin' | 'assistant'
+  const ACT_ADMIN_PASSCODE = 'ACTWHANNA'; // same full admin capabilities as ADMIN_PASSCODE, but scoped to ACT students/content only
+  const ACT_ADMIN_COURSE = 'ACT Math Bootcamp';
+  let currentAdminRole = null; // 'admin' | 'assistant' | 'act-admin'
+  // The course this admin session is scoped to — null means no restriction
+  // (sees everything). Read this wherever admin views list or create
+  // students/content, so an ACT-only login never sees or touches EST/SAT data.
+  let currentAdminCourseFilter = null;
 
   // Auto-refreshes the Homework and Mistakes tabs every 30s while they're
   // the one actually open — without this, an admin who leaves the tab open
@@ -3531,6 +3543,7 @@
     adminOverlay.classList.remove('open');
     stopAdminAutoRefresh();
     currentAdminRole = null; // otherwise a stale admin state could leak into a student session later in the same tab, incorrectly showing admin-only controls
+    currentAdminCourseFilter = null;
   });
 
   document.getElementById('adminSubmit').addEventListener('click', checkAdminPass);
@@ -3556,10 +3569,11 @@
 
   async function checkAdminPass(){
     const val = document.getElementById('adminPass').value;
-    if(val === ADMIN_PASSCODE || val === ASSISTANT_PASSCODE){
-      currentAdminRole = (val === ADMIN_PASSCODE) ? 'admin' : 'assistant';
+    if(val === ADMIN_PASSCODE || val === ASSISTANT_PASSCODE || val === ACT_ADMIN_PASSCODE){
+      currentAdminRole = (val === ADMIN_PASSCODE) ? 'admin' : (val === ACT_ADMIN_PASSCODE ? 'act-admin' : 'assistant');
+      currentAdminCourseFilter = (currentAdminRole === 'act-admin') ? ACT_ADMIN_COURSE : null;
       const roleLabel = document.getElementById('adminRoleLabel');
-      if(roleLabel) roleLabel.textContent = currentAdminRole === 'admin' ? '/ ADMIN' : '/ ASSISTANT';
+      if(roleLabel) roleLabel.textContent = currentAdminRole === 'admin' ? '/ ADMIN' : (currentAdminRole === 'act-admin' ? '/ ACT ADMIN' : '/ ASSISTANT');
       adminError.classList.remove('show');
       adminGate.style.display = 'none';
       adminDash.classList.add('open');
@@ -3592,7 +3606,7 @@
     fetchAllMistakes().then(refreshIntegrityBanner);
 
     const [students, hw, attempts] = await Promise.all([
-      fetchAllStudents(), fetchHomeworkIndex(), fetchAttemptsIndex()
+      fetchStudentsForCurrentAdmin(), fetchHomeworkIndex(), fetchAttemptsIndex()
     ]);
     const approved = students.filter(s => s.status === 'approved');
 
@@ -4267,7 +4281,8 @@
   document.getElementById('newExamBtn').addEventListener('click', ()=>{
     editingExamId = null;
     examTitleInput.value = '';
-    populateExamCourseSelect('');
+    populateExamCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
+    document.getElementById('examCourseInput').disabled = (currentAdminRole === 'act-admin');
     examDescInput.value = '';
     document.getElementById('examTimeLimitInput').value = '';
     questionsContainer.innerHTML = '';
@@ -4317,6 +4332,7 @@
     editingExamId = exam.id;
     examTitleInput.value = exam.title;
     populateExamCourseSelect(exam.course || '');
+    document.getElementById('examCourseInput').disabled = (currentAdminRole === 'act-admin');
     examDescInput.value = exam.description || '';
     document.getElementById('examTimeLimitInput').value = exam.timeLimit || '';
     questionsContainer.innerHTML = '';
@@ -4328,7 +4344,8 @@
   async function renderAdminExamList(){
     const wrap = document.getElementById('examListWrap');
     const emptyState = document.getElementById('examListEmpty');
-    const exams = await fetchExamsIndex();
+    let exams = await fetchExamsIndex();
+    if(currentAdminCourseFilter) exams = exams.filter(e => e.course === currentAdminCourseFilter);
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
 
@@ -4519,7 +4536,13 @@
   async function renderPublicExams(){
     const grid = document.getElementById('examsGrid');
     if(!grid) return; // Practice Exams section removed from the homepage
-    const exams = await fetchExamsIndex();
+    const allExams = await fetchExamsIndex();
+    // Only exams matching this student's own course — an exam with no
+    // course set at all stays visible to everyone (keeps older,
+    // unscoped content working exactly as it always did).
+    const exams = currentStudent
+      ? allExams.filter(e => !e.course || e.course === currentStudent.course)
+      : allExams;
 
     if(exams.length === 0){
       grid.innerHTML = '<div class="exams-empty">No practice exams published yet — check back soon.</div>';
@@ -5158,6 +5181,17 @@
     return students;
   }
 
+  // Same as fetchAllStudents, but scoped to the current admin session's
+  // course filter (set when logging in with a course-specific passcode) —
+  // used everywhere an admin VIEW lists students, so an ACT-only login
+  // never sees EST/SAT students. Returns everyone when there's no filter
+  // (the main admin, or an assistant).
+  async function fetchStudentsForCurrentAdmin(){
+    const students = await fetchAllStudents();
+    if(!currentAdminCourseFilter) return students;
+    return students.filter(s => s.course === currentAdminCourseFilter);
+  }
+
   /* ---------------- ACADEMIC ASSISTANT ACCOUNTS ----------------
      Individual assistant accounts, each scoped to a specific list of
      assigned students (set by the admin) — separate from the shared
@@ -5269,7 +5303,7 @@
   document.getElementById('addHwQuestionBtn').addEventListener('click', ()=> addQuestionBlock(null, hwQuestionsContainer));
 
   async function initHomeworkPanel(resetLoaders){
-    const students = await fetchAllStudents();
+    const students = await fetchStudentsForCurrentAdmin();
     const checkboxList = document.getElementById('hwStudentCheckboxList');
     const filterSelect = document.getElementById('hwFilterSelect');
     const loadSkillSelect = document.getElementById('hwLoadSkillSelect');
@@ -5374,6 +5408,11 @@
     const filterVal = document.getElementById('hwFilterSelect').value;
     let entries = await fetchHomeworkIndex();
     if(filterVal) entries = entries.filter(e => (e.username||'').trim().toLowerCase() === filterVal.trim().toLowerCase());
+    if(currentAdminCourseFilter){
+      const scopedStudents = await fetchStudentsForCurrentAdmin();
+      const allowedUsernames = new Set(scopedStudents.map(s => (s.username||'').trim().toLowerCase()));
+      entries = entries.filter(e => allowedUsernames.has((e.username||'').trim().toLowerCase()));
+    }
 
     const tbody = document.getElementById('homeworkBody');
     const emptyState = document.getElementById('homeworkEmpty');
@@ -5512,7 +5551,7 @@
     const ok = await dbSet('skills', id, { id, ...data });
     if(ok){
       await dbSet('skills', `idx-${id}`, {
-        _index: true, id, skill: data.skill, questionCount: (data.questions || []).length, ts: data.ts
+        _index: true, id, skill: data.skill, course: data.course, questionCount: (data.questions || []).length, ts: data.ts
       });
       backfillExplanationVideos(data.skill, data.questions || []);
     }
@@ -5583,7 +5622,8 @@
   async function renderAdminSkillList(){
     const wrap = document.getElementById('skillListWrap');
     const emptyState = document.getElementById('skillListEmpty');
-    const sets = await fetchSkillsIndex();
+    let sets = await fetchSkillsIndex();
+    if(currentAdminCourseFilter) sets = sets.filter(s => s.course === currentAdminCourseFilter);
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
 
@@ -5599,7 +5639,7 @@
       row.innerHTML = `
         <div>
           <h4>${esc(set.skill)}</h4>
-          <div class="meta">${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
+          <div class="meta">${set.course ? esc(set.course) + ' · ' : ''}${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-skill-btn" title="Edit this skill set" aria-label="Edit this skill set">✏️ Edit</button>
@@ -5623,6 +5663,8 @@
     if(!set){ alert('Could not load that skill — please try again.'); return; }
     editingSkillId = set.id;
     document.getElementById('skillNameInput').value = set.skill;
+    populateSkillCourseSelect(set.course || '');
+    document.getElementById('skillCourseInput').disabled = (currentAdminRole === 'act-admin');
     skillQuestionsContainer.innerHTML = '';
     (set.questions || []).forEach(q => addQuestionBlock(q, skillQuestionsContainer));
     document.getElementById('saveSkillBtn').textContent = 'Save changes';
@@ -5635,6 +5677,8 @@
     document.getElementById('saveSkillBtn').textContent = 'Save skill set';
     document.getElementById('cancelSkillEditBtn').style.display = 'none';
     document.getElementById('skillNameInput').value = '';
+    populateSkillCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
+    document.getElementById('skillCourseInput').disabled = (currentAdminRole === 'act-admin');
     skillQuestionsContainer.innerHTML = '';
     addQuestionBlock(null, skillQuestionsContainer);
   }
@@ -5658,7 +5702,8 @@
     const wasEditing = !!editingSkillId;
     btn.disabled = true; btn.textContent = 'Saving…';
     const id = editingSkillId || generateId('skill');
-    const ok = await saveSkillSet(id, { skill, questions, ts: new Date().toISOString() });
+    const course = document.getElementById('skillCourseInput').value.trim();
+    const ok = await saveSkillSet(id, { skill, course, questions, ts: new Date().toISOString() });
     btn.disabled = false;
 
     if(ok){
@@ -5691,10 +5736,21 @@
     const courses = await fetchAllCourses();
     cachedCourseNames = courses.map(c => c.name).filter(Boolean);
     populateExamCourseSelect();
+    populateSkillCourseSelect();
   }
 
   function populateExamCourseSelect(selectedValue){
     const sel = document.getElementById('examCourseInput');
+    if(!sel) return;
+    const current = selectedValue !== undefined ? selectedValue : sel.value;
+    const options = [...cachedCourseNames];
+    if(current && !options.includes(current)) options.push(current);
+    sel.innerHTML = '<option value="">No course / general</option>' +
+      options.map(name => `<option value="${esc(name)}" ${current === name ? 'selected' : ''}>${esc(name)}</option>`).join('');
+  }
+
+  function populateSkillCourseSelect(selectedValue){
+    const sel = document.getElementById('skillCourseInput');
     if(!sel) return;
     const current = selectedValue !== undefined ? selectedValue : sel.value;
     const options = [...cachedCourseNames];
@@ -5795,7 +5851,15 @@
   async function renderAdminLeaderboard(){
     const wrap = document.getElementById('adminLeaderboardWrap');
     const all = await fetchHomeworkIndex();
-    const completed = all.filter(e => e.status === 'completed' && e.score);
+    let completed = all.filter(e => e.status === 'completed' && e.score);
+
+    // Scope to the current admin's course, if any — an ACT-only login
+    // should never see EST/SAT students mixed into this ranking.
+    const allStudents = await fetchStudentsForCurrentAdmin();
+    if(currentAdminCourseFilter){
+      const allowedUsernames = new Set(allStudents.map(s => (s.username||'').trim().toLowerCase()));
+      completed = completed.filter(e => allowedUsernames.has((e.username||'').trim().toLowerCase()));
+    }
 
     if(completed.length === 0){
       wrap.innerHTML = '<div class="admin-empty">No completed homework yet — the leaderboard fills in as students submit.</div>';
@@ -5814,7 +5878,6 @@
       .sort((a,b)=> b.avg - a.avg)
       .slice(0, 20);
 
-    const allStudents = await fetchAllStudents();
     const giftCountByUsername = {};
     allStudents.forEach(s => {
       giftCountByUsername[(s.username || '').trim().toLowerCase()] = Array.isArray(s.gifts) ? s.gifts.length : 0;
@@ -6011,7 +6074,12 @@
   }
 
   async function renderAdminAsks(){
-    const asks = await fetchAllAsks();
+    let asks = await fetchAllAsks();
+    if(currentAdminCourseFilter){
+      const scopedStudents = await fetchStudentsForCurrentAdmin();
+      const allowedUsernames = new Set(scopedStudents.map(s => (s.username||'').trim().toLowerCase()));
+      asks = asks.filter(a => allowedUsernames.has((a.username||'').trim().toLowerCase()));
+    }
     const tbody = document.getElementById('asksBody');
     const emptyState = document.getElementById('asksEmpty');
     tbody.innerHTML = '';
@@ -6066,7 +6134,7 @@
 
   /* ---------------- ADMIN: Sessions tab ---------------- */
   async function initSessionsPanel(){
-    const students = await fetchAllStudents();
+    const students = await fetchStudentsForCurrentAdmin();
     const studentSelect = document.getElementById('sessStudentSelect');
     const filterSelect = document.getElementById('sessFilterSelect');
     const dateInput = document.getElementById('sessDateInput');
@@ -6086,6 +6154,11 @@
     const filterVal = document.getElementById('sessFilterSelect').value;
     let sessions = await fetchAllSessions();
     if(filterVal) sessions = sessions.filter(s => (s.username||'').trim().toLowerCase() === filterVal.trim().toLowerCase());
+    if(currentAdminCourseFilter){
+      const scopedStudents = await fetchStudentsForCurrentAdmin();
+      const allowedUsernames = new Set(scopedStudents.map(s => (s.username||'').trim().toLowerCase()));
+      sessions = sessions.filter(s => allowedUsernames.has((s.username||'').trim().toLowerCase()));
+    }
 
     const tbody = document.getElementById('sessionsBody');
     const emptyState = document.getElementById('sessionsEmpty');
@@ -6201,7 +6274,7 @@
 
   /* ---------------- ADMIN: Reviews tab ---------------- */
   async function initReviewsPanel(){
-    const students = await fetchAllStudents();
+    const students = await fetchStudentsForCurrentAdmin();
     const studentSelect = document.getElementById('revStudentSelect');
     const filterSelect = document.getElementById('revFilterSelect');
 
@@ -6219,6 +6292,11 @@
     const filterVal = document.getElementById('revFilterSelect').value;
     let reviews = await fetchAllReviews();
     if(filterVal) reviews = reviews.filter(r => (r.username||'').trim().toLowerCase() === filterVal.trim().toLowerCase());
+    if(currentAdminCourseFilter){
+      const scopedStudents = await fetchStudentsForCurrentAdmin();
+      const allowedUsernames = new Set(scopedStudents.map(s => (s.username||'').trim().toLowerCase()));
+      reviews = reviews.filter(r => allowedUsernames.has((r.username||'').trim().toLowerCase()));
+    }
 
     const tbody = document.getElementById('reviewsBody');
     const emptyState = document.getElementById('reviewsEmpty');
@@ -6318,7 +6396,10 @@
   async function renderStudentSkills(){
     const grid = document.getElementById('skillsGrid');
     if(!grid) return;
-    const sets = await fetchSkillsIndex();
+    const allSets = await fetchSkillsIndex();
+    const sets = currentStudent
+      ? allSets.filter(s => !s.course || s.course === currentStudent.course)
+      : allSets;
 
     if(sets.length === 0){
       grid.innerHTML = '<div class="exams-empty">No skills published yet — check back soon.</div>';
@@ -8184,7 +8265,21 @@
   async function renderDashboardLeaderboard(){
     const wrap = document.getElementById('dashLeaderboardWrap');
     const all = await fetchHomeworkIndex();
-    const completed = all.filter(e => e.status === 'completed' && e.score);
+    let completed = all.filter(e => e.status === 'completed' && e.score);
+
+    // Scope to this student's own course — comparing scores across
+    // different exams (EST vs SAT vs ACT) isn't meaningful, so the
+    // leaderboard should only ever rank students against their own course.
+    let allStudents = [];
+    if(currentStudent && currentStudent.course){
+      allStudents = await fetchAllStudents();
+      const sameCourseUsernames = new Set(
+        allStudents.filter(s => s.course === currentStudent.course).map(s => (s.username||'').trim().toLowerCase())
+      );
+      completed = completed.filter(e => sameCourseUsernames.has((e.username||'').trim().toLowerCase()));
+    } else {
+      allStudents = await fetchAllStudents();
+    }
 
     if(completed.length === 0){
       wrap.innerHTML = '<div class="admin-empty">No completed homework yet — the leaderboard fills in as students submit.</div>';
@@ -8203,7 +8298,6 @@
       .sort((a,b)=> b.avg - a.avg)
       .slice(0, 20);
 
-    const allStudents = await fetchAllStudents();
     const giftCountByUsername = {};
     allStudents.forEach(s => {
       giftCountByUsername[(s.username || '').trim().toLowerCase()] = Array.isArray(s.gifts) ? s.gifts.length : 0;
@@ -8317,7 +8411,7 @@
 
   /* ---------------- ADMIN: global Mistakes tab ---------------- */
   async function initMistakesPanel(resetFilter){
-    const students = await fetchAllStudents();
+    const students = await fetchStudentsForCurrentAdmin();
     const filterSelect = document.getElementById('mistakesFilterSelect');
     const currentVal = filterSelect.value;
     filterSelect.innerHTML = '<option value="">All students</option>' +
@@ -8347,7 +8441,14 @@
     const tbody = document.getElementById('complianceBody');
     const emptyState = document.getElementById('complianceEmpty');
     const summaryGrid = document.getElementById('complianceSummaryGrid');
-    const [rows, attempts, allHw] = await Promise.all([gatherAllMistakeRows(null), fetchAllAttempts(), fetchAllHomework()]);
+    let [rows, attempts, allHw] = await Promise.all([gatherAllMistakeRows(null), fetchAllAttempts(), fetchAllHomework()]);
+    if(currentAdminCourseFilter){
+      const scopedStudents = await fetchStudentsForCurrentAdmin();
+      const allowedUsernames = new Set(scopedStudents.map(s => (s.username||'').trim().toLowerCase()));
+      rows = rows.filter(r => allowedUsernames.has((r.username||'').trim().toLowerCase()));
+      attempts = attempts.filter(a => allowedUsernames.has((a.username||'').trim().toLowerCase()));
+      allHw = allHw.filter(h => allowedUsernames.has((h.username||'').trim().toLowerCase()));
+    }
 
     const groups = {}; // "username|day" -> { username, day, count, lessons:Set }
     rows.forEach(r=>{
@@ -8517,7 +8618,12 @@
 
   async function renderAdminMistakesTable(){
     const filterVal = document.getElementById('mistakesFilterSelect').value;
-    const rows = await gatherAllMistakeRows(filterVal || null);
+    let rows = await gatherAllMistakeRows(filterVal || null);
+    if(currentAdminCourseFilter){
+      const scopedStudents = await fetchStudentsForCurrentAdmin();
+      const allowedUsernames = new Set(scopedStudents.map(s => (s.username||'').trim().toLowerCase()));
+      rows = rows.filter(r => allowedUsernames.has((r.username||'').trim().toLowerCase()));
+    }
 
     const tbody = document.getElementById('mistakesBody');
     const emptyState = document.getElementById('mistakesTableEmpty');
@@ -8809,7 +8915,7 @@
     document.getElementById('weeklyWaStepper').style.display = 'none';
 
     const [allStudents, allHw, allAttempts] = await Promise.all([
-      fetchAllStudents(), fetchHomeworkIndex(), fetchAttemptsIndex()
+      fetchStudentsForCurrentAdmin(), fetchHomeworkIndex(), fetchAttemptsIndex()
     ]);
     const approved = allStudents.filter(s => s.status === 'approved');
     const messageAllBtn = document.getElementById('messageAllWeeklyBtn');
@@ -9077,7 +9183,7 @@
   }
 
   async function renderAdminStudents(){
-    const students = await fetchAllStudents();
+    const students = await fetchStudentsForCurrentAdmin();
     document.getElementById('statStudents').textContent = students.length;
     const pendingCount = students.filter(s => (s.status || 'pending') === 'pending').length;
     document.getElementById('statPending').textContent = pendingCount;
@@ -9199,7 +9305,7 @@
   document.getElementById('refreshStudents').addEventListener('click', ()=>{ invalidateDbCache('students'); renderAdminStudents(); });
 
   document.getElementById('exportStudents').addEventListener('click', async ()=>{
-    const students = await fetchAllStudents();
+    const students = await fetchStudentsForCurrentAdmin();
     if(students.length === 0) return;
     const rows = [
       ['username','grade','course','student_number','parent_number','status','registered_at'],
