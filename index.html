@@ -537,6 +537,146 @@
   .final-cta h2{font-size:clamp(1.8rem,4vw,2.6rem);position:relative;}
   .final-cta p{color:var(--muted);margin:18px auto 34px;max-width:480px;position:relative;}
 
+  /* ---------- Math Champions League (UCL-inspired theme) ---------- */
+  .ucl-theme{
+    background: radial-gradient(ellipse 900px 500px at 50% -10%, #24337a 0%, #0d1130 45%, #050615 100%);
+    border-radius: 20px;
+    padding: 8px 8px 32px;
+    position: relative;
+    overflow: hidden;
+    color: #E8ECFF;
+    isolation: isolate;
+  }
+  .ucl-theme::before{
+    content: "";
+    position: absolute; inset: 0; z-index: -1;
+    background-image:
+      radial-gradient(1.6px 1.6px at 8% 18%, rgba(255,255,255,0.85), transparent),
+      radial-gradient(1.6px 1.6px at 80% 12%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.2px 1.2px at 42% 8%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(1.6px 1.6px at 65% 28%, rgba(255,255,255,0.45), transparent),
+      radial-gradient(1.2px 1.2px at 22% 35%, rgba(255,255,255,0.55), transparent),
+      radial-gradient(1.6px 1.6px at 92% 42%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1.2px 1.2px at 12% 55%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.6px 1.6px at 55% 65%, rgba(255,255,255,0.35), transparent),
+      radial-gradient(1.2px 1.2px at 78% 75%, rgba(255,255,255,0.45), transparent),
+      radial-gradient(1.6px 1.6px at 30% 88%, rgba(255,255,255,0.4), transparent);
+    background-repeat: no-repeat;
+  }
+  .ucl-hero{
+    text-align: center;
+    padding: 36px 20px 30px;
+    position: relative;
+  }
+  .ucl-hero .ucl-star-row{
+    font-size: 1.1rem;
+    letter-spacing: 12px;
+    color: #B9C4FF;
+    opacity: 0.85;
+    margin-bottom: 14px;
+    text-shadow: 0 0 12px rgba(139,158,255,0.6);
+  }
+  .ucl-hero h2{
+    font-size: clamp(1.5rem, 4vw, 2.3rem);
+    background: linear-gradient(135deg, #ffffff 10%, #B9C4FF 55%, #6E85FF 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-weight: 800; letter-spacing: 0.3px; margin-bottom: 8px; line-height: 1.25;
+  }
+  .ucl-hero .ucl-subtitle{ color: #9AA5D9; font-size: 0.92rem; }
+  .ucl-section-label{
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem; letter-spacing: 2px;
+    color: #8FA0FF; text-transform: uppercase; margin: 28px 20px 14px;
+  }
+  .ucl-section-label::after{ content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(143,160,255,0.4), transparent); }
+  .ucl-group-card{
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(139,158,255,0.18);
+    border-radius: 14px;
+    padding: 18px 18px 8px;
+    margin: 0 20px 18px;
+    backdrop-filter: blur(6px);
+  }
+  .ucl-group-card h4{ color: #D6DCFF; font-size: 1rem; margin-bottom: 12px; letter-spacing: 0.3px; }
+  .ucl-table{ width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .ucl-table th{
+    text-align: left; padding: 8px 10px; color: #7C8AC9;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;
+    border-bottom: 1px solid rgba(139,158,255,0.2);
+  }
+  .ucl-table td{ padding: 10px; border-bottom: 1px solid rgba(139,158,255,0.08); color: #E8ECFF; }
+  .ucl-table tr.qualifies td{ background: linear-gradient(90deg, rgba(76,111,255,0.14), transparent); }
+  .ucl-table tr.qualifies td:first-child{ border-left: 3px solid #6E85FF; padding-left: 7px; }
+  .ucl-rank-badge{
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(139,158,255,0.15); color: #B9C4FF;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; font-weight: 600;
+  }
+  .ucl-you-tag{
+    display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 20px;
+    background: rgba(255,176,32,0.16); border: 1px solid rgba(255,176,32,0.4);
+    color: #FFB020; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.5px;
+  }
+  .ucl-bracket-wrap{ margin: 0 20px; display: flex; flex-direction: column; gap: 22px; }
+  .ucl-round-title{ color: #D6DCFF; font-weight: 700; font-size: 1.02rem; letter-spacing: 0.3px; }
+  .ucl-match-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .ucl-match-card{
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border: 1px solid rgba(139,158,255,0.22);
+    border-radius: 12px; padding: 14px 16px; position: relative;
+  }
+  .ucl-match-card.decided{ border-color: rgba(76,217,138,0.3); }
+  .ucl-match-card.involves-you{ border-color: #6E85FF; box-shadow: 0 0 0 1px #6E85FF, 0 0 20px rgba(110,133,255,0.25); }
+  .ucl-player-row{ display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 0.92rem; }
+  .ucl-player-row.is-winner{ color: #fff; font-weight: 700; }
+  .ucl-player-row.is-winner::after{ content: "✓"; color: #4CD98A; margin-left: 8px; font-weight: 800; }
+  .ucl-player-row.is-loser{ color: #6B7290; text-decoration: line-through; text-decoration-color: rgba(107,114,144,0.5); }
+  .ucl-vs-divider{ text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; color: #5C68A0; letter-spacing: 2px; padding: 2px 0; }
+  .ucl-match-status{ font-size: 0.72rem; color: #7C8AC9; margin-top: 6px; font-style: italic; }
+  .ucl-champion-banner{
+    margin: 20px 20px 0; padding: 34px 20px; text-align: center; border-radius: 16px;
+    background: radial-gradient(ellipse at center, rgba(255,196,64,0.16), transparent 70%);
+    border: 1px solid rgba(255,196,64,0.35);
+  }
+  .ucl-champion-banner .trophy{ font-size: 3rem; display: block; margin-bottom: 10px; filter: drop-shadow(0 0 16px rgba(255,196,64,0.55)); }
+  .ucl-champion-banner h3{
+    font-size: 1.4rem; background: linear-gradient(135deg, #FFE9A8, #FFC440 60%, #E8A317);
+    -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800;
+  }
+  .ucl-champion-banner p{ color: #C9B98A; margin-top: 6px; font-size: 0.9rem; }
+  .ucl-play-btn{
+    display: inline-block; margin-top: 10px; padding: 10px 22px; border-radius: 24px;
+    background: linear-gradient(135deg, #4C6FFF, #7B5CFF); color: #fff; font-weight: 700;
+    font-size: 0.86rem; border: none; cursor: pointer; box-shadow: 0 4px 18px rgba(76,111,255,0.35);
+    transition: transform 0.15s;
+  }
+  .ucl-play-btn:hover{ transform: translateY(-1px); }
+  .ucl-empty-note{ text-align: center; color: #7C8AC9; padding: 30px 20px; font-size: 0.9rem; }
+  .ucl-highlight-line{
+    font-size: 0.78rem; color: #C9B98A; margin-top: 8px; padding-top: 8px;
+    border-top: 1px solid rgba(255,196,64,0.15); line-height: 1.4;
+  }
+  .ucl-goldenboot-card{
+    margin: 20px 20px 0; padding: 20px; border-radius: 14px; text-align: center;
+    background: linear-gradient(135deg, rgba(255,196,64,0.1), rgba(255,196,64,0.02));
+    border: 1px solid rgba(255,196,64,0.3);
+  }
+  .ucl-goldenboot-card .boot-icon{ font-size: 1.8rem; }
+  .ucl-goldenboot-card .boot-name{ color: #FFE9A8; font-weight: 800; font-size: 1.1rem; margin: 4px 0 2px; }
+  .ucl-goldenboot-card .boot-detail{ color: #C9B98A; font-size: 0.82rem; }
+  .ucl-podium{ display: flex; justify-content: center; gap: 14px; margin: 20px 20px 0; flex-wrap: wrap; }
+  .ucl-podium-spot{
+    flex: 1; min-width: 130px; max-width: 180px; text-align: center; padding: 18px 10px;
+    border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(139,158,255,0.15);
+  }
+  .ucl-podium-spot.gold{ order: 2; border-color: rgba(255,196,64,0.4); background: linear-gradient(135deg, rgba(255,196,64,0.1), transparent); }
+  .ucl-podium-spot.silver{ order: 1; border-color: rgba(200,208,230,0.35); }
+  .ucl-podium-spot.bronze{ order: 3; border-color: rgba(205,140,90,0.35); }
+  .ucl-podium-medal{ font-size: 1.8rem; display: block; margin-bottom: 6px; }
+  .ucl-podium-name{ font-weight: 700; color: #E8ECFF; font-size: 0.92rem; }
+  .ucl-podium-label{ color: #7C8AC9; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
   /* ---------- footer ---------- */
   footer{
     padding:70px 0 40px;
@@ -1962,6 +2102,7 @@
           <button class="dash-tab-btn" data-dashtab="tabMistakes">🧾 Mistake History</button>
           <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
           <button class="dash-tab-btn" data-dashtab="tabPlanner">🧠 Study Planner</button>
+          <button class="dash-tab-btn" data-dashtab="tabCompetition" id="competitionTabBtn" style="display:none;">⭐ Champions League</button>
         </nav>
         <div class="dash-sidebar-actions">
           <button class="btn btn-primary" id="dashMyScoresBtn">View my scores</button>
@@ -2147,6 +2288,12 @@
 
           <div class="hw-section-title">Quick actions</div>
           <div class="planner-actions" id="plannerActions"></div>
+        </div>
+
+        <div class="dash-tab-panel" id="tabCompetition">
+          <div id="compStudentContent" class="ucl-theme">
+            <div class="admin-empty">Loading…</div>
+          </div>
         </div>
       </div>
     </div>
@@ -2531,6 +2678,7 @@
       <button class="admin-tab" data-tab="sessionsPanel" data-roles="admin,act-admin">Sessions</button>
       <button class="admin-tab" data-tab="reviewsPanel" data-roles="admin,assistant,act-admin">Reviews</button>
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
+      <button class="admin-tab" data-tab="competitionsPanel" data-roles="admin,act-admin">🏆 Competition</button>
       <button class="admin-tab" data-tab="mistakesPanel" data-roles="admin,assistant,act-admin">Mistakes</button>
       <button class="admin-tab" data-tab="assistantAcctsPanel" data-roles="admin">Assistants</button>
       <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant,act-admin">Weekly Updates</button>
@@ -2859,6 +3007,45 @@
       </div>
     </div>
 
+    <div class="admin-panel" id="competitionsPanel">
+      <div class="admin-note">🏆 <strong>Math Champions League</strong> — group stage first, ranked by score on a linked exam, then a knockout bracket (Round of 32 → 16 → Quarterfinals → Semifinals → Final) where the higher scorer on each round's exam advances. Reuses your existing exams, so scoring and saving work exactly the same as everywhere else.</div>
+
+      <div id="compListView">
+        <div class="admin-actions">
+          <button class="btn btn-primary" id="newCompetitionBtn">+ New competition</button>
+          <button class="btn btn-ghost" id="refreshCompetitions">Refresh</button>
+        </div>
+        <div class="admin-table-wrap" id="competitionListWrap">
+          <div class="admin-empty" id="competitionListEmpty" style="display:none;">No competitions yet — click "New competition" to set up your first Champions League.</div>
+        </div>
+      </div>
+
+      <div id="compEditorView" style="display:none;">
+        <div class="field-row">
+          <label class="field-label">Competition name</label>
+          <input type="text" id="compNameInput" placeholder="e.g. EST Champions League — August 2026">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Course (optional — leave blank to include any student)</label>
+          <select id="compCourseInput"><option value="">Any course</option></select>
+        </div>
+
+        <label class="field-label" style="margin-top:20px;display:block;">Groups</label>
+        <div id="compGroupsContainer"></div>
+        <button class="add-q-btn" id="addCompGroupBtn" type="button">+ Add group</button>
+
+        <div class="editor-actions" style="margin-top:24px;">
+          <button class="btn btn-ghost" id="cancelCompBtn">Cancel</button>
+          <button class="btn btn-primary" id="saveCompBtn">Save competition</button>
+        </div>
+      </div>
+
+      <div id="compDetailView" style="display:none;">
+        <button class="btn btn-ghost" id="backToCompListBtn" style="margin-bottom:16px;">← All competitions</button>
+        <div id="compDetailContent"></div>
+      </div>
+    </div>
+
     <div class="admin-panel" id="mistakesPanel">
       <div class="admin-note">See who's actually retaking their daily mistakes below — the full wrong-answer log is further down.</div>
       <div class="hw-section-title">Who retook it, who didn't</div>
@@ -2953,6 +3140,7 @@
          create table if not exists sessions  (id text primary key, data jsonb, created_at timestamptz default now());
          create table if not exists reviews   (id text primary key, data jsonb, created_at timestamptz default now());
          create table if not exists courses   (id text primary key, data jsonb, created_at timestamptz default now());
+         create table if not exists competitions (id text primary key, data jsonb, created_at timestamptz default now());
 
          alter table leads    enable row level security;
          alter table exams    enable row level security;
@@ -2964,6 +3152,7 @@
          alter table sessions enable row level security;
          alter table reviews  enable row level security;
          alter table courses  enable row level security;
+         alter table competitions enable row level security;
 
          drop policy if exists "public access" on leads;
          drop policy if exists "public access" on exams;
@@ -2975,6 +3164,7 @@
          drop policy if exists "public access" on sessions;
          drop policy if exists "public access" on reviews;
          drop policy if exists "public access" on courses;
+         drop policy if exists "public access" on competitions;
 
          create policy "public access" on leads    for all using (true) with check (true);
          create policy "public access" on exams    for all using (true) with check (true);
@@ -2986,6 +3176,7 @@
          create policy "public access" on sessions for all using (true) with check (true);
          create policy "public access" on reviews  for all using (true) with check (true);
          create policy "public access" on courses  for all using (true) with check (true);
+         create policy "public access" on competitions for all using (true) with check (true);
 
      3. Go to Project Settings → Data API. Copy the "Project URL" and
         the "anon public" API key.
@@ -3730,6 +3921,7 @@
       if(tab.dataset.tab === 'sessionsPanel'){ invalidateDbCache('sessions'); initSessionsPanel(); }
       if(tab.dataset.tab === 'reviewsPanel'){ invalidateDbCache('reviews'); initReviewsPanel(); }
       if(tab.dataset.tab === 'coursesPanel'){ invalidateDbCache('courses'); renderAdminCourseList(); }
+      if(tab.dataset.tab === 'competitionsPanel'){ invalidateDbCache('competitions'); showCompView('list'); renderCompetitionList(); }
       if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(true); }
       if(tab.dataset.tab === 'assistantAcctsPanel'){ invalidateDbCache('assistants'); renderAssistantAcctsTable(); }
       if(tab.dataset.tab === 'weeklyUpdatesPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); invalidateDbCache('students'); renderWeeklyUpdates(); }
@@ -3970,7 +4162,7 @@
         <div class="option-row">
           <input type="radio" name="${groupName}" class="q-correct" value="${i}" ${data && data.correct===i ? 'checked' : ''}>
           <div class="option-text-wrap">
-            <input type="text" class="q-option" placeholder="Option ${i+1} (optional if you add an image)" value="${data && data.options[i] ? esc(data.options[i]) : ''}">
+            <input type="text" class="q-option" placeholder="Option ${i+1} (optional if you add an image)" value="${data && data.options && data.options[i] ? esc(data.options[i]) : ''}">
             <div class="option-image-controls">
               <label class="option-image-btn">📷 ${optImg ? 'Change' : 'Add'} image
                 <input type="file" accept="image/*" class="q-option-image-input" data-idx="${i}">
@@ -5011,7 +5203,7 @@
       }
       document.getElementById('examCloseBtn').addEventListener('click', ()=>{
         examModal.classList.remove('open');
-        if(currentStudent){ renderWeakPoints(); renderMistakeHistory(); renderOverview(); }
+        if(currentStudent){ renderWeakPoints(); renderMistakeHistory(); renderOverview(); invalidateDbCache('competitions'); renderStudentCompetitionSection(); }
       });
     }
 
@@ -5731,6 +5923,110 @@
     return await dbDelete('courses', id);
   }
 
+  /* ---------------- MATH CHAMPIONS LEAGUE (competitions) ----------------
+     Reuses the existing exam system entirely — a competition just links
+     to real exams for its group stage and each knockout round. A
+     student's "match result" is simply their score on that linked exam,
+     looked up from the attempts they already have. No separate
+     submission system needed, which means the same save-reliability
+     work that protects every other exam automatically protects this too. */
+  async function saveCompetition(id, data){
+    return await dbSet('competitions', id, { id, ...data });
+  }
+  async function fetchAllCompetitions(){
+    const comps = await dbGetAll('competitions');
+    comps.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+    return comps;
+  }
+  async function deleteCompetitionRecord(id){
+    return await dbDelete('competitions', id);
+  }
+
+  // A student's result for a given linked exam — their best attempt on
+  // that exam's title, or null if they haven't taken it yet.
+  async function getStudentScoreOnExam(username, examId){
+    if(!examId) return null;
+    const exam = await dbGet('exams', examId);
+    if(!exam) return null;
+    const attempts = await fetchAllAttempts();
+    const uname = username.trim().toLowerCase();
+    const mine = attempts.filter(a =>
+      (a.username||'').trim().toLowerCase() === uname && a.examTitle === exam.title
+    );
+    if(mine.length === 0) return null;
+    // Best score counts, same spirit as a real match — one bad nerve-related
+    // attempt shouldn't eliminate someone if they also have a strong one.
+    return mine.reduce((best, a) => (a.pct > best.pct ? a : best), mine[0]);
+  }
+
+  // A short, dynamic recap line for a decided match — tone shifts based on
+  // how close the result actually was, same spirit as real sports commentary.
+  function generateMatchHighlight(winnerName, loserName, winnerPct, loserPct){
+    const gap = winnerPct - loserPct;
+    if(winnerPct === 100 && loserPct === 0){
+      return `🔥 Total domination — ${winnerName} scored a perfect 100% while ${loserName} couldn't convert a single point.`;
+    }
+    if(gap >= 40){
+      return `🔥 Dominant performance! ${winnerName} crushed it, ${winnerPct}% to ${loserPct}%.`;
+    }
+    if(gap <= 10){
+      return `😰 Nail-biter! ${winnerName} narrowly edged out ${loserName}, ${winnerPct}% to ${loserPct}%.`;
+    }
+    return `💪 Solid win for ${winnerName}, ${winnerPct}% to ${loserPct}%.`;
+  }
+
+  // Golden Boot: whoever has the best average score across every match
+  // they've actually played in this competition — group stage plus every
+  // knockout round — the same spirit as a real tournament's top scorer award.
+  async function computeGoldenBoot(comp){
+    const scoresByStudent = {};
+    async function addScore(uname, examId){
+      if(!uname || !examId) return;
+      const result = await getStudentScoreOnExam(uname, examId);
+      if(result){
+        if(!scoresByStudent[uname]) scoresByStudent[uname] = [];
+        scoresByStudent[uname].push(result.pct);
+      }
+    }
+    for(const group of comp.groups){
+      for(const uname of group.studentUsernames) await addScore(uname, group.examId);
+    }
+    for(const round of (comp.rounds || [])){
+      for(const m of round.matches){
+        await addScore(m.player1, m.examId);
+        await addScore(m.player2, m.examId);
+      }
+    }
+    const averages = Object.entries(scoresByStudent).map(([username, scores]) => ({
+      username, avg: Math.round(scores.reduce((s,p)=>s+p,0) / scores.length), matchesPlayed: scores.length
+    }));
+    averages.sort((a,b)=> b.avg - a.avg);
+    return averages[0] || null;
+  }
+
+  // Podium: champion, runner-up, and semifinalists — only meaningful once
+  // the Final has an actual decided winner.
+  function computePodium(comp){
+    if(!comp.rounds || comp.rounds.length === 0) return null;
+    const finalRound = comp.rounds[comp.rounds.length - 1];
+    if(finalRound.matches.length !== 1 || !finalRound.matches[0].winner) return null;
+
+    const finalMatch = finalRound.matches[0];
+    const champion = finalMatch.winner;
+    const runnerUp = finalMatch.winner === finalMatch.player1 ? finalMatch.player2 : finalMatch.player1;
+
+    let semifinalists = [];
+    if(comp.rounds.length >= 2){
+      const semiRound = comp.rounds[comp.rounds.length - 2];
+      semifinalists = semiRound.matches.flatMap(m=>{
+        if(!m.winner) return [];
+        const loser = m.winner === m.player1 ? m.player2 : m.player1;
+        return loser ? [loser] : [];
+      });
+    }
+    return { champion, runnerUp, semifinalists };
+  }
+
   let cachedCourseNames = [];
   async function refreshCourseNamesCache(){
     const courses = await fetchAllCourses();
@@ -5831,6 +6127,401 @@
   });
 
   document.getElementById('refreshCourses').addEventListener('click', ()=>{ invalidateDbCache('courses'); renderAdminCourseList(); });
+
+  /* ---------------- MATH CHAMPIONS LEAGUE (admin: create/edit) ---------------- */
+  let editingCompId = null;
+
+  function populateCompCourseSelect(selectedValue){
+    const sel = document.getElementById('compCourseInput');
+    if(!sel) return;
+    const current = selectedValue !== undefined ? selectedValue : sel.value;
+    const options = [...cachedCourseNames];
+    if(current && !options.includes(current)) options.push(current);
+    sel.innerHTML = '<option value="">Any course</option>' +
+      options.map(name => `<option value="${esc(name)}" ${current === name ? 'selected' : ''}>${esc(name)}</option>`).join('');
+  }
+
+  async function addCompGroupBlock(groupData){
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    block.innerHTML = `
+      <button type="button" class="remove-q-btn" aria-label="Remove group">✕</button>
+      <div class="field-row" style="margin-bottom:14px;">
+        <label class="field-label">Group name</label>
+        <input type="text" class="comp-group-name" placeholder="e.g. Group A" value="${groupData ? esc(groupData.name || '') : ''}">
+      </div>
+      <div class="field-row" style="margin-bottom:14px;">
+        <label class="field-label">Exam for this group's match</label>
+        <select class="comp-group-exam"><option value="">— choose an exam —</option></select>
+      </div>
+      <label class="field-label" style="margin-bottom:6px;display:block;">Students in this group</label>
+      <div class="student-checkbox-list comp-group-students" style="max-height:200px;"><div class="admin-empty" style="padding:12px;">Loading…</div></div>
+    `;
+    block.querySelector('.remove-q-btn').addEventListener('click', ()=> block.remove());
+    document.getElementById('compGroupsContainer').appendChild(block);
+
+    const [exams, students] = await Promise.all([fetchExamsIndex(), fetchStudentsForCurrentAdmin()]);
+    const examSel = block.querySelector('.comp-group-exam');
+    examSel.innerHTML = '<option value="">— choose an exam —</option>' +
+      exams.map(e => `<option value="${esc(e.id)}" ${groupData && e.id === groupData.examId ? 'selected' : ''}>${esc(e.title)}</option>`).join('');
+
+    const selected = new Set((groupData && groupData.studentUsernames) || []);
+    const studentsWrap = block.querySelector('.comp-group-students');
+    studentsWrap.innerHTML = students.length === 0
+      ? '<div class="admin-empty" style="padding:12px;">No approved students yet.</div>'
+      : students.map(s => `
+          <label class="student-checkbox-row">
+            <input type="checkbox" value="${esc(s.username)}" ${selected.has(s.username) ? 'checked' : ''}>
+            <span>${esc(s.username)}</span>
+          </label>
+        `).join('');
+  }
+
+  function collectCompGroupsFromForm(){
+    const groups = [];
+    document.querySelectorAll('#compGroupsContainer .question-block').forEach(block=>{
+      const name = block.querySelector('.comp-group-name').value.trim();
+      const examId = block.querySelector('.comp-group-exam').value;
+      const studentUsernames = Array.from(block.querySelectorAll('.comp-group-students input:checked')).map(el => el.value);
+      if(name) groups.push({ name, examId: examId || null, studentUsernames });
+    });
+    return groups;
+  }
+
+  document.getElementById('addCompGroupBtn').addEventListener('click', ()=> addCompGroupBlock(null));
+
+  function showCompView(view){
+    document.getElementById('compListView').style.display = view === 'list' ? 'block' : 'none';
+    document.getElementById('compEditorView').style.display = view === 'editor' ? 'block' : 'none';
+    document.getElementById('compDetailView').style.display = view === 'detail' ? 'block' : 'none';
+  }
+
+  document.getElementById('newCompetitionBtn').addEventListener('click', async ()=>{
+    editingCompId = null;
+    document.getElementById('compNameInput').value = '';
+    populateCompCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
+    document.getElementById('compGroupsContainer').innerHTML = '';
+    await addCompGroupBlock(null);
+    showCompView('editor');
+  });
+
+  document.getElementById('cancelCompBtn').addEventListener('click', ()=> showCompView('list'));
+  document.getElementById('backToCompListBtn').addEventListener('click', async ()=>{ showCompView('list'); await renderCompetitionList(); });
+
+  document.getElementById('saveCompBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('compNameInput').value.trim();
+    if(!name){ alert('Give this competition a name.'); return; }
+    const groups = collectCompGroupsFromForm();
+    if(groups.length === 0){ alert('Add at least one group with a name.'); return; }
+    const course = document.getElementById('compCourseInput').value.trim();
+    const btn = document.getElementById('saveCompBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const id = editingCompId || generateId('comp');
+    const existing = editingCompId ? await dbGet('competitions', editingCompId) : null;
+    const data = {
+      name, course: course || null, groups,
+      status: existing ? existing.status : 'group_stage',
+      rounds: existing ? existing.rounds : [],
+      ts: existing ? existing.ts : new Date().toISOString()
+    };
+    const ok = await saveCompetition(id, data);
+    btn.disabled = false; btn.textContent = 'Save competition';
+    if(ok){
+      invalidateDbCache('competitions');
+      showCompView('list');
+      await renderCompetitionList();
+    } else {
+      alert('Could not save — check your connection and try again.');
+    }
+  });
+
+  async function editCompetition(compId){
+    const comp = await dbGet('competitions', compId);
+    if(!comp){ alert('Could not load that competition — please try again.'); return; }
+    editingCompId = comp.id;
+    document.getElementById('compNameInput').value = comp.name;
+    populateCompCourseSelect(comp.course || '');
+    document.getElementById('compGroupsContainer').innerHTML = '';
+    for(const g of comp.groups){ await addCompGroupBlock(g); }
+    showCompView('editor');
+  }
+
+  async function renderCompetitionList(){
+    const wrap = document.getElementById('competitionListWrap');
+    const emptyState = document.getElementById('competitionListEmpty');
+    let comps = await fetchAllCompetitions();
+    if(currentAdminCourseFilter) comps = comps.filter(c => !c.course || c.course === currentAdminCourseFilter);
+
+    wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
+    if(comps.length === 0){ emptyState.style.display = 'block'; return; }
+    emptyState.style.display = 'none';
+
+    const statusLabel = { group_stage: '⚽ Group stage', knockout: '🏆 Knockout stage', completed: '🎉 Completed' };
+    comps.forEach(comp=>{
+      const totalStudents = comp.groups.reduce((s,g)=> s + g.studentUsernames.length, 0);
+      const row = document.createElement('div');
+      row.className = 'exam-list-item';
+      row.innerHTML = `
+        <div>
+          <h4>${esc(comp.name)}</h4>
+          <div class="meta">${comp.course ? esc(comp.course) + ' · ' : ''}${statusLabel[comp.status] || comp.status} · ${comp.groups.length} group${comp.groups.length===1?'':'s'} · ${totalStudents} student${totalStudents===1?'':'s'}</div>
+        </div>
+        <div class="exam-list-actions">
+          <button class="view-comp-btn">Open</button>
+          <button class="edit-comp-btn">Edit</button>
+          <button class="danger delete-comp-btn">Delete</button>
+        </div>
+      `;
+      row.querySelector('.view-comp-btn').addEventListener('click', ()=> openCompDetail(comp.id));
+      row.querySelector('.edit-comp-btn').addEventListener('click', ()=> editCompetition(comp.id));
+      row.querySelector('.delete-comp-btn').addEventListener('click', async ()=>{
+        if(!confirm(`Delete "${comp.name}"? This can't be undone — students' exam scores themselves are untouched, only the competition/bracket is removed.`)) return;
+        await deleteCompetitionRecord(comp.id);
+        await renderCompetitionList();
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  document.getElementById('refreshCompetitions').addEventListener('click', ()=>{ invalidateDbCache('competitions'); renderCompetitionList(); });
+
+  function roundNameForCount(n){
+    if(n >= 32) return 'Round of 32';
+    if(n === 16) return 'Round of 16';
+    if(n === 8) return 'Quarterfinals';
+    if(n === 4) return 'Semifinals';
+    if(n === 2) return 'Final';
+    return n <= 1 ? 'Champion' : `Round of ${n}`;
+  }
+
+  async function renderBracketHtml(comp){
+    if(!comp.rounds || comp.rounds.length === 0) return '';
+    const roundsHtml = await Promise.all(comp.rounds.map(async (round)=>{
+      const matchesHtml = await Promise.all(round.matches.map(async (m)=>{
+        let highlightHtml = '';
+        if(m.winner && m.player2 && m.examId){
+          const [r1, r2] = await Promise.all([
+            getStudentScoreOnExam(m.player1, m.examId),
+            getStudentScoreOnExam(m.player2, m.examId)
+          ]);
+          if(r1 && r2){
+            const loser = m.winner === m.player1 ? m.player2 : m.player1;
+            const winnerPct = m.winner === m.player1 ? r1.pct : r2.pct;
+            const loserPct = m.winner === m.player1 ? r2.pct : r1.pct;
+            highlightHtml = `<div class="detail" style="color:#C9B98A;font-style:italic;margin-top:4px;">${generateMatchHighlight(m.winner, loser, winnerPct, loserPct)}</div>`;
+          }
+        }
+        return `
+          <div class="reminder-row">
+            <div class="reminder-info">
+              <div class="name">${esc(m.player1)}${m.player2 ? ' vs ' + esc(m.player2) : ' (bye — auto-advances)'}</div>
+              <div class="detail">${m.winner ? `🏆 Winner: ${esc(m.winner)}` : (m.player2 ? 'Awaiting result' : 'Advances automatically')}</div>
+              ${highlightHtml}
+            </div>
+          </div>
+        `;
+      }));
+      return `
+        <div style="margin-bottom:20px;">
+          <div class="hw-section-title" style="margin-top:0;">${esc(round.name)}</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">${matchesHtml.join('')}</div>
+        </div>
+      `;
+    }));
+    return roundsHtml.join('');
+  }
+
+  async function openCompDetail(compId){
+    const comp = await dbGet('competitions', compId);
+    if(!comp){ alert('Could not load that competition — please try again.'); return; }
+    showCompView('detail');
+    const content = document.getElementById('compDetailContent');
+    content.innerHTML = '<div class="admin-empty">Loading standings…</div>';
+
+    const groupStandingsHtml = await Promise.all(comp.groups.map(async (group)=>{
+      const results = await Promise.all(group.studentUsernames.map(async (uname)=>{
+        const result = await getStudentScoreOnExam(uname, group.examId);
+        return { username: uname, pct: result ? result.pct : null };
+      }));
+      results.sort((a,b)=> (b.pct ?? -1) - (a.pct ?? -1));
+      const rows = results.map((r,i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${esc(r.username)}</td>
+          <td>${r.pct != null ? r.pct + '%' : '<span style="color:var(--muted);">Not taken yet</span>'}</td>
+        </tr>
+      `).join('');
+      return `
+        <div class="admin-table-wrap" style="margin-bottom:24px;">
+          <div class="hw-section-title" style="margin-top:0;">${esc(group.name)}</div>
+          <table class="admin-table">
+            <thead><tr><th>Rank</th><th>Student</th><th>Score</th></tr></thead>
+            <tbody>${rows || '<tr><td colspan="3">No students in this group.</td></tr>'}</tbody>
+          </table>
+        </div>
+      `;
+    }));
+
+    const bracketHtml = await renderBracketHtml(comp);
+
+    let goldenBootHtml = '';
+    let podiumHtml = '';
+    if(comp.status === 'knockout' || comp.status === 'completed'){
+      const goldenBoot = await computeGoldenBoot(comp);
+      if(goldenBoot && goldenBoot.matchesPlayed > 0){
+        goldenBootHtml = `
+          <div class="admin-note" style="margin:0 0 16px;text-align:center;background:rgba(255,196,64,0.08);border-color:rgba(255,196,64,0.35);">
+            🥇 <strong>Golden Boot: ${esc(goldenBoot.username)}</strong> — ${goldenBoot.avg}% average across ${goldenBoot.matchesPlayed} match${goldenBoot.matchesPlayed===1?'':'es'}
+          </div>
+        `;
+      }
+      const podium = computePodium(comp);
+      if(podium){
+        podiumHtml = `
+          <div class="admin-note" style="margin:0 0 16px;">
+            🏆 <strong>${esc(podium.champion)}</strong> — Champion
+            ${podium.runnerUp ? ` · 🥈 <strong>${esc(podium.runnerUp)}</strong> — Runner-up` : ''}
+            ${podium.semifinalists.length > 0 ? ` · 🥉 Semifinalists: ${podium.semifinalists.map(esc).join(', ')}` : ''}
+          </div>
+        `;
+      }
+    }
+
+    let advanceControlsHtml = '';
+    if(comp.status === 'group_stage'){
+      advanceControlsHtml = `<button class="btn btn-primary" id="advanceToKnockoutBtn" style="margin-top:8px;">Advance top 2 from each group to Knockout →</button>`;
+    } else if(comp.status === 'knockout'){
+      const lastRound = comp.rounds[comp.rounds.length - 1];
+      const isFinalDecided = lastRound.matches.length === 1 && !!lastRound.matches[0].winner;
+      advanceControlsHtml = isFinalDecided
+        ? `<div class="admin-note" style="margin-top:8px;">🎉 <strong>${esc(lastRound.matches[0].winner)}</strong> is the champion! <button class="btn btn-ghost" id="markCompCompleteBtn" style="margin-left:12px;">Mark competition complete</button></div>`
+        : `<button class="btn btn-primary" id="advanceRoundBtn" style="margin-top:8px;">Advance to next round →</button>`;
+    }
+
+    content.innerHTML = `
+      <h3 style="margin-bottom:4px;">${esc(comp.name)}</h3>
+      <p style="color:var(--muted);margin-bottom:20px;">${comp.course ? esc(comp.course) : 'Open to any course'}</p>
+      ${podiumHtml}
+      ${goldenBootHtml}
+      ${groupStandingsHtml.join('')}
+      ${bracketHtml}
+      <div id="compExamPickerWrap"></div>
+      ${advanceControlsHtml}
+    `;
+
+    const advanceBtn = document.getElementById('advanceToKnockoutBtn');
+    if(advanceBtn) advanceBtn.addEventListener('click', ()=> showCompExamPicker(comp, 'knockout'));
+    const advanceRoundBtn = document.getElementById('advanceRoundBtn');
+    if(advanceRoundBtn) advanceRoundBtn.addEventListener('click', ()=>{
+      const lastRound = comp.rounds[comp.rounds.length - 1];
+      if(lastRound.matches.length === 1){
+        // Just confirming the Final's winner — no next round to generate,
+        // so no need to ask for another exam.
+        advanceRound(comp, null);
+      } else {
+        showCompExamPicker(comp, 'round');
+      }
+    });
+    const completeBtn = document.getElementById('markCompCompleteBtn');
+    if(completeBtn) completeBtn.addEventListener('click', async ()=>{
+      comp.status = 'completed';
+      await saveCompetition(comp.id, comp);
+      invalidateDbCache('competitions');
+      openCompDetail(comp.id);
+    });
+  }
+
+  // Inline exam picker shown right where the advance button was — this is
+  // how each knockout round gets its match exam assigned before pairings
+  // are generated or winners confirmed.
+  async function showCompExamPicker(comp, mode){
+    const wrap = document.getElementById('compExamPickerWrap');
+    const exams = await fetchExamsIndex();
+    wrap.innerHTML = `
+      <div class="field-row" style="margin-top:12px;">
+        <label class="field-label">${mode === 'knockout' ? 'Exam for the first knockout round' : 'Exam for the next round'}</label>
+        <select id="compRoundExamSelect"><option value="">— choose an exam —</option>${exams.map(e => `<option value="${esc(e.id)}">${esc(e.title)}</option>`).join('')}</select>
+      </div>
+      <button class="btn btn-primary" id="confirmCompRoundBtn" style="margin-top:8px;">Confirm and generate matchups</button>
+    `;
+    document.getElementById('confirmCompRoundBtn').addEventListener('click', async ()=>{
+      const examId = document.getElementById('compRoundExamSelect').value;
+      if(!examId){ alert('Choose an exam first.'); return; }
+      if(mode === 'knockout') await advanceToKnockout(comp, examId);
+      else await advanceRound(comp, examId);
+    });
+  }
+
+  async function advanceToKnockout(comp, examId){
+    const advancing = [];
+    for(const group of comp.groups){
+      const results = await Promise.all(group.studentUsernames.map(async (uname)=>{
+        const result = await getStudentScoreOnExam(uname, group.examId);
+        return { username: uname, pct: result ? result.pct : -1 };
+      }));
+      results.sort((a,b)=> b.pct - a.pct);
+      advancing.push(...results.slice(0, 2).map(r => r.username));
+    }
+    if(advancing.length < 2){ alert('Not enough students have completed their group exams yet to advance.'); return; }
+
+    const shuffled = [...advancing].sort(()=> Math.random() - 0.5);
+    const matches = [];
+    for(let i = 0; i < shuffled.length; i += 2){
+      if(shuffled[i+1] !== undefined){
+        matches.push({ player1: shuffled[i], player2: shuffled[i+1], examId, winner: null });
+      } else {
+        matches.push({ player1: shuffled[i], player2: null, examId: null, winner: shuffled[i] }); // odd one out — automatic bye
+      }
+    }
+    comp.rounds = [{ name: roundNameForCount(advancing.length), matches }];
+    comp.status = 'knockout';
+    const ok = await saveCompetition(comp.id, comp);
+    if(ok){ invalidateDbCache('competitions'); openCompDetail(comp.id); }
+    else alert('Could not save — check your connection and try again.');
+  }
+
+  async function advanceRound(comp, examId){
+    const lastRound = comp.rounds[comp.rounds.length - 1];
+    // Confirm winners for any match not already decided by a bye
+    for(const m of lastRound.matches){
+      if(m.winner) continue;
+      const [r1, r2] = await Promise.all([
+        getStudentScoreOnExam(m.player1, m.examId),
+        getStudentScoreOnExam(m.player2, m.examId)
+      ]);
+      const p1 = r1 ? r1.pct : -1;
+      const p2 = r2 ? r2.pct : -1;
+      if(p1 === -1 && p2 === -1) continue; // neither has taken it yet — leave undecided
+      m.winner = p1 >= p2 ? m.player1 : m.player2;
+    }
+    const stillUndecided = lastRound.matches.filter(m => !m.winner);
+    if(stillUndecided.length > 0){
+      alert(`${stillUndecided.length} match${stillUndecided.length===1?'':'es'} still ${stillUndecided.length===1?'has':'have'} no result yet on the linked exam — can't advance until every match in this round has a winner.`);
+      return;
+    }
+
+    const winners = lastRound.matches.map(m => m.winner);
+    if(winners.length === 1){
+      // Already the final — nothing more to generate, just save the confirmed winner
+      const ok = await saveCompetition(comp.id, comp);
+      if(ok){ invalidateDbCache('competitions'); openCompDetail(comp.id); }
+      return;
+    }
+
+    const shuffled = [...winners].sort(()=> Math.random() - 0.5);
+    const nextMatches = [];
+    for(let i = 0; i < shuffled.length; i += 2){
+      if(shuffled[i+1] !== undefined){
+        nextMatches.push({ player1: shuffled[i], player2: shuffled[i+1], examId, winner: null });
+      } else {
+        nextMatches.push({ player1: shuffled[i], player2: null, examId: null, winner: shuffled[i] });
+      }
+    }
+    comp.rounds.push({ name: roundNameForCount(winners.length), matches: nextMatches });
+    const ok = await saveCompetition(comp.id, comp);
+    if(ok){ invalidateDbCache('competitions'); openCompDetail(comp.id); }
+    else alert('Could not save — check your connection and try again.');
+  }
 
   /* ---------------- ADMIN: Leaderboard tab (ranked by homework average) ---------------- */
   // Records a gift/reward given to a student for their leaderboard standing.
@@ -7076,6 +7767,212 @@
     });
   }
 
+  /* ---------------- MATH CHAMPIONS LEAGUE (student view) ---------------- */
+  // Finds every competition this student is actually part of (searches
+  // every group across every competition for their username), and hides
+  // the tab entirely for students not currently in one.
+  async function findMyCompetitions(){
+    if(!currentStudent) return [];
+    const all = await fetchAllCompetitions();
+    const uname = currentStudent.username.trim().toLowerCase();
+    return all.filter(c => c.groups.some(g => g.studentUsernames.some(u => u.trim().toLowerCase() === uname)));
+  }
+
+  function startExamById(examId){
+    dbGet('exams', examId).then(exam=>{
+      if(exam) startExam(exam);
+      else alert('Could not load that match — please try again.');
+    });
+  }
+
+  async function renderStudentCompetitionSection(){
+    const tabBtn = document.getElementById('competitionTabBtn');
+    const content = document.getElementById('compStudentContent');
+    const myComps = await findMyCompetitions();
+
+    if(myComps.length === 0){
+      if(tabBtn) tabBtn.style.display = 'none';
+      return;
+    }
+    if(tabBtn) tabBtn.style.display = '';
+
+    const uname = currentStudent.username.trim().toLowerCase();
+    const sections = await Promise.all(myComps.map(async (comp)=>{
+      const myGroup = comp.groups.find(g => g.studentUsernames.some(u => u.trim().toLowerCase() === uname));
+
+      const groupResults = await Promise.all(myGroup.studentUsernames.map(async (u)=>{
+        const result = await getStudentScoreOnExam(u, myGroup.examId);
+        return { username: u, pct: result ? result.pct : null };
+      }));
+      groupResults.sort((a,b)=> (b.pct ?? -1) - (a.pct ?? -1));
+
+      const groupExam = myGroup.examId ? await dbGet('exams', myGroup.examId) : null;
+      const iHaveTakenGroupExam = groupResults.find(r => r.username.trim().toLowerCase() === uname)?.pct != null;
+
+      const standingsRows = groupResults.map((r,i) => `
+        <tr class="${i < 2 && r.pct != null ? 'qualifies' : ''}">
+          <td><span class="ucl-rank-badge">${i+1}</span></td>
+          <td>${esc(r.username)}${r.username.trim().toLowerCase() === uname ? '<span class="ucl-you-tag">YOU</span>' : ''}</td>
+          <td>${r.pct != null ? r.pct + '%' : '—'}</td>
+        </tr>
+      `).join('');
+
+      let bracketHtml = '';
+      let championBanner = '';
+      let myActiveMatchHtml = '';
+      let goldenBootHtml = '';
+      let podiumHtml = '';
+
+      if(comp.status === 'knockout' || comp.status === 'completed'){
+        const roundsHtml = await Promise.all(comp.rounds.map(async (round)=>{
+          const matchesHtml = await Promise.all(round.matches.map(async (m)=>{
+            const involvesMe = (m.player1 && m.player1.trim().toLowerCase() === uname) || (m.player2 && m.player2.trim().toLowerCase() === uname);
+            const p1Class = m.winner ? (m.winner === m.player1 ? 'is-winner' : 'is-loser') : '';
+            const p2Class = m.winner ? (m.winner === m.player2 ? 'is-winner' : 'is-loser') : '';
+
+            let highlightHtml = '';
+            if(m.winner && m.player2 && m.examId){
+              const [r1, r2] = await Promise.all([
+                getStudentScoreOnExam(m.player1, m.examId),
+                getStudentScoreOnExam(m.player2, m.examId)
+              ]);
+              if(r1 && r2){
+                const loser = m.winner === m.player1 ? m.player2 : m.player1;
+                const winnerPct = m.winner === m.player1 ? r1.pct : r2.pct;
+                const loserPct = m.winner === m.player1 ? r2.pct : r1.pct;
+                highlightHtml = `<div class="ucl-highlight-line">${generateMatchHighlight(m.winner, loser, winnerPct, loserPct)}</div>`;
+              }
+            }
+
+            return `
+              <div class="ucl-match-card ${m.winner ? 'decided' : ''} ${involvesMe ? 'involves-you' : ''}">
+                <div class="ucl-player-row ${p1Class}">${esc(m.player1)}${m.player1 && m.player1.trim().toLowerCase() === uname ? ' (you)' : ''}</div>
+                ${m.player2 ? `
+                  <div class="ucl-vs-divider">VS</div>
+                  <div class="ucl-player-row ${p2Class}">${esc(m.player2)}${m.player2.trim().toLowerCase() === uname ? ' (you)' : ''}</div>
+                ` : ''}
+                <div class="ucl-match-status">${m.winner ? `Winner: ${esc(m.winner)}` : (m.player2 ? 'Awaiting result' : 'Bye — advances automatically')}</div>
+                ${highlightHtml}
+              </div>
+            `;
+          }));
+          return `
+            <div>
+              <div class="ucl-round-title">${esc(round.name)}</div>
+              <div class="ucl-match-grid" style="margin-top:10px;">${matchesHtml.join('')}</div>
+            </div>
+          `;
+        }));
+        bracketHtml = roundsHtml.join('');
+
+        // Find my current, undecided match (if any) so I can jump straight to it
+        for(const round of comp.rounds){
+          const myMatch = round.matches.find(m =>
+            !m.winner && ((m.player1 && m.player1.trim().toLowerCase() === uname) || (m.player2 && m.player2.trim().toLowerCase() === uname))
+          );
+          if(myMatch && myMatch.examId){
+            const matchExam = await dbGet('exams', myMatch.examId);
+            const alreadyTaken = (await getStudentScoreOnExam(currentStudent.username, myMatch.examId)) != null;
+            myActiveMatchHtml = `
+              <div class="ucl-champion-banner" style="background:radial-gradient(ellipse at center, rgba(76,111,255,0.16), transparent 70%);border-color:rgba(76,111,255,0.35);">
+                <span class="trophy">⚔️</span>
+                <h3 style="background:linear-gradient(135deg,#fff,#B9C4FF 60%,#6E85FF);-webkit-background-clip:text;background-clip:text;color:transparent;">Your match: ${esc(myMatch.player1)} vs ${esc(myMatch.player2)}</h3>
+                <p>${alreadyTaken ? "You've taken this match — waiting on your opponent." : (matchExam ? `Play "${esc(matchExam.title)}" now to lock in your result.` : '')}</p>
+                ${!alreadyTaken && matchExam ? `<button class="ucl-play-btn" data-examid="${esc(myMatch.examId)}">Play your match</button>` : ''}
+              </div>
+            `;
+            break;
+          }
+        }
+
+        const goldenBoot = await computeGoldenBoot(comp);
+        if(goldenBoot && goldenBoot.matchesPlayed > 0){
+          const isMe = goldenBoot.username.trim().toLowerCase() === uname;
+          goldenBootHtml = `
+            <div class="ucl-goldenboot-card">
+              <span class="boot-icon">🥇</span>
+              <div class="boot-name">${esc(goldenBoot.username)}${isMe ? ' (you!)' : ''}</div>
+              <div class="boot-detail">Golden Boot — ${goldenBoot.avg}% average across ${goldenBoot.matchesPlayed} match${goldenBoot.matchesPlayed===1?'':'es'}</div>
+            </div>
+          `;
+        }
+
+        const podium = computePodium(comp);
+        if(podium){
+          podiumHtml = `
+            <div class="ucl-podium">
+              ${podium.runnerUp ? `
+                <div class="ucl-podium-spot silver">
+                  <span class="ucl-podium-medal">🥈</span>
+                  <div class="ucl-podium-name">${esc(podium.runnerUp)}</div>
+                  <div class="ucl-podium-label">Runner-up</div>
+                </div>` : ''}
+              <div class="ucl-podium-spot gold">
+                <span class="ucl-podium-medal">🥇</span>
+                <div class="ucl-podium-name">${esc(podium.champion)}</div>
+                <div class="ucl-podium-label">Champion</div>
+              </div>
+              ${podium.semifinalists.map(name => `
+                <div class="ucl-podium-spot bronze">
+                  <span class="ucl-podium-medal">🥉</span>
+                  <div class="ucl-podium-name">${esc(name)}</div>
+                  <div class="ucl-podium-label">Semifinalist</div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        if(comp.status === 'completed'){
+          const lastRound = comp.rounds[comp.rounds.length - 1];
+          const champion = lastRound.matches[0] ? lastRound.matches[0].winner : null;
+          if(champion){
+            const isMe = champion.trim().toLowerCase() === uname;
+            championBanner = `
+              <div class="ucl-champion-banner">
+                <span class="trophy">🏆</span>
+                <h3>${esc(champion)} is the Champion!</h3>
+                <p>${isMe ? "That's you — congratulations! 🎉" : `${esc(comp.name)} has crowned its winner.`}</p>
+              </div>
+            `;
+          }
+        }
+      }
+
+      return `
+        <div style="margin-bottom:36px;">
+          <div class="ucl-hero">
+            <div class="ucl-star-row">★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★</div>
+            <h2>${esc(comp.name)}</h2>
+            <div class="ucl-subtitle">${comp.status === 'group_stage' ? 'Group Stage' : (comp.status === 'knockout' ? 'Knockout Stage' : 'Completed')}${myGroup ? ' · ' + esc(myGroup.name) : ''}</div>
+          </div>
+
+          ${championBanner}
+          ${podiumHtml}
+          ${myActiveMatchHtml}
+          ${goldenBootHtml}
+
+          <div class="ucl-section-label">Group standings</div>
+          <div class="ucl-group-card">
+            <h4>${esc(myGroup.name)}${groupExam ? ` — ${esc(groupExam.title)}` : ''}</h4>
+            <table class="ucl-table">
+              <thead><tr><th>Rank</th><th>Student</th><th>Score</th></tr></thead>
+              <tbody>${standingsRows}</tbody>
+            </table>
+            ${!iHaveTakenGroupExam && groupExam ? `<button class="ucl-play-btn" data-examid="${esc(myGroup.examId)}" style="margin:14px 0 4px;">Play your group match</button>` : ''}
+          </div>
+
+          ${bracketHtml ? `<div class="ucl-section-label">Knockout bracket</div><div class="ucl-bracket-wrap">${bracketHtml}</div>` : ''}
+        </div>
+      `;
+    }));
+
+    content.innerHTML = sections.join('<hr style="border:none;border-top:1px solid rgba(139,158,255,0.15);margin:20px;">');
+    content.querySelectorAll('.ucl-play-btn[data-examid]').forEach(btn=>{
+      btn.addEventListener('click', ()=> startExamById(btn.dataset.examid));
+    });
+  }
+
   document.getElementById('regeneratePlanBtn').addEventListener('click', async ()=>{
     const btn = document.getElementById('regeneratePlanBtn');
     btn.disabled = true; btn.textContent = 'Regenerating…';
@@ -7747,6 +8644,8 @@
         await renderWeakPoints();
         await renderMistakeHistory();
         await renderOverview();
+        invalidateDbCache('competitions');
+        await renderStudentCompetitionSection();
       });
     }
 
@@ -8109,7 +9008,7 @@
     document.getElementById('dashGrade').textContent = currentStudent.grade || '—';
     document.getElementById('dashStudentNumber').textContent = currentStudent.studentNumber || '—';
     dash.style.display = 'block';
-    ['homework','attempts','mistakes','skills','exams','sessions','reviews'].forEach(invalidateDbCache);
+    ['homework','attempts','mistakes','skills','exams','sessions','reviews','competitions'].forEach(invalidateDbCache);
     renderStudentHomework();
     renderStudentSessions();
     renderStudentReviews();
@@ -8117,6 +9016,7 @@
     renderWeakPoints();
     renderMistakeHistory();
     renderOverview();
+    renderStudentCompetitionSection();
 
     // exam cards (if any exist elsewhere) were rendered as locked before sign-in — refresh so they unlock
     renderPublicExams();
@@ -8138,6 +9038,7 @@
       if(btn.dataset.dashtab === 'tabMistakes') renderMistakeHistory();
       if(btn.dataset.dashtab === 'tabGraph' && typeof drawGraph === 'function') drawGraph();
       if(btn.dataset.dashtab === 'tabPlanner') renderStudyPlanner();
+      if(btn.dataset.dashtab === 'tabCompetition'){ invalidateDbCache('competitions'); renderStudentCompetitionSection(); }
       if(btn.dataset.dashtab === 'tabOverview') renderOverview();
     });
   });
