@@ -677,6 +677,30 @@
   .ucl-podium-name{ font-weight: 700; color: #E8ECFF; font-size: 0.92rem; }
   .ucl-podium-label{ color: #7C8AC9; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 
+  /* ---------- Competition editor organization ---------- */
+  .comp-randomize-box{
+    margin: 22px 0; padding: 16px 18px; border-radius: 12px;
+    background: rgba(76,111,255,0.05); border: 1px solid rgba(76,111,255,0.2);
+  }
+  .comp-randomize-header{ display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  .comp-participant-count{ font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; color: var(--signal); flex-shrink: 0; }
+  .comp-randomize-actions{ display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .comp-participants-list{ display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px; overflow-y: auto; }
+  .comp-groups-summary{
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.76rem; color: var(--muted);
+    margin: 4px 0 2px;
+  }
+  .comp-groups-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .comp-group-badge{
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; background: rgba(76,111,255,0.15);
+    color: var(--signal); font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem; font-weight: 700;
+    margin-right: 8px; flex-shrink: 0;
+  }
+  .comp-group-header-row{ display: flex; align-items: center; margin-bottom: 12px; }
+  .comp-group-student-count{ margin-left: auto; font-size: 0.76rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .comp-group-students{ grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); display: grid; gap: 2px; }
+
   /* ---------- footer ---------- */
   footer{
     padding:70px 0 40px;
@@ -3030,8 +3054,24 @@
           <select id="compCourseInput"><option value="">Any course</option></select>
         </div>
 
-        <label class="field-label" style="margin-top:20px;display:block;">Groups</label>
-        <div id="compGroupsContainer"></div>
+        <div class="comp-randomize-box">
+          <div class="comp-randomize-header">
+            <label class="field-label" style="margin:0;">🎲 Random draw — pick who's competing, then let the draw decide their group</label>
+            <span class="comp-participant-count" id="compParticipantCount">0 selected</span>
+          </div>
+          <div class="comp-randomize-actions">
+            <button type="button" class="btn btn-ghost" id="selectAllParticipantsBtn" style="padding:6px 14px;font-size:0.8rem;">Select all</button>
+            <button type="button" class="btn btn-ghost" id="clearParticipantsBtn" style="padding:6px 14px;font-size:0.8rem;">Clear</button>
+            <button type="button" class="btn btn-primary" id="randomizeGroupsBtn" style="padding:6px 16px;font-size:0.8rem;margin-left:auto;">🎲 Randomize into groups below</button>
+          </div>
+          <div class="student-checkbox-list comp-participants-list" id="compParticipantsList" style="max-height:180px;">
+            <div class="admin-empty" style="padding:12px;">Loading…</div>
+          </div>
+        </div>
+
+        <div class="comp-groups-summary" id="compGroupsSummary"></div>
+        <label class="field-label" style="margin-top:8px;display:block;">Groups</label>
+        <div id="compGroupsContainer" class="comp-groups-grid"></div>
         <button class="add-q-btn" id="addCompGroupBtn" type="button">+ Add group</button>
 
         <div class="editor-actions" style="margin-top:24px;">
@@ -6146,9 +6186,10 @@
     block.className = 'question-block';
     block.innerHTML = `
       <button type="button" class="remove-q-btn" aria-label="Remove group">✕</button>
-      <div class="field-row" style="margin-bottom:14px;">
-        <label class="field-label">Group name</label>
-        <input type="text" class="comp-group-name" placeholder="e.g. Group A" value="${groupData ? esc(groupData.name || '') : ''}">
+      <div class="comp-group-header-row">
+        <span class="comp-group-badge"></span>
+        <input type="text" class="comp-group-name" placeholder="e.g. Group A" value="${groupData ? esc(groupData.name || '') : ''}" style="flex:1;">
+        <span class="comp-group-student-count">0 students</span>
       </div>
       <div class="field-row" style="margin-bottom:14px;">
         <label class="field-label">Exam for this group's match</label>
@@ -6157,8 +6198,12 @@
       <label class="field-label" style="margin-bottom:6px;display:block;">Students in this group</label>
       <div class="student-checkbox-list comp-group-students" style="max-height:200px;"><div class="admin-empty" style="padding:12px;">Loading…</div></div>
     `;
-    block.querySelector('.remove-q-btn').addEventListener('click', ()=> block.remove());
+    block.querySelector('.remove-q-btn').addEventListener('click', ()=>{
+      block.remove();
+      renumberCompGroups();
+    });
     document.getElementById('compGroupsContainer').appendChild(block);
+    renumberCompGroups();
 
     const [exams, students] = await Promise.all([fetchExamsIndex(), fetchStudentsForCurrentAdmin()]);
     const examSel = block.querySelector('.comp-group-exam');
@@ -6175,6 +6220,37 @@
             <span>${esc(s.username)}</span>
           </label>
         `).join('');
+    updateCompGroupStudentCount(block);
+    studentsWrap.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('change', ()=> updateCompGroupStudentCount(block));
+    });
+  }
+
+  // Keeps the "1", "2", "3"... badges and the overall summary line accurate
+  // as groups get added or removed.
+  function renumberCompGroups(){
+    const blocks = document.querySelectorAll('#compGroupsContainer .question-block');
+    blocks.forEach((block, i) => {
+      const badge = block.querySelector('.comp-group-badge');
+      if(badge) badge.textContent = i + 1;
+    });
+    updateCompGroupsSummary();
+  }
+
+  function updateCompGroupStudentCount(block){
+    const count = block.querySelectorAll('.comp-group-students input:checked').length;
+    const label = block.querySelector('.comp-group-student-count');
+    if(label) label.textContent = `${count} student${count===1?'':'s'}`;
+    updateCompGroupsSummary();
+  }
+
+  function updateCompGroupsSummary(){
+    const summary = document.getElementById('compGroupsSummary');
+    if(!summary) return;
+    const blocks = document.querySelectorAll('#compGroupsContainer .question-block');
+    const totalStudents = Array.from(blocks).reduce((sum, block) =>
+      sum + block.querySelectorAll('.comp-group-students input:checked').length, 0);
+    summary.textContent = `${blocks.length} group${blocks.length===1?'':'s'} · ${totalStudents} student${totalStudents===1?'':'s'} assigned`;
   }
 
   function collectCompGroupsFromForm(){
@@ -6188,7 +6264,81 @@
     return groups;
   }
 
-  document.getElementById('addCompGroupBtn').addEventListener('click', ()=> addCompGroupBlock(null));
+  document.getElementById('addCompGroupBtn').addEventListener('click', ()=>{ addCompGroupBlock(null); });
+
+  // Populates the "who's competing" checkbox list — separate from any one
+  // group's own list, since the whole point is to pick participants BEFORE
+  // deciding which group each one lands in.
+  async function renderCompParticipantsList(preSelectedUsernames){
+    const wrap = document.getElementById('compParticipantsList');
+    const students = await fetchStudentsForCurrentAdmin();
+    const preselected = new Set(preSelectedUsernames || []);
+    wrap.innerHTML = students.length === 0
+      ? '<div class="admin-empty" style="padding:12px;">No approved students yet.</div>'
+      : students.map(s => `
+          <label class="student-checkbox-row">
+            <input type="checkbox" value="${esc(s.username)}" ${preselected.has(s.username) ? 'checked' : ''}>
+            <span>${esc(s.username)}</span>
+          </label>
+        `).join('');
+    wrap.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('change', updateCompParticipantCount);
+    });
+    updateCompParticipantCount();
+  }
+
+  function updateCompParticipantCount(){
+    const count = document.querySelectorAll('#compParticipantsList input:checked').length;
+    const label = document.getElementById('compParticipantCount');
+    if(label) label.textContent = `${count} selected`;
+  }
+
+  document.getElementById('selectAllParticipantsBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#compParticipantsList input[type=checkbox]').forEach(cb => cb.checked = true);
+    updateCompParticipantCount();
+  });
+  document.getElementById('clearParticipantsBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#compParticipantsList input[type=checkbox]').forEach(cb => cb.checked = false);
+    updateCompParticipantCount();
+  });
+
+  // The actual draw: shuffles the selected participants and deals them out
+  // evenly across whatever group blocks already exist — same idea as a
+  // real UCL group-stage draw, just done in the browser instead of with
+  // physical balls.
+  document.getElementById('randomizeGroupsBtn').addEventListener('click', ()=>{
+    const groupBlocks = document.querySelectorAll('#compGroupsContainer .question-block');
+    if(groupBlocks.length === 0){
+      alert('Add at least one group first, then randomize students into it.');
+      return;
+    }
+    const selected = Array.from(document.querySelectorAll('#compParticipantsList input:checked')).map(cb => cb.value);
+    if(selected.length === 0){
+      alert('Select at least one student to include in the draw first.');
+      return;
+    }
+
+    // Fisher-Yates shuffle — genuinely random, not just Array.sort quirks.
+    const shuffled = [...selected];
+    for(let i = shuffled.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // Clear every group's current selection first, so re-randomizing
+    // doesn't leave stale picks mixed in with the new draw.
+    groupBlocks.forEach(block=>{
+      block.querySelectorAll('.comp-group-students input[type=checkbox]').forEach(cb => cb.checked = false);
+    });
+
+    shuffled.forEach((username, i) => {
+      const targetBlock = groupBlocks[i % groupBlocks.length];
+      const cb = targetBlock.querySelector(`.comp-group-students input[value="${CSS.escape(username)}"]`);
+      if(cb) cb.checked = true;
+    });
+
+    groupBlocks.forEach(block => updateCompGroupStudentCount(block));
+  });
 
   function showCompView(view){
     document.getElementById('compListView').style.display = view === 'list' ? 'block' : 'none';
@@ -6201,6 +6351,7 @@
     document.getElementById('compNameInput').value = '';
     populateCompCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
     document.getElementById('compGroupsContainer').innerHTML = '';
+    await renderCompParticipantsList([]);
     await addCompGroupBlock(null);
     showCompView('editor');
   });
@@ -6241,6 +6392,8 @@
     editingCompId = comp.id;
     document.getElementById('compNameInput').value = comp.name;
     populateCompCourseSelect(comp.course || '');
+    const allParticipants = comp.groups.flatMap(g => g.studentUsernames);
+    await renderCompParticipantsList(allParticipants);
     document.getElementById('compGroupsContainer').innerHTML = '';
     for(const g of comp.groups){ await addCompGroupBlock(g); }
     showCompView('editor');
