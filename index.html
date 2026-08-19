@@ -1096,6 +1096,10 @@
   }
   .student-multiselect-count{margin-left:auto; color:var(--muted); font-size:0.78rem;}
   .student-multiselect-list{max-height:220px; overflow-y:auto; padding:6px 4px;}
+  .student-checkbox-list{
+    overflow-y:auto; padding:6px 4px;
+    border:1px solid var(--line); border-radius:8px; background:var(--ink);
+  }
   .student-checkbox-row{
     display:flex; align-items:center; gap:10px; padding:8px 12px;
     border-radius:6px; cursor:pointer; font-size:0.88rem;
@@ -6491,6 +6495,7 @@
     const content = document.getElementById('compDetailContent');
     content.innerHTML = '<div class="admin-empty">Loading standings…</div>';
 
+    const doubleHwSet = new Set((comp.doubleHwUsernames || []).map(u => u.trim().toLowerCase()));
     const groupStandingsHtml = await Promise.all(comp.groups.map(async (group)=>{
       const results = await Promise.all(group.studentUsernames.map(async (uname)=>{
         const result = await getStudentScoreOnExam(uname, group.examId);
@@ -6500,7 +6505,7 @@
       const rows = results.map((r,i) => `
         <tr>
           <td>${i+1}</td>
-          <td>${esc(r.username)}</td>
+          <td>${esc(r.username)}${doubleHwSet.has(r.username.trim().toLowerCase()) ? ' <span class="tag-pill" style="background:rgba(255,107,74,0.14);color:var(--ember);border-color:rgba(255,107,74,0.35);">📚 Double HW</span>' : ''}</td>
           <td>${r.pct != null ? r.pct + '%' : '<span style="color:var(--muted);">Not taken yet</span>'}</td>
         </tr>
       `).join('');
@@ -6607,6 +6612,7 @@
 
   async function advanceToKnockout(comp, examId){
     const advancing = [];
+    const doubleHwUsernames = [];
     for(const group of comp.groups){
       const results = await Promise.all(group.studentUsernames.map(async (uname)=>{
         const result = await getStudentScoreOnExam(uname, group.examId);
@@ -6614,6 +6620,12 @@
       }));
       results.sort((a,b)=> b.pct - a.pct);
       advancing.push(...results.slice(0, 2).map(r => r.username));
+      // Last place in each group gets flagged for double homework — a real
+      // consequence for finishing bottom of the group, same spirit as
+      // relegation, just translated into extra practice instead.
+      if(results.length >= 2){
+        doubleHwUsernames.push(results[results.length - 1].username);
+      }
     }
     if(advancing.length < 2){ alert('Not enough students have completed their group exams yet to advance.'); return; }
 
@@ -6628,6 +6640,7 @@
     }
     comp.rounds = [{ name: roundNameForCount(advancing.length), matches }];
     comp.status = 'knockout';
+    comp.doubleHwUsernames = doubleHwUsernames;
     const ok = await saveCompetition(comp.id, comp);
     if(ok){ invalidateDbCache('competitions'); openCompDetail(comp.id); }
     else alert('Could not save — check your connection and try again.');
@@ -7961,11 +7974,12 @@
 
       const groupExam = myGroup.examId ? await dbGet('exams', myGroup.examId) : null;
       const iHaveTakenGroupExam = groupResults.find(r => r.username.trim().toLowerCase() === uname)?.pct != null;
+      const doubleHwSet = new Set((comp.doubleHwUsernames || []).map(u => u.trim().toLowerCase()));
 
       const standingsRows = groupResults.map((r,i) => `
         <tr class="${i < 2 && r.pct != null ? 'qualifies' : ''}">
           <td><span class="ucl-rank-badge">${i+1}</span></td>
-          <td>${esc(r.username)}${r.username.trim().toLowerCase() === uname ? '<span class="ucl-you-tag">YOU</span>' : ''}</td>
+          <td>${esc(r.username)}${r.username.trim().toLowerCase() === uname ? '<span class="ucl-you-tag">YOU</span>' : ''}${doubleHwSet.has(r.username.trim().toLowerCase()) ? ' <span class="ucl-you-tag" style="background:rgba(255,107,74,0.16);border-color:rgba(255,107,74,0.4);color:#FF6B4A;">📚 Double HW</span>' : ''}</td>
           <td>${r.pct != null ? r.pct + '%' : '—'}</td>
         </tr>
       `).join('');
