@@ -4608,7 +4608,7 @@
       row.innerHTML = `
         <div>
           <h4>${esc(exam.title)}</h4>
-          <div class="meta">${exam.course ? esc(exam.course) + ' · ' : ''}${exam.questionCount} question${exam.questionCount===1?'':'s'}</div>
+          <div class="meta">${exam.course ? esc(exam.course) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${exam.questionCount} question${exam.questionCount===1?'':'s'}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-exam-btn">Edit</button>
@@ -5888,7 +5888,7 @@
       row.innerHTML = `
         <div>
           <h4>${esc(set.skill)}</h4>
-          <div class="meta">${set.course ? esc(set.course) + ' · ' : ''}${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
+          <div class="meta">${set.course ? esc(set.course) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-skill-btn" title="Edit this skill set" aria-label="Edit this skill set">✏️ Edit</button>
