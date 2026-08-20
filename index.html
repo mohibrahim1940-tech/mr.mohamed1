@@ -699,6 +699,16 @@
   }
   .comp-group-header-row{ display: flex; align-items: center; margin-bottom: 12px; }
   .comp-group-student-count{ margin-left: auto; font-size: 0.76rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .course-toggle-row{ display: flex; gap: 8px; }
+  .course-toggle-btn{
+    flex: 1; padding: 10px 16px; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--ink); color: var(--muted);
+    font-size: 0.88rem; font-weight: 600; cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .course-toggle-btn:hover{ border-color: rgba(255,255,255,0.3); color: var(--text); }
+  .course-toggle-btn.active{ border-color: var(--signal); color: #fff; background: rgba(76,111,255,0.16); }
+  .course-toggle-btn.locked{ opacity: 0.35; cursor: not-allowed; pointer-events: none; }
   .comp-group-students{ grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); display: grid; gap: 2px; }
 
   /* ---------- footer ---------- */
@@ -2877,9 +2887,12 @@
         </div>
         <div class="field-row">
           <label class="field-label">Course</label>
-          <select id="skillCourseInput">
-            <option value="">No course / general</option>
-          </select>
+          <div class="course-toggle-row" id="skillCourseToggle">
+            <button type="button" class="course-toggle-btn" data-course="">General</button>
+            <button type="button" class="course-toggle-btn" data-course="EST Math Prep">EST</button>
+            <button type="button" class="course-toggle-btn" data-course="ACT Math Bootcamp">ACT</button>
+          </div>
+          <input type="hidden" id="skillCourseInput" value="">
         </div>
 
         <label class="field-label">Questions</label>
@@ -5868,7 +5881,7 @@
       // ever touching the dropdown would save with no course at all,
       // making it invisible to their own strictly-filtered list.
       populateSkillCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
-      document.getElementById('skillCourseInput').disabled = (currentAdminRole === 'act-admin');
+      applySkillCourseLock();
     }
     if(skillQuestionsContainer.children.length === 0){
       addQuestionBlock(null, skillQuestionsContainer);
@@ -5923,7 +5936,7 @@
     editingSkillId = set.id;
     document.getElementById('skillNameInput').value = set.skill;
     populateSkillCourseSelect(set.course || '');
-    document.getElementById('skillCourseInput').disabled = (currentAdminRole === 'act-admin');
+    applySkillCourseLock();
     skillQuestionsContainer.innerHTML = '';
     (set.questions || []).forEach(q => addQuestionBlock(q, skillQuestionsContainer));
     document.getElementById('saveSkillBtn').textContent = 'Save changes';
@@ -5937,7 +5950,7 @@
     document.getElementById('cancelSkillEditBtn').style.display = 'none';
     document.getElementById('skillNameInput').value = '';
     populateSkillCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
-    document.getElementById('skillCourseInput').disabled = (currentAdminRole === 'act-admin');
+    applySkillCourseLock();
     skillQuestionsContainer.innerHTML = '';
     addQuestionBlock(null, skillQuestionsContainer);
   }
@@ -6121,13 +6134,28 @@
   }
 
   function populateSkillCourseSelect(selectedValue){
-    const sel = document.getElementById('skillCourseInput');
-    if(!sel) return;
-    const current = selectedValue !== undefined ? selectedValue : sel.value;
-    const options = [...cachedCourseNames];
-    if(current && !options.includes(current)) options.push(current);
-    sel.innerHTML = '<option value="">No course / general</option>' +
-      options.map(name => `<option value="${esc(name)}" ${current === name ? 'selected' : ''}>${esc(name)}</option>`).join('');
+    const hidden = document.getElementById('skillCourseInput');
+    if(!hidden) return;
+    const current = selectedValue !== undefined ? selectedValue : hidden.value;
+    hidden.value = current;
+    document.querySelectorAll('#skillCourseToggle .course-toggle-btn').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.course === current);
+    });
+  }
+
+  document.getElementById('skillCourseToggle').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.course-toggle-btn');
+    if(!btn || btn.classList.contains('locked')) return;
+    populateSkillCourseSelect(btn.dataset.course);
+  });
+
+  // Locks every course toggle button except ACT for the ACT admin, so
+  // they physically cannot create General or EST-tagged content.
+  function applySkillCourseLock(){
+    const isActAdmin = currentAdminRole === 'act-admin';
+    document.querySelectorAll('#skillCourseToggle .course-toggle-btn').forEach(btn=>{
+      btn.classList.toggle('locked', isActAdmin && btn.dataset.course !== ACT_ADMIN_COURSE);
+    });
   }
 
   // Keeps the public registration form's course dropdown in sync with admin-added
