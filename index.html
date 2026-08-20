@@ -5860,6 +5860,7 @@
   });
 
   async function initSkillsPanel(){
+    await refreshCourseNamesCache();
     if(skillQuestionsContainer.children.length === 0){
       addQuestionBlock(null, skillQuestionsContainer);
     }
@@ -6087,7 +6088,15 @@
   let cachedCourseNames = [];
   async function refreshCourseNamesCache(){
     const courses = await fetchAllCourses();
-    cachedCourseNames = courses.map(c => c.name).filter(Boolean);
+    // The three standard courses always need to be selectable here — this
+    // list feeds the Skill/Exam course dropdowns, which is a separate data
+    // source from the registration form. Without this, a course like "ACT
+    // Math Bootcamp" could be completely un-selectable when tagging
+    // content unless someone happened to also add it as a manual entry in
+    // the Courses tab, even though students can register under it fine.
+    const standardCourses = ['EST Math Prep', 'SAT Math Prep', 'ACT Math Bootcamp'];
+    const customCourses = courses.map(c => c.name).filter(Boolean);
+    cachedCourseNames = [...standardCourses, ...customCourses.filter(name => !standardCourses.includes(name))];
     populateExamCourseSelect();
     populateSkillCourseSelect();
   }
