@@ -5579,7 +5579,8 @@
       students.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('');
     if(students.some(s => s.username === currentFilterVal)) filterSelect.value = currentFilterVal;
 
-    const skillSets = await fetchSkillsIndex();
+    let skillSets = await fetchSkillsIndex();
+    if(currentAdminCourseFilter) skillSets = skillSets.filter(s => !s.course || s.course === currentAdminCourseFilter);
     loadSkillSelect.innerHTML = '<option value="">— Start blank, or pick a skill below —</option>' +
       skillSets.map(s => `<option value="${esc(s.id)}">${esc(s.skill)} (${s.questionCount} question${s.questionCount===1?'':'s'})</option>`).join('');
     // Only force these back to blank on a genuine fresh tab-open — not on a
@@ -5587,7 +5588,8 @@
     // admin is actively mid-way through using while building homework.
     loadSkillSelect.value = resetLoaders ? '' : (skillSets.some(s => s.id === currentLoadSkillVal) ? currentLoadSkillVal : '');
 
-    const examSets = await fetchExamsIndex();
+    let examSets = await fetchExamsIndex();
+    if(currentAdminCourseFilter) examSets = examSets.filter(e => !e.course || e.course === currentAdminCourseFilter);
     loadExamSelect.innerHTML = '<option value="">— Or pick an exam instead —</option>' +
       examSets.map(e => `<option value="${esc(e.id)}">${esc(e.title)} (${e.questionCount} question${e.questionCount===1?'':'s'})</option>`).join('');
     loadExamSelect.value = resetLoaders ? '' : (examSets.some(e => e.id === currentLoadExamVal) ? currentLoadExamVal : '');
@@ -7452,7 +7454,8 @@
       return;
     }
 
-    const skillSets = await fetchSkillsIndex();
+    let skillSets = await fetchSkillsIndex();
+    if(currentStudent) skillSets = skillSets.filter(s => !s.course || s.course === currentStudent.course);
     const maxCount = weak[0][1];
 
     wpList.innerHTML = '';
