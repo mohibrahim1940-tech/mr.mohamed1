@@ -5861,6 +5861,15 @@
 
   async function initSkillsPanel(){
     await refreshCourseNamesCache();
+    if(!editingSkillId){
+      // Freshly opening the tab (not mid-edit) — make sure the course is
+      // correctly locked to ACT right away for the ACT admin, not only
+      // when they explicitly click Cancel. Otherwise a skill saved before
+      // ever touching the dropdown would save with no course at all,
+      // making it invisible to their own strictly-filtered list.
+      populateSkillCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
+      document.getElementById('skillCourseInput').disabled = (currentAdminRole === 'act-admin');
+    }
     if(skillQuestionsContainer.children.length === 0){
       addQuestionBlock(null, skillQuestionsContainer);
     }
