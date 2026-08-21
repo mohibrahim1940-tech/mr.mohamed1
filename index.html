@@ -709,6 +709,7 @@
   .course-toggle-btn:hover{ border-color: rgba(255,255,255,0.3); color: var(--text); }
   .course-toggle-btn.active{ border-color: var(--signal); color: #fff; background: rgba(76,111,255,0.16); }
   .course-toggle-btn.locked{ opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+  .skill-course-filter-btn.active{ border-color: var(--signal); color: #fff; background: rgba(76,111,255,0.16); }
   .comp-group-students{ grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); display: grid; gap: 2px; }
 
   /* ---------- footer ---------- */
@@ -2887,12 +2888,9 @@
         </div>
         <div class="field-row">
           <label class="field-label">Course</label>
-          <div class="course-toggle-row" id="skillCourseToggle">
-            <button type="button" class="course-toggle-btn" data-course="">General</button>
-            <button type="button" class="course-toggle-btn" data-course="EST Math Prep">EST</button>
-            <button type="button" class="course-toggle-btn" data-course="ACT Math Bootcamp">ACT</button>
-          </div>
-          <input type="hidden" id="skillCourseInput" value="">
+          <select id="skillCourseInput">
+            <option value="">No course / general</option>
+          </select>
         </div>
 
         <label class="field-label">Questions</label>
@@ -2913,6 +2911,9 @@
 
       <div class="admin-actions" style="margin-top:28px;">
         <button class="btn btn-ghost" id="refreshSkills">Refresh</button>
+        <button class="btn btn-ghost skill-course-filter-btn active" data-filter="all">All</button>
+        <button class="btn btn-ghost skill-course-filter-btn" data-filter="EST Math Prep">EST</button>
+        <button class="btn btn-ghost skill-course-filter-btn" data-filter="ACT Math Bootcamp">ACT</button>
       </div>
       <div class="admin-table-wrap" id="skillListWrap">
         <div class="admin-empty" id="skillListEmpty" style="display:none;">No skill sets yet — add one above.</div>
@@ -5813,7 +5814,7 @@
     const ok = await dbSet('skills', id, { id, ...data });
     if(ok){
       await dbSet('skills', `idx-${id}`, {
-        _index: true, id, skill: data.skill, course: data.course, questionCount: (data.questions || []).length, ts: data.ts
+        _index: true, id, skill: data.skill, course: data.course, createdByRole: data.createdByRole, questionCount: (data.questions || []).length, ts: data.ts
       });
       backfillExplanationVideos(data.skill, data.questions || []);
     }
@@ -5891,11 +5892,14 @@
 
   let editingSkillId = null;
 
+  let currentSkillListFilter = 'all';
+
   async function renderAdminSkillList(){
     const wrap = document.getElementById('skillListWrap');
     const emptyState = document.getElementById('skillListEmpty');
     let sets = await fetchSkillsIndex();
     if(currentAdminCourseFilter) sets = sets.filter(s => s.course === currentAdminCourseFilter);
+    if(currentSkillListFilter !== 'all') sets = sets.filter(s => s.course === currentSkillListFilter);
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
 
@@ -5910,7 +5914,7 @@
       row.className = 'exam-list-item';
       row.innerHTML = `
         <div>
-          <h4>${esc(set.skill)}</h4>
+          <h4>${esc(set.skill)}${(set.createdByRole === 'act-admin' && currentAdminRole !== 'act-admin') ? ' <span class="tag-pill" style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);">🎓 Added by ACT admin</span>' : ''}</h4>
           <div class="meta">${set.course ? esc(set.course) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
         </div>
         <div class="exam-list-actions">
@@ -5975,7 +5979,12 @@
     btn.disabled = true; btn.textContent = 'Saving…';
     const id = editingSkillId || generateId('skill');
     const course = document.getElementById('skillCourseInput').value.trim();
-    const ok = await saveSkillSet(id, { skill, course, questions, ts: new Date().toISOString() });
+    // Preserve the original creator's role through edits — if the ACT admin
+    // made this, it should keep showing that way even if the main admin
+    // edits it later, since the point is knowing where it came from.
+    const existing = wasEditing ? await dbGet('skills', id) : null;
+    const createdByRole = existing && existing.createdByRole ? existing.createdByRole : currentAdminRole;
+    const ok = await saveSkillSet(id, { skill, course, questions, createdByRole, ts: new Date().toISOString() });
     btn.disabled = false;
 
     if(ok){
@@ -5989,6 +5998,14 @@
   });
 
   document.getElementById('refreshSkills').addEventListener('click', ()=>{ invalidateDbCache('skills'); renderAdminSkillList(); });
+
+  document.querySelectorAll('.skill-course-filter-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      currentSkillListFilter = btn.dataset.filter;
+      document.querySelectorAll('.skill-course-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+      renderAdminSkillList();
+    });
+  });
 
   /* ---------------- COURSES (admin-managed course list) ---------------- */
   async function saveCourse(id, data){
@@ -6134,28 +6151,21 @@
   }
 
   function populateSkillCourseSelect(selectedValue){
-    const hidden = document.getElementById('skillCourseInput');
-    if(!hidden) return;
-    const current = selectedValue !== undefined ? selectedValue : hidden.value;
-    hidden.value = current;
-    document.querySelectorAll('#skillCourseToggle .course-toggle-btn').forEach(btn=>{
-      btn.classList.toggle('active', btn.dataset.course === current);
-    });
+    const sel = document.getElementById('skillCourseInput');
+    if(!sel) return;
+    const current = selectedValue !== undefined ? selectedValue : sel.value;
+    const options = [...cachedCourseNames];
+    if(current && !options.includes(current)) options.push(current);
+    sel.innerHTML = '<option value="">No course / general</option>' +
+      options.map(name => `<option value="${esc(name)}" ${current === name ? 'selected' : ''}>${esc(name)}</option>`).join('');
   }
 
-  document.getElementById('skillCourseToggle').addEventListener('click', (e)=>{
-    const btn = e.target.closest('.course-toggle-btn');
-    if(!btn || btn.classList.contains('locked')) return;
-    populateSkillCourseSelect(btn.dataset.course);
-  });
-
-  // Locks every course toggle button except ACT for the ACT admin, so
-  // they physically cannot create General or EST-tagged content.
+  // Locks the course dropdown to ACT Math Bootcamp for the ACT admin, so
+  // they physically cannot create General- or other-course-tagged content.
   function applySkillCourseLock(){
-    const isActAdmin = currentAdminRole === 'act-admin';
-    document.querySelectorAll('#skillCourseToggle .course-toggle-btn').forEach(btn=>{
-      btn.classList.toggle('locked', isActAdmin && btn.dataset.course !== ACT_ADMIN_COURSE);
-    });
+    const sel = document.getElementById('skillCourseInput');
+    if(!sel) return;
+    sel.disabled = (currentAdminRole === 'act-admin');
   }
 
   // Keeps the public registration form's course dropdown in sync with admin-added
@@ -6427,6 +6437,14 @@
     if(!name){ alert('Give this competition a name.'); return; }
     const groups = collectCompGroupsFromForm();
     if(groups.length === 0){ alert('Add at least one group with a name.'); return; }
+    // A group with students but no exam is a real trap — students see the
+    // group but there's no way for them to actually play their match. Block
+    // the save and say exactly which group needs fixing.
+    const groupsMissingExam = groups.filter(g => g.studentUsernames.length > 0 && !g.examId);
+    if(groupsMissingExam.length > 0){
+      alert(`"${groupsMissingExam[0].name}" has students but no exam selected — students in that group won't be able to play their match. Pick an exam for every group with students before saving.`);
+      return;
+    }
     const course = document.getElementById('compCourseInput').value.trim();
     const btn = document.getElementById('saveCompBtn');
     btn.disabled = true; btn.textContent = 'Saving…';
@@ -6571,6 +6589,7 @@
       return `
         <div class="admin-table-wrap" style="margin-bottom:24px;">
           <div class="hw-section-title" style="margin-top:0;">${esc(group.name)}</div>
+          ${!group.examId ? `<div class="admin-note" style="background:rgba(255,107,74,0.1);border-color:rgba(255,107,74,0.4);margin-bottom:12px;">⚠ <strong>No exam linked to this group</strong> — students can't play their match until you edit this competition and pick one.</div>` : ''}
           <table class="admin-table">
             <thead><tr><th>Rank</th><th>Student</th><th>Score</th></tr></thead>
             <tbody>${rows || '<tr><td colspan="3">No students in this group.</td></tr>'}</tbody>
@@ -8187,6 +8206,7 @@
               <tbody>${standingsRows}</tbody>
             </table>
             ${!iHaveTakenGroupExam && groupExam ? `<button class="ucl-play-btn" data-examid="${esc(myGroup.examId)}" style="margin:14px 0 4px;">Play your group match</button>` : ''}
+            ${!myGroup.examId ? `<div style="color:#7C8AC9;font-size:0.85rem;margin-top:10px;font-style:italic;">Your coach hasn't set up this group's match exam yet — check back soon.</div>` : ''}
           </div>
 
           ${bracketHtml ? `<div class="ucl-section-label">Knockout bracket</div><div class="ucl-bracket-wrap">${bracketHtml}</div>` : ''}
