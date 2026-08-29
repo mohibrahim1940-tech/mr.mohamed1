@@ -815,6 +815,8 @@
   .am-rating-star.filled{ color: #FFB020; }
   .am-rating-star:hover{ color: #FFB020; }
   .am-rating-locked .am-rating-star{ cursor: default; }
+  .assistant-chat-thread{ display: flex; flex-direction: column; padding-bottom: 4px; }
+  .assistant-chat-thread .am-chat-bubble{ max-width: 100%; margin-bottom: 10px; }
 
   .comp-group-students{ grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); display: grid; gap: 2px; }
 
@@ -2291,6 +2293,7 @@
           <button class="dash-tab-btn" data-dashtab="tabLeaderboard">🏆 Leaderboard</button>
           <button class="dash-tab-btn" data-dashtab="tabExams">📝 Exams</button>
           <button class="dash-tab-btn" data-dashtab="tabMistakes">🧾 Mistake History</button>
+          <button class="dash-tab-btn" data-dashtab="tabAssistantChat" id="assistantChatTabBtn">💬 My Assistant Chat</button>
           <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
           <button class="dash-tab-btn" data-dashtab="tabPlanner">🧠 Study Planner</button>
           <button class="dash-tab-btn" data-dashtab="tabCompetition" id="competitionTabBtn" style="display:none;">⭐ Champions League</button>
@@ -2441,6 +2444,14 @@
           <div class="hw-section-title" id="allMistakesTitle">All mistakes</div>
           <div class="hw-list" id="mistakeHistoryList">
             <div class="admin-empty">No mistakes yet.</div>
+          </div>
+        </div>
+
+        <div class="dash-tab-panel" id="tabAssistantChat">
+          <div class="hw-section-title">💬 My Assistant Chat</div>
+          <p style="color:var(--muted); font-size:0.86rem; margin:-10px 0 18px;">Every question your coach has explained for you, with your own explanation attached — rate any one to let them know how it helped.</p>
+          <div id="assistantChatList" style="display:flex; flex-direction:column; gap:16px;">
+            <div class="admin-empty" id="assistantChatEmpty">No answered mistakes yet — once your coach explains one of your wrong answers, it'll show up here.</div>
           </div>
         </div>
 
@@ -6390,7 +6401,10 @@
     if(!examId) return null;
     const exam = await dbGet('exams', examId);
     if(!exam) return null;
-    const attempts = await fetchAllAttempts();
+    // Only score-level fields are used below — never the per-question
+    // results — so the lightweight index avoids downloading every
+    // attempt's full image-laden results just to check a score.
+    const attempts = await fetchAttemptsIndex();
     const uname = username.trim().toLowerCase();
     const mine = attempts.filter(a =>
       (a.username||'').trim().toLowerCase() === uname && a.examTitle === exam.title
@@ -7947,6 +7961,189 @@
       `;
       item.querySelector('button').addEventListener('click', ()=> openQuestionView(row));
       list.appendChild(item);
+    });
+  }
+
+  // A dedicated page for the student to browse every mistake their coach
+  // has actually explained — question and answer together as one thread,
+  // most recently answered first, with the same rating widget used
+  // elsewhere so rating works consistently everywhere it appears.
+  async function renderAssistantChatList(){
+    if(!currentStudent) return;
+    const list = document.getElementById('assistantChatList');
+    const emptyState = document.getElementById('assistantChatEmpty');
+    const rows = await gatherAllMistakeRows(currentStudent.username);
+    const answered = rows.filter(r => r.status === 'answered' && r.answer);
+    answered.sort((a,b)=> new Date(b.answer.answeredAt || b.ts || 0) - new Date(a.answer.answeredAt || a.ts || 0));
+
+    list.querySelectorAll('.assistant-chat-thread').forEach(el => el.remove());
+
+    if(answered.length === 0){ emptyState.style.display = 'block'; return; }
+    emptyState.style.display = 'none';
+
+    answered.forEach(row=>{
+      const thread = document.createElement('div');
+      thread.className = 'assistant-chat-thread';
+
+      const followUpBubbleHtml = row.studentFollowUp ? `
+        <div class="am-chat-bubble" style="margin-top:10px;">
+          <div class="bubble-label">You asked${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
+          ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
+          ${row.studentFollowUp.photoUrl ? `<img src="${esc(row.studentFollowUp.photoUrl)}" alt="Your photo">` : ''}
+          ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
+        </div>
+      ` : '';
+
+      const askToolsHtml = !row.studentFollowUp ? `
+        <div class="am-answer-tools ask-followup-tools" style="margin-top:10px;">
+          <textarea class="ask-followup-text" placeholder="Still confused? Ask a follow-up question…"></textarea>
+          <input type="file" accept="image/*" class="ask-followup-photo-input" style="display:none;">
+          <button type="button" class="am-tool-btn ask-followup-photo-btn">📷 Add photo</button>
+          <button type="button" class="am-tool-btn ask-followup-voice-btn">🎤 Record voice</button>
+          <button type="button" class="btn btn-primary ask-followup-send-btn">Ask</button>
+        </div>
+        <div class="ask-followup-attachments" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;"></div>
+      ` : '';
+
+      thread.innerHTML = `
+        <div class="am-chat-bubble">
+          <div class="bubble-label">${esc(row.lesson)} · ${esc(row.source)}</div>
+          ${row.image ? `<img src="${esc(row.image)}" alt="Question">` : ''}
+          ${row.text ? `<div>${esc(row.text)}</div>` : ''}
+        </div>
+        <div class="am-chat-bubble answer-bubble">
+          <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'your coach')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
+          ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
+          ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+          ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
+          <div style="margin-top:12px;">
+            <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">${row.studentRating ? 'Your rating:' : 'How helpful was this?'}</div>
+            <div class="am-rating-stars ${row.studentRating ? 'am-rating-locked' : ''}" data-mistake-id="${esc(row.id || '')}">
+              ${[1,2,3,4,5].map(n => `<button type="button" class="am-rating-star ${row.studentRating >= n ? 'filled' : ''}" data-star="${n}">★</button>`).join('')}
+            </div>
+          </div>
+        </div>
+        ${followUpBubbleHtml}
+        ${askToolsHtml}
+      `;
+      list.appendChild(thread);
+
+      if(!row.studentRating){
+        thread.querySelectorAll('.am-rating-star').forEach(starBtn=>{
+          starBtn.addEventListener('click', async ()=>{
+            const stars = parseInt(starBtn.dataset.star, 10);
+            const record = await dbGet('mistakes', row.id);
+            if(record){
+              await dbSet('mistakes', row.id, { ...record, studentRating: stars });
+              invalidateDbCache('mistakes');
+              renderAssistantChatList(); // full re-render so the rating locks in visually
+            }
+          });
+        });
+      }
+
+      if(!row.studentFollowUp){
+        // Scoped to THIS thread only — using a closure variable per thread
+        // (not a shared/global one) since several threads with their own
+        // independent attach-and-send state render on screen at once here.
+        let pendingPhoto = null;
+        let pendingVoice = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+
+        const photoInput = thread.querySelector('.ask-followup-photo-input');
+        const photoBtn = thread.querySelector('.ask-followup-photo-btn');
+        const voiceBtn = thread.querySelector('.ask-followup-voice-btn');
+        const sendBtn = thread.querySelector('.ask-followup-send-btn');
+        const textInput = thread.querySelector('.ask-followup-text');
+        const attachmentsWrap = thread.querySelector('.ask-followup-attachments');
+
+        function renderAttachmentPreviews(){
+          attachmentsWrap.innerHTML = '';
+          if(pendingPhoto){
+            const el = document.createElement('div');
+            el.className = 'am-attachment-preview';
+            el.innerHTML = `📷 Photo attached <button type="button">✕</button>`;
+            el.querySelector('button').addEventListener('click', ()=>{ pendingPhoto = null; renderAttachmentPreviews(); });
+            attachmentsWrap.appendChild(el);
+          }
+          if(pendingVoice){
+            const el = document.createElement('div');
+            el.className = 'am-attachment-preview';
+            el.innerHTML = `🎤 Voice recorded <audio controls style="height:28px;"></audio> <button type="button">✕</button>`;
+            el.querySelector('audio').src = pendingVoice.previewUrl;
+            el.querySelector('button').addEventListener('click', ()=>{ pendingVoice = null; renderAttachmentPreviews(); });
+            attachmentsWrap.appendChild(el);
+          }
+        }
+
+        photoBtn.addEventListener('click', ()=> photoInput.click());
+        photoInput.addEventListener('change', (e)=>{
+          const file = e.target.files[0];
+          if(!file) return;
+          pendingPhoto = { file, previewUrl: URL.createObjectURL(file) };
+          renderAttachmentPreviews();
+        });
+
+        voiceBtn.addEventListener('click', async ()=>{
+          if(mediaRecorder && mediaRecorder.state === 'recording'){
+            mediaRecorder.stop();
+            voiceBtn.textContent = '🎤 Record voice';
+            voiceBtn.classList.remove('recording');
+            return;
+          }
+          try{
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            recordedChunks = [];
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (e)=> recordedChunks.push(e.data);
+            mediaRecorder.onstop = ()=>{
+              const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+              pendingVoice = { blob, previewUrl: URL.createObjectURL(blob) };
+              renderAttachmentPreviews();
+              stream.getTracks().forEach(t => t.stop());
+            };
+            mediaRecorder.start();
+            voiceBtn.textContent = '⏹ Stop recording';
+            voiceBtn.classList.add('recording');
+          }catch(err){
+            alert('Could not access your microphone — check your browser permissions and try again.');
+          }
+        });
+
+        sendBtn.addEventListener('click', async ()=>{
+          const text = textInput.value.trim();
+          if(!text && !pendingPhoto && !pendingVoice){
+            alert('Type a question, add a photo, or record your voice before sending.');
+            return;
+          }
+          sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+          try{
+            let photoUrl = null, voiceUrl = null;
+            if(pendingPhoto){
+              photoUrl = await uploadMistakeAnswerFile(pendingPhoto.file, (pendingPhoto.file.name.split('.').pop() || 'jpg'), pendingPhoto.file.type || 'image/jpeg');
+            }
+            if(pendingVoice){
+              voiceUrl = await uploadMistakeAnswerFile(pendingVoice.blob, 'webm', 'audio/webm');
+            }
+            const studentFollowUp = { text: text || null, photoUrl, voiceUrl, askedAt: new Date().toISOString() };
+            const record = await dbGet('mistakes', row.id);
+            if(record){
+              const ok = await dbSet('mistakes', row.id, { ...record, studentFollowUp });
+              if(ok){
+                invalidateDbCache('mistakes');
+                renderAssistantChatList();
+              } else {
+                alert('Could not send — check your connection and try again.');
+                sendBtn.disabled = false; sendBtn.textContent = 'Ask';
+              }
+            }
+          }catch(err){
+            alert(err.message || 'Could not upload — try again.');
+            sendBtn.disabled = false; sendBtn.textContent = 'Ask';
+          }
+        });
+      }
     });
   }
 
@@ -9663,6 +9860,7 @@
       if(btn.dataset.dashtab === 'tabSkills') renderStudentSkills();
       if(btn.dataset.dashtab === 'tabHw'){ renderStudentHomework(); renderWeakPoints(); }
       if(btn.dataset.dashtab === 'tabMistakes') renderMistakeHistory();
+      if(btn.dataset.dashtab === 'tabAssistantChat') renderAssistantChatList();
       if(btn.dataset.dashtab === 'tabGraph' && typeof drawGraph === 'function') drawGraph();
       if(btn.dataset.dashtab === 'tabPlanner') renderStudyPlanner();
       if(btn.dataset.dashtab === 'tabCompetition'){ invalidateDbCache('competitions'); renderStudentCompetitionSection(); }
@@ -9931,6 +10129,7 @@
       correctText: (m.options && m.correctAnswer != null) ? (m.options[m.correctAnswer] ?? '—') : '—',
       retakenOverride: m.retakenOverride,
       status: m.status || 'delivered', answer: m.answer || null, studentRating: m.studentRating || null,
+      studentFollowUp: m.studentFollowUp || null,
       ts: m.ts
     }));
 
@@ -10213,11 +10412,13 @@
       if(i === row.chosenAnswer){ cls = 'chosen-wrong'; tag = `<span class="qview-tag chosen-wrong">${esc(row.username)} chose</span>`; }
       if(i === row.correctAnswer){ cls = (cls ? cls + ' ' : '') + 'is-correct'; tag = (tag ? tag + ' ' : '') + `<span class="qview-tag is-correct">Correct</span>`; }
       const optImg = row.optionImages && row.optionImages[i];
+      const hasText = opt && opt.trim();
+      const fallbackLabel = !hasText && !optImg ? `<span style="color:var(--muted);font-style:italic;">(Option ${String.fromCharCode(65+i)} — no content saved)</span>` : '';
       const bodyHtml = optImg
-        ? `<img src="${optImg}" alt="Option ${i+1}" style="max-width:140px;max-height:90px;border-radius:6px;object-fit:contain;vertical-align:middle;">${opt ? ` <span>${esc(opt)}</span>` : ''}`
-        : `<span>${esc(opt)}</span>`;
+        ? `<img src="${optImg}" alt="Option ${i+1}" style="max-width:140px;max-height:90px;border-radius:6px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">${hasText ? ` <span>${esc(opt)}</span>` : ''}`
+        : (hasText ? `<span>${esc(opt)}</span>` : fallbackLabel);
       return `<div class="qview-option ${cls}"><span style="flex:1;">${bodyHtml}</span>${tag}</div>`;
-    }).join('');
+    }).join('') || `<div style="color:var(--ember);font-style:italic;padding:10px 0;">⚠ No answer choices were saved for this question.</div>`;
 
     content.innerHTML = `
       <div class="eyebrow" style="margin-bottom:14px;">${esc(row.source || '')} · ${esc(row.lesson)}${row.questionNumber ? ` · Question ${row.questionNumber}${row.questionTotal ? ` of ${row.questionTotal}` : ''}` : ''}</div>
@@ -10353,6 +10554,7 @@
       card.className = 'am-mistake-card';
       card.innerHTML = `
         <span class="am-status-badge ${row.status === 'answered' ? 'answered' : 'delivered'}">${row.status === 'answered' ? '✅ Done' : '🔵 Delivered'}</span>
+        ${row.studentFollowUp ? `<span class="am-status-badge delivered" style="background:rgba(255,176,32,0.14);color:#FFB020;border-color:rgba(255,176,32,0.35);">💬 Follow-up</span>` : ''}
         <div class="am-card-info">
           <div class="name">${esc(row.username)} · ${esc(row.lesson)}</div>
           <div class="snippet">${esc(row.text)}</div>
@@ -10389,13 +10591,19 @@
       const isChosen = i === row.chosenAnswer;
       const isCorrect = i === row.correctAnswer;
       const optImg = row.optionImages && row.optionImages[i];
+      // An option can have neither text nor a working image (a broken or
+      // deleted storage link, or just genuinely no content saved) — without
+      // a fallback that option renders as a totally blank box, which looks
+      // exactly like "the choices aren't visible."
+      const hasText = opt && opt.trim();
+      const fallbackLabel = !hasText && !optImg ? `<span style="color:var(--muted);font-style:italic;">(Option ${String.fromCharCode(65+i)} — no content saved)</span>` : '';
       return `
         <div style="padding:8px 12px;margin:4px 0;border-radius:8px;background:${isCorrect ? 'rgba(57,217,138,0.12)' : (isChosen ? 'rgba(255,107,74,0.12)' : 'var(--ink)')};">
-          ${optImg ? `<img src="${optImg}" style="max-width:120px;border-radius:6px;display:block;margin-bottom:4px;">` : ''}
-          ${opt ? esc(opt) : ''} ${isCorrect ? ' ✓' : ''}${isChosen && !isCorrect ? ' (their answer)' : ''}
+          ${optImg ? `<img src="${optImg}" style="max-width:120px;border-radius:6px;display:block;margin-bottom:4px;" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
+          ${hasText ? esc(opt) : fallbackLabel} ${isCorrect ? ' ✓' : ''}${isChosen && !isCorrect ? ' (their answer)' : ''}
         </div>
       `;
-    }).join('');
+    }).join('') || `<div style="color:var(--ember);font-style:italic;padding:10px 0;">⚠ No answer choices were saved for this question.</div>`;
 
     const answerBubbleHtml = row.answer ? `
       <div class="am-chat-bubble answer-bubble">
@@ -10404,6 +10612,15 @@
         ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
         ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
         ${row.studentRating ? `<div style="margin-top:10px;color:var(--muted);font-size:0.85rem;">Student rated this: ${'⭐'.repeat(row.studentRating)}</div>` : `<div style="margin-top:10px;color:var(--muted);font-size:0.82rem;font-style:italic;">Not rated by the student yet.</div>`}
+      </div>
+    ` : '';
+
+    const studentFollowUpHtml = row.studentFollowUp ? `
+      <div class="am-chat-bubble" style="margin-top:10px;">
+        <div class="bubble-label">${esc(row.username)} followed up${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
+        ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
+        ${row.studentFollowUp.photoUrl ? `<img src="${esc(row.studentFollowUp.photoUrl)}" alt="Student's photo">` : ''}
+        ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
       </div>
     ` : '';
 
@@ -10426,6 +10643,7 @@
         ${optionsHtml}
       </div>
       ${answerBubbleHtml}
+      ${studentFollowUpHtml}
       ${answerToolsHtml}
     `;
 
