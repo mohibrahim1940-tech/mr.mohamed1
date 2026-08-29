@@ -1484,7 +1484,7 @@
   }
   #assistantDashTitle{ padding:72px 24px 0; font-size:1.6rem; }
   #assistantDashModal p{ padding:0 24px; }
-  #assistantDashContent{ flex:1; overflow-y:auto; padding:20px 24px 48px; max-height:none !important; }
+  #assistantDashContent, #asdMistakesContent{ flex:1; overflow-y:auto; padding:20px 24px 48px; max-height:none !important; }
   @media(min-width:640px){
     #assistantDashTitle{ padding-top:80px; }
   }
@@ -2780,8 +2780,13 @@
   <div class="modal-box">
     <button class="modal-close" id="closeAssistantDashModal" aria-label="Close">×</button>
     <h3 style="margin-bottom:4px;" id="assistantDashTitle">Welcome</h3>
-    <p style="color:var(--muted); font-size:0.86rem; margin-bottom:20px;">Your assigned students — progress, scores, and mistakes.</p>
+    <p style="color:var(--muted); font-size:0.86rem; margin-bottom:16px;">Your assigned students — progress, scores, and mistakes.</p>
+    <div class="admin-actions" style="margin-bottom:16px;">
+      <button class="btn btn-primary" id="asdShowProgressBtn">📊 Student Progress</button>
+      <button class="btn btn-ghost" id="asdShowMistakesBtn">💬 Answer Mistakes</button>
+    </div>
     <div id="assistantDashContent" style="max-height:65vh; overflow-y:auto;"></div>
+    <div id="asdMistakesContent" style="max-height:65vh; overflow-y:auto; display:none;"></div>
   </div>
 </div>
 
@@ -9582,6 +9587,12 @@
     const content = document.getElementById('assistantDashContent');
     content.innerHTML = '<div class="admin-empty">Loading…</div>';
     document.getElementById('assistantDashModal').classList.add('open');
+    // Always reset to the Progress view on open, regardless of which view
+    // was showing last time this modal was closed.
+    document.getElementById('asdShowProgressBtn').classList.replace('btn-ghost', 'btn-primary');
+    document.getElementById('asdShowMistakesBtn').classList.replace('btn-primary', 'btn-ghost');
+    content.style.display = 'block';
+    document.getElementById('asdMistakesContent').style.display = 'none';
 
     const fresh = await getAssistantAccount(currentAssistantAccount.username);
     if(fresh) currentAssistantAccount = fresh;
@@ -9608,7 +9619,7 @@
       // Pending mistakes = not yet answered through the Answer Mistakes
       // workflow — the notification badge that actually matters here.
       const mineMistakes = allMistakes.filter(m => !m._index && (m.username||'').trim().toLowerCase() === uname);
-      const pendingMistakes = mineMistakes.filter(m => (m.status || 'delivered') !== 'answered').length;
+      const pendingMistakes = mineMistakes.filter(m => isMistakeInAssistantQueue(m) && m.status !== 'answered').length;
       const mineAsksCount = allAsks.filter(a => (a.username||'').trim().toLowerCase() === uname).length;
       return {
         username: displayName, uname, course: student ? student.course : null,
@@ -9670,6 +9681,91 @@
       card.addEventListener('click', ()=> openStudentAnalysis(card.dataset.username));
     });
   }
+
+  // Same assigned-student list as the progress view, but organized around
+  // mistakes specifically — each one clickable to open and answer right
+  // here, reusing the exact same answer interface (text/photo/voice) the
+  // main admin panel's Answer Mistakes tab already uses.
+  async function renderAssistantMistakesBoxes(){
+    if(!currentAssistantAccount) return;
+    const container = document.getElementById('asdMistakesContent');
+    container.innerHTML = '<div class="admin-empty">Loading…</div>';
+    const assigned = currentAssistantAccount.assignedStudents || [];
+    if(assigned.length === 0){
+      container.innerHTML = '<div class="admin-empty">No students assigned to you yet — ask Mr. Mohamed Ibrahim to assign some in the admin panel.</div>';
+      return;
+    }
+
+    const allMistakes = await gatherAllMistakeRows(null);
+    const byStudent = {};
+    assigned.forEach(u => { byStudent[u] = []; });
+    allMistakes.filter(isMistakeInAssistantQueue).forEach(m=>{
+      const match = assigned.find(u => u.trim().toLowerCase() === (m.username||'').trim().toLowerCase());
+      if(match) byStudent[match].push(m);
+    });
+    // Pending mistakes first within each box, most recent first within each group
+    Object.keys(byStudent).forEach(u=>{
+      byStudent[u].sort((a,b)=>{
+        const aPending = a.status !== 'answered', bPending = b.status !== 'answered';
+        if(aPending !== bPending) return aPending ? -1 : 1;
+        return new Date(b.ts || 0) - new Date(a.ts || 0);
+      });
+    });
+
+    container.innerHTML = `
+      <div class="asd-grid">
+        ${assigned.map(uname=>{
+          const mistakes = byStudent[uname] || [];
+          const pendingCount = mistakes.filter(m => m.status !== 'answered').length;
+          return `
+            <div class="asd-card" style="cursor:default;">
+              <div class="asd-card-header">
+                <div class="asd-card-name">${esc(uname)}</div>
+                ${pendingCount > 0 ? `<span class="asd-notif-badge mistakes">🔴 ${pendingCount}</span>` : (mistakes.length > 0 ? `<span class="am-status-badge answered">✅ All answered</span>` : '')}
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+                ${mistakes.length === 0
+                  ? `<div style="color:var(--muted);font-size:0.82rem;">✅ Nothing to answer right now.</div>`
+                  : mistakes.map(m => `
+                    <div class="am-mistake-card asd-mistake-row" data-mistake-id="${esc(m.id)}" style="padding:10px 12px;">
+                      <span class="am-status-badge ${m.status === 'answered' ? 'answered' : 'delivered'}">${m.status === 'answered' ? '✅' : '🔵'}</span>
+                      <div class="am-card-info">
+                        <div class="snippet">${esc(m.lesson)} · ${esc(m.text)}</div>
+                      </div>
+                    </div>
+                  `).join('')
+                }
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    container.querySelectorAll('.asd-mistake-row').forEach(row=>{
+      row.addEventListener('click', ()=>{
+        openAmDetail(row.dataset.mistakeId, {
+          containerId: 'asdMistakesContent',
+          skipListToggle: true,
+          onBack: renderAssistantMistakesBoxes
+        });
+      });
+    });
+  }
+
+  document.getElementById('asdShowProgressBtn').addEventListener('click', ()=>{
+    document.getElementById('asdShowProgressBtn').classList.replace('btn-ghost', 'btn-primary');
+    document.getElementById('asdShowMistakesBtn').classList.replace('btn-primary', 'btn-ghost');
+    document.getElementById('assistantDashContent').style.display = 'block';
+    document.getElementById('asdMistakesContent').style.display = 'none';
+  });
+  document.getElementById('asdShowMistakesBtn').addEventListener('click', ()=>{
+    document.getElementById('asdShowMistakesBtn').classList.replace('btn-ghost', 'btn-primary');
+    document.getElementById('asdShowProgressBtn').classList.replace('btn-primary', 'btn-ghost');
+    document.getElementById('assistantDashContent').style.display = 'none';
+    document.getElementById('asdMistakesContent').style.display = 'block';
+    renderAssistantMistakesBoxes();
+  });
 
   document.querySelectorAll('.open-auth-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -10128,7 +10224,7 @@
       chosenText: (m.options && m.chosenAnswer != null) ? (m.options[m.chosenAnswer] ?? '—') : '—',
       correctText: (m.options && m.correctAnswer != null) ? (m.options[m.correctAnswer] ?? '—') : '—',
       retakenOverride: m.retakenOverride,
-      status: m.status || 'delivered', answer: m.answer || null, studentRating: m.studentRating || null,
+      status: m.status || null, answer: m.answer || null, studentRating: m.studentRating || null,
       studentFollowUp: m.studentFollowUp || null,
       ts: m.ts
     }));
@@ -10514,6 +10610,20 @@
   /* ---------------- ANSWER MISTAKES (assistant chat-style answer workflow) ---------------- */
   let amCurrentFilter = 'needs';
 
+  // Whether a mistake belongs in the assistant/admin Answer Mistakes queue
+  // at all. Two things take a mistake out of the queue entirely, not just
+  // out of the default view: (1) it predates this feature (no status field
+  // was ever set on it — genuinely impossible to distinguish from "just
+  // hasn't been answered yet" without this), and (2) it's been fully
+  // resolved — answered AND rated by the student, with no follow-up
+  // question waiting. A follow-up always brings it back regardless of
+  // rating, since that's the student asking for more help.
+  function isMistakeInAssistantQueue(row){
+    if(row.status === null || row.status === undefined) return false;
+    const isResolved = row.status === 'answered' && row.studentRating && !row.studentFollowUp;
+    return !isResolved;
+  }
+
   function amShowView(view){
     document.getElementById('amListView').style.display = view === 'list' ? 'block' : 'none';
     document.getElementById('amDetailView').style.display = view === 'detail' ? 'block' : 'none';
@@ -10533,6 +10643,12 @@
       const assigned = new Set((currentAssistantAccount.assignedStudents || []).map(s => s.trim().toLowerCase()));
       rows = rows.filter(r => assigned.has((r.username||'').trim().toLowerCase()));
     }
+    // Takes legacy (pre-feature) mistakes and fully-resolved ones (answered,
+    // rated, no follow-up) out of the queue entirely — they were clogging
+    // this view with thousands of records nobody could realistically work
+    // through, and a resolved mistake with no open question doesn't need
+    // anyone's attention anymore.
+    rows = rows.filter(isMistakeInAssistantQueue);
 
     const needsCount = rows.filter(r => r.status !== 'answered').length;
     const counterEl = document.getElementById('amCounter');
@@ -10579,13 +10695,14 @@
   let amMediaRecorder = null;
   let amRecordedChunks = [];
 
-  async function openAmDetail(mistakeId){
+  async function openAmDetail(mistakeId, opts = {}){
+    const containerId = opts.containerId || 'amDetailContent';
     const rows = await gatherAllMistakeRows(null);
     const row = rows.find(r => r.id === mistakeId);
     if(!row){ alert('Could not load that mistake — please try again.'); return; }
     amPendingPhoto = null;
     amPendingVoice = null;
-    amShowView('detail');
+    if(!opts.skipListToggle) amShowView('detail');
 
     const optionsHtml = (row.options || []).map((opt, i)=>{
       const isChosen = i === row.chosenAnswer;
@@ -10635,7 +10752,8 @@
       <div id="amAttachmentsWrap" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;"></div>
     ` : '';
 
-    document.getElementById('amDetailContent').innerHTML = `
+    document.getElementById(containerId).innerHTML = `
+      ${opts.onBack ? `<button class="btn btn-ghost" id="amDetailBackBtn" style="margin-bottom:16px;">← Back</button>` : ''}
       <div class="am-chat-bubble">
         <div class="bubble-label">${esc(row.username)} · ${esc(row.lesson)} · ${esc(row.source)}</div>
         ${row.image ? `<img src="${esc(row.image)}" alt="Question">` : ''}
@@ -10646,6 +10764,10 @@
       ${studentFollowUpHtml}
       ${answerToolsHtml}
     `;
+
+    if(opts.onBack){
+      document.getElementById('amDetailBackBtn').addEventListener('click', opts.onBack);
+    }
 
     if(!row.answer){
       const photoInput = document.getElementById('amPhotoInput');
@@ -10709,7 +10831,8 @@
           const ok = await dbSet('mistakes', mistakeId, { ...(await dbGet('mistakes', mistakeId)), status: 'answered', answer });
           if(ok){
             invalidateDbCache('mistakes');
-            openAmDetail(mistakeId);
+            await openAmDetail(mistakeId, opts);
+            if(typeof opts.onSent === 'function') opts.onSent();
           } else {
             alert('Could not save — check your connection and try again.');
             sendBtn.disabled = false; sendBtn.textContent = 'Send answer';
