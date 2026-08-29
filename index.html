@@ -167,6 +167,12 @@
     .nav-links.open{transform:translateY(0);}
     .menu-toggle{display:block;}
     .nav-cta .btn-ghost{display:none;}
+    /* These are already duplicated inside .nav-links (the hamburger
+       dropdown) — showing them here too was what pushed the hamburger
+       toggle itself off the right edge of the screen on real phone
+       widths, making the menu impossible to open. */
+    .nav-cta > a{display:none;}
+    .nav-cta .btn-primary{display:none;}
   }
 
   /* ---------- hero ---------- */
@@ -710,6 +716,106 @@
   .course-toggle-btn.active{ border-color: var(--signal); color: #fff; background: rgba(76,111,255,0.16); }
   .course-toggle-btn.locked{ opacity: 0.35; cursor: not-allowed; pointer-events: none; }
   .skill-course-filter-btn.active{ border-color: var(--signal); color: #fff; background: rgba(76,111,255,0.16); }
+
+  /* ---------- Competition match theme (half-time / full-time / yellow cards) ---------- */
+  .match-scoreboard{
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: linear-gradient(135deg, #0d3320, #0a2818);
+    border: 1px solid rgba(76,217,138,0.35); border-radius: 10px;
+    padding: 10px 16px; margin-bottom: 14px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; color: #E8ECFF;
+  }
+  .match-clock{ font-weight: 700; color: #4CD98A; }
+  .match-half-label{ letter-spacing: 1px; color: #9AD9BB; font-size: 0.75rem; }
+  .match-cards{ display: flex; align-items: center; gap: 6px; font-weight: 700; color: #FFD84D; }
+  .match-card-icon{ display: inline-block; width: 12px; height: 16px; background: #FFD84D; border-radius: 2px; box-shadow: 0 0 4px rgba(255,216,77,0.6); }
+  .exam-option.correct-flash{ animation: correctFlash 0.6s ease; }
+  @keyframes correctFlash{ 0%{ background: rgba(76,217,138,0.35); } 100%{ background: transparent; } }
+
+  .yellow-card-toast{
+    position: absolute; top: 20px; right: 20px; z-index: 50;
+    display: flex; align-items: center; gap: 8px;
+    background: #1a1408; border: 1px solid #FFD84D; border-radius: 10px;
+    padding: 10px 16px; color: #FFD84D; font-weight: 700; font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    opacity: 0; transform: translateY(-10px) scale(0.95);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 4px 20px rgba(255,216,77,0.25);
+  }
+  .yellow-card-toast.show{ opacity: 1; transform: translateY(0) scale(1); }
+  .yellow-card-toast .yellow-card-icon{ display: inline-block; width: 14px; height: 19px; background: #FFD84D; border-radius: 2px; flex-shrink: 0; }
+
+  .halftime-screen, .fulltime-banner{
+    text-align: center; padding: 40px 20px;
+    background: radial-gradient(ellipse at top, #0d3320, #05130c 70%);
+    border-radius: 16px; border: 1px solid rgba(76,217,138,0.3);
+    margin-bottom: 20px;
+  }
+  .halftime-whistle, .fulltime-whistle{ font-size: 2.4rem; margin-bottom: 8px; }
+  .halftime-screen h2, .fulltime-banner h2{
+    font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: #fff; margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(76,217,138,0.5);
+  }
+  .halftime-stats, .fulltime-report{ display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; }
+  .halftime-stat, .fulltime-stat{ display: flex; flex-direction: column; align-items: center; }
+  .halftime-stat .num, .fulltime-stat .num{ font-size: 1.8rem; font-weight: 800; color: #4CD98A; font-family: 'IBM Plex Mono', monospace; }
+  .halftime-stat .label, .fulltime-stat .label{ font-size: 0.72rem; letter-spacing: 1px; color: #9AD9BB; text-transform: uppercase; margin-top: 2px; }
+
+  /* ---------- Answer Mistakes (assistant chat-style answer workflow) ---------- */
+  .am-counter{
+    display: inline-block; margin: 10px 0 14px; padding: 8px 16px; border-radius: 20px;
+    background: rgba(255,176,32,0.12); border: 1px solid rgba(255,176,32,0.4);
+    color: #FFB020; font-weight: 700; font-size: 0.86rem;
+  }
+  .am-counter.all-done{ background: rgba(57,217,138,0.12); border-color: rgba(57,217,138,0.4); color: #39D98A; }
+  .am-mistake-card{
+    display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; cursor: pointer;
+    transition: border-color .15s;
+  }
+  .am-mistake-card:hover{ border-color: rgba(255,255,255,0.3); }
+  .am-status-badge{
+    flex-shrink: 0; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px;
+  }
+  .am-status-badge.delivered{ background: rgba(76,111,255,0.14); color: var(--signal); border: 1px solid rgba(76,111,255,0.35); }
+  .am-status-badge.answered{ background: rgba(57,217,138,0.14); color: #39D98A; border: 1px solid rgba(57,217,138,0.35); }
+  .am-card-info{ flex: 1; min-width: 0; }
+  .am-card-info .name{ font-weight: 600; margin-bottom: 3px; }
+  .am-card-info .snippet{ color: var(--muted); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .am-chat-bubble{
+    max-width: 640px; padding: 16px 18px; border-radius: 14px; margin-bottom: 16px;
+    background: var(--panel); border: 1px solid var(--line);
+  }
+  .am-chat-bubble.answer-bubble{ background: rgba(76,111,255,0.08); border-color: rgba(76,111,255,0.3); margin-left: auto; }
+  .am-chat-bubble .bubble-label{ font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .am-chat-bubble img{ max-width: 100%; border-radius: 8px; margin-top: 8px; }
+  .am-chat-bubble audio{ width: 100%; margin-top: 8px; }
+
+  .am-answer-tools{
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-top: 20px;
+  }
+  .am-answer-tools textarea{
+    flex: 1; min-width: 200px; min-height: 44px; padding: 10px 12px; border-radius: 8px;
+    background: var(--ink); border: 1px solid var(--line); color: var(--text); font-family: inherit; resize: vertical;
+  }
+  .am-tool-btn{
+    padding: 10px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--ink);
+    color: var(--muted); cursor: pointer; font-size: 0.85rem; white-space: nowrap;
+  }
+  .am-tool-btn:hover{ border-color: rgba(255,255,255,0.3); color: var(--text); }
+  .am-tool-btn.recording{ border-color: var(--ember); color: var(--ember); background: rgba(255,107,74,0.1); animation: amPulse 1.2s ease-in-out infinite; }
+  @keyframes amPulse{ 0%,100%{ opacity: 1; } 50%{ opacity: 0.5; } }
+  .am-attachment-preview{ display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--ink); border-radius: 8px; font-size: 0.8rem; color: var(--muted); }
+  .am-attachment-preview button{ background: none; border: none; color: var(--ember); cursor: pointer; font-size: 1rem; }
+
+  .am-rating-stars{ display: flex; gap: 4px; margin-top: 8px; }
+  .am-rating-star{ font-size: 1.3rem; cursor: pointer; color: rgba(255,255,255,0.2); transition: color .15s; background: none; border: none; padding: 0; }
+  .am-rating-star.filled{ color: #FFB020; }
+  .am-rating-star:hover{ color: #FFB020; }
+  .am-rating-locked .am-rating-star{ cursor: default; }
+
   .comp-group-students{ grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); display: grid; gap: 2px; }
 
   /* ---------- footer ---------- */
@@ -1357,6 +1463,52 @@
   @media(min-width:640px){
     #examModal #examPlayer{ padding:80px 40px 48px; }
   }
+
+  /* ---------- Assistant dashboard: fullscreen + modern card grid ---------- */
+  #assistantDashModal{ padding:0; }
+  #assistantDashModal .modal-box{
+    width:100%; height:100%; max-width:none; max-height:none;
+    border-radius:0; display:flex; flex-direction:column; padding:0;
+    background: radial-gradient(ellipse 1000px 500px at 50% -10%, rgba(76,111,255,0.08), transparent), var(--ink);
+  }
+  #assistantDashModal #closeAssistantDashModal{
+    top:20px; right:20px; width:40px; height:40px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--panel); border:1px solid var(--line); border-radius:50%;
+    font-size:1.4rem; z-index:2;
+  }
+  #assistantDashModal .modal-box > *:not(#closeAssistantDashModal){
+    width:100%; max-width:1100px; margin:0 auto; box-sizing:border-box;
+  }
+  #assistantDashTitle{ padding:72px 24px 0; font-size:1.6rem; }
+  #assistantDashModal p{ padding:0 24px; }
+  #assistantDashContent{ flex:1; overflow-y:auto; padding:20px 24px 48px; max-height:none !important; }
+  @media(min-width:640px){
+    #assistantDashTitle{ padding-top:80px; }
+  }
+
+  .asd-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:16px; }
+  .asd-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:20px; position:relative; cursor:pointer;
+    transition:border-color .15s, transform .15s;
+  }
+  .asd-card:hover{ border-color:rgba(76,111,255,0.4); transform:translateY(-2px); }
+  .asd-card-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .asd-card-name{ font-size:1.05rem; font-weight:700; }
+  .asd-notif-row{ display:flex; gap:6px; }
+  .asd-notif-badge{
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 9px; border-radius:20px; font-size:0.72rem; font-weight:700;
+  }
+  .asd-notif-badge.mistakes{ background:rgba(255,107,74,0.14); color:var(--ember); border:1px solid rgba(255,107,74,0.35); }
+  .asd-notif-badge.asks{ background:rgba(76,111,255,0.14); color:var(--signal); border:1px solid rgba(76,111,255,0.35); }
+  .asd-stat-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  .asd-stat{ background:var(--ink); border-radius:8px; padding:10px 12px; }
+  .asd-stat .num{ font-size:1.2rem; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+  .asd-stat .label{ font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+  .asd-card-footer{ color:var(--muted); font-size:0.78rem; }
+  .asd-retake-flag{ color:#FFB020; font-weight:600; }
   .exam-progress{
     height:4px;background:var(--line);border-radius:4px;
     margin-bottom:22px;overflow:hidden;
@@ -2614,7 +2766,7 @@
 <!-- ACADEMIC ASSISTANT DASHBOARD (shown after signing into an individual
      assistant account — separate from the shared-passcode full admin panel) -->
 <div class="modal-overlay" id="assistantDashModal">
-  <div class="modal-box exam-modal-box" style="max-width:760px;">
+  <div class="modal-box">
     <button class="modal-close" id="closeAssistantDashModal" aria-label="Close">×</button>
     <h3 style="margin-bottom:4px;" id="assistantDashTitle">Welcome</h3>
     <p style="color:var(--muted); font-size:0.86rem; margin-bottom:20px;">Your assigned students — progress, scores, and mistakes.</p>
@@ -2719,6 +2871,7 @@
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
       <button class="admin-tab" data-tab="competitionsPanel" data-roles="admin,act-admin">🏆 Competition</button>
       <button class="admin-tab" data-tab="mistakesPanel" data-roles="admin,assistant,act-admin">Mistakes</button>
+      <button class="admin-tab" data-tab="answerMistakesPanel" data-roles="admin,assistant,act-admin">💬 Answer Mistakes</button>
       <button class="admin-tab" data-tab="assistantAcctsPanel" data-roles="admin">Assistants</button>
       <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant,act-admin">Weekly Updates</button>
     </div>
@@ -2857,6 +3010,12 @@
         <label class="field-label">Questions</label>
         <div id="hwQuestionsContainer"></div>
         <button class="add-q-btn" id="addHwQuestionBtn" type="button">+ Add question</button>
+
+        <div class="field-row" style="margin-top:24px;">
+          <label class="field-label">Bulk import (paste questions here — e.g. from Claude)</label>
+          <textarea id="hwImportInput" placeholder='Paste a block like: [{"lesson":"Fractions","text":"1/2 + 1/2 = ?","options":["0","1","2","1/2"],"correct":1}, ...]' style="min-height:100px;"></textarea>
+          <button class="btn btn-ghost" id="importHwQuestionsBtn" type="button" style="margin-top:10px;">Import into questions above</button>
+        </div>
 
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveHwBtn">Assign homework</button>
@@ -3140,6 +3299,29 @@
       </div>
     </div>
 
+    <div class="admin-panel" id="answerMistakesPanel">
+      <div id="amListView">
+        <div class="admin-note">Every wrong answer, in one place to actually work through — pick one up, explain it with a photo, a voice note, or just text, and it's marked done for everyone to see.</div>
+        <div class="am-counter" id="amCounter"></div>
+        <div class="admin-actions">
+          <select id="amFilterSelect" style="max-width:220px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
+            <option value="needs">Needs an answer</option>
+            <option value="done">Already answered</option>
+            <option value="all">All</option>
+          </select>
+          <button class="btn btn-ghost" id="refreshAnswerMistakes">Refresh</button>
+        </div>
+        <div id="amListWrap" style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+          <div class="admin-empty" id="amListEmpty" style="display:none;">Nothing here right now.</div>
+        </div>
+      </div>
+
+      <div id="amDetailView" style="display:none;">
+        <button class="btn btn-ghost" id="backToAmListBtn" style="margin-bottom:16px;">← All mistakes</button>
+        <div id="amDetailContent"></div>
+      </div>
+    </div>
+
     <div class="admin-panel" id="assistantAcctsPanel">
       <div class="admin-note">Academic assistants with their own individual accounts — each one only sees the students you assign them, not the whole roster. (Separate from the shared assistant2026 passcode, which still grants full access to everything.)</div>
       <div class="admin-actions">
@@ -3279,6 +3461,20 @@
         questions that already have images embedded the old way keep
         working normally — the "Optimize existing images" button in
         the admin Exams tab converts those over once this bucket is set up.
+     5c. (Only needed for the "Answer mistakes" feature — assistants
+        answering a student's wrong question with a photo or voice
+        recording.) Same pattern again: Storage → "New bucket" → name
+        it exactly  mistake-answers  → toggle "Public bucket" ON →
+        Create. Then SQL Editor → New query → run:
+
+         create policy "public access mistake-answers"
+         on storage.objects for all
+         using (bucket_id = 'mistake-answers')
+         with check (bucket_id = 'mistake-answers');
+
+        Until this exists, uploading a photo or voice answer will show
+        a clear error explaining exactly this — typed text answers
+        still work fine either way, since those don't need file storage.
      6. (Only needed if you want academic assistants to have their own
         individual accounts, scoped to specific students, instead of
         sharing one passcode.) Go to SQL Editor → New query → paste
@@ -3750,12 +3946,24 @@
   const ADMIN_PASSCODE = 'ibrahim2026'; // demo only — replace with real auth
   const ASSISTANT_PASSCODE = 'assistant2026'; // separate, lower-access login for teaching assistants
   const ACT_ADMIN_PASSCODE = 'ACTWHANNA'; // same full admin capabilities as ADMIN_PASSCODE, but scoped to ACT students/content only
-  const ACT_ADMIN_COURSE = 'ACT Math Bootcamp';
+  // A category prefix, not one exact course name — covers every course whose
+  // name starts with "ACT" (e.g. "ACT Math Bootcamp", "ACT Science Prep"),
+  // so this login works even when there are multiple ACT-branded courses.
+  const ACT_ADMIN_COURSE = 'ACT';
   let currentAdminRole = null; // 'admin' | 'assistant' | 'act-admin'
   // The course this admin session is scoped to — null means no restriction
   // (sees everything). Read this wherever admin views list or create
   // students/content, so an ACT-only login never sees or touches EST/SAT data.
   let currentAdminCourseFilter = null;
+
+  // Whether a given course name belongs to the current admin's scoped
+  // category — a prefix match, not exact equality, so "ACT" correctly
+  // covers every course branded under that name, not just one specific one.
+  function courseInAdminScope(courseName){
+    if(!currentAdminCourseFilter) return true;
+    if(!courseName) return false;
+    return courseName.trim().toUpperCase().startsWith(currentAdminCourseFilter.trim().toUpperCase());
+  }
 
   // Auto-refreshes the Homework and Mistakes tabs every 30s while they're
   // the one actually open — without this, an admin who leaves the tab open
@@ -3981,6 +4189,7 @@
       if(tab.dataset.tab === 'coursesPanel'){ invalidateDbCache('courses'); renderAdminCourseList(); }
       if(tab.dataset.tab === 'competitionsPanel'){ invalidateDbCache('competitions'); showCompView('list'); renderCompetitionList(); }
       if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(true); }
+      if(tab.dataset.tab === 'answerMistakesPanel'){ invalidateDbCache('mistakes'); amShowView('list'); renderAnswerMistakesList(); }
       if(tab.dataset.tab === 'assistantAcctsPanel'){ invalidateDbCache('assistants'); renderAssistantAcctsTable(); }
       if(tab.dataset.tab === 'weeklyUpdatesPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); invalidateDbCache('students'); renderWeeklyUpdates(); }
     });
@@ -4061,6 +4270,28 @@
       throw new Error(uploadError.message || 'Upload failed');
     }
     const { data: publicUrlData } = supabaseClient.storage.from('explanation-videos').getPublicUrl(path);
+    return publicUrlData.publicUrl;
+  }
+
+  // Uploads a photo or voice recording an assistant attaches when
+  // answering a student's mistake. Same bucket for both since they're
+  // always part of the same "answer" and never need separate handling.
+  async function uploadMistakeAnswerFile(file, ext, contentType){
+    if(!storageAvailable()) throw new Error('Storage is not connected — see the SUPABASE SETUP comment near the top of this file.');
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: uploadError } = await supabaseClient.storage
+      .from('mistake-answers')
+      .upload(path, file, { contentType, upsert: false });
+    if(uploadError){
+      if(/bucket not found/i.test(uploadError.message || '')){
+        throw new Error('The "mistake-answers" storage bucket doesn\'t exist yet — create it in your Supabase dashboard first (see step 5c of the SUPABASE SETUP comment near the top of this file).');
+      }
+      if(/row-level security|row level security/i.test(uploadError.message || '')){
+        throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy). See step 5c of the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
+      }
+      throw new Error(uploadError.message || 'Upload failed');
+    }
+    const { data: publicUrlData } = supabaseClient.storage.from('mistake-answers').getPublicUrl(path);
     return publicUrlData.publicUrl;
   }
 
@@ -4543,7 +4774,7 @@
     editingExamId = null;
     examTitleInput.value = '';
     populateExamCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
-    document.getElementById('examCourseInput').disabled = (currentAdminRole === 'act-admin');
+    document.getElementById('examCourseInput').disabled = false; // populateExamCourseSelect already restricts options to ACT-scoped courses for this role
     examDescInput.value = '';
     document.getElementById('examTimeLimitInput').value = '';
     questionsContainer.innerHTML = '';
@@ -4593,7 +4824,7 @@
     editingExamId = exam.id;
     examTitleInput.value = exam.title;
     populateExamCourseSelect(exam.course || '');
-    document.getElementById('examCourseInput').disabled = (currentAdminRole === 'act-admin');
+    document.getElementById('examCourseInput').disabled = false; // populateExamCourseSelect already restricts options to ACT-scoped courses for this role
     examDescInput.value = exam.description || '';
     document.getElementById('examTimeLimitInput').value = exam.timeLimit || '';
     questionsContainer.innerHTML = '';
@@ -4606,7 +4837,7 @@
     const wrap = document.getElementById('examListWrap');
     const emptyState = document.getElementById('examListEmpty');
     let exams = await fetchExamsIndex();
-    if(currentAdminCourseFilter) exams = exams.filter(e => e.course === currentAdminCourseFilter);
+    if(currentAdminCourseFilter) exams = exams.filter(e => courseInAdminScope(e.course));
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
 
@@ -4955,11 +5186,18 @@
     if(e.target === examModal){ stopActiveTimer(); examModal.classList.remove('open'); }
   });
 
-  function startExam(exam){
+  function startExam(exam, matchMode){
     let current = 0;
     const answers = new Array(exam.questions.length).fill(null);
     const flagged = new Array(exam.questions.length).fill(false);
     let remainingSeconds = exam.timeLimit ? exam.timeLimit * 60 : null;
+    let yellowCards = 0;
+    const cardedQuestions = new Array(exam.questions.length).fill(false); // a card, once given for a question, sticks even if they later pick the right answer -- just like a real match
+    let halfTimeShown = false;
+    const halfwayPoint = Math.ceil(exam.questions.length / 2);
+
+    if(matchMode) examModal.classList.add('match-mode');
+    else examModal.classList.remove('match-mode');
 
     quizLocked = true;
     examModal.classList.add('quiz-locked');
@@ -4982,12 +5220,20 @@
     function renderQuestion(){
       const q = exam.questions[current];
       const progress = Math.round(((current) / exam.questions.length) * 100);
+      const matchMinute = Math.round(((current) / exam.questions.length) * 90);
       examPlayer.innerHTML = `
+        ${matchMode ? `
+          <div class="match-scoreboard">
+            <div class="match-clock">⏱ ${matchMinute}'</div>
+            <div class="match-half-label">${current < halfwayPoint ? '1ST HALF' : '2ND HALF'}</div>
+            <div class="match-cards">${yellowCards > 0 ? `<span class="match-card-icon"></span> × ${yellowCards}` : ''}</div>
+          </div>
+        ` : ''}
         ${remainingSeconds !== null ? `<div class="exam-timer"><span id="examTimerDisplay">${formatTimer(remainingSeconds)}</span></div>` : ''}
         <div class="exam-progress"><div class="exam-progress-fill" style="width:${progress}%"></div></div>
         <div id="qNavWrap"></div>
         <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-          <div class="exam-q-count">QUESTION ${current+1} OF ${exam.questions.length}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
+          <div class="exam-q-count">${matchMode ? `PLAY ${current+1} OF ${exam.questions.length}` : `QUESTION ${current+1} OF ${exam.questions.length}`}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
           <button type="button" class="flag-review-btn${flagged[current] ? ' active' : ''}" id="flagReviewBtn">🚩 ${flagged[current] ? 'Flagged for review' : 'Flag for review'}</button>
         </div>
         ${q.image ? `<img class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
@@ -5031,6 +5277,25 @@
           row.classList.add('selected');
           const currentNavBtn = document.querySelector('.q-nav-btn.current');
           if(currentNavBtn) currentNavBtn.classList.add('answered');
+          if(matchMode){
+            // Immediate feedback only in match mode — this is the one
+            // place the normal exam flow deliberately withholds
+            // correctness until the end, but a "yellow card" needs to
+            // happen the moment the wrong answer is picked to feel real.
+            // Only cards ONCE per question, even if they click multiple
+            // wrong options while changing their mind.
+            if(i !== q.correct){
+              if(!cardedQuestions[current]){
+                cardedQuestions[current] = true;
+                yellowCards++;
+                const cardsLabel = document.querySelector('.match-cards');
+                if(cardsLabel) cardsLabel.innerHTML = `<span class="match-card-icon"></span> × ${yellowCards}`;
+                showYellowCard();
+              }
+            } else {
+              row.classList.add('correct-flash');
+            }
+          }
         });
         optionsWrap.appendChild(row);
       });
@@ -5073,8 +5338,46 @@
       });
       document.getElementById('examNextBtn').addEventListener('click', async ()=>{
         if(current === exam.questions.length-1){ await renderScore(); }
+        else if(matchMode && !halfTimeShown && current + 1 === halfwayPoint && exam.questions.length >= 4){
+          halfTimeShown = true;
+          current++;
+          showHalfTime();
+        }
         else { current++; renderQuestion(); }
       });
+    }
+
+    // Brief toast in the corner when a wrong answer is picked — doesn't
+    // block the student, just flashes and fades so the "match" feel
+    // doesn't slow down actually answering questions.
+    function showYellowCard(){
+      const toast = document.createElement('div');
+      toast.className = 'yellow-card-toast';
+      toast.innerHTML = `<span class="yellow-card-icon"></span><span>YELLOW CARD</span>`;
+      examModal.appendChild(toast);
+      requestAnimationFrame(()=> toast.classList.add('show'));
+      setTimeout(()=>{
+        toast.classList.remove('show');
+        setTimeout(()=> toast.remove(), 400);
+      }, 1400);
+    }
+
+    // A brief interstitial between the two "halves" of the match — shown
+    // once, only for exams with enough questions for it to make sense.
+    function showHalfTime(){
+      examPlayer.innerHTML = `
+        <div class="halftime-screen">
+          <div class="halftime-whistle">🟨🏟️🟨</div>
+          <h2>HALF TIME</h2>
+          <div class="halftime-stats">
+            <div class="halftime-stat"><span class="num">${current}</span><span class="label">Played</span></div>
+            <div class="halftime-stat"><span class="num">${yellowCards}</span><span class="label">Yellow Cards</span></div>
+            <div class="halftime-stat"><span class="num">${exam.questions.length - current}</span><span class="label">Remaining</span></div>
+          </div>
+          <button class="btn btn-primary" id="resumeMatchBtn" style="margin-top:20px;">Start 2nd Half →</button>
+        </div>
+      `;
+      document.getElementById('resumeMatchBtn').addEventListener('click', ()=> renderQuestion());
     }
 
     async function renderScore(){
@@ -5101,7 +5404,8 @@
               username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
               options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, chosenAnswer: answers[i], correctAnswer: q.correct,
-              questionNumber: i + 1, questionTotal: exam.questions.length
+              questionNumber: i + 1, questionTotal: exam.questions.length,
+              status: 'delivered', answer: null, studentRating: null
             });
           }
         });
@@ -5208,7 +5512,20 @@
         ? `<div class="est-score-badge">Expected EST score: <strong>${pctToEstScore(pct)}</strong> / 800</div>`
         : '';
 
+      const fullTimeHtml = matchMode ? `
+        <div class="fulltime-banner">
+          <div class="fulltime-whistle">🏁</div>
+          <h2>FULL TIME</h2>
+          <div class="fulltime-report">
+            <div class="fulltime-stat"><span class="num">${correctCount}</span><span class="label">Goals</span></div>
+            <div class="fulltime-stat"><span class="num">${yellowCards}</span><span class="label">Yellow Cards</span></div>
+            <div class="fulltime-stat"><span class="num">${exam.questions.length}</span><span class="label">Minutes Played</span></div>
+          </div>
+        </div>
+      ` : '';
+
       examPlayer.innerHTML = `
+        ${fullTimeHtml}
         <div class="exam-score">
           <div class="score-sticker">${sticker.emoji}</div>
           <div class="score-sticker-label">${sticker.label}</div>
@@ -5450,7 +5767,7 @@
   async function fetchStudentsForCurrentAdmin(){
     const students = await fetchAllStudents();
     if(!currentAdminCourseFilter) return students;
-    return students.filter(s => s.course === currentAdminCourseFilter);
+    return students.filter(s => courseInAdminScope(s.course));
   }
 
   /* ---------------- ACADEMIC ASSISTANT ACCOUNTS ----------------
@@ -5563,6 +5880,34 @@
 
   document.getElementById('addHwQuestionBtn').addEventListener('click', ()=> addQuestionBlock(null, hwQuestionsContainer));
 
+  document.getElementById('importHwQuestionsBtn').addEventListener('click', ()=>{
+    const raw = document.getElementById('hwImportInput').value.trim();
+    if(!raw){ alert('Paste a block of questions first.'); return; }
+
+    let parsed;
+    try{
+      parsed = JSON.parse(raw);
+    }catch(err){
+      alert('That doesn\'t look like valid JSON — check for a missing bracket or comma and try again.');
+      return;
+    }
+    if(!Array.isArray(parsed)){
+      alert('Expected a list of questions in [ ] brackets.');
+      return;
+    }
+
+    const valid = parsed.filter(q => q && typeof q.text === 'string' && Array.isArray(q.options) && q.options.length === 4);
+    if(valid.length === 0){
+      alert('No valid questions found — each one needs "text" and 4 "options".');
+      return;
+    }
+
+    hwQuestionsContainer.innerHTML = '';
+    valid.forEach(q => addQuestionBlock(q, hwQuestionsContainer));
+    document.getElementById('hwImportInput').value = '';
+    alert(`Imported ${valid.length} question${valid.length === 1 ? '' : 's'} — review them below, then click "Assign homework".`);
+  });
+
   async function initHomeworkPanel(resetLoaders){
     const students = await fetchStudentsForCurrentAdmin();
     const checkboxList = document.getElementById('hwStudentCheckboxList');
@@ -5594,7 +5939,7 @@
     if(students.some(s => s.username === currentFilterVal)) filterSelect.value = currentFilterVal;
 
     let skillSets = await fetchSkillsIndex();
-    if(currentAdminCourseFilter) skillSets = skillSets.filter(s => !s.course || s.course === currentAdminCourseFilter);
+    if(currentAdminCourseFilter) skillSets = skillSets.filter(s => !s.course || courseInAdminScope(s.course));
     loadSkillSelect.innerHTML = '<option value="">— Start blank, or pick a skill below —</option>' +
       skillSets.map(s => `<option value="${esc(s.id)}">${esc(s.skill)} (${s.questionCount} question${s.questionCount===1?'':'s'})</option>`).join('');
     // Only force these back to blank on a genuine fresh tab-open — not on a
@@ -5603,7 +5948,7 @@
     loadSkillSelect.value = resetLoaders ? '' : (skillSets.some(s => s.id === currentLoadSkillVal) ? currentLoadSkillVal : '');
 
     let examSets = await fetchExamsIndex();
-    if(currentAdminCourseFilter) examSets = examSets.filter(e => !e.course || e.course === currentAdminCourseFilter);
+    if(currentAdminCourseFilter) examSets = examSets.filter(e => !e.course || courseInAdminScope(e.course));
     loadExamSelect.innerHTML = '<option value="">— Or pick an exam instead —</option>' +
       examSets.map(e => `<option value="${esc(e.id)}">${esc(e.title)} (${e.questionCount} question${e.questionCount===1?'':'s'})</option>`).join('');
     loadExamSelect.value = resetLoaders ? '' : (examSets.some(e => e.id === currentLoadExamVal) ? currentLoadExamVal : '');
@@ -5898,7 +6243,7 @@
     const wrap = document.getElementById('skillListWrap');
     const emptyState = document.getElementById('skillListEmpty');
     let sets = await fetchSkillsIndex();
-    if(currentAdminCourseFilter) sets = sets.filter(s => s.course === currentAdminCourseFilter);
+    if(currentAdminCourseFilter) sets = sets.filter(s => courseInAdminScope(s.course));
     if(currentSkillListFilter !== 'all') sets = sets.filter(s => s.course === currentSkillListFilter);
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
@@ -6143,29 +6488,38 @@
   function populateExamCourseSelect(selectedValue){
     const sel = document.getElementById('examCourseInput');
     if(!sel) return;
-    const current = selectedValue !== undefined ? selectedValue : sel.value;
-    const options = [...cachedCourseNames];
-    if(current && !options.includes(current)) options.push(current);
-    sel.innerHTML = '<option value="">No course / general</option>' +
+    const isActAdmin = currentAdminRole === 'act-admin';
+    let options = isActAdmin ? cachedCourseNames.filter(name => courseInAdminScope(name)) : [...cachedCourseNames];
+    let current = selectedValue !== undefined ? selectedValue : sel.value;
+    // ACT admin: if the current value isn't actually one of their ACT
+    // courses (blank, stale, or non-ACT), default to the first one
+    // available rather than leaving it on something invalid.
+    if(isActAdmin && !options.includes(current)) current = options[0] || '';
+    if(current && !options.includes(current) && !isActAdmin) options.push(current);
+    sel.innerHTML = (isActAdmin ? '' : '<option value="">No course / general</option>') +
       options.map(name => `<option value="${esc(name)}" ${current === name ? 'selected' : ''}>${esc(name)}</option>`).join('');
   }
 
   function populateSkillCourseSelect(selectedValue){
     const sel = document.getElementById('skillCourseInput');
     if(!sel) return;
-    const current = selectedValue !== undefined ? selectedValue : sel.value;
-    const options = [...cachedCourseNames];
-    if(current && !options.includes(current)) options.push(current);
-    sel.innerHTML = '<option value="">No course / general</option>' +
+    const isActAdmin = currentAdminRole === 'act-admin';
+    let options = isActAdmin ? cachedCourseNames.filter(name => courseInAdminScope(name)) : [...cachedCourseNames];
+    let current = selectedValue !== undefined ? selectedValue : sel.value;
+    if(isActAdmin && !options.includes(current)) current = options[0] || '';
+    if(current && !options.includes(current) && !isActAdmin) options.push(current);
+    sel.innerHTML = (isActAdmin ? '' : '<option value="">No course / general</option>') +
       options.map(name => `<option value="${esc(name)}" ${current === name ? 'selected' : ''}>${esc(name)}</option>`).join('');
   }
 
-  // Locks the course dropdown to ACT Math Bootcamp for the ACT admin, so
-  // they physically cannot create General- or other-course-tagged content.
+  // No longer needs to disable the dropdown — populateSkillCourseSelect
+  // already restricts its options to ACT-scoped courses for this role, so
+  // the admin can freely choose between multiple ACT courses if they have
+  // more than one, without any risk of picking something outside scope.
   function applySkillCourseLock(){
     const sel = document.getElementById('skillCourseInput');
     if(!sel) return;
-    sel.disabled = (currentAdminRole === 'act-admin');
+    sel.disabled = false;
   }
 
   // Keeps the public registration form's course dropdown in sync with admin-added
@@ -6247,10 +6601,12 @@
   function populateCompCourseSelect(selectedValue){
     const sel = document.getElementById('compCourseInput');
     if(!sel) return;
-    const current = selectedValue !== undefined ? selectedValue : sel.value;
-    const options = [...cachedCourseNames];
-    if(current && !options.includes(current)) options.push(current);
-    sel.innerHTML = '<option value="">Any course</option>' +
+    const isActAdmin = currentAdminRole === 'act-admin';
+    let options = isActAdmin ? cachedCourseNames.filter(name => courseInAdminScope(name)) : [...cachedCourseNames];
+    let current = selectedValue !== undefined ? selectedValue : sel.value;
+    if(isActAdmin && !options.includes(current)) current = options[0] || '';
+    if(current && !options.includes(current) && !isActAdmin) options.push(current);
+    sel.innerHTML = (isActAdmin ? '' : '<option value="">Any course</option>') +
       options.map(name => `<option value="${esc(name)}" ${current === name ? 'selected' : ''}>${esc(name)}</option>`).join('');
   }
 
@@ -6278,7 +6634,8 @@
     document.getElementById('compGroupsContainer').appendChild(block);
     renumberCompGroups();
 
-    const [exams, students] = await Promise.all([fetchExamsIndex(), fetchStudentsForCurrentAdmin()]);
+    let [exams, students] = await Promise.all([fetchExamsIndex(), fetchStudentsForCurrentAdmin()]);
+    if(currentAdminCourseFilter) exams = exams.filter(e => courseInAdminScope(e.course));
     const examSel = block.querySelector('.comp-group-exam');
     examSel.innerHTML = '<option value="">— choose an exam —</option>' +
       exams.map(e => `<option value="${esc(e.id)}" ${groupData && e.id === groupData.examId ? 'selected' : ''}>${esc(e.title)}</option>`).join('');
@@ -6484,7 +6841,7 @@
     const wrap = document.getElementById('competitionListWrap');
     const emptyState = document.getElementById('competitionListEmpty');
     let comps = await fetchAllCompetitions();
-    if(currentAdminCourseFilter) comps = comps.filter(c => !c.course || c.course === currentAdminCourseFilter);
+    if(currentAdminCourseFilter) comps = comps.filter(c => !c.course || courseInAdminScope(c.course));
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
     if(comps.length === 0){ emptyState.style.display = 'block'; return; }
@@ -6672,7 +7029,8 @@
   // are generated or winners confirmed.
   async function showCompExamPicker(comp, mode){
     const wrap = document.getElementById('compExamPickerWrap');
-    const exams = await fetchExamsIndex();
+    let exams = await fetchExamsIndex();
+    if(currentAdminCourseFilter) exams = exams.filter(e => courseInAdminScope(e.course));
     wrap.innerHTML = `
       <div class="field-row" style="margin-top:12px;">
         <label class="field-label">${mode === 'knockout' ? 'Exam for the first knockout round' : 'Exam for the next round'}</label>
@@ -8025,7 +8383,7 @@
 
   function startExamById(examId){
     dbGet('exams', examId).then(exam=>{
-      if(exam) startExam(exam);
+      if(exam) startExam(exam, true);
       else alert('Could not load that match — please try again.');
     });
   }
@@ -8748,7 +9106,8 @@
               username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
               options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, chosenAnswer: answers[i], correctAnswer: q.correct,
-              questionNumber: i + 1, questionTotal: hw.questions.length
+              questionNumber: i + 1, questionTotal: hw.questions.length,
+              status: 'delivered', answer: null, studentRating: null
             });
           }
         });
@@ -9036,9 +9395,9 @@
       return;
     }
 
-    const allStudents = await fetchAllStudents();
-    const allHw = await fetchHomeworkIndex();
-    const allAttempts = await fetchAttemptsIndex();
+    const [allStudents, allHw, allAttempts, allMistakes, allAsks] = await Promise.all([
+      fetchAllStudents(), fetchHomeworkIndex(), fetchAttemptsIndex(), fetchAllMistakes(), fetchAllAsks()
+    ]);
     const assignedLower = assigned.map(u => u.trim().toLowerCase());
 
     const rows = assignedLower.map(uname=>{
@@ -9049,7 +9408,16 @@
       const mineAttempts = allAttempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
       const allPct = [...completedHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
       const avgPct = allPct.length ? Math.round(allPct.reduce((s,p)=> s+p, 0) / allPct.length) : null;
-      return { username: displayName, uname, hwProgress: `${completedHw.length} of ${mineHw.length}`, avgPct, completedHw, mineAttempts };
+      // Pending mistakes = not yet answered through the Answer Mistakes
+      // workflow — the notification badge that actually matters here.
+      const mineMistakes = allMistakes.filter(m => !m._index && (m.username||'').trim().toLowerCase() === uname);
+      const pendingMistakes = mineMistakes.filter(m => (m.status || 'delivered') !== 'answered').length;
+      const mineAsksCount = allAsks.filter(a => (a.username||'').trim().toLowerCase() === uname).length;
+      return {
+        username: displayName, uname, course: student ? student.course : null,
+        hwProgress: `${completedHw.length} of ${mineHw.length}`, avgPct, completedHw, mineAttempts,
+        pendingMistakes, mineAsksCount
+      };
     });
 
     // Resolve each assigned student's TRUE pending count — a raw
@@ -9079,18 +9447,30 @@
       return { ...r, pendingRetakes };
     }));
 
-    content.innerHTML = resolvedRows.map(r => `
-      <div class="reminder-row">
-        <div class="reminder-info">
-          <div class="name">${esc(r.username)}</div>
-          <div class="detail">Homework: ${r.hwProgress} · Avg score: ${r.avgPct != null ? r.avgPct + '%' : '—'}${r.pendingRetakes > 0 ? ` · ${r.pendingRetakes} pending retake${r.pendingRetakes===1?'':'s'}` : ''}</div>
-        </div>
-        <button class="btn btn-ghost view-assistant-student-btn" data-username="${esc(r.uname)}" style="padding:9px 16px;font-size:0.85rem;">View progress &amp; mistakes</button>
+    content.innerHTML = `
+      <div class="asd-grid">
+        ${resolvedRows.map(r => `
+          <div class="asd-card" data-username="${esc(r.uname)}">
+            <div class="asd-card-header">
+              <div class="asd-card-name">${esc(r.username)}</div>
+              <div class="asd-notif-row">
+                ${r.pendingMistakes > 0 ? `<span class="asd-notif-badge mistakes">🔴 ${r.pendingMistakes} mistake${r.pendingMistakes===1?'':'s'}</span>` : ''}
+                ${r.mineAsksCount > 0 ? `<span class="asd-notif-badge asks">💬 ${r.mineAsksCount} asked</span>` : ''}
+              </div>
+            </div>
+            ${r.course ? `<div style="color:var(--muted);font-size:0.8rem;margin-bottom:14px;">${esc(r.course)}</div>` : ''}
+            <div class="asd-stat-grid">
+              <div class="asd-stat"><div class="num">${r.avgPct != null ? r.avgPct + '%' : '—'}</div><div class="label">Avg score</div></div>
+              <div class="asd-stat"><div class="num">${r.hwProgress}</div><div class="label">Homework</div></div>
+            </div>
+            <div class="asd-card-footer">${r.pendingRetakes > 0 ? `<span class="asd-retake-flag">⚠ ${r.pendingRetakes} pending retake${r.pendingRetakes===1?'':'s'}</span>` : 'No pending retakes'}</div>
+          </div>
+        `).join('')}
       </div>
-    `).join('');
+    `;
 
-    content.querySelectorAll('.view-assistant-student-btn').forEach(btn=>{
-      btn.addEventListener('click', ()=> openStudentAnalysis(btn.dataset.username));
+    content.querySelectorAll('.asd-card').forEach(card=>{
+      card.addEventListener('click', ()=> openStudentAnalysis(card.dataset.username));
     });
   }
 
@@ -9550,6 +9930,7 @@
       chosenText: (m.options && m.chosenAnswer != null) ? (m.options[m.chosenAnswer] ?? '—') : '—',
       correctText: (m.options && m.correctAnswer != null) ? (m.options[m.correctAnswer] ?? '—') : '—',
       retakenOverride: m.retakenOverride,
+      status: m.status || 'delivered', answer: m.answer || null, studentRating: m.studentRating || null,
       ts: m.ts
     }));
 
@@ -9844,6 +10225,22 @@
       <div class="exam-q-text" style="margin-bottom:20px;">${esc(row.text)}</div>
       ${optionsHtml}
       ${explanationVideoHtml(row)}
+      ${row.answer ? `
+        <div class="am-chat-bubble answer-bubble" style="margin-top:16px;">
+          <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'assistant')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
+          ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
+          ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+          ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
+          ${currentStudent && !currentAdminRole ? `
+            <div style="margin-top:12px;">
+              <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">${row.studentRating ? 'Your rating:' : 'How helpful was this?'}</div>
+              <div class="am-rating-stars ${row.studentRating ? 'am-rating-locked' : ''}" id="qviewRatingStars" data-mistake-id="${esc(row.id || '')}">
+                ${[1,2,3,4,5].map(n => `<button type="button" class="am-rating-star ${row.studentRating >= n ? 'filled' : ''}" data-star="${n}">★</button>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
       ${row.explanationVideo && row.id && currentAdminRole ? `
         <button class="btn btn-ghost" id="removeWrongVideoBtn" style="width:100%;margin-top:10px;font-size:0.82rem;">🗑 Wrong video — remove from just this mistake</button>
         <button class="btn btn-ghost" id="removeWrongVideoEverywhereBtn" style="width:100%;margin-top:8px;font-size:0.82rem;color:var(--ember);border-color:var(--ember);">🗑 Remove this video from EVERY mistake it's attached to</button>
@@ -9852,6 +10249,24 @@
       ${allowDelete && row.id ? `<button class="btn btn-ghost" id="deleteMistakeFromViewBtn" style="width:100%;margin-top:16px;">Delete this mistake</button>` : ''}
     `;
     document.getElementById('questionViewModal').classList.add('open');
+
+    const ratingStarsWrap = document.getElementById('qviewRatingStars');
+    if(ratingStarsWrap && !ratingStarsWrap.classList.contains('am-rating-locked')){
+      ratingStarsWrap.querySelectorAll('.am-rating-star').forEach(starBtn=>{
+        starBtn.addEventListener('click', async ()=>{
+          const stars = parseInt(starBtn.dataset.star, 10);
+          const mistakeId = ratingStarsWrap.dataset.mistakeId;
+          if(!mistakeId) return;
+          const record = await dbGet('mistakes', mistakeId);
+          if(record){
+            await dbSet('mistakes', mistakeId, { ...record, studentRating: stars });
+            row.studentRating = stars;
+            invalidateDbCache('mistakes');
+            openQuestionView(row, allowDelete); // re-render, now showing the locked-in rating
+          }
+        });
+      });
+    }
 
     const removeVideoBtn = document.getElementById('removeWrongVideoBtn');
     if(removeVideoBtn){
@@ -9894,6 +10309,222 @@
   }
 
   document.getElementById('refreshMistakesPanel').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); renderAdminMistakesTable(); });
+
+  /* ---------------- ANSWER MISTAKES (assistant chat-style answer workflow) ---------------- */
+  let amCurrentFilter = 'needs';
+
+  function amShowView(view){
+    document.getElementById('amListView').style.display = view === 'list' ? 'block' : 'none';
+    document.getElementById('amDetailView').style.display = view === 'detail' ? 'block' : 'none';
+  }
+
+  async function renderAnswerMistakesList(){
+    let rows = await gatherAllMistakeRows(null);
+    if(currentAdminCourseFilter){
+      const scopedStudents = await fetchStudentsForCurrentAdmin();
+      const allowedUsernames = new Set(scopedStudents.map(s => (s.username||'').trim().toLowerCase()));
+      rows = rows.filter(r => allowedUsernames.has((r.username||'').trim().toLowerCase()));
+    }
+    // Assistant accounts (not the shared assistant2026 passcode) are
+    // already scoped to specific students the same way — reuse the same
+    // filtering the rest of their dashboard already applies.
+    if(currentAssistantAccount){
+      const assigned = new Set((currentAssistantAccount.assignedStudents || []).map(s => s.trim().toLowerCase()));
+      rows = rows.filter(r => assigned.has((r.username||'').trim().toLowerCase()));
+    }
+
+    const needsCount = rows.filter(r => r.status !== 'answered').length;
+    const counterEl = document.getElementById('amCounter');
+    counterEl.textContent = needsCount === 0 ? '✓ All mistakes answered' : `${needsCount} mistake${needsCount===1?'':'s'} still need${needsCount===1?'s':''} an answer`;
+    counterEl.classList.toggle('all-done', needsCount === 0);
+
+    if(amCurrentFilter === 'needs') rows = rows.filter(r => r.status !== 'answered');
+    else if(amCurrentFilter === 'done') rows = rows.filter(r => r.status === 'answered');
+
+    const wrap = document.getElementById('amListWrap');
+    const emptyState = document.getElementById('amListEmpty');
+    wrap.querySelectorAll('.am-mistake-card').forEach(el => el.remove());
+
+    if(rows.length === 0){ emptyState.style.display = 'block'; return; }
+    emptyState.style.display = 'none';
+
+    rows.forEach(row=>{
+      const card = document.createElement('div');
+      card.className = 'am-mistake-card';
+      card.innerHTML = `
+        <span class="am-status-badge ${row.status === 'answered' ? 'answered' : 'delivered'}">${row.status === 'answered' ? '✅ Done' : '🔵 Delivered'}</span>
+        <div class="am-card-info">
+          <div class="name">${esc(row.username)} · ${esc(row.lesson)}</div>
+          <div class="snippet">${esc(row.text)}</div>
+        </div>
+      `;
+      card.addEventListener('click', ()=> openAmDetail(row.id));
+      wrap.appendChild(card);
+    });
+  }
+
+  document.getElementById('amFilterSelect').addEventListener('change', (e)=>{
+    amCurrentFilter = e.target.value;
+    renderAnswerMistakesList();
+  });
+  document.getElementById('refreshAnswerMistakes').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); renderAnswerMistakesList(); });
+  document.getElementById('backToAmListBtn').addEventListener('click', ()=>{ amShowView('list'); renderAnswerMistakesList(); });
+
+  // In-progress attachment for the answer currently being composed — reset
+  // each time a mistake is opened.
+  let amPendingPhoto = null; // { file, previewUrl }
+  let amPendingVoice = null; // { blob, previewUrl }
+  let amMediaRecorder = null;
+  let amRecordedChunks = [];
+
+  async function openAmDetail(mistakeId){
+    const rows = await gatherAllMistakeRows(null);
+    const row = rows.find(r => r.id === mistakeId);
+    if(!row){ alert('Could not load that mistake — please try again.'); return; }
+    amPendingPhoto = null;
+    amPendingVoice = null;
+    amShowView('detail');
+
+    const optionsHtml = (row.options || []).map((opt, i)=>{
+      const isChosen = i === row.chosenAnswer;
+      const isCorrect = i === row.correctAnswer;
+      const optImg = row.optionImages && row.optionImages[i];
+      return `
+        <div style="padding:8px 12px;margin:4px 0;border-radius:8px;background:${isCorrect ? 'rgba(57,217,138,0.12)' : (isChosen ? 'rgba(255,107,74,0.12)' : 'var(--ink)')};">
+          ${optImg ? `<img src="${optImg}" style="max-width:120px;border-radius:6px;display:block;margin-bottom:4px;">` : ''}
+          ${opt ? esc(opt) : ''} ${isCorrect ? ' ✓' : ''}${isChosen && !isCorrect ? ' (their answer)' : ''}
+        </div>
+      `;
+    }).join('');
+
+    const answerBubbleHtml = row.answer ? `
+      <div class="am-chat-bubble answer-bubble">
+        <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'assistant')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
+        ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
+        ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+        ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
+        ${row.studentRating ? `<div style="margin-top:10px;color:var(--muted);font-size:0.85rem;">Student rated this: ${'⭐'.repeat(row.studentRating)}</div>` : `<div style="margin-top:10px;color:var(--muted);font-size:0.82rem;font-style:italic;">Not rated by the student yet.</div>`}
+      </div>
+    ` : '';
+
+    const answerToolsHtml = !row.answer ? `
+      <div class="am-answer-tools" id="amAnswerTools">
+        <textarea id="amTextInput" placeholder="Type an explanation (optional)…"></textarea>
+        <input type="file" accept="image/*" id="amPhotoInput" style="display:none;">
+        <button type="button" class="am-tool-btn" id="amPhotoBtn">📷 Add photo</button>
+        <button type="button" class="am-tool-btn" id="amVoiceBtn">🎤 Record voice</button>
+        <button type="button" class="btn btn-primary" id="amSendBtn">Send answer</button>
+      </div>
+      <div id="amAttachmentsWrap" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;"></div>
+    ` : '';
+
+    document.getElementById('amDetailContent').innerHTML = `
+      <div class="am-chat-bubble">
+        <div class="bubble-label">${esc(row.username)} · ${esc(row.lesson)} · ${esc(row.source)}</div>
+        ${row.image ? `<img src="${esc(row.image)}" alt="Question">` : ''}
+        ${row.text ? `<div style="margin-bottom:10px;">${esc(row.text)}</div>` : ''}
+        ${optionsHtml}
+      </div>
+      ${answerBubbleHtml}
+      ${answerToolsHtml}
+    `;
+
+    if(!row.answer){
+      const photoInput = document.getElementById('amPhotoInput');
+      const photoBtn = document.getElementById('amPhotoBtn');
+      const voiceBtn = document.getElementById('amVoiceBtn');
+      const attachmentsWrap = document.getElementById('amAttachmentsWrap');
+
+      photoBtn.addEventListener('click', ()=> photoInput.click());
+      photoInput.addEventListener('change', (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        amPendingPhoto = { file, previewUrl: URL.createObjectURL(file) };
+        renderAmAttachmentPreviews();
+      });
+
+      voiceBtn.addEventListener('click', async ()=>{
+        if(amMediaRecorder && amMediaRecorder.state === 'recording'){
+          amMediaRecorder.stop();
+          voiceBtn.textContent = '🎤 Record voice';
+          voiceBtn.classList.remove('recording');
+          return;
+        }
+        try{
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          amRecordedChunks = [];
+          amMediaRecorder = new MediaRecorder(stream);
+          amMediaRecorder.ondataavailable = (e)=> amRecordedChunks.push(e.data);
+          amMediaRecorder.onstop = ()=>{
+            const blob = new Blob(amRecordedChunks, { type: 'audio/webm' });
+            amPendingVoice = { blob, previewUrl: URL.createObjectURL(blob) };
+            renderAmAttachmentPreviews();
+            stream.getTracks().forEach(t => t.stop());
+          };
+          amMediaRecorder.start();
+          voiceBtn.textContent = '⏹ Stop recording';
+          voiceBtn.classList.add('recording');
+        }catch(err){
+          alert('Could not access your microphone — check your browser permissions and try again.');
+        }
+      });
+
+      document.getElementById('amSendBtn').addEventListener('click', async ()=>{
+        const sendBtn = document.getElementById('amSendBtn');
+        sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
+        const text = document.getElementById('amTextInput').value.trim();
+        if(!text && !amPendingPhoto && !amPendingVoice){
+          alert('Add at least a text explanation, a photo, or a voice recording before sending.');
+          sendBtn.disabled = false; sendBtn.textContent = 'Send answer';
+          return;
+        }
+        try{
+          let photoUrl = null, voiceUrl = null;
+          if(amPendingPhoto){
+            photoUrl = await uploadMistakeAnswerFile(amPendingPhoto.file, (amPendingPhoto.file.name.split('.').pop() || 'jpg'), amPendingPhoto.file.type || 'image/jpeg');
+          }
+          if(amPendingVoice){
+            voiceUrl = await uploadMistakeAnswerFile(amPendingVoice.blob, 'webm', 'audio/webm');
+          }
+          const answererName = currentAssistantAccount ? currentAssistantAccount.username : (currentAdminRole === 'act-admin' ? 'ACT Admin' : 'Mr. Mohamed Ibrahim');
+          const answer = { text: text || null, photoUrl, voiceUrl, answeredBy: answererName, answeredAt: new Date().toISOString() };
+          const ok = await dbSet('mistakes', mistakeId, { ...(await dbGet('mistakes', mistakeId)), status: 'answered', answer });
+          if(ok){
+            invalidateDbCache('mistakes');
+            openAmDetail(mistakeId);
+          } else {
+            alert('Could not save — check your connection and try again.');
+            sendBtn.disabled = false; sendBtn.textContent = 'Send answer';
+          }
+        }catch(err){
+          alert(err.message || 'Could not upload — try again.');
+          sendBtn.disabled = false; sendBtn.textContent = 'Send answer';
+        }
+      });
+    }
+  }
+
+  function renderAmAttachmentPreviews(){
+    const wrap = document.getElementById('amAttachmentsWrap');
+    if(!wrap) return;
+    wrap.innerHTML = '';
+    if(amPendingPhoto){
+      const el = document.createElement('div');
+      el.className = 'am-attachment-preview';
+      el.innerHTML = `📷 Photo attached <button type="button">✕</button>`;
+      el.querySelector('button').addEventListener('click', ()=>{ amPendingPhoto = null; renderAmAttachmentPreviews(); });
+      wrap.appendChild(el);
+    }
+    if(amPendingVoice){
+      const el = document.createElement('div');
+      el.className = 'am-attachment-preview';
+      el.innerHTML = `🎤 Voice recorded <audio controls style="height:28px;"></audio> <button type="button">✕</button>`;
+      el.querySelector('audio').src = amPendingVoice.previewUrl;
+      el.querySelector('button').addEventListener('click', ()=>{ amPendingVoice = null; renderAmAttachmentPreviews(); });
+      wrap.appendChild(el);
+    }
+  }
+
   document.getElementById('refreshCompliance').addEventListener('click', async ()=>{
     const btn = document.getElementById('refreshCompliance');
     btn.disabled = true; btn.textContent = '🔄 Checking…';
