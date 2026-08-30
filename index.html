@@ -9803,6 +9803,7 @@
       });
     });
 
+    const myIdentity = getCurrentAnswererIdentity();
     container.innerHTML = `
       <div class="asd-grid">
         ${assigned.map(uname=>{
@@ -9820,6 +9821,7 @@
                   : mistakes.map(m => `
                     <div class="am-mistake-card asd-mistake-row" data-mistake-id="${esc(m.id)}" style="padding:10px 12px;">
                       <span class="am-status-badge ${m.status === 'answered' ? 'answered' : 'delivered'}">${m.status === 'answered' ? '✅' : '🔵'}</span>
+                      ${m.claimedBy ? `<span class="am-status-badge delivered" style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);">🔵 ${m.claimedBy === myIdentity ? 'You' : esc(m.claimedBy)}</span>` : ''}
                       <div class="am-card-info">
                         <div class="snippet">${esc(m.lesson)} · ${esc(m.text)}</div>
                       </div>
@@ -10317,6 +10319,7 @@
       retakenOverride: m.retakenOverride,
       status: m.status || null, answer: m.answer || null, studentRating: m.studentRating || null,
       studentFollowUp: m.studentFollowUp || null,
+      claimedBy: m.claimedBy || null,
       ts: m.ts
     }));
 
@@ -10701,18 +10704,29 @@
   /* ---------------- ANSWER MISTAKES (assistant chat-style answer workflow) ---------------- */
   let amCurrentFilter = 'needs';
 
+  // Who's actually looking at the Answer Mistakes queue right now — used
+  // both to attribute a new answer and to decide whether a claimed
+  // question should be visible to this particular viewer.
+  function getCurrentAnswererIdentity(){
+    return currentAssistantAccount ? currentAssistantAccount.username : (currentAdminRole === 'act-admin' ? 'ACT Admin' : (currentAdminRole === 'assistant' ? 'Shared Assistant Login' : 'Mr. Mohamed Ibrahim'));
+  }
+
   // Whether a mistake belongs in the assistant/admin Answer Mistakes queue
-  // at all. Two things take a mistake out of the queue entirely, not just
+  // at all. Three things take a mistake out of the queue entirely, not just
   // out of the default view: (1) it predates this feature (no status field
   // was ever set on it — genuinely impossible to distinguish from "just
-  // hasn't been answered yet" without this), and (2) it's been fully
+  // hasn't been answered yet" without this), (2) it's been fully
   // resolved — answered AND rated by the student, with no follow-up
-  // question waiting. A follow-up always brings it back regardless of
-  // rating, since that's the student asking for more help.
+  // question waiting (a follow-up always brings it back regardless of
+  // rating, since that's the student asking for more help), and (3) another
+  // assistant has already claimed it — the main admin (Mr. Mohamed
+  // Ibrahim) always sees everything regardless of claim, for oversight.
   function isMistakeInAssistantQueue(row){
     if(row.status === null || row.status === undefined) return false;
     const isResolved = row.status === 'answered' && row.studentRating && !row.studentFollowUp;
-    return !isResolved;
+    if(isResolved) return false;
+    if(row.claimedBy && currentAdminRole !== 'admin' && row.claimedBy !== getCurrentAnswererIdentity()) return false;
+    return true;
   }
 
   function amShowView(view){
@@ -10756,12 +10770,14 @@
     if(rows.length === 0){ emptyState.style.display = 'block'; return; }
     emptyState.style.display = 'none';
 
+    const myIdentity = getCurrentAnswererIdentity();
     rows.forEach(row=>{
       const card = document.createElement('div');
       card.className = 'am-mistake-card';
       card.innerHTML = `
         <span class="am-status-badge ${row.status === 'answered' ? 'answered' : 'delivered'}">${row.status === 'answered' ? '✅ Done' : '🔵 Delivered'}</span>
         ${row.studentFollowUp ? `<span class="am-status-badge delivered" style="background:rgba(255,176,32,0.14);color:#FFB020;border-color:rgba(255,176,32,0.35);">💬 Follow-up</span>` : ''}
+        ${row.claimedBy ? `<span class="am-status-badge delivered" style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);">🔵 ${row.claimedBy === myIdentity ? 'Claimed by you' : `Claimed by ${esc(row.claimedBy)}`}</span>` : ''}
         <div class="am-card-info">
           <div class="name">${esc(row.username)} · ${esc(row.lesson)}</div>
           <div class="snippet">${esc(row.text)}</div>
@@ -10832,6 +10848,16 @@
       </div>
     ` : '';
 
+    const currentIdentity = getCurrentAnswererIdentity();
+    const claimBannerHtml = !row.answer ? (
+      row.claimedBy
+        ? `<div class="admin-note" style="background:rgba(76,111,255,0.1);border-color:rgba(76,111,255,0.4);margin-top:10px;">🔵 ${row.claimedBy === currentIdentity ? "You've claimed this — other assistants can't see it now." : `Claimed by ${esc(row.claimedBy)}.`}</div>`
+        : `<div class="admin-note" style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+             <span>Not claimed yet — anyone could be working on this.</span>
+             <button type="button" class="btn btn-ghost" id="amClaimBtn" style="flex-shrink:0;">🔵 Claim this question</button>
+           </div>`
+    ) : '';
+
     const answerToolsHtml = !row.answer ? `
       <div class="am-answer-tools" id="amAnswerTools">
         <textarea id="amTextInput" placeholder="Type an explanation (optional)…"></textarea>
@@ -10851,6 +10877,7 @@
         ${row.text ? `<div style="margin-bottom:10px;">${esc(row.text)}</div>` : ''}
         ${optionsHtml}
       </div>
+      ${claimBannerHtml}
       ${answerBubbleHtml}
       ${studentFollowUpHtml}
       ${answerToolsHtml}
@@ -10858,6 +10885,24 @@
 
     if(opts.onBack){
       document.getElementById('amDetailBackBtn').addEventListener('click', opts.onBack);
+    }
+
+    const claimBtn = document.getElementById('amClaimBtn');
+    if(claimBtn){
+      claimBtn.addEventListener('click', async ()=>{
+        claimBtn.disabled = true; claimBtn.textContent = 'Claiming…';
+        const record = await dbGet('mistakes', mistakeId);
+        if(record){
+          const ok = await dbSet('mistakes', mistakeId, { ...record, claimedBy: currentIdentity });
+          if(ok){
+            invalidateDbCache('mistakes');
+            openAmDetail(mistakeId, opts);
+          } else {
+            alert('Could not claim — check your connection and try again.');
+            claimBtn.disabled = false; claimBtn.textContent = '🔵 Claim this question';
+          }
+        }
+      });
     }
 
     if(!row.answer){
@@ -10917,7 +10962,7 @@
           if(amPendingVoice){
             voiceUrl = await uploadMistakeAnswerFile(amPendingVoice.blob, 'webm', 'audio/webm');
           }
-          const answererName = currentAssistantAccount ? currentAssistantAccount.username : (currentAdminRole === 'act-admin' ? 'ACT Admin' : (currentAdminRole === 'assistant' ? 'Shared Assistant Login' : 'Mr. Mohamed Ibrahim'));
+          const answererName = getCurrentAnswererIdentity();
           const answer = { text: text || null, photoUrl, voiceUrl, answeredBy: answererName, answeredAt: new Date().toISOString() };
           const ok = await dbSet('mistakes', mistakeId, { ...(await dbGet('mistakes', mistakeId)), status: 'answered', answer });
           if(ok){
