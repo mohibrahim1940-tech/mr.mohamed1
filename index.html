@@ -1134,7 +1134,7 @@
   }
   .admin-table tr:last-child td{border-bottom:none;}
   .admin-empty{padding:50px 20px;text-align:center;color:var(--muted);font-size:0.9rem;}
-  .admin-actions{display:flex;gap:12px;margin-bottom:24px;}
+  .admin-actions{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
   .admin-note{
     font-size:0.78rem;color:var(--muted);
     background:var(--panel);border:1px solid var(--line);
@@ -1175,11 +1175,20 @@
   .student-action-btn:disabled:hover{color:var(--muted);border-color:var(--line);}
 
   /* ---------- admin tabs ---------- */
-  .admin-tabs{display:flex;gap:10px;margin-bottom:28px;}
+  .admin-tabs{
+    display:flex;gap:10px;margin-bottom:28px;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+    padding-bottom:4px; /* keeps the scrollbar from crowding the tabs above it */
+  }
+  .admin-tabs::-webkit-scrollbar{ height:6px; }
+  .admin-tabs::-webkit-scrollbar-thumb{ background:var(--line); border-radius:10px; }
   .admin-tab{
     background:var(--panel);border:1px solid var(--line);
     color:var(--muted);padding:10px 18px;border-radius:8px;
     font-size:0.88rem;cursor:pointer;font-family:'Inter',sans-serif;
+    flex-shrink:0; /* stops tabs squeezing/wrapping their own text when the row scrolls instead */
+    white-space:nowrap;
   }
   .admin-tab.active{background:var(--panel-2);color:var(--text);border-color:var(--signal);}
   .admin-panel{display:none;}
@@ -4378,6 +4387,29 @@
   // Uploads a photo or voice recording an assistant attaches when
   // answering a student's mistake. Same bucket for both since they're
   // always part of the same "answer" and never need separate handling.
+  // Safari (iOS and macOS) never supported audio/webm for MediaRecorder —
+  // recording would either silently produce a broken file or throw
+  // outright. Checking what the browser actually supports, rather than
+  // assuming webm everywhere, is what makes voice recording work on an
+  // iPhone or iPad instead of failing there specifically.
+  function getSupportedAudioRecording(){
+    const candidates = [
+      { mimeType: 'audio/webm;codecs=opus', ext: 'webm' },
+      { mimeType: 'audio/webm', ext: 'webm' },
+      { mimeType: 'audio/mp4', ext: 'm4a' },
+      { mimeType: 'audio/mp4;codecs=mp4a.40.2', ext: 'm4a' },
+      { mimeType: 'audio/ogg;codecs=opus', ext: 'ogg' },
+    ];
+    if(typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported){
+      for(const c of candidates){
+        if(MediaRecorder.isTypeSupported(c.mimeType)) return c;
+      }
+    }
+    // No supported type detected — let the browser pick its own default
+    // rather than forcing one it may not actually be able to produce.
+    return { mimeType: null, ext: 'webm' };
+  }
+
   async function uploadMistakeAnswerFile(file, ext, contentType){
     if(!storageAvailable()) throw new Error('Storage is not connected — see the SUPABASE SETUP comment near the top of this file.');
     const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -8086,6 +8118,7 @@
           <div class="bubble-label">You asked${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
           ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
           ${row.studentFollowUp.photoUrl ? `<img src="${esc(row.studentFollowUp.photoUrl)}" alt="Your photo">` : ''}
+          ${row.studentFollowUp.videoUrl ? `<video controls preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
           ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
         </div>
       ` : '';
@@ -8094,7 +8127,9 @@
         <div class="am-answer-tools ask-followup-tools" style="margin-top:10px;">
           <textarea class="ask-followup-text" placeholder="Still confused? Ask a follow-up question…"></textarea>
           <input type="file" accept="image/*" class="ask-followup-photo-input" style="display:none;">
+          <input type="file" accept="video/*" class="ask-followup-video-input" style="display:none;">
           <button type="button" class="am-tool-btn ask-followup-photo-btn">📷 Add photo</button>
+          <button type="button" class="am-tool-btn ask-followup-video-btn">🎥 Add video</button>
           <button type="button" class="am-tool-btn ask-followup-voice-btn">🎤 Record voice</button>
           <button type="button" class="btn btn-primary ask-followup-send-btn">Ask</button>
         </div>
@@ -8111,6 +8146,7 @@
           <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'your coach')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
           ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
           ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+          ${row.answer.videoUrl ? `<video controls preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
           ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
           <div style="margin-top:12px;">
             <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">${row.studentRating ? 'Your rating:' : 'How helpful was this?'}</div>
@@ -8143,12 +8179,15 @@
         // (not a shared/global one) since several threads with their own
         // independent attach-and-send state render on screen at once here.
         let pendingPhoto = null;
+        let pendingVideo = null;
         let pendingVoice = null;
         let mediaRecorder = null;
         let recordedChunks = [];
 
         const photoInput = thread.querySelector('.ask-followup-photo-input');
         const photoBtn = thread.querySelector('.ask-followup-photo-btn');
+        const videoInput = thread.querySelector('.ask-followup-video-input');
+        const videoBtn = thread.querySelector('.ask-followup-video-btn');
         const voiceBtn = thread.querySelector('.ask-followup-voice-btn');
         const sendBtn = thread.querySelector('.ask-followup-send-btn');
         const textInput = thread.querySelector('.ask-followup-text');
@@ -8161,6 +8200,13 @@
             el.className = 'am-attachment-preview';
             el.innerHTML = `📷 Photo attached <button type="button">✕</button>`;
             el.querySelector('button').addEventListener('click', ()=>{ pendingPhoto = null; renderAttachmentPreviews(); });
+            attachmentsWrap.appendChild(el);
+          }
+          if(pendingVideo){
+            const el = document.createElement('div');
+            el.className = 'am-attachment-preview';
+            el.innerHTML = `🎥 Video attached <button type="button">✕</button>`;
+            el.querySelector('button').addEventListener('click', ()=>{ pendingVideo = null; renderAttachmentPreviews(); });
             attachmentsWrap.appendChild(el);
           }
           if(pendingVoice){
@@ -8177,7 +8223,35 @@
         photoInput.addEventListener('change', (e)=>{
           const file = e.target.files[0];
           if(!file) return;
+          if(!file.type.startsWith('image/')){
+            alert('That file doesn\'t look like a photo — try picking an image instead.');
+            photoInput.value = '';
+            return;
+          }
+          const sizeMB = file.size / (1024 * 1024);
+          if(sizeMB > 15){
+            const proceed = confirm(`This photo is ${sizeMB.toFixed(0)} MB — quite large for a photo. It'll still upload, but a smaller photo (well under 15 MB) will be faster and more reliable.\n\nUse it anyway?`);
+            if(!proceed){ photoInput.value = ''; return; }
+          }
           pendingPhoto = { file, previewUrl: URL.createObjectURL(file) };
+          renderAttachmentPreviews();
+        });
+
+        videoBtn.addEventListener('click', ()=> videoInput.click());
+        videoInput.addEventListener('change', (e)=>{
+          const file = e.target.files[0];
+          if(!file) return;
+          if(!file.type.startsWith('video/')){
+            alert('That file doesn\'t look like a video — try picking a video file instead.');
+            videoInput.value = '';
+            return;
+          }
+          const sizeMB = file.size / (1024 * 1024);
+          if(sizeMB > 50){
+            const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that could take a while to upload and for your coach to load. Keep it well under 50 MB if you can.\n\nUse it anyway?`);
+            if(!proceed){ videoInput.value = ''; return; }
+          }
+          pendingVideo = { file, ext: (file.name.split('.').pop() || 'mp4'), contentType: file.type || 'video/mp4', previewUrl: URL.createObjectURL(file) };
           renderAttachmentPreviews();
         });
 
@@ -8188,14 +8262,20 @@
             voiceBtn.classList.remove('recording');
             return;
           }
+          if(typeof MediaRecorder === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+            alert('Voice recording isn\'t supported in this browser or connection — try a photo or text instead.');
+            return;
+          }
           try{
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const { mimeType, ext } = getSupportedAudioRecording();
             recordedChunks = [];
-            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
             mediaRecorder.ondataavailable = (e)=> recordedChunks.push(e.data);
             mediaRecorder.onstop = ()=>{
-              const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-              pendingVoice = { blob, previewUrl: URL.createObjectURL(blob) };
+              const actualType = mediaRecorder.mimeType || mimeType || 'audio/webm';
+              const blob = new Blob(recordedChunks, { type: actualType });
+              pendingVoice = { blob, ext, contentType: actualType, previewUrl: URL.createObjectURL(blob) };
               renderAttachmentPreviews();
               stream.getTracks().forEach(t => t.stop());
             };
@@ -8203,26 +8283,35 @@
             voiceBtn.textContent = '⏹ Stop recording';
             voiceBtn.classList.add('recording');
           }catch(err){
-            alert('Could not access your microphone — check your browser permissions and try again.');
+            if(err && err.name === 'NotAllowedError'){
+              alert('Microphone access was blocked — check your browser permissions and try again.');
+            } else if(err && (err.name === 'NotSupportedError' || err.name === 'NotFoundError')){
+              alert('Could not start voice recording on this device — try a photo or text instead.');
+            } else {
+              alert('Could not access your microphone — check your browser permissions and try again.');
+            }
           }
         });
 
         sendBtn.addEventListener('click', async ()=>{
           const text = textInput.value.trim();
-          if(!text && !pendingPhoto && !pendingVoice){
-            alert('Type a question, add a photo, or record your voice before sending.');
+          if(!text && !pendingPhoto && !pendingVideo && !pendingVoice){
+            alert('Type a question, add a photo, a video, or record your voice before sending.');
             return;
           }
           sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
           try{
-            let photoUrl = null, voiceUrl = null;
+            let photoUrl = null, videoUrl = null, voiceUrl = null;
             if(pendingPhoto){
               photoUrl = await uploadMistakeAnswerFile(pendingPhoto.file, (pendingPhoto.file.name.split('.').pop() || 'jpg'), pendingPhoto.file.type || 'image/jpeg');
             }
-            if(pendingVoice){
-              voiceUrl = await uploadMistakeAnswerFile(pendingVoice.blob, 'webm', 'audio/webm');
+            if(pendingVideo){
+              videoUrl = await uploadMistakeAnswerFile(pendingVideo.file, pendingVideo.ext || 'mp4', pendingVideo.contentType || 'video/mp4');
             }
-            const studentFollowUp = { text: text || null, photoUrl, voiceUrl, askedAt: new Date().toISOString() };
+            if(pendingVoice){
+              voiceUrl = await uploadMistakeAnswerFile(pendingVoice.blob, pendingVoice.ext || 'webm', pendingVoice.contentType || 'audio/webm');
+            }
+            const studentFollowUp = { text: text || null, photoUrl, videoUrl, voiceUrl, askedAt: new Date().toISOString() };
             const record = await dbGet('mistakes', row.id);
             if(record){
               const ok = await dbSet('mistakes', row.id, { ...record, studentFollowUp });
@@ -10798,7 +10887,8 @@
   // In-progress attachment for the answer currently being composed — reset
   // each time a mistake is opened.
   let amPendingPhoto = null; // { file, previewUrl }
-  let amPendingVoice = null; // { blob, previewUrl }
+  let amPendingVideo = null; // { file, ext, contentType, previewUrl }
+  let amPendingVoice = null; // { blob, ext, contentType, previewUrl }
   let amMediaRecorder = null;
   let amRecordedChunks = [];
 
@@ -10808,6 +10898,7 @@
     const row = rows.find(r => r.id === mistakeId);
     if(!row){ alert('Could not load that mistake — please try again.'); return; }
     amPendingPhoto = null;
+    amPendingVideo = null;
     amPendingVoice = null;
     if(!opts.skipListToggle) amShowView('detail');
 
@@ -10834,6 +10925,7 @@
         <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'assistant')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
         ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
         ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+        ${row.answer.videoUrl ? `<video controls preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
         ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
         ${row.studentRating ? `<div style="margin-top:10px;color:var(--muted);font-size:0.85rem;">Student rated this: ${'⭐'.repeat(row.studentRating)}</div>` : `<div style="margin-top:10px;color:var(--muted);font-size:0.82rem;font-style:italic;">Not rated by the student yet.</div>`}
       </div>
@@ -10844,6 +10936,7 @@
         <div class="bubble-label">${esc(row.username)} followed up${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
         ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
         ${row.studentFollowUp.photoUrl ? `<img src="${esc(row.studentFollowUp.photoUrl)}" alt="Student's photo">` : ''}
+        ${row.studentFollowUp.videoUrl ? `<video controls preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
         ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
       </div>
     ` : '';
@@ -10862,7 +10955,9 @@
       <div class="am-answer-tools" id="amAnswerTools">
         <textarea id="amTextInput" placeholder="Type an explanation (optional)…"></textarea>
         <input type="file" accept="image/*" id="amPhotoInput" style="display:none;">
+        <input type="file" accept="video/*" id="amVideoInput" style="display:none;">
         <button type="button" class="am-tool-btn" id="amPhotoBtn">📷 Add photo</button>
+        <button type="button" class="am-tool-btn" id="amVideoBtn">🎥 Add video</button>
         <button type="button" class="am-tool-btn" id="amVoiceBtn">🎤 Record voice</button>
         <button type="button" class="btn btn-primary" id="amSendBtn">Send answer</button>
       </div>
@@ -10908,6 +11003,8 @@
     if(!row.answer){
       const photoInput = document.getElementById('amPhotoInput');
       const photoBtn = document.getElementById('amPhotoBtn');
+      const videoInput = document.getElementById('amVideoInput');
+      const videoBtn = document.getElementById('amVideoBtn');
       const voiceBtn = document.getElementById('amVoiceBtn');
       const attachmentsWrap = document.getElementById('amAttachmentsWrap');
 
@@ -10915,7 +11012,35 @@
       photoInput.addEventListener('change', (e)=>{
         const file = e.target.files[0];
         if(!file) return;
+        if(!file.type.startsWith('image/')){
+          alert('That file doesn\'t look like a photo — try picking an image instead.');
+          photoInput.value = '';
+          return;
+        }
+        const sizeMB = file.size / (1024 * 1024);
+        if(sizeMB > 15){
+          const proceed = confirm(`This photo is ${sizeMB.toFixed(0)} MB — quite large for a photo. It'll still upload, but a smaller photo (well under 15 MB) will be faster and more reliable.\n\nUse it anyway?`);
+          if(!proceed){ photoInput.value = ''; return; }
+        }
         amPendingPhoto = { file, previewUrl: URL.createObjectURL(file) };
+        renderAmAttachmentPreviews();
+      });
+
+      videoBtn.addEventListener('click', ()=> videoInput.click());
+      videoInput.addEventListener('change', (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        if(!file.type.startsWith('video/')){
+          alert('That file doesn\'t look like a video — try picking a video file instead.');
+          videoInput.value = '';
+          return;
+        }
+        const sizeMB = file.size / (1024 * 1024);
+        if(sizeMB > 50){
+          const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that's large enough that it could take a while to load for ${row.username}. For best results, keep it well under 50 MB.\n\nUse it anyway?`);
+          if(!proceed){ videoInput.value = ''; return; }
+        }
+        amPendingVideo = { file, ext: (file.name.split('.').pop() || 'mp4'), contentType: file.type || 'video/mp4', previewUrl: URL.createObjectURL(file) };
         renderAmAttachmentPreviews();
       });
 
@@ -10926,14 +11051,20 @@
           voiceBtn.classList.remove('recording');
           return;
         }
+        if(typeof MediaRecorder === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+          alert('Voice recording isn\'t supported in this browser or connection — try a photo or text instead.');
+          return;
+        }
         try{
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const { mimeType, ext } = getSupportedAudioRecording();
           amRecordedChunks = [];
-          amMediaRecorder = new MediaRecorder(stream);
+          amMediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
           amMediaRecorder.ondataavailable = (e)=> amRecordedChunks.push(e.data);
           amMediaRecorder.onstop = ()=>{
-            const blob = new Blob(amRecordedChunks, { type: 'audio/webm' });
-            amPendingVoice = { blob, previewUrl: URL.createObjectURL(blob) };
+            const actualType = amMediaRecorder.mimeType || mimeType || 'audio/webm';
+            const blob = new Blob(amRecordedChunks, { type: actualType });
+            amPendingVoice = { blob, ext, contentType: actualType, previewUrl: URL.createObjectURL(blob) };
             renderAmAttachmentPreviews();
             stream.getTracks().forEach(t => t.stop());
           };
@@ -10941,7 +11072,13 @@
           voiceBtn.textContent = '⏹ Stop recording';
           voiceBtn.classList.add('recording');
         }catch(err){
-          alert('Could not access your microphone — check your browser permissions and try again.');
+          if(err && err.name === 'NotAllowedError'){
+            alert('Microphone access was blocked — check your browser permissions and try again.');
+          } else if(err && (err.name === 'NotSupportedError' || err.name === 'NotFoundError')){
+            alert('Could not start voice recording on this device — try a photo or text instead.');
+          } else {
+            alert('Could not access your microphone — check your browser permissions and try again.');
+          }
         }
       });
 
@@ -10949,21 +11086,24 @@
         const sendBtn = document.getElementById('amSendBtn');
         sendBtn.disabled = true; sendBtn.textContent = 'Sending…';
         const text = document.getElementById('amTextInput').value.trim();
-        if(!text && !amPendingPhoto && !amPendingVoice){
-          alert('Add at least a text explanation, a photo, or a voice recording before sending.');
+        if(!text && !amPendingPhoto && !amPendingVideo && !amPendingVoice){
+          alert('Add at least a text explanation, a photo, a video, or a voice recording before sending.');
           sendBtn.disabled = false; sendBtn.textContent = 'Send answer';
           return;
         }
         try{
-          let photoUrl = null, voiceUrl = null;
+          let photoUrl = null, videoUrl2 = null, voiceUrl = null;
           if(amPendingPhoto){
             photoUrl = await uploadMistakeAnswerFile(amPendingPhoto.file, (amPendingPhoto.file.name.split('.').pop() || 'jpg'), amPendingPhoto.file.type || 'image/jpeg');
           }
+          if(amPendingVideo){
+            videoUrl2 = await uploadMistakeAnswerFile(amPendingVideo.file, amPendingVideo.ext || 'mp4', amPendingVideo.contentType || 'video/mp4');
+          }
           if(amPendingVoice){
-            voiceUrl = await uploadMistakeAnswerFile(amPendingVoice.blob, 'webm', 'audio/webm');
+            voiceUrl = await uploadMistakeAnswerFile(amPendingVoice.blob, amPendingVoice.ext || 'webm', amPendingVoice.contentType || 'audio/webm');
           }
           const answererName = getCurrentAnswererIdentity();
-          const answer = { text: text || null, photoUrl, voiceUrl, answeredBy: answererName, answeredAt: new Date().toISOString() };
+          const answer = { text: text || null, photoUrl, videoUrl: videoUrl2, voiceUrl, answeredBy: answererName, answeredAt: new Date().toISOString() };
           const ok = await dbSet('mistakes', mistakeId, { ...(await dbGet('mistakes', mistakeId)), status: 'answered', answer });
           if(ok){
             invalidateDbCache('mistakes');
@@ -10990,6 +11130,13 @@
       el.className = 'am-attachment-preview';
       el.innerHTML = `📷 Photo attached <button type="button">✕</button>`;
       el.querySelector('button').addEventListener('click', ()=>{ amPendingPhoto = null; renderAmAttachmentPreviews(); });
+      wrap.appendChild(el);
+    }
+    if(amPendingVideo){
+      const el = document.createElement('div');
+      el.className = 'am-attachment-preview';
+      el.innerHTML = `🎥 Video attached <button type="button">✕</button>`;
+      el.querySelector('button').addEventListener('click', ()=>{ amPendingVideo = null; renderAmAttachmentPreviews(); });
       wrap.appendChild(el);
     }
     if(amPendingVoice){
