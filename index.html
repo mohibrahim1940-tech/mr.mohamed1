@@ -1407,6 +1407,11 @@
     display:flex; align-items:center; gap:6px; color:var(--signal);
     font-size:0.82rem; font-weight:600; margin-bottom:8px;
   }
+  .explanation-text-wrap{
+    margin-top:14px; padding:14px 16px; border-radius:10px;
+    background:rgba(76,111,255,0.08); border:1px solid rgba(76,111,255,0.3);
+  }
+  .explanation-text-body{ font-size:0.9rem; line-height:1.6; white-space:pre-wrap; }
 
   .option-row{align-items:flex-start;}
   .option-row input[type="radio"]{margin-top:9px;}
@@ -1513,7 +1518,7 @@
   }
   #assistantDashTitle{ padding:72px 24px 0; font-size:1.6rem; }
   #assistantDashModal p{ padding:0 24px; }
-  #assistantDashContent, #asdMistakesContent{ flex:1; overflow-y:auto; padding:20px 24px 48px; max-height:none !important; }
+  #assistantDashContent, #asdMistakesContent, #asdExplainContent{ flex:1; overflow-y:auto; padding:20px 24px 48px; max-height:none !important; }
   @media(min-width:640px){
     #assistantDashTitle{ padding-top:80px; }
   }
@@ -2876,9 +2881,11 @@
     <div class="admin-actions" style="margin-bottom:16px;">
       <button class="btn btn-primary" id="asdShowProgressBtn">📊 Student Progress</button>
       <button class="btn btn-ghost" id="asdShowMistakesBtn">💬 Answer Mistakes</button>
+      <button class="btn btn-ghost" id="asdShowExplainBtn">📝 Explain Questions</button>
     </div>
     <div id="assistantDashContent" style="max-height:65vh; overflow-y:auto;"></div>
     <div id="asdMistakesContent" style="max-height:65vh; overflow-y:auto; display:none;"></div>
+    <div id="asdExplainContent" style="max-height:65vh; overflow-y:auto; display:none;"></div>
   </div>
 </div>
 
@@ -2931,6 +2938,25 @@
       </div>
     </div>
     <button class="btn btn-primary" id="saveAssignedStudentsBtn" style="width:100%; margin-top:16px;">Save assignment</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="assignSkillsModal" style="z-index:500;">
+  <div class="modal-box auth-modal-box">
+    <button class="modal-close" id="closeAssignSkillsModal" aria-label="Close">×</button>
+    <h3 style="margin-bottom:4px;" id="assignSkillsTitle">Assign skills</h3>
+    <p style="color:var(--muted); font-size:0.84rem; margin-bottom:18px;">This assistant's goal is to write an explanation for every question in the skills checked below — even ones nobody's missed yet.</p>
+    <div class="student-multiselect">
+      <div class="student-multiselect-actions">
+        <button type="button" class="btn btn-ghost" id="assignSkillsSelectAllBtn" style="padding:6px 12px;font-size:0.78rem;">Select all</button>
+        <button type="button" class="btn btn-ghost" id="assignSkillsSelectNoneBtn" style="padding:6px 12px;font-size:0.78rem;">Clear</button>
+        <span class="student-multiselect-count" id="assignSkillsSelectedCount">0 selected</span>
+      </div>
+      <div class="student-multiselect-list" id="assignSkillsCheckboxList">
+        <div class="admin-empty" style="padding:12px;">Loading skills…</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" id="saveAssignedSkillsBtn" style="width:100%; margin-top:16px;">Save assignment</button>
   </div>
 </div>
 
@@ -3457,7 +3483,7 @@
       </div>
       <div class="admin-table-wrap">
         <table class="admin-table" id="assistantAcctsTable">
-          <thead><tr><th>Username</th><th>Status</th><th>Assigned students</th><th></th></tr></thead>
+          <thead><tr><th>Username</th><th>Status</th><th>Assigned students</th><th>Assigned skills</th><th></th></tr></thead>
           <tbody id="assistantAcctsBody"></tbody>
         </table>
         <div class="admin-empty" id="assistantAcctsEmpty" style="display:none;">No assistant accounts registered yet.</div>
@@ -4914,12 +4940,20 @@
   // Only ever called on a wrong answer's review row — shows the explanation
   // video Mr. Mohamed Ibrahim attached to that question, if there is one.
   function explanationVideoHtml(row){
-    if(!row.explanationVideo) return '';
+    if(!row.explanationVideo && !row.explanationText) return '';
     return `
-      <div class="explanation-video-wrap">
-        <div class="explanation-video-label">🎬 Watch the explanation</div>
-        <video controls preload="metadata" src="${row.explanationVideo}"></video>
-      </div>
+      ${row.explanationText ? `
+        <div class="explanation-text-wrap">
+          <div class="explanation-video-label">📝 Explanation${row.explanationBy ? ` from ${esc(row.explanationBy)}` : ' from your coach'}</div>
+          <div class="explanation-text-body">${esc(row.explanationText)}</div>
+        </div>
+      ` : ''}
+      ${row.explanationVideo ? `
+        <div class="explanation-video-wrap">
+          <div class="explanation-video-label">🎬 Watch the explanation</div>
+          <video controls preload="metadata" src="${row.explanationVideo}"></video>
+        </div>
+      ` : ''}
     `;
   }
 
@@ -5586,7 +5620,7 @@
             mistakeEntries.push({
               username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: exam.questions.length,
               status: 'delivered', answer: null, studentRating: null
             });
@@ -5600,6 +5634,8 @@
           options: q.options,
           optionImages: q.optionImages || null,
           explanationVideo: q.explanationVideo || null,
+          explanationText: q.explanationText || null,
+          explanationBy: q.explanationBy || null,
           chosenAnswer: answers[i],
           correctAnswer: q.correct,
           correct: answers[i] === q.correct
@@ -7627,12 +7663,99 @@
           if((candidate.lesson || 'General').trim() === mLesson) match = candidate;
         }
 
-        if(match && match.explanationVideo && match.explanationVideo !== m.explanationVideo){
-          updates.push(dbSet('mistakes', m.id, { ...m, explanationVideo: match.explanationVideo }));
+        if(match && ((match.explanationVideo && match.explanationVideo !== m.explanationVideo) || (match.explanationText && match.explanationText !== m.explanationText))){
+          updates.push(dbSet('mistakes', m.id, { ...m, explanationVideo: match.explanationVideo || m.explanationVideo || null, explanationText: match.explanationText || m.explanationText || null, explanationBy: match.explanationBy || m.explanationBy || null }));
         }
       });
       if(updates.length > 0) await Promise.all(updates);
     }catch(err){ console.error('Could not backfill explanation videos:', err); }
+  }
+
+  // Finds the exam or skill a mistake came from, so an explanation typed
+  // for one question can be saved back to the actual reusable question
+  // bank — not just the one mistake record. Skills and exams only (per
+  // how this feature is meant to be used); homework isn't a reusable
+  // question bank the same way.
+  async function findSourceRecordForMistake(row){
+    const [exams, skills] = await Promise.all([fetchAllExams(), fetchAllSkills()]);
+    const exam = exams.find(e => e.title === row.source);
+    if(exam) return { type: 'exams', record: exam, titleField: 'title' };
+    const skill = skills.find(s => s.skill === row.source);
+    if(skill) return { type: 'skills', record: skill, titleField: 'skill' };
+    return null;
+  }
+
+  // Same matching signals backfillExplanationVideos already uses (image →
+  // exact text → recorded position) — reused here so "find the question
+  // this mistake came from" is answered identically everywhere it matters.
+  function matchQuestionForMistake(row, questions){
+    const mLesson = (row.lesson || 'General').trim();
+    const sameLesson = questions.filter(q => (q.lesson || 'General').trim() === mLesson);
+    let match = null;
+    if(row.image) match = sameLesson.find(q => q.image && q.image === row.image);
+    if(!match && row.text && row.text !== '(question with image)') match = sameLesson.find(q => (q.text || '') === row.text);
+    if(!match && row.questionNumber && questions[row.questionNumber - 1]){
+      const candidate = questions[row.questionNumber - 1];
+      if((candidate.lesson || 'General').trim() === mLesson) match = candidate;
+    }
+    return match;
+  }
+
+  // Every commonly-missed question, across every skill/exam, that doesn't
+  // already have an explanation — this is the actual "goal" list an
+  // individual assistant works through. Ranked by how many distinct
+  // students got it wrong, since that's the most valuable order to
+  // explain things in.
+  async function findQuestionsNeedingExplanation(assignedUsernames){
+    const allMistakes = await fetchAllMistakes();
+    const relevant = allMistakes.filter(m => !m._index && !m.explanationText &&
+      (!assignedUsernames || assignedUsernames.some(u => u.trim().toLowerCase() === (m.username||'').trim().toLowerCase())));
+    if(relevant.length === 0) return [];
+
+    // Group by source+lesson+text (or +image when there's no real text) so
+    // the same question missed by 5 different students becomes ONE entry
+    // with a count of 5, not five separate rows.
+    const groups = {};
+    relevant.forEach(m=>{
+      const key = `${m.source}|||${(m.lesson||'General').trim()}|||${m.text && m.text !== '(question with image)' ? m.text : (m.image || '')}`;
+      if(!groups[key]) groups[key] = { sample: m, usernames: new Set() };
+      groups[key].usernames.add((m.username||'').trim().toLowerCase());
+    });
+
+    return Object.values(groups)
+      .map(g => ({ row: g.sample, missedByCount: g.usernames.size }))
+      .sort((a,b) => b.missedByCount - a.missedByCount);
+  }
+
+  // Saves an explanation back to the actual question in its skill/exam —
+  // not just the one mistake being viewed — then backfills it onto every
+  // existing mistake that came from that same question, so it's visible
+  // to every student who already got it wrong, not only future ones.
+  async function saveExplanationForQuestion(row, explanationText, explanationBy){
+    const source = await findSourceRecordForMistake(row);
+    if(!source) return { ok: false, reason: 'not-found' };
+    const questions = source.record.questions || [];
+    const match = matchQuestionForMistake(row, questions);
+    if(!match) return { ok: false, reason: 'not-found' };
+    match.explanationText = explanationText;
+    match.explanationBy = explanationBy;
+    const ok = await dbSet(source.type, source.record.id, source.record);
+    if(ok) await backfillExplanationVideos(source.record[source.titleField], questions);
+    return { ok };
+  }
+
+  // For assigned-skill questions that may not have any mistake yet — the
+  // assistant is explaining proactively, before anyone's necessarily
+  // missed it, so there's no mistake row to match against. Updates the
+  // skill directly by question index instead.
+  async function saveExplanationForSkillQuestionByIndex(skillId, questionIndex, explanationText, explanationBy){
+    const skill = await dbGet('skills', skillId);
+    if(!skill || !Array.isArray(skill.questions) || !skill.questions[questionIndex]) return { ok: false, reason: 'not-found' };
+    skill.questions[questionIndex].explanationText = explanationText;
+    skill.questions[questionIndex].explanationBy = explanationBy;
+    const ok = await dbSet('skills', skillId, skill);
+    if(ok) await backfillExplanationVideos(skill.skill, skill.questions);
+    return { ok };
   }
 
   async function renderAdminAsks(){
@@ -8245,13 +8368,17 @@
     const list = document.getElementById('assistantChatList');
     const emptyState = document.getElementById('assistantChatEmpty');
     const rows = await gatherAllMistakeRows(currentStudent.username);
-    const answered = rows.filter(r => r.status === 'answered' && r.answer);
-    answered.sort((a,b)=> new Date(b.answer.answeredAt || b.ts || 0) - new Date(a.answer.answeredAt || a.ts || 0));
+    // A thread here is either a full answer from an assistant, or just an
+    // explanation attached to the question itself (from the proactive
+    // "Explain Questions" goal) — a student should be able to ask about
+    // either one if they're still confused.
+    const answered = rows.filter(r => (r.status === 'answered' && r.answer) || r.explanationText);
+    answered.sort((a,b)=> new Date((b.answer && b.answer.answeredAt) || b.ts || 0) - new Date((a.answer && a.answer.answeredAt) || a.ts || 0));
 
     // Opening this page is what "reading" the answers means — mark every
     // currently-unseen one as seen now, so the badge clears and doesn't
     // reappear for the same answers next time.
-    const newlySeen = answered.filter(r => !r.answer.seenByStudent);
+    const newlySeen = answered.filter(r => r.answer && !r.answer.seenByStudent);
     if(newlySeen.length > 0){
       await Promise.all(newlySeen.map(async r=>{
         const record = await dbGet('mistakes', r.id);
@@ -8301,19 +8428,26 @@
           ${row.image ? `<img src="${esc(row.image)}" alt="Question">` : ''}
           ${row.text ? `<div>${esc(row.text)}</div>` : ''}
         </div>
-        <div class="am-chat-bubble answer-bubble">
-          <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'your coach')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
-          ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
-          ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
-          ${row.answer.videoUrl ? `<video controls preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
-          ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
-          <div style="margin-top:12px;">
-            <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">${row.studentRating ? 'Your rating:' : 'How helpful was this?'}</div>
-            <div class="am-rating-stars ${row.studentRating ? 'am-rating-locked' : ''}" data-mistake-id="${esc(row.id || '')}">
-              ${[1,2,3,4,5].map(n => `<button type="button" class="am-rating-star ${row.studentRating >= n ? 'filled' : ''}" data-star="${n}">★</button>`).join('')}
+        ${row.answer ? `
+          <div class="am-chat-bubble answer-bubble">
+            <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'your coach')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
+            ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
+            ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+            ${row.answer.videoUrl ? `<video controls preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
+            ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
+            <div style="margin-top:12px;">
+              <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">${row.studentRating ? 'Your rating:' : 'How helpful was this?'}</div>
+              <div class="am-rating-stars ${row.studentRating ? 'am-rating-locked' : ''}" data-mistake-id="${esc(row.id || '')}">
+                ${[1,2,3,4,5].map(n => `<button type="button" class="am-rating-star ${row.studentRating >= n ? 'filled' : ''}" data-star="${n}">★</button>`).join('')}
+              </div>
             </div>
           </div>
-        </div>
+        ` : `
+          <div class="am-chat-bubble answer-bubble">
+            <div class="bubble-label">📝 Explanation${row.explanationBy ? ` from ${esc(row.explanationBy)}` : ' from your coach'}</div>
+            <div>${esc(row.explanationText)}</div>
+          </div>
+        `}
         ${followUpBubbleHtml}
         ${askToolsHtml}
       `;
@@ -9633,6 +9767,8 @@
         options: q.options,
         optionImages: q.optionImages || null,
         explanationVideo: q.explanationVideo || null,
+        explanationText: q.explanationText || null,
+        explanationBy: q.explanationBy || null,
         chosenAnswer: answers[i],
         correctAnswer: q.correct,
         correct: answers[i] === q.correct
@@ -9646,7 +9782,7 @@
             mistakeEntries.push({
               username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: hw.questions.length,
               status: 'delivered', answer: null, studentRating: null
             });
@@ -9928,10 +10064,7 @@
     document.getElementById('assistantDashModal').classList.add('open');
     // Always reset to the Progress view on open, regardless of which view
     // was showing last time this modal was closed.
-    document.getElementById('asdShowProgressBtn').classList.replace('btn-ghost', 'btn-primary');
-    document.getElementById('asdShowMistakesBtn').classList.replace('btn-primary', 'btn-ghost');
-    content.style.display = 'block';
-    document.getElementById('asdMistakesContent').style.display = 'none';
+    asdShowView('progress');
 
     const fresh = await getAssistantAccount(currentAssistantAccount.username);
     if(fresh) currentAssistantAccount = fresh;
@@ -10094,19 +10227,144 @@
     });
   }
 
-  document.getElementById('asdShowProgressBtn').addEventListener('click', ()=>{
-    document.getElementById('asdShowProgressBtn').classList.replace('btn-ghost', 'btn-primary');
-    document.getElementById('asdShowMistakesBtn').classList.replace('btn-primary', 'btn-ghost');
-    document.getElementById('assistantDashContent').style.display = 'block';
-    document.getElementById('asdMistakesContent').style.display = 'none';
-  });
+  function asdShowView(view){
+    const buttons = { progress: 'asdShowProgressBtn', mistakes: 'asdShowMistakesBtn', explain: 'asdShowExplainBtn' };
+    const contents = { progress: 'assistantDashContent', mistakes: 'asdMistakesContent', explain: 'asdExplainContent' };
+    Object.keys(buttons).forEach(key=>{
+      const btn = document.getElementById(buttons[key]);
+      if(key === view) btn.classList.replace('btn-ghost', 'btn-primary');
+      else btn.classList.replace('btn-primary', 'btn-ghost');
+      document.getElementById(contents[key]).style.display = (key === view) ? 'block' : 'none';
+    });
+  }
+  document.getElementById('asdShowProgressBtn').addEventListener('click', ()=> asdShowView('progress'));
   document.getElementById('asdShowMistakesBtn').addEventListener('click', ()=>{
-    document.getElementById('asdShowMistakesBtn').classList.replace('btn-ghost', 'btn-primary');
-    document.getElementById('asdShowProgressBtn').classList.replace('btn-primary', 'btn-ghost');
-    document.getElementById('assistantDashContent').style.display = 'none';
-    document.getElementById('asdMistakesContent').style.display = 'block';
+    asdShowView('mistakes');
     renderAssistantMistakesBoxes();
   });
+  document.getElementById('asdShowExplainBtn').addEventListener('click', ()=>{
+    asdShowView('explain');
+    renderAssistantExplainGoal();
+  });
+
+  // The "goal" view: every commonly-missed question, across this
+  // assistant's assigned students, that doesn't have an explanation yet —
+  // ranked by how many students got it wrong, so the highest-value ones
+  // come first.
+  async function renderAssistantExplainGoal(){
+    if(!currentAssistantAccount) return;
+    const container = document.getElementById('asdExplainContent');
+    container.innerHTML = '<div class="admin-empty">Loading…</div>';
+    const assignedStudents = currentAssistantAccount.assignedStudents || [];
+    const assignedSkillIds = currentAssistantAccount.assignedSkills || [];
+
+    const missedItems = assignedStudents.length > 0 ? await findQuestionsNeedingExplanation(assignedStudents) : [];
+
+    // Proactive coverage: every question in an assigned skill that doesn't
+    // have an explanation yet, regardless of whether any student has
+    // actually missed it — the whole point of assigning a skill is
+    // covering it before students need it, not waiting for mistakes.
+    const skillItems = [];
+    for(const skillId of assignedSkillIds){
+      const skill = await dbGet('skills', skillId);
+      if(!skill || !Array.isArray(skill.questions)) continue;
+      skill.questions.forEach((q, qi)=>{
+        if(!q.explanationText){
+          skillItems.push({ skillId, skillName: skill.skill, questionIndex: qi, q });
+        }
+      });
+    }
+
+    if(missedItems.length === 0 && skillItems.length === 0){
+      container.innerHTML = assignedStudents.length === 0 && assignedSkillIds.length === 0
+        ? '<div class="admin-empty">No students or skills assigned to you yet — ask Mr. Mohamed Ibrahim to assign some in the admin panel.</div>'
+        : '<div class="admin-empty">✅ All caught up — nothing needs an explanation right now.</div>';
+      return;
+    }
+
+    function questionCardHtml(idPrefix, i, source, lesson, badgeHtml, image, text, options, optionImages, correctAnswer){
+      const optionsHtml = (options || []).map((opt, oi) => `
+        <div style="padding:6px 10px; margin:3px 0; border-radius:6px; background:${oi === correctAnswer ? 'rgba(57,217,138,0.12)' : 'var(--ink)'}; font-size:0.85rem;">
+          ${optionImages && optionImages[oi] ? `<img src="${esc(optionImages[oi])}" style="max-width:100px;border-radius:4px;display:block;margin-bottom:4px;">` : ''}
+          ${esc(opt || '')} ${oi === correctAnswer ? ' ✓' : ''}
+        </div>
+      `).join('');
+      return `
+        <div class="am-chat-bubble" data-${idPrefix}-index="${i}">
+          <div class="bubble-label">${esc(source)} · ${esc(lesson)} · ${badgeHtml}</div>
+          ${image ? `<img src="${esc(image)}" alt="Question">` : ''}
+          ${text ? `<div style="margin-bottom:8px;">${esc(text)}</div>` : ''}
+          ${optionsHtml}
+          <div class="am-answer-tools" style="margin-top:12px;">
+            <textarea class="explain-text-input" placeholder="Explain why the correct answer is right…"></textarea>
+            <button type="button" class="btn btn-primary explain-save-btn">Save explanation</button>
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      ${skillItems.length > 0 ? `
+        <div class="analysis-section-title" style="margin-top:0;">Your assigned skills — complete coverage</div>
+        <div class="admin-note">Every question in a skill assigned to you, whether or not anyone's missed it yet — the goal is to have all of these explained ahead of time.</div>
+        <div style="display:flex; flex-direction:column; gap:16px; margin-top:16px;">
+          ${skillItems.map((item, i) => questionCardHtml('skill', i, item.skillName, item.q.lesson || 'General', '<span style="color:var(--signal);">assigned skill</span>', item.q.image, item.q.text, item.q.options, item.q.optionImages, item.q.correct)).join('')}
+        </div>
+      ` : ''}
+      ${missedItems.length > 0 ? `
+        <div class="analysis-section-title">Commonly missed by your students</div>
+        <div class="admin-note">Every question your students have gotten wrong that doesn't have an explanation yet — most commonly missed first.</div>
+        <div style="display:flex; flex-direction:column; gap:16px; margin-top:16px;">
+          ${missedItems.map((item, i) => {
+            const row = item.row;
+            return questionCardHtml('missed', i, row.source, row.lesson, `<span style="color:var(--ember);">missed by ${item.missedByCount} student${item.missedByCount===1?'':'s'}</span>`, row.image, row.text, row.options, row.optionImages, row.correctAnswer);
+          }).join('')}
+        </div>
+      ` : ''}
+    `;
+
+    const explainerName = currentAssistantAccount.username;
+
+    container.querySelectorAll('[data-skill-index]').forEach(card=>{
+      const i = parseInt(card.dataset.skillIndex, 10);
+      const item = skillItems[i];
+      const saveBtn = card.querySelector('.explain-save-btn');
+      const textInput = card.querySelector('.explain-text-input');
+      saveBtn.addEventListener('click', async ()=>{
+        const text = textInput.value.trim();
+        if(!text){ alert('Type an explanation before saving.'); return; }
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        const result = await saveExplanationForSkillQuestionByIndex(item.skillId, item.questionIndex, text, explainerName);
+        if(result.ok){
+          invalidateDbCache('mistakes'); invalidateDbCache('skills');
+          renderAssistantExplainGoal();
+        } else {
+          alert('Could not save this explanation — the skill may have been edited or deleted since. Try refreshing.');
+          saveBtn.disabled = false; saveBtn.textContent = 'Save explanation';
+        }
+      });
+    });
+
+    container.querySelectorAll('[data-missed-index]').forEach(card=>{
+      const i = parseInt(card.dataset.missedIndex, 10);
+      const item = missedItems[i];
+      const saveBtn = card.querySelector('.explain-save-btn');
+      const textInput = card.querySelector('.explain-text-input');
+      saveBtn.addEventListener('click', async ()=>{
+        const text = textInput.value.trim();
+        if(!text){ alert('Type an explanation before saving.'); return; }
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        const result = await saveExplanationForQuestion(item.row, text, explainerName);
+        if(result.ok){
+          invalidateDbCache('mistakes'); invalidateDbCache('exams'); invalidateDbCache('skills');
+          renderAssistantExplainGoal();
+        } else {
+          alert('Could not save this explanation — the original skill or exam may have been edited or deleted since. Try refreshing.');
+          saveBtn.disabled = false; saveBtn.textContent = 'Save explanation';
+        }
+      });
+    });
+  }
 
   document.querySelectorAll('.open-auth-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -10562,6 +10820,8 @@
       options: m.options || [],
       optionImages: m.optionImages || null,
       explanationVideo: m.explanationVideo || null,
+      explanationText: m.explanationText || null,
+      explanationBy: m.explanationBy || null,
       chosenAnswer: m.chosenAnswer,
       correctAnswer: m.correctAnswer,
       chosenText: (m.options && m.chosenAnswer != null) ? (m.options[m.chosenAnswer] ?? '—') : '—',
@@ -11401,15 +11661,18 @@
 
     accounts.forEach(a=>{
       const assignedCount = (a.assignedStudents || []).length;
+      const assignedSkillCount = (a.assignedSkills || []).length;
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${esc(a.username)}</td>
         <td><span class="status-pill ${a.status === 'approved' ? 'status-approved' : a.status === 'declined' ? 'status-declined' : 'status-pending'}">${esc(a.status)}</span></td>
         <td>${assignedCount === 0 ? 'None yet' : `${assignedCount} student${assignedCount===1?'':'s'}`}</td>
+        <td>${assignedSkillCount === 0 ? 'None yet' : `${assignedSkillCount} skill${assignedSkillCount===1?'':'s'}`}</td>
         <td style="white-space:nowrap;">
           ${a.status !== 'approved' ? `<button class="student-action-btn approve-assistant-btn">Approve</button>` : ''}
           ${a.status !== 'declined' ? `<button class="student-action-btn decline-assistant-btn">Decline</button>` : ''}
           <button class="student-action-btn manage-students-btn">Manage students</button>
+          <button class="student-action-btn manage-skills-btn">Manage skills</button>
           <button class="student-action-btn delete-assistant-btn">Delete</button>
         </td>
       `;
@@ -11422,6 +11685,7 @@
         await renderAssistantAcctsTable();
       });
       tr.querySelector('.manage-students-btn').addEventListener('click', ()=> openAssignStudentsModal(a.username));
+      tr.querySelector('.manage-skills-btn').addEventListener('click', ()=> openAssignSkillsModal(a.username));
       tr.querySelector('.delete-assistant-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete the assistant account "${a.username}"? This can't be undone.`)) return;
         await deleteAssistantAccount(a.username);
@@ -11657,6 +11921,69 @@
     }
     btn.disabled = false; btn.textContent = 'Save assignment';
     assignStudentsModal.classList.remove('open');
+    await renderAssistantAcctsTable();
+  });
+
+  const assignSkillsModal = document.getElementById('assignSkillsModal');
+  let assignSkillsTargetUsername = null;
+
+  function updateAssignSkillsSelectedCount(){
+    const count = document.querySelectorAll('#assignSkillsCheckboxList input:checked').length;
+    document.getElementById('assignSkillsSelectedCount').textContent = `${count} selected`;
+  }
+
+  async function openAssignSkillsModal(assistantUsername){
+    assignSkillsTargetUsername = assistantUsername;
+    document.getElementById('assignSkillsTitle').textContent = `Assign skills to ${assistantUsername}`;
+    const checkboxList = document.getElementById('assignSkillsCheckboxList');
+    checkboxList.innerHTML = '<div class="admin-empty" style="padding:12px;">Loading skills…</div>';
+    assignSkillsModal.classList.add('open');
+
+    const [account, skills] = await Promise.all([
+      getAssistantAccount(assistantUsername),
+      fetchSkillsIndex()
+    ]);
+    const assignedSet = new Set(account && account.assignedSkills || []);
+
+    if(skills.length === 0){
+      checkboxList.innerHTML = '<div class="admin-empty" style="padding:12px;">No skills added yet.</div>';
+    } else {
+      checkboxList.innerHTML = skills.map(s => `
+        <label class="student-checkbox-row">
+          <input type="checkbox" value="${esc(s.id)}" ${assignedSet.has(s.id) ? 'checked' : ''}>
+          <span>${esc(s.skill)}</span>
+        </label>
+      `).join('');
+      checkboxList.querySelectorAll('input').forEach(cb => cb.addEventListener('change', updateAssignSkillsSelectedCount));
+    }
+    updateAssignSkillsSelectedCount();
+  }
+
+  document.getElementById('closeAssignSkillsModal').addEventListener('click', ()=>{
+    assignSkillsModal.classList.remove('open');
+  });
+  assignSkillsModal.addEventListener('click', (e)=>{
+    if(e.target === assignSkillsModal) assignSkillsModal.classList.remove('open');
+  });
+  document.getElementById('assignSkillsSelectAllBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#assignSkillsCheckboxList input').forEach(cb => cb.checked = true);
+    updateAssignSkillsSelectedCount();
+  });
+  document.getElementById('assignSkillsSelectNoneBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#assignSkillsCheckboxList input').forEach(cb => cb.checked = false);
+    updateAssignSkillsSelectedCount();
+  });
+  document.getElementById('saveAssignedSkillsBtn').addEventListener('click', async ()=>{
+    if(!assignSkillsTargetUsername) return;
+    const btn = document.getElementById('saveAssignedSkillsBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const selected = Array.from(document.querySelectorAll('#assignSkillsCheckboxList input:checked')).map(cb => cb.value);
+    const account = await getAssistantAccount(assignSkillsTargetUsername);
+    if(account){
+      await dbSet('assistants', assistantAcctKey(assignSkillsTargetUsername), { ...account, assignedSkills: selected });
+    }
+    btn.disabled = false; btn.textContent = 'Save assignment';
+    assignSkillsModal.classList.remove('open');
     await renderAssistantAcctsTable();
   });
 
