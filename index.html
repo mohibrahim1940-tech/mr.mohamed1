@@ -823,6 +823,12 @@
   .am-rating-star.filled{ color: #FFB020; }
   .am-rating-star:hover{ color: #FFB020; }
   .am-rating-locked .am-rating-star{ cursor: default; }
+  #assistantChatNotifBadge{
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px;
+    background: var(--ember); color: #fff; font-size: 0.72rem; font-weight: 700;
+    border-radius: 10px; vertical-align: middle;
+  }
   .assistant-chat-thread{ display: flex; flex-direction: column; padding-bottom: 4px; }
   .assistant-chat-thread .am-chat-bubble{ max-width: 100%; margin-bottom: 10px; }
   .aa-today-row{ display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
@@ -2382,7 +2388,7 @@
           <button class="dash-tab-btn" data-dashtab="tabLeaderboard">🏆 Leaderboard</button>
           <button class="dash-tab-btn" data-dashtab="tabExams">📝 Exams</button>
           <button class="dash-tab-btn" data-dashtab="tabMistakes">🧾 Mistake History</button>
-          <button class="dash-tab-btn" data-dashtab="tabAssistantChat" id="assistantChatTabBtn">💬 My Assistant Chat</button>
+          <button class="dash-tab-btn" data-dashtab="tabAssistantChat" id="assistantChatTabBtn">💬 My Assistant Chat<span id="assistantChatNotifBadge" style="display:none;"></span></button>
           <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
           <button class="dash-tab-btn" data-dashtab="tabPlanner">🧠 Study Planner</button>
           <button class="dash-tab-btn" data-dashtab="tabCompetition" id="competitionTabBtn" style="display:none;">⭐ Champions League</button>
@@ -8217,6 +8223,23 @@
   // has actually explained — question and answer together as one thread,
   // most recently answered first, with the same rating widget used
   // elsewhere so rating works consistently everywhere it appears.
+  // Shows a red count badge on the "My Assistant Chat" tab whenever the
+  // student has answers they haven't looked at yet — computed on sign-in
+  // and refresh, independent of whether that tab is currently open.
+  async function renderAssistantChatNotifBadge(){
+    if(!currentStudent) return;
+    const badge = document.getElementById('assistantChatNotifBadge');
+    if(!badge) return;
+    const rows = await gatherAllMistakeRows(currentStudent.username);
+    const unseenCount = rows.filter(r => r.status === 'answered' && r.answer && !r.answer.seenByStudent).length;
+    if(unseenCount > 0){
+      badge.textContent = unseenCount;
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
   async function renderAssistantChatList(){
     if(!currentStudent) return;
     const list = document.getElementById('assistantChatList');
@@ -8224,6 +8247,21 @@
     const rows = await gatherAllMistakeRows(currentStudent.username);
     const answered = rows.filter(r => r.status === 'answered' && r.answer);
     answered.sort((a,b)=> new Date(b.answer.answeredAt || b.ts || 0) - new Date(a.answer.answeredAt || a.ts || 0));
+
+    // Opening this page is what "reading" the answers means — mark every
+    // currently-unseen one as seen now, so the badge clears and doesn't
+    // reappear for the same answers next time.
+    const newlySeen = answered.filter(r => !r.answer.seenByStudent);
+    if(newlySeen.length > 0){
+      await Promise.all(newlySeen.map(async r=>{
+        const record = await dbGet('mistakes', r.id);
+        if(record && record.answer){
+          await dbSet('mistakes', r.id, { ...record, answer: { ...record.answer, seenByStudent: true } });
+        }
+      }));
+      invalidateDbCache('mistakes');
+      renderAssistantChatNotifBadge();
+    }
 
     list.querySelectorAll('.assistant-chat-thread').forEach(el => el.remove());
 
@@ -10240,6 +10278,7 @@
     renderMistakeHistory();
     renderOverview();
     renderStudentCompetitionSection();
+    renderAssistantChatNotifBadge();
 
     // exam cards (if any exist elsewhere) were rendered as locked before sign-in — refresh so they unlock
     renderPublicExams();
@@ -10289,7 +10328,8 @@
       renderWeakPoints(),
       renderMistakeHistory(),
       renderOverview(),
-      renderPublicExams()
+      renderPublicExams(),
+      renderAssistantChatNotifBadge()
     ]);
 
     const failures = results.filter(r => r.status === 'rejected');
@@ -11255,7 +11295,7 @@
             voiceUrl = await uploadMistakeAnswerFile(amPendingVoice.blob, amPendingVoice.ext || 'webm', amPendingVoice.contentType || 'audio/webm');
           }
           const answererName = getCurrentAnswererIdentity();
-          const answer = { text: text || null, photoUrl, videoUrl: videoUrl2, voiceUrl, answeredBy: answererName, answeredAt: new Date().toISOString() };
+          const answer = { text: text || null, photoUrl, videoUrl: videoUrl2, voiceUrl, answeredBy: answererName, answeredAt: new Date().toISOString(), seenByStudent: false };
           const ok = await dbSet('mistakes', mistakeId, { ...(await dbGet('mistakes', mistakeId)), status: 'answered', answer });
           if(ok){
             invalidateDbCache('mistakes');
