@@ -716,6 +716,14 @@
   .course-toggle-btn.active{ border-color: var(--signal); color: #fff; background: rgba(76,111,255,0.16); }
   .course-toggle-btn.locked{ opacity: 0.35; cursor: not-allowed; pointer-events: none; }
   .skill-course-filter-btn.active{ border-color: var(--signal); color: #fff; background: rgba(76,111,255,0.16); }
+  .skill-course-checkboxes{ display:flex; flex-wrap:wrap; gap:8px; }
+  .skill-course-checkbox-item{
+    display:flex; align-items:center; gap:7px; padding:9px 14px;
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    cursor:pointer; font-size:0.85rem; user-select:none;
+  }
+  .skill-course-checkbox-item:has(input:checked){ border-color:var(--signal); background:rgba(76,111,255,0.1); color:#fff; }
+  .skill-course-checkbox-item input{ cursor:pointer; margin:0; }
 
   /* ---------- Competition match theme (half-time / full-time / yellow cards) ---------- */
   .match-scoreboard{
@@ -1527,6 +1535,37 @@
   @media(min-width:640px){
     #trackingModal h3{ padding-top:80px; }
   }
+
+  /* ---------- Student analysis: fullscreen + modern card grid, same
+     family as Tracking/Academic Assistant but with more detail below ---------- */
+  #studentAnalysisModal{ padding:0; }
+  #studentAnalysisModal .modal-box{
+    width:100%; height:100%; max-width:none; max-height:none;
+    border-radius:0; display:flex; flex-direction:column; padding:0;
+    background: radial-gradient(ellipse 1000px 500px at 50% -10%, rgba(76,111,255,0.08), transparent), var(--ink);
+  }
+  #studentAnalysisModal #closeAnalysisModal{
+    top:20px; right:20px; width:40px; height:40px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--panel); border:1px solid var(--line); border-radius:50%;
+    font-size:1.4rem; z-index:2;
+  }
+  #studentAnalysisModal .modal-box > *:not(#closeAnalysisModal){
+    width:100%; max-width:1100px; margin:0 auto; box-sizing:border-box;
+  }
+  #studentAnalysisModal h3{ padding:72px 24px 0; font-size:1.6rem; }
+  #studentAnalysisModal p{ padding:0 24px; }
+  #studentAnalysisModal #analysisStatsGrid{ padding:0 24px; margin-top:20px; }
+  #analysisContent{ flex:1; overflow-y:auto; padding:0 24px 48px; }
+  @media(min-width:640px){
+    #studentAnalysisModal h3{ padding-top:80px; }
+  }
+  .analysis-stat-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px; }
+  .analysis-stat-card .num{ font-size:1.5rem; font-weight:700; font-family:'IBM Plex Mono',monospace; }
+  .analysis-stat-card .lbl{ font-size:0.78rem; color:var(--muted); margin-top:4px; }
+  .analysis-stat-card.warn .num{ color:var(--ember); }
+  .analysis-stat-card.good .num{ color:#39D98A; }
+  .analysis-section-title{ font-weight:700; font-size:1.05rem; margin:28px 0 12px; }
 
   .track-goal-bar-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:24px; }
   .track-goal-bar-track{ height:14px; border-radius:20px; background:var(--ink); overflow:hidden; margin-top:12px; }
@@ -2775,9 +2814,6 @@
       </select>
       <select id="regCourse" required>
         <option value="" disabled selected>Course</option>
-        <option>EST Math Prep</option>
-        <option>SAT Math Prep</option>
-        <option>ACT Math Bootcamp</option>
         <option>Not sure yet</option>
       </select>
       <input type="text" id="regStudentNumber" placeholder="Student number" required>
@@ -2863,11 +2899,12 @@
 
 <!-- ADMIN: STUDENT ANALYSIS MODAL -->
 <div class="modal-overlay" id="studentAnalysisModal">
-  <div class="modal-box exam-modal-box" style="max-width:600px;">
+  <div class="modal-box">
     <button class="modal-close" id="closeAnalysisModal" aria-label="Close">×</button>
     <h3 style="margin-bottom:6px;" id="analysisStudentName">Student analysis</h3>
-    <p style="color:var(--muted); font-size:0.9rem; margin-bottom:20px;" id="analysisSummary"></p>
-    <div id="analysisContent" style="max-height:60vh; overflow-y:auto;"></div>
+    <p style="color:var(--muted); font-size:0.9rem; margin-bottom:8px;" id="analysisSummary"></p>
+    <div id="analysisStatsGrid" class="asd-grid" style="margin-bottom:28px;"></div>
+    <div id="analysisContent"></div>
   </div>
 </div>
 
@@ -3030,6 +3067,9 @@
         <div class="admin-stat-card"><div class="num" id="statPending">0</div><div class="lbl">Pending requests</div></div>
       </div>
       <div class="admin-actions">
+        <select id="studentsCourseFilterSelect" style="max-width:220px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
+          <option value="">All courses</option>
+        </select>
         <button class="btn btn-ghost" id="refreshStudents">Refresh</button>
         <button class="btn btn-ghost" id="exportStudents">Export CSV</button>
       </div>
@@ -3125,10 +3165,8 @@
           <input type="text" id="skillNameInput" placeholder="e.g. Quadratic Equations">
         </div>
         <div class="field-row">
-          <label class="field-label">Course</label>
-          <select id="skillCourseInput">
-            <option value="">No course / general</option>
-          </select>
+          <label class="field-label">Course(s) — pick as many as apply</label>
+          <div id="skillCourseCheckboxes" class="skill-course-checkboxes"></div>
         </div>
 
         <label class="field-label">Questions</label>
@@ -3150,8 +3188,7 @@
       <div class="admin-actions" style="margin-top:28px;">
         <button class="btn btn-ghost" id="refreshSkills">Refresh</button>
         <button class="btn btn-ghost skill-course-filter-btn active" data-filter="all">All</button>
-        <button class="btn btn-ghost skill-course-filter-btn" data-filter="EST Math Prep">EST</button>
-        <button class="btn btn-ghost skill-course-filter-btn" data-filter="ACT Math Bootcamp">ACT</button>
+        <span id="skillCourseFilterExtra"></span>
       </div>
       <div class="admin-table-wrap" id="skillListWrap">
         <div class="admin-empty" id="skillListEmpty" style="display:none;">No skill sets yet — add one above.</div>
@@ -3161,6 +3198,9 @@
     <div class="admin-panel" id="leaderboardPanel">
       <div class="admin-note">Ranked by each student's average score across every homework they've completed.</div>
       <div class="admin-actions">
+        <select id="leaderboardCourseFilterSelect" style="max-width:220px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
+          <option value="">All courses</option>
+        </select>
         <button class="btn btn-ghost" id="refreshAdminLeaderboard">Refresh</button>
       </div>
       <div class="leaderboard-wrap" id="adminLeaderboardWrap">
@@ -3363,6 +3403,9 @@
 
       <div class="admin-note">Every wrong answer across every student's homework, exams, and skill practice — newest first.</div>
       <div class="admin-actions">
+        <select id="mistakesCourseFilterSelect" style="max-width:220px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
+          <option value="">All courses</option>
+        </select>
         <select id="mistakesFilterSelect" style="max-width:220px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
           <option value="">All students</option>
         </select>
@@ -6298,7 +6341,9 @@
     const ok = await dbSet('skills', id, { id, ...data });
     if(ok){
       await dbSet('skills', `idx-${id}`, {
-        _index: true, id, skill: data.skill, course: data.course, createdByRole: data.createdByRole, questionCount: (data.questions || []).length, ts: data.ts
+        _index: true, id, skill: data.skill, course: data.course,
+        courses: Array.isArray(data.courses) ? data.courses : (data.course ? [data.course] : []),
+        createdByRole: data.createdByRole, questionCount: (data.questions || []).length, ts: data.ts
       });
       backfillExplanationVideos(data.skill, data.questions || []);
     }
@@ -6310,11 +6355,40 @@
     sets.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
     return sets;
   }
+
+  let _skillsCourseRepairDone = false;
+  // One-time fix for a real bug: existing skills' lightweight index records
+  // never carried course info at all, which meant every skill silently
+  // looked "general" to the course-visibility check regardless of what
+  // course it was actually tagged with. Rebuilds each index record from
+  // its full record once per session so course filtering and student-
+  // facing visibility both become accurate.
+  async function repairSkillsIndexCourses(){
+    if(_skillsCourseRepairDone) return;
+    _skillsCourseRepairDone = true;
+    try{
+      const fullSkills = await fetchAllSkills();
+      for(const skill of fullSkills){
+        await dbSet('skills', `idx-${skill.id}`, {
+          _index: true, id: skill.id, skill: skill.skill, course: skill.course || null,
+          courses: Array.isArray(skill.courses) ? skill.courses : (skill.course ? [skill.course] : []),
+          createdByRole: skill.createdByRole, questionCount: (skill.questions || []).length, ts: skill.ts
+        });
+      }
+      if(fullSkills.length > 0) invalidateDbCache('skills');
+    }catch(err){
+      console.error('repairSkillsIndexCourses failed:', err);
+    }
+  }
+
   // Lightweight version for grids/dropdowns — skill name + question count only,
   // no question content or images.
   async function fetchSkillsIndex(){
+    await repairSkillsIndexCourses();
     await ensureIndexBackfilled('skills', (skill)=> ({
-      _index: true, id: skill.id, skill: skill.skill, questionCount: (skill.questions || []).length, ts: skill.ts
+      _index: true, id: skill.id, skill: skill.skill, course: skill.course || null,
+      courses: Array.isArray(skill.courses) ? skill.courses : (skill.course ? [skill.course] : []),
+      questionCount: (skill.questions || []).length, ts: skill.ts
     }));
     const rows = await dbGetAllByIdPrefix('skills', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -6365,8 +6439,7 @@
       // when they explicitly click Cancel. Otherwise a skill saved before
       // ever touching the dropdown would save with no course at all,
       // making it invisible to their own strictly-filtered list.
-      populateSkillCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
-      applySkillCourseLock();
+      populateSkillCourseCheckboxes(currentAdminRole === 'act-admin' ? [ACT_ADMIN_COURSE] : []);
     }
     if(skillQuestionsContainer.children.length === 0){
       addQuestionBlock(null, skillQuestionsContainer);
@@ -6383,7 +6456,7 @@
     const emptyState = document.getElementById('skillListEmpty');
     let sets = await fetchSkillsIndex();
     if(currentAdminCourseFilter) sets = sets.filter(s => courseInAdminScope(s.course));
-    if(currentSkillListFilter !== 'all') sets = sets.filter(s => s.course === currentSkillListFilter);
+    if(currentSkillListFilter !== 'all') sets = sets.filter(s => getSkillCourses(s).includes(currentSkillListFilter));
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
 
@@ -6399,7 +6472,7 @@
       row.innerHTML = `
         <div>
           <h4>${esc(set.skill)}${(set.createdByRole === 'act-admin' && currentAdminRole !== 'act-admin') ? ' <span class="tag-pill" style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);">🎓 Added by ACT admin</span>' : ''}</h4>
-          <div class="meta">${set.course ? esc(set.course) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
+          <div class="meta">${getSkillCourses(set).length > 0 ? esc(getSkillCourses(set).join(', ')) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-skill-btn" title="Edit this skill set" aria-label="Edit this skill set">✏️ Edit</button>
@@ -6423,8 +6496,7 @@
     if(!set){ alert('Could not load that skill — please try again.'); return; }
     editingSkillId = set.id;
     document.getElementById('skillNameInput').value = set.skill;
-    populateSkillCourseSelect(set.course || '');
-    applySkillCourseLock();
+    populateSkillCourseCheckboxes(getSkillCourses(set));
     skillQuestionsContainer.innerHTML = '';
     (set.questions || []).forEach(q => addQuestionBlock(q, skillQuestionsContainer));
     document.getElementById('saveSkillBtn').textContent = 'Save changes';
@@ -6437,8 +6509,7 @@
     document.getElementById('saveSkillBtn').textContent = 'Save skill set';
     document.getElementById('cancelSkillEditBtn').style.display = 'none';
     document.getElementById('skillNameInput').value = '';
-    populateSkillCourseSelect(currentAdminRole === 'act-admin' ? ACT_ADMIN_COURSE : '');
-    applySkillCourseLock();
+    populateSkillCourseCheckboxes(currentAdminRole === 'act-admin' ? [ACT_ADMIN_COURSE] : []);
     skillQuestionsContainer.innerHTML = '';
     addQuestionBlock(null, skillQuestionsContainer);
   }
@@ -6458,17 +6529,22 @@
       return;
     }
 
+    const courses = getCheckedSkillCourses();
+    if(currentAdminRole === 'act-admin' && courses.length === 0){
+      alert('Pick at least one ACT course for this skill.');
+      return;
+    }
+
     const btn = document.getElementById('saveSkillBtn');
     const wasEditing = !!editingSkillId;
     btn.disabled = true; btn.textContent = 'Saving…';
     const id = editingSkillId || generateId('skill');
-    const course = document.getElementById('skillCourseInput').value.trim();
     // Preserve the original creator's role through edits — if the ACT admin
     // made this, it should keep showing that way even if the main admin
     // edits it later, since the point is knowing where it came from.
     const existing = wasEditing ? await dbGet('skills', id) : null;
     const createdByRole = existing && existing.createdByRole ? existing.createdByRole : currentAdminRole;
-    const ok = await saveSkillSet(id, { skill, course, questions, createdByRole, ts: new Date().toISOString() });
+    const ok = await saveSkillSet(id, { skill, courses, course: courses[0] || null, questions, createdByRole, ts: new Date().toISOString() });
     btn.disabled = false;
 
     if(ok){
@@ -6483,13 +6559,30 @@
 
   document.getElementById('refreshSkills').addEventListener('click', ()=>{ invalidateDbCache('skills'); renderAdminSkillList(); });
 
-  document.querySelectorAll('.skill-course-filter-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      currentSkillListFilter = btn.dataset.filter;
-      document.querySelectorAll('.skill-course-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
-      renderAdminSkillList();
+  // Rebuilds the per-course quick-filter buttons (beyond the fixed "All"
+  // one) from whatever courses actually exist — no assumption about which
+  // courses an admin has, so this works the same whether they've added
+  // one course or a dozen.
+  function populateSkillCourseFilterButtons(){
+    const wrap = document.getElementById('skillCourseFilterExtra');
+    if(!wrap) return;
+    wrap.innerHTML = cachedCourseNames.map(name =>
+      `<button class="btn btn-ghost skill-course-filter-btn" data-filter="${esc(name)}">${esc(name)}</button>`
+    ).join('');
+    wireUpSkillCourseFilterButtons();
+  }
+
+  function wireUpSkillCourseFilterButtons(){
+    document.querySelectorAll('.skill-course-filter-btn').forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.filter === currentSkillListFilter);
+      btn.onclick = ()=>{
+        currentSkillListFilter = btn.dataset.filter;
+        document.querySelectorAll('.skill-course-filter-btn').forEach(b => b.classList.toggle('active', b === btn));
+        renderAdminSkillList();
+      };
     });
-  });
+  }
+  wireUpSkillCourseFilterButtons();
 
   /* ---------------- COURSES (admin-managed course list) ---------------- */
   async function saveCourse(id, data){
@@ -6615,16 +6708,14 @@
   async function refreshCourseNamesCache(){
     const courses = await fetchAllCourses();
     // The three standard courses always need to be selectable here — this
-    // list feeds the Skill/Exam course dropdowns, which is a separate data
-    // source from the registration form. Without this, a course like "ACT
-    // Math Bootcamp" could be completely un-selectable when tagging
-    // content unless someone happened to also add it as a manual entry in
-    // the Courses tab, even though students can register under it fine.
-    const standardCourses = ['EST Math Prep', 'SAT Math Prep', 'ACT Math Bootcamp'];
-    const customCourses = courses.map(c => c.name).filter(Boolean);
-    cachedCourseNames = [...standardCourses, ...customCourses.filter(name => !standardCourses.includes(name))];
+    // Course dropdowns/checkboxes throughout the admin panel (Skills, Exams,
+    // etc.) reflect only the courses actually added in the Courses tab —
+    // no built-in defaults, so a new setup starts with a genuinely empty
+    // course list until the admin adds their own.
+    cachedCourseNames = courses.map(c => c.name).filter(Boolean);
     populateExamCourseSelect();
-    populateSkillCourseSelect();
+    populateSkillCourseCheckboxes();
+    populateSkillCourseFilterButtons();
   }
 
   function populateExamCourseSelect(selectedValue){
@@ -6642,26 +6733,34 @@
       options.map(name => `<option value="${esc(name)}" ${current === name ? 'selected' : ''}>${esc(name)}</option>`).join('');
   }
 
-  function populateSkillCourseSelect(selectedValue){
-    const sel = document.getElementById('skillCourseInput');
-    if(!sel) return;
+  function populateSkillCourseCheckboxes(selectedCourses){
+    const wrap = document.getElementById('skillCourseCheckboxes');
+    if(!wrap) return;
     const isActAdmin = currentAdminRole === 'act-admin';
-    let options = isActAdmin ? cachedCourseNames.filter(name => courseInAdminScope(name)) : [...cachedCourseNames];
-    let current = selectedValue !== undefined ? selectedValue : sel.value;
-    if(isActAdmin && !options.includes(current)) current = options[0] || '';
-    if(current && !options.includes(current) && !isActAdmin) options.push(current);
-    sel.innerHTML = (isActAdmin ? '' : '<option value="">No course / general</option>') +
-      options.map(name => `<option value="${esc(name)}" ${current === name ? 'selected' : ''}>${esc(name)}</option>`).join('');
+    const options = isActAdmin ? cachedCourseNames.filter(name => courseInAdminScope(name)) : [...cachedCourseNames];
+    let current = selectedCourses !== undefined ? selectedCourses : getCheckedSkillCourses();
+    // ACT admin must always have at least one of their own courses picked —
+    // can't leave a skill fully unscoped the way the main admin can.
+    if(isActAdmin && current.filter(c => options.includes(c)).length === 0) current = options.length ? [options[0]] : [];
+    wrap.innerHTML = options.map(name => `
+      <label class="skill-course-checkbox-item">
+        <input type="checkbox" value="${esc(name)}" ${current.includes(name) ? 'checked' : ''}>
+        ${esc(name)}
+      </label>
+    `).join('') || '<div style="color:var(--muted);font-size:0.85rem;">No courses added yet.</div>';
   }
 
-  // No longer needs to disable the dropdown — populateSkillCourseSelect
-  // already restricts its options to ACT-scoped courses for this role, so
-  // the admin can freely choose between multiple ACT courses if they have
-  // more than one, without any risk of picking something outside scope.
-  function applySkillCourseLock(){
-    const sel = document.getElementById('skillCourseInput');
-    if(!sel) return;
-    sel.disabled = false;
+  function getCheckedSkillCourses(){
+    return Array.from(document.querySelectorAll('#skillCourseCheckboxes input:checked')).map(cb => cb.value);
+  }
+
+  // Backward-compatible reader: skills saved before this feature only have
+  // a single "course" string, not a "courses" array. Treating that as a
+  // one-item array means every existing skill keeps working exactly as
+  // before, with no migration needed.
+  function getSkillCourses(skill){
+    if(Array.isArray(skill.courses)) return skill.courses;
+    return skill.course ? [skill.course] : [];
   }
 
   // Keeps the public registration form's course dropdown in sync with admin-added
@@ -7284,7 +7383,20 @@
   }
 
   async function renderAdminLeaderboard(){
+    await refreshCourseNamesCache();
     const wrap = document.getElementById('adminLeaderboardWrap');
+    const courseFilterSelect = document.getElementById('leaderboardCourseFilterSelect');
+    if(courseFilterSelect && currentAdminRole === 'admin'){
+      courseFilterSelect.style.display = '';
+      if(courseFilterSelect.options.length <= 1){
+        courseFilterSelect.innerHTML = '<option value="">All courses</option>' +
+          cachedCourseNames.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+      }
+      courseFilterSelect.value = leaderboardManualCourseFilter;
+    } else if(courseFilterSelect){
+      courseFilterSelect.style.display = 'none';
+    }
+
     const all = await fetchHomeworkIndex();
     let completed = all.filter(e => e.status === 'completed' && e.score);
 
@@ -7294,6 +7406,11 @@
     if(currentAdminCourseFilter){
       const allowedUsernames = new Set(allStudents.map(s => (s.username||'').trim().toLowerCase()));
       completed = completed.filter(e => allowedUsernames.has((e.username||'').trim().toLowerCase()));
+    }
+    if(currentAdminRole === 'admin' && leaderboardManualCourseFilter){
+      const courseByUsername = {};
+      allStudents.forEach(s => { courseByUsername[(s.username||'').trim().toLowerCase()] = (s.course||'').trim(); });
+      completed = completed.filter(e => courseByUsername[(e.username||'').trim().toLowerCase()] === leaderboardManualCourseFilter.trim());
     }
 
     if(completed.length === 0){
@@ -7346,6 +7463,10 @@
     });
   }
   document.getElementById('refreshAdminLeaderboard').addEventListener('click', ()=>{ invalidateDbCache('attempts'); invalidateDbCache('homework'); renderAdminLeaderboard(); });
+  document.getElementById('leaderboardCourseFilterSelect').addEventListener('change', (e)=>{
+    leaderboardManualCourseFilter = e.target.value;
+    renderAdminLeaderboard();
+  });
 
   /* ---------------- ASK A QUESTION (student -> admin, per homework question) ---------------- */
   async function saveAsk(entry){
@@ -7833,7 +7954,7 @@
     if(!grid) return;
     const allSets = await fetchSkillsIndex();
     const sets = currentStudent
-      ? allSets.filter(s => !s.course || s.course === currentStudent.course)
+      ? allSets.filter(s => { const c = getSkillCourses(s); return c.length === 0 || c.includes(currentStudent.course); })
       : allSets;
 
     if(sets.length === 0){
@@ -8020,7 +8141,7 @@
     }
 
     let skillSets = await fetchSkillsIndex();
-    if(currentStudent) skillSets = skillSets.filter(s => !s.course || s.course === currentStudent.course);
+    if(currentStudent) skillSets = skillSets.filter(s => { const c = getSkillCourses(s); return c.length === 0 || c.includes(currentStudent.course); });
     const maxCount = weak[0][1];
 
     wpList.innerHTML = '';
@@ -10624,12 +10745,31 @@
   }
 
   async function renderAdminMistakesTable(){
+    await refreshCourseNamesCache();
+    const courseFilterSelect = document.getElementById('mistakesCourseFilterSelect');
+    if(courseFilterSelect && currentAdminRole === 'admin'){
+      courseFilterSelect.style.display = '';
+      if(courseFilterSelect.options.length <= 1){
+        courseFilterSelect.innerHTML = '<option value="">All courses</option>' +
+          cachedCourseNames.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+      }
+      courseFilterSelect.value = mistakesManualCourseFilter;
+    } else if(courseFilterSelect){
+      courseFilterSelect.style.display = 'none';
+    }
+
     const filterVal = document.getElementById('mistakesFilterSelect').value;
     let rows = await gatherAllMistakeRows(filterVal || null);
     if(currentAdminCourseFilter){
       const scopedStudents = await fetchStudentsForCurrentAdmin();
       const allowedUsernames = new Set(scopedStudents.map(s => (s.username||'').trim().toLowerCase()));
       rows = rows.filter(r => allowedUsernames.has((r.username||'').trim().toLowerCase()));
+    }
+    if(currentAdminRole === 'admin' && mistakesManualCourseFilter){
+      const allStudents = await fetchStudentsForCurrentAdmin();
+      const courseByUsername = {};
+      allStudents.forEach(s => { courseByUsername[(s.username||'').trim().toLowerCase()] = (s.course||'').trim(); });
+      rows = rows.filter(r => courseByUsername[(r.username||'').trim().toLowerCase()] === mistakesManualCourseFilter.trim());
     }
 
     const tbody = document.getElementById('mistakesBody');
@@ -10789,9 +10929,21 @@
   }
 
   document.getElementById('refreshMistakesPanel').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); renderAdminMistakesTable(); });
+  document.getElementById('mistakesCourseFilterSelect').addEventListener('change', (e)=>{
+    mistakesManualCourseFilter = e.target.value;
+    renderAdminMistakesTable();
+  });
 
   /* ---------------- ANSWER MISTAKES (assistant chat-style answer workflow) ---------------- */
   let amCurrentFilter = 'needs';
+
+  // Manual, admin-chosen course filters for Students/Mistakes/Leaderboard —
+  // independent per tab, same pattern as every other filter dropdown in
+  // the app. '' means "all courses". Only meaningful for the main admin,
+  // since act-admin/assistant already have their own automatic scoping.
+  let studentsManualCourseFilter = '';
+  let mistakesManualCourseFilter = '';
+  let leaderboardManualCourseFilter = '';
 
   // Who's actually looking at the Answer Mistakes queue right now — used
   // both to attribute a new answer and to decide whether a claimed
@@ -11583,13 +11735,16 @@
 
   async function openStudentAnalysis(username){
     document.getElementById('analysisStudentName').textContent = `${username}'s analysis`;
-    document.getElementById('analysisSummary').textContent = 'Loading…';
+    document.getElementById('analysisSummary').textContent = '';
+    document.getElementById('analysisStatsGrid').innerHTML = '<div class="admin-empty">Loading…</div>';
     document.getElementById('analysisContent').innerHTML = '';
     document.getElementById('studentAnalysisModal').classList.add('open');
 
     const uname = username.trim().toLowerCase();
-    const [hwIndex, attemptsIndex] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
-    const myCompletedHwIndex = hwIndex.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
+    const [hwIndex, attemptsIndex, allStudents] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex(), fetchStudentsForCurrentAdmin()]);
+    const studentRecord = allStudents.find(s => (s.username||'').trim().toLowerCase() === uname);
+    const myHwIndex = hwIndex.filter(h => (h.username||'').trim().toLowerCase() === uname);
+    const myCompletedHwIndex = myHwIndex.filter(h => h.status === 'completed');
     const myOwnAttemptsIndex = attemptsIndex.filter(a => (a.username||'').trim().toLowerCase() === uname);
     const mineHw = (await Promise.all(myCompletedHwIndex.map(h => dbGet('homework', h.id))))
       .filter(h => h && Array.isArray(h.results));
@@ -11609,12 +11764,52 @@
     const totalQ = totalCorrect + totalWrong;
     const acc = totalQ > 0 ? Math.round((totalCorrect / totalQ) * 100) : 0;
 
-    document.getElementById('analysisSummary').textContent = totalQ > 0
-      ? `${totalCorrect} correct, ${totalWrong} incorrect out of ${totalQ} questions (${acc}% overall).`
-      : (myMistakes.length > 0 ? `${myMistakes.length} mistake${myMistakes.length===1?'':'s'} on record.` : 'No graded homework or exams yet for this student.');
+    document.getElementById('analysisSummary').textContent = studentRecord
+      ? `${studentRecord.course || 'No course set'} · Grade ${studentRecord.grade || '—'} · Registered ${studentRecord.ts ? new Date(studentRecord.ts).toLocaleDateString() : '—'}`
+      : '';
+
+    const pendingMistakesCount = myMistakes.filter(m => isMistakeInAssistantQueue(m) && m.status !== 'answered').length;
+
+    // Pending retakes — same accurate calculation the rest of the app uses,
+    // not just the raw retakeRequired flag (which never clears on its own).
+    let pendingRetakes = 0;
+    const pendingHwForRetake = myCompletedHwIndex.filter(h => h.retakeRequired);
+    const pendingAttemptsForRetake = myOwnAttemptsIndex.filter(a => a.retakeRequired);
+    if(pendingHwForRetake.length > 0 || pendingAttemptsForRetake.length > 0){
+      const laterCorrect = [];
+      [...mineHw, ...mineAttempts].forEach(item=>{
+        const ts = item.submittedAt || item.ts;
+        if(!ts) return;
+        item.results.forEach(res=>{ if(res.correct) laterCorrect.push({ lesson: (res.lesson||'General').trim().toLowerCase(), text: (res.text||'').trim().toLowerCase(), ts }); });
+      });
+      pendingRetakes = await countTrueResolvedPendingRetakes(username, mineHw, mineAttempts, laterCorrect);
+    }
+
+    document.getElementById('analysisStatsGrid').innerHTML = `
+      <div class="analysis-stat-card ${totalQ > 0 ? (acc < 60 ? 'warn' : 'good') : ''}">
+        <div class="num">${totalQ > 0 ? acc + '%' : '—'}</div>
+        <div class="lbl">Overall score</div>
+      </div>
+      <div class="analysis-stat-card">
+        <div class="num">${myCompletedHwIndex.length} of ${myHwIndex.length}</div>
+        <div class="lbl">Homework completed</div>
+      </div>
+      <div class="analysis-stat-card ${pendingRetakes > 0 ? 'warn' : 'good'}">
+        <div class="num">${pendingRetakes}</div>
+        <div class="lbl">Pending retakes</div>
+      </div>
+      <div class="analysis-stat-card ${pendingMistakesCount > 0 ? 'warn' : 'good'}">
+        <div class="num">${pendingMistakesCount}</div>
+        <div class="lbl">Mistakes needing an answer</div>
+      </div>
+      <div class="analysis-stat-card">
+        <div class="num">${myMistakes.length}</div>
+        <div class="lbl">Total mistakes on record</div>
+      </div>
+    `;
 
     const content = document.getElementById('analysisContent');
-    content.innerHTML = '';
+    content.innerHTML = '<div class="analysis-section-title">Detailed breakdown</div>';
 
     function renderAnalysisItem(title, item){
       const correctCount = item.results.filter(r => r.correct).length;
@@ -11752,7 +11947,26 @@
   }
 
   async function renderAdminStudents(){
-    const students = await fetchStudentsForCurrentAdmin();
+    await refreshCourseNamesCache();
+    let students = await fetchStudentsForCurrentAdmin();
+
+    // Only the main admin gets to manually pick a course here — act-admin
+    // and the shared assistant login are already automatically scoped.
+    const courseFilterSelect = document.getElementById('studentsCourseFilterSelect');
+    if(courseFilterSelect && currentAdminRole === 'admin'){
+      courseFilterSelect.style.display = '';
+      if(courseFilterSelect.options.length <= 1){
+        courseFilterSelect.innerHTML = '<option value="">All courses</option>' +
+          cachedCourseNames.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+      }
+      courseFilterSelect.value = studentsManualCourseFilter;
+      if(studentsManualCourseFilter){
+        students = students.filter(s => (s.course||'').trim() === studentsManualCourseFilter.trim());
+      }
+    } else if(courseFilterSelect){
+      courseFilterSelect.style.display = 'none';
+    }
+
     document.getElementById('statStudents').textContent = students.length;
     const pendingCount = students.filter(s => (s.status || 'pending') === 'pending').length;
     document.getElementById('statPending').textContent = pendingCount;
@@ -11872,6 +12086,10 @@
   }
 
   document.getElementById('refreshStudents').addEventListener('click', ()=>{ invalidateDbCache('students'); renderAdminStudents(); });
+  document.getElementById('studentsCourseFilterSelect').addEventListener('change', (e)=>{
+    studentsManualCourseFilter = e.target.value;
+    renderAdminStudents();
+  });
 
   document.getElementById('exportStudents').addEventListener('click', async ()=>{
     const students = await fetchStudentsForCurrentAdmin();
