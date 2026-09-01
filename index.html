@@ -4644,6 +4644,20 @@
       <div class="q-video-row">
         <label class="field-label" style="margin-bottom:6px;">Your written explanation (optional — shown to a student only if they get this wrong)</label>
         <textarea class="q-explanation-text" placeholder="Explain why the correct answer is right…" style="width:100%;min-height:70px;">${block._explanationText ? esc(block._explanationText) : ''}</textarea>
+        ${(block._existingExplanations && block._existingExplanations.length > 0) ? `
+          <div style="margin-top:10px;">
+            <label class="field-label" style="margin-bottom:6px;">Already explained by others</label>
+            ${block._existingExplanations.map(exp => `
+              <div class="explanation-text-wrap" style="margin-top:0;margin-bottom:8px;">
+                <div class="explanation-video-label">📝 ${exp.by ? esc(exp.by) : 'Unknown'}</div>
+                ${exp.text ? `<div class="explanation-text-body">${esc(exp.text)}</div>` : ''}
+                ${exp.photo ? `<img src="${exp.photo}" alt="Explanation photo" style="max-width:200px;border-radius:6px;display:block;margin-top:6px;">` : ''}
+                ${exp.video ? `<video controls preload="metadata" src="${exp.video}" style="max-width:280px;border-radius:6px;display:block;margin-top:6px;"></video>` : ''}
+                ${exp.voice ? `<audio controls src="${exp.voice}" style="width:100%;margin-top:6px;"></audio>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
       <div class="q-video-row">
         <label class="field-label" style="margin-bottom:6px;">Explanation video (optional — shown to a student only if they get this wrong)</label>
@@ -4906,11 +4920,14 @@
       const row = document.createElement('div');
       row.className = 'exam-option';
       const optImg = optionImages[i];
+      const hasText = !!(opt && opt.trim());
+      const fallbackLabel = !hasText && !optImg ? `<span style="color:var(--ember);font-style:italic;">⚠ (Option ${String.fromCharCode(65+i)} — empty, add text or an image)</span>` : '';
       row.innerHTML = `
         <input type="radio" disabled>
         <div class="option-content">
-          ${optImg ? `<img src="${optImg}" alt="Option ${i+1}">` : ''}
-          ${opt ? `<span>${esc(opt)}</span>` : ''}
+          ${optImg ? `<img src="${optImg}" alt="Option ${i+1}" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
+          ${hasText ? `<span>${esc(opt)}</span>` : ''}
+          ${fallbackLabel}
         </div>
       `;
       optionsWrap.appendChild(row);
@@ -5545,11 +5562,18 @@
         const row = document.createElement('label');
         row.className = 'exam-option' + (answers[current]===i ? ' selected' : '');
         const optImg = q.optionImages && q.optionImages[i];
+        const hasText = !!(opt && opt.trim());
+        // Some old options ended up with neither text nor a working image
+        // (a deleted upload, a save that lost the text, etc) — without a
+        // fallback, that choice silently renders as an empty, invisible
+        // row a student can't tell apart from a blank space.
+        const fallbackLabel = !hasText && !optImg ? `<span style="color:var(--muted);font-style:italic;">(Option ${String.fromCharCode(65+i)} — no content saved)</span>` : '';
         row.innerHTML = `
           <input type="radio" name="exam-answer" value="${i}" ${answers[current]===i ? 'checked' : ''}>
           <div class="option-content">
-            ${optImg ? `<img src="${optImg}" alt="Option ${i+1}">` : ''}
-            ${opt ? `<span>${esc(opt)}</span>` : ''}
+            ${optImg ? `<img src="${optImg}" alt="Option ${i+1}" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
+            ${hasText ? `<span>${esc(opt)}</span>` : ''}
+            ${fallbackLabel}
           </div>
         `;
         row.addEventListener('click', ()=>{
@@ -5686,7 +5710,7 @@
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
               options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, explanationPhoto: q.explanationPhoto || null, explanationVoice: q.explanationVoice || null, explanations: q.explanations || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: exam.questions.length,
-              status: 'delivered', answer: null, studentRating: null
+              status: getQuestionExplanations(q).length > 0 ? 'answered' : 'delivered', answer: null, studentRating: null
             });
           }
         });
@@ -7708,6 +7732,58 @@
   // CURRENT explanation video — so it doesn't matter whether the video was
   // added before or after a student made that mistake; they always see
   // whatever video is attached now.
+  // Removes one person's explanation for a question entirely — from the
+  // source skill/exam itself, and from every existing mistake it was
+  // already shared to. Unlike backfillExplanationVideos (which only ever
+  // adds or updates), this can take a mistake back out of "answered"
+  // status if nothing else is left to show the student once this
+  // explanation is gone.
+  async function deleteExplanationForQuestion(row, deletedBy){
+    const source = await findSourceRecordForMistake(row);
+    if(!source) return { ok: false, reason: 'not-found' };
+    const questions = source.record.questions || [];
+    const match = matchQuestionForMistake(row, questions);
+    if(!match) return { ok: false, reason: 'not-found' };
+
+    match.explanations = getQuestionExplanations(match).filter(e => e.by !== deletedBy);
+    // Once migrated to the array form there's nothing left to also clear
+    // on the old single-fields, but do it anyway in case this question
+    // never went through upsertQuestionExplanation and still only has the
+    // legacy fields for exactly this person.
+    if(match.explanationBy === deletedBy){
+      delete match.explanationText; delete match.explanationVideo;
+      delete match.explanationPhoto; delete match.explanationVoice; delete match.explanationBy;
+    }
+
+    const ok = await dbSet(source.type, source.record.id, source.record);
+    if(!ok) return { ok: false, reason: 'save-failed' };
+
+    try{
+      const allMistakes = await fetchAllMistakes();
+      const matching = allMistakes.filter(m => !m._index && m.source === source.record[source.titleField]);
+      const updates = [];
+      matching.forEach(m=>{
+        const mMatch = matchQuestionForMistake(m, questions);
+        if(!mMatch) return;
+        const stillHasExplanations = getQuestionExplanations(mMatch);
+        const hadThisPersonsAnswer = m.answer && m.answer.answeredBy === deletedBy;
+        const stillHasOwnAnswer = m.answer && !hadThisPersonsAnswer;
+        const nowHasNothing = stillHasExplanations.length === 0 && !stillHasOwnAnswer;
+        updates.push(dbSet('mistakes', m.id, {
+          ...m,
+          explanations: stillHasExplanations,
+          explanationText: null, explanationVideo: null, explanationPhoto: null, explanationVoice: null, explanationBy: null,
+          answer: hadThisPersonsAnswer ? null : m.answer,
+          studentRating: hadThisPersonsAnswer ? null : m.studentRating,
+          status: nowHasNothing ? 'delivered' : m.status
+        }));
+      });
+      if(updates.length > 0) await Promise.all(updates);
+    }catch(err){ console.error('Could not propagate explanation deletion:', err); }
+
+    return { ok: true };
+  }
+
   async function backfillExplanationVideos(sourceTitle, questions){
     if(!sourceTitle || !Array.isArray(questions) || questions.length === 0) return;
     try{
@@ -7745,7 +7821,17 @@
 
         const explanationsChanged = JSON.stringify(match.explanations || null) !== JSON.stringify(m.explanations || null);
         if(match && (explanationsChanged || (match.explanationVideo && match.explanationVideo !== m.explanationVideo) || (match.explanationText && match.explanationText !== m.explanationText) || (match.explanationPhoto && match.explanationPhoto !== m.explanationPhoto) || (match.explanationVoice && match.explanationVoice !== m.explanationVoice))){
-          updates.push(dbSet('mistakes', m.id, { ...m, explanationVideo: match.explanationVideo || m.explanationVideo || null, explanationText: match.explanationText || m.explanationText || null, explanationBy: match.explanationBy || m.explanationBy || null, explanationPhoto: match.explanationPhoto || m.explanationPhoto || null, explanationVoice: match.explanationVoice || m.explanationVoice || null, explanations: match.explanations || m.explanations || null }));
+          const gainedExplanation = getQuestionExplanations(match).length > 0;
+          updates.push(dbSet('mistakes', m.id, {
+            ...m,
+            explanationVideo: match.explanationVideo || m.explanationVideo || null, explanationText: match.explanationText || m.explanationText || null,
+            explanationBy: match.explanationBy || m.explanationBy || null, explanationPhoto: match.explanationPhoto || m.explanationPhoto || null,
+            explanationVoice: match.explanationVoice || m.explanationVoice || null, explanations: match.explanations || m.explanations || null,
+            // A student stuck on this exact mistake now has an explanation
+            // to read even without a personal answer — no need for another
+            // assistant to separately answer the same question again.
+            status: (gainedExplanation && m.status !== 'answered') ? 'answered' : m.status
+          }));
         }
       });
       if(updates.length > 0) await Promise.all(updates);
@@ -8416,7 +8502,7 @@
       item.innerHTML = `
         <div class="mistake-history-main">
           <span class="hw-date">${date ? date.toLocaleDateString() : ''}</span>
-          ${row.image ? `<img class="mistake-thumb" src="${row.image}" alt="Question photo">` : ''}
+          ${row.image ? `<img class="mistake-thumb" src="${row.image}" alt="Question photo" onerror="this.style.display='none'">` : ''}
           <span class="hw-title">${esc(row.source || '')} · ${esc(row.text)}</span>
           <button class="btn btn-ghost" style="padding:5px 12px;font-size:0.78rem;flex-shrink:0;">View</button>
         </div>
@@ -8462,7 +8548,7 @@
     // explanation attached to the question itself (from the proactive
     // "Explain Questions" goal) — a student should be able to ask about
     // either one if they're still confused.
-    const answered = rows.filter(r => (r.status === 'answered' && r.answer) || r.explanationText);
+    const answered = rows.filter(r => (r.status === 'answered' && r.answer) || getQuestionExplanations(r).length > 0);
     answered.sort((a,b)=> new Date((b.answer && b.answer.answeredAt) || b.ts || 0) - new Date((a.answer && a.answer.answeredAt) || a.ts || 0));
 
     // Opening this page is what "reading" the answers means — mark every
@@ -8515,7 +8601,7 @@
       thread.innerHTML = `
         <div class="am-chat-bubble">
           <div class="bubble-label">${esc(row.lesson)} · ${esc(row.source)}</div>
-          ${row.image ? `<img src="${esc(row.image)}" alt="Question">` : ''}
+          ${row.image ? `<img src="${esc(row.image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
           ${row.text ? `<div>${esc(row.text)}</div>` : ''}
         </div>
         ${row.answer ? `
@@ -8534,8 +8620,7 @@
           </div>
         ` : `
           <div class="am-chat-bubble answer-bubble">
-            <div class="bubble-label">📝 Explanation${row.explanationBy ? ` from ${esc(row.explanationBy)}` : ' from your coach'}</div>
-            <div>${esc(row.explanationText)}</div>
+            ${explanationVideoHtml(row)}
           </div>
         `}
         ${followUpBubbleHtml}
@@ -9785,11 +9870,14 @@
         const row = document.createElement('label');
         row.className = 'exam-option' + (answers[current]===i ? ' selected' : '');
         const optImg = q.optionImages && q.optionImages[i];
+        const hasText = !!(opt && opt.trim());
+        const fallbackLabel = !hasText && !optImg ? `<span style="color:var(--muted);font-style:italic;">(Option ${String.fromCharCode(65+i)} — no content saved)</span>` : '';
         row.innerHTML = `
           <input type="radio" name="hw-answer" value="${i}" ${answers[current]===i ? 'checked' : ''}>
           <div class="option-content">
-            ${optImg ? `<img src="${optImg}" alt="Option ${i+1}">` : ''}
-            ${opt ? `<span>${esc(opt)}</span>` : ''}
+            ${optImg ? `<img src="${optImg}" alt="Option ${i+1}" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
+            ${hasText ? `<span>${esc(opt)}</span>` : ''}
+            ${fallbackLabel}
           </div>
         `;
         row.addEventListener('click', ()=>{
@@ -9877,7 +9965,7 @@
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
               options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, explanationPhoto: q.explanationPhoto || null, explanationVoice: q.explanationVoice || null, explanations: q.explanations || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: hw.questions.length,
-              status: 'delivered', answer: null, studentRating: null
+              status: getQuestionExplanations(q).length > 0 ? 'answered' : 'delivered', answer: null, studentRating: null
             });
           }
         });
@@ -10385,14 +10473,14 @@
     function questionCardHtml(idPrefix, i, source, lesson, badgeHtml, image, text, options, optionImages, correctAnswer){
       const optionsHtml = (options || []).map((opt, oi) => `
         <div style="padding:6px 10px; margin:3px 0; border-radius:6px; background:${oi === correctAnswer ? 'rgba(57,217,138,0.12)' : 'var(--ink)'}; font-size:0.85rem;">
-          ${optionImages && optionImages[oi] ? `<img src="${esc(optionImages[oi])}" style="max-width:100px;border-radius:4px;display:block;margin-bottom:4px;">` : ''}
+          ${optionImages && optionImages[oi] ? `<img src="${esc(optionImages[oi])}" style="max-width:100px;border-radius:4px;display:block;margin-bottom:4px;" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
           ${esc(opt || '')} ${oi === correctAnswer ? ' ✓' : ''}
         </div>
       `).join('');
       return `
         <div class="am-chat-bubble" data-${idPrefix}-index="${i}">
           <div class="bubble-label">${esc(source)} · ${esc(lesson)} · ${badgeHtml}</div>
-          ${image ? `<img src="${esc(image)}" alt="Question">` : ''}
+          ${image ? `<img src="${esc(image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
           ${text ? `<div style="margin-bottom:8px;">${esc(text)}</div>` : ''}
           ${optionsHtml}
           <div class="am-answer-tools explain-answer-tools" style="margin-top:12px;">
@@ -11347,7 +11435,7 @@
         <td>Q${row.questionNumber}${row.questionTotal ? ` of ${row.questionTotal}` : ''}</td>
         <td><span class="tag-pill">${esc(row.lesson)}</span></td>
         <td>${esc(row.text)}</td>
-        <td>${row.image ? `<img class="mistake-thumb" src="${row.image}" alt="Question photo">` : '—'}</td>
+        <td>${row.image ? `<img class="mistake-thumb" src="${row.image}" alt="Question photo" onerror="this.parentElement.textContent='⚠'">` : '—'}</td>
         <td>${esc(row.chosenText)}</td>
         <td>${esc(row.correctText)}</td>
         <td>${date ? date.toLocaleDateString() : '—'}</td>
@@ -11397,7 +11485,7 @@
 
     content.innerHTML = `
       <div class="eyebrow" style="margin-bottom:14px;">${esc(row.source || '')} · ${esc(row.lesson)}${row.questionNumber ? ` · Question ${row.questionNumber}${row.questionTotal ? ` of ${row.questionTotal}` : ''}` : ''}</div>
-      ${row.image ? `<img class="exam-q-image" src="${row.image}" alt="Question image">` : ''}
+      ${row.image ? `<img class="exam-q-image" src="${row.image}" alt="Question image" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
       <div class="exam-q-text" style="margin-bottom:20px;">${esc(row.text)}</div>
       ${optionsHtml}
       ${explanationVideoHtml(row)}
@@ -11628,9 +11716,13 @@
       `;
     }).join('') || `<div style="color:var(--ember);font-style:italic;padding:10px 0;">⚠ No answer choices were saved for this question.</div>`;
 
+    const canDeleteThisAnswer = row.answer && (row.answer.answeredBy === getCurrentAnswererIdentity() || currentAdminRole === 'admin');
     const answerBubbleHtml = row.answer ? `
       <div class="am-chat-bubble answer-bubble">
-        <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'assistant')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
+        <div class="bubble-label" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>Answered by ${esc(row.answer.answeredBy || 'assistant')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</span>
+          ${canDeleteThisAnswer ? `<button type="button" id="amDeleteAnswerBtn" class="am-tool-btn" style="color:var(--ember);border-color:var(--ember);padding:4px 10px;font-size:0.78rem;">🗑 Delete</button>` : ''}
+        </div>
         ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
         ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
         ${row.answer.videoUrl ? `<video controls preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
@@ -11676,7 +11768,7 @@
       ${opts.onBack ? `<button class="btn btn-ghost" id="amDetailBackBtn" style="margin-bottom:16px;">← Back</button>` : ''}
       <div class="am-chat-bubble">
         <div class="bubble-label">${esc(row.username)} · ${esc(row.lesson)} · ${esc(row.source)}</div>
-        ${row.image ? `<img src="${esc(row.image)}" alt="Question">` : ''}
+        ${row.image ? `<img src="${esc(row.image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
         ${row.text ? `<div style="margin-bottom:10px;">${esc(row.text)}</div>` : ''}
         ${optionsHtml}
       </div>
@@ -11704,6 +11796,23 @@
             alert('Could not claim — check your connection and try again.');
             claimBtn.disabled = false; claimBtn.textContent = '🔵 Claim this question';
           }
+        }
+      });
+    }
+
+    const deleteAnswerBtn = document.getElementById('amDeleteAnswerBtn');
+    if(deleteAnswerBtn){
+      deleteAnswerBtn.addEventListener('click', async ()=>{
+        if(!confirm('Delete this answer? It will be removed for every student it was shown to — including anyone who already saw it — not just this one.')) return;
+        deleteAnswerBtn.disabled = true; deleteAnswerBtn.textContent = 'Deleting…';
+        const result = await deleteExplanationForQuestion(row, row.answer.answeredBy);
+        if(result.ok){
+          invalidateDbCache('mistakes');
+          openAmDetail(mistakeId, opts);
+          if(typeof opts.onSent === 'function') opts.onSent();
+        } else {
+          alert('Could not delete — the original skill or exam may have been edited or deleted since. Try refreshing.');
+          deleteAnswerBtn.disabled = false; deleteAnswerBtn.textContent = '🗑 Delete';
         }
       });
     }
@@ -11814,6 +11923,14 @@
           const answer = { text: text || null, photoUrl, videoUrl: videoUrl2, voiceUrl, answeredBy: answererName, answeredAt: new Date().toISOString(), seenByStudent: false };
           const ok = await dbSet('mistakes', mistakeId, { ...(await dbGet('mistakes', mistakeId)), status: 'answered', answer });
           if(ok){
+            // Share this answer with every OTHER student who's gotten the
+            // same question wrong, not just the one whose mistake this
+            // was — reuses the same explanation system "Explain
+            // Questions" already backfills through, so a question only
+            // needs answering once to help everyone stuck on it.
+            await saveExplanationForQuestion(row, text || null, answererName, {
+              explanationPhoto: photoUrl, explanationVideo: videoUrl2, explanationVoice: voiceUrl
+            });
             invalidateDbCache('mistakes');
             await openAmDetail(mistakeId, opts);
             if(typeof opts.onSent === 'function') opts.onSent();
