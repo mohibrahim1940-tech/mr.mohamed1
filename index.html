@@ -4208,10 +4208,12 @@
       adminError.classList.remove('show');
       document.getElementById('adminPass').value = '';
       adminOverlay.classList.remove('open');
+      currentAssistantAccount = null;
       await openTrackingDashboard();
       return;
     }
     if(val === ADMIN_PASSCODE || val === ASSISTANT_PASSCODE || val === ACT_ADMIN_PASSCODE){
+      currentAssistantAccount = null;
       currentAdminRole = (val === ADMIN_PASSCODE) ? 'admin' : (val === ACT_ADMIN_PASSCODE ? 'act-admin' : 'assistant');
       currentAdminCourseFilter = (currentAdminRole === 'act-admin') ? ACT_ADMIN_COURSE : null;
       const roleLabel = document.getElementById('adminRoleLabel');
@@ -4621,7 +4623,10 @@
     block._imageData = (data && data.image) || null;
     block._optionImages = (data && Array.isArray(data.optionImages)) ? data.optionImages.slice(0, 4) : [null, null, null, null];
     while(block._optionImages.length < 4) block._optionImages.push(null);
-    block._explanationVideo = (data && data.explanationVideo) || null;
+    const myExistingExplanation = data ? getQuestionExplanations(data).find(e => e.by === getCurrentAnswererIdentity() || !e.by) : null;
+    block._explanationText = myExistingExplanation ? myExistingExplanation.text : null;
+    block._explanationVideo = myExistingExplanation ? myExistingExplanation.video : null;
+    block._existingExplanations = data ? getQuestionExplanations(data).filter(e => e !== myExistingExplanation) : [];
 
     block.innerHTML = `
       <button type="button" class="remove-q-btn" aria-label="Remove question">✕</button>
@@ -4635,6 +4640,10 @@
         </div>
         <span class="paste-hint">📋 You can also just paste (Ctrl+V) a copied image anywhere in this question box.</span>
         <img class="q-image-preview" style="${block._imageData ? 'display:block;' : ''}" src="${block._imageData || ''}">
+      </div>
+      <div class="q-video-row">
+        <label class="field-label" style="margin-bottom:6px;">Your written explanation (optional — shown to a student only if they get this wrong)</label>
+        <textarea class="q-explanation-text" placeholder="Explain why the correct answer is right…" style="width:100%;min-height:70px;">${block._explanationText ? esc(block._explanationText) : ''}</textarea>
       </div>
       <div class="q-video-row">
         <label class="field-label" style="margin-bottom:6px;">Explanation video (optional — shown to a student only if they get this wrong)</label>
@@ -4840,16 +4849,30 @@
       const options = Array.from(block.querySelectorAll('.q-option')).map(i => i.value.trim());
       const optionImages = (block._optionImages || [null,null,null,null]).slice(0, 4);
       const explanationVideo = block._explanationVideo || null;
+      const explanationTextInput = block.querySelector('.q-explanation-text');
+      const myExplanationText = explanationTextInput ? explanationTextInput.value.trim() : '';
       const correctRadio = block.querySelector('.q-correct:checked');
       const correct = correctRadio ? parseInt(correctRadio.value, 10) : null;
       const optionsComplete = options.every((o, i) => o || optionImages[i]);
       if((text || image) && optionsComplete && correct !== null){
         const hasAnyOptionImage = optionImages.some(Boolean);
-        questions.push({
+        const q = {
           lesson: lesson || 'General', text, image, options, correct,
-          ...(hasAnyOptionImage ? { optionImages } : {}),
-          ...(explanationVideo ? { explanationVideo } : {})
-        });
+          ...(hasAnyOptionImage ? { optionImages } : {})
+        };
+        // Start from whatever explanations already existed (an assistant's,
+        // or the admin's own from before) and only touch the admin's own
+        // entry — never clobbers anyone else's. The admin's video (if any)
+        // merges into the SAME entry as their text, since both come from
+        // the same person — keeping them separate would mean the video
+        // silently stops showing once a text explanation exists too.
+        if((block._existingExplanations && block._existingExplanations.length > 0) || myExplanationText || explanationVideo){
+          q.explanations = block._existingExplanations ? block._existingExplanations.slice() : [];
+          if(myExplanationText || explanationVideo){
+            upsertQuestionExplanation(q, { by: getCurrentAnswererIdentity(), text: myExplanationText || null, video: explanationVideo || undefined });
+          }
+        }
+        questions.push(q);
       }
     });
     return questions;
@@ -4939,33 +4962,63 @@
 
   // Only ever called on a wrong answer's review row — shows the explanation
   // video Mr. Mohamed Ibrahim attached to that question, if there is one.
+  // Backward-compatible reader: older questions only have the single
+  // explanationText/explanationVideo/etc fields (from before multiple
+  // explanations were supported). Treating those as a one-item array
+  // means every existing explanation keeps working with no migration.
+  function getQuestionExplanations(q){
+    if(Array.isArray(q.explanations)) return q.explanations;
+    if(q.explanationText || q.explanationVideo || q.explanationPhoto || q.explanationVoice){
+      return [{ text: q.explanationText || null, video: q.explanationVideo || null, photo: q.explanationPhoto || null, voice: q.explanationVoice || null, by: q.explanationBy || null }];
+    }
+    return [];
+  }
+
+  // Adds or updates ONE person's explanation on a question without
+  // touching anyone else's — matched by who wrote it, so the admin's own
+  // explanation and an assistant's explanation for the same question both
+  // survive side by side, and re-saving just updates that same person's
+  // entry rather than duplicating it.
+  function upsertQuestionExplanation(q, entry){
+    const explanations = getQuestionExplanations(q).slice();
+    const idx = explanations.findIndex(e => e.by === entry.by);
+    if(idx >= 0) explanations[idx] = { ...explanations[idx], ...entry };
+    else explanations.push(entry);
+    q.explanations = explanations;
+    // Once migrated to the array, drop the old single fields so nothing
+    // downstream accidentally reads stale/duplicate data from them.
+    delete q.explanationText; delete q.explanationVideo; delete q.explanationPhoto; delete q.explanationVoice; delete q.explanationBy;
+    return explanations;
+  }
+
   function explanationVideoHtml(row){
-    if(!row.explanationVideo && !row.explanationText && !row.explanationPhoto && !row.explanationVoice) return '';
-    return `
-      ${row.explanationText ? `
+    const explanations = getQuestionExplanations(row);
+    if(explanations.length === 0) return '';
+    return explanations.map(exp => `
+      ${exp.text ? `
         <div class="explanation-text-wrap">
-          <div class="explanation-video-label">📝 Explanation${row.explanationBy ? ` from ${esc(row.explanationBy)}` : ' from your coach'}</div>
-          <div class="explanation-text-body">${esc(row.explanationText)}</div>
+          <div class="explanation-video-label">📝 Explanation${exp.by ? ` from ${esc(exp.by)}` : ' from your coach'}</div>
+          <div class="explanation-text-body">${esc(exp.text)}</div>
         </div>
       ` : ''}
-      ${row.explanationPhoto ? `
+      ${exp.photo ? `
         <div class="explanation-video-wrap">
-          <img src="${row.explanationPhoto}" alt="Explanation photo" style="max-width:100%;border-radius:8px;">
+          <img src="${exp.photo}" alt="Explanation photo" style="max-width:100%;border-radius:8px;">
         </div>
       ` : ''}
-      ${row.explanationVideo ? `
+      ${exp.video ? `
         <div class="explanation-video-wrap">
-          <div class="explanation-video-label">🎬 Watch the explanation</div>
-          <video controls preload="metadata" src="${row.explanationVideo}"></video>
+          <div class="explanation-video-label">🎬 Watch the explanation${exp.by ? ` from ${esc(exp.by)}` : ''}</div>
+          <video controls preload="metadata" src="${exp.video}"></video>
         </div>
       ` : ''}
-      ${row.explanationVoice ? `
+      ${exp.voice ? `
         <div class="explanation-video-wrap">
-          <div class="explanation-video-label">🎤 Listen to the explanation</div>
-          <audio controls src="${row.explanationVoice}" style="width:100%;"></audio>
+          <div class="explanation-video-label">🎤 Listen to the explanation${exp.by ? ` from ${esc(exp.by)}` : ''}</div>
+          <audio controls src="${exp.voice}" style="width:100%;"></audio>
         </div>
       ` : ''}
-    `;
+    `).join('');
   }
 
   document.getElementById('addQuestionBtn').addEventListener('click', ()=> addQuestionBlock(null));
@@ -5631,7 +5684,7 @@
             mistakeEntries.push({
               username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, explanationPhoto: q.explanationPhoto || null, explanationVoice: q.explanationVoice || null, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, explanationPhoto: q.explanationPhoto || null, explanationVoice: q.explanationVoice || null, explanations: q.explanations || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: exam.questions.length,
               status: 'delivered', answer: null, studentRating: null
             });
@@ -5649,6 +5702,7 @@
           explanationBy: q.explanationBy || null,
           explanationPhoto: q.explanationPhoto || null,
           explanationVoice: q.explanationVoice || null,
+          explanations: q.explanations || null,
           chosenAnswer: answers[i],
           correctAnswer: q.correct,
           correct: answers[i] === q.correct
@@ -7689,8 +7743,9 @@
           if((candidate.lesson || 'General').trim() === mLesson) match = candidate;
         }
 
-        if(match && ((match.explanationVideo && match.explanationVideo !== m.explanationVideo) || (match.explanationText && match.explanationText !== m.explanationText) || (match.explanationPhoto && match.explanationPhoto !== m.explanationPhoto) || (match.explanationVoice && match.explanationVoice !== m.explanationVoice))){
-          updates.push(dbSet('mistakes', m.id, { ...m, explanationVideo: match.explanationVideo || m.explanationVideo || null, explanationText: match.explanationText || m.explanationText || null, explanationBy: match.explanationBy || m.explanationBy || null, explanationPhoto: match.explanationPhoto || m.explanationPhoto || null, explanationVoice: match.explanationVoice || m.explanationVoice || null }));
+        const explanationsChanged = JSON.stringify(match.explanations || null) !== JSON.stringify(m.explanations || null);
+        if(match && (explanationsChanged || (match.explanationVideo && match.explanationVideo !== m.explanationVideo) || (match.explanationText && match.explanationText !== m.explanationText) || (match.explanationPhoto && match.explanationPhoto !== m.explanationPhoto) || (match.explanationVoice && match.explanationVoice !== m.explanationVoice))){
+          updates.push(dbSet('mistakes', m.id, { ...m, explanationVideo: match.explanationVideo || m.explanationVideo || null, explanationText: match.explanationText || m.explanationText || null, explanationBy: match.explanationBy || m.explanationBy || null, explanationPhoto: match.explanationPhoto || m.explanationPhoto || null, explanationVoice: match.explanationVoice || m.explanationVoice || null, explanations: match.explanations || m.explanations || null }));
         }
       });
       if(updates.length > 0) await Promise.all(updates);
@@ -7732,9 +7787,10 @@
   // individual assistant works through. Ranked by how many distinct
   // students got it wrong, since that's the most valuable order to
   // explain things in.
-  async function findQuestionsNeedingExplanation(assignedUsernames){
+  async function findQuestionsNeedingExplanation(assignedUsernames, explainerName){
     const allMistakes = await fetchAllMistakes();
-    const relevant = allMistakes.filter(m => !m._index && !m.explanationText &&
+    const relevant = allMistakes.filter(m => !m._index &&
+      !getQuestionExplanations(m).some(e => e.by === explainerName) &&
       (!assignedUsernames || assignedUsernames.some(u => u.trim().toLowerCase() === (m.username||'').trim().toLowerCase())));
     if(relevant.length === 0) return [];
 
@@ -7763,11 +7819,12 @@
     const questions = source.record.questions || [];
     const match = matchQuestionForMistake(row, questions);
     if(!match) return { ok: false, reason: 'not-found' };
-    match.explanationText = explanationText;
-    match.explanationBy = explanationBy;
-    if(extras.explanationPhoto !== undefined) match.explanationPhoto = extras.explanationPhoto;
-    if(extras.explanationVideo !== undefined) match.explanationVideo = extras.explanationVideo;
-    if(extras.explanationVoice !== undefined) match.explanationVoice = extras.explanationVoice;
+    upsertQuestionExplanation(match, {
+      by: explanationBy, text: explanationText || null,
+      photo: extras.explanationPhoto !== undefined ? extras.explanationPhoto : null,
+      video: extras.explanationVideo !== undefined ? extras.explanationVideo : null,
+      voice: extras.explanationVoice !== undefined ? extras.explanationVoice : null,
+    });
     const ok = await dbSet(source.type, source.record.id, source.record);
     if(ok) await backfillExplanationVideos(source.record[source.titleField], questions);
     return { ok };
@@ -7780,11 +7837,12 @@
   async function saveExplanationForSkillQuestionByIndex(skillId, questionIndex, explanationText, explanationBy, extras = {}){
     const skill = await dbGet('skills', skillId);
     if(!skill || !Array.isArray(skill.questions) || !skill.questions[questionIndex]) return { ok: false, reason: 'not-found' };
-    skill.questions[questionIndex].explanationText = explanationText;
-    skill.questions[questionIndex].explanationBy = explanationBy;
-    if(extras.explanationPhoto !== undefined) skill.questions[questionIndex].explanationPhoto = extras.explanationPhoto;
-    if(extras.explanationVideo !== undefined) skill.questions[questionIndex].explanationVideo = extras.explanationVideo;
-    if(extras.explanationVoice !== undefined) skill.questions[questionIndex].explanationVoice = extras.explanationVoice;
+    upsertQuestionExplanation(skill.questions[questionIndex], {
+      by: explanationBy, text: explanationText || null,
+      photo: extras.explanationPhoto !== undefined ? extras.explanationPhoto : null,
+      video: extras.explanationVideo !== undefined ? extras.explanationVideo : null,
+      voice: extras.explanationVoice !== undefined ? extras.explanationVoice : null,
+    });
     const ok = await dbSet('skills', skillId, skill);
     if(ok) await backfillExplanationVideos(skill.skill, skill.questions);
     return { ok };
@@ -9803,6 +9861,7 @@
         explanationBy: q.explanationBy || null,
         explanationPhoto: q.explanationPhoto || null,
         explanationVoice: q.explanationVoice || null,
+        explanations: q.explanations || null,
         chosenAnswer: answers[i],
         correctAnswer: q.correct,
         correct: answers[i] === q.correct
@@ -9816,7 +9875,7 @@
             mistakeEntries.push({
               username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, explanationPhoto: q.explanationPhoto || null, explanationVoice: q.explanationVoice || null, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, explanationPhoto: q.explanationPhoto || null, explanationVoice: q.explanationVoice || null, explanations: q.explanations || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: hw.questions.length,
               status: 'delivered', answer: null, studentRating: null
             });
@@ -10292,15 +10351,16 @@
     const assignedStudents = currentAssistantAccount.assignedStudents || [];
     const assignedSkillIds = currentAssistantAccount.assignedSkills || [];
 
-    const missedItems = assignedStudents.length > 0 ? await findQuestionsNeedingExplanation(assignedStudents) : [];
+    const explainerName = currentAssistantAccount.username;
+    const missedItems = assignedStudents.length > 0 ? await findQuestionsNeedingExplanation(assignedStudents, explainerName) : [];
 
-    // Proactive coverage: every question in an assigned skill that doesn't
-    // have an explanation yet, regardless of whether any student has
-    // actually missed it — the whole point of assigning a skill is
-    // covering it before students need it, not waiting for mistakes.
-    // skillsSummary tracks every assigned skill by name with its progress,
-    // even ones that are fully explained already — so an assistant always
-    // sees their whole scope, not just what's left to do.
+    // Proactive coverage: every question in an assigned skill that this
+    // assistant specifically hasn't explained yet — someone else (the
+    // admin, or another assistant) may have already added their own
+    // explanation, but that doesn't fulfill this assistant's own goal.
+    // skillsSummary tracks every assigned skill by name with THIS
+    // assistant's own progress, even ones fully covered by them already —
+    // so they always see their whole scope, not just what's left to do.
     const skillItems = [];
     const skillsSummary = [];
     for(const skillId of assignedSkillIds){
@@ -10308,7 +10368,7 @@
       if(!skill || !Array.isArray(skill.questions)) continue;
       let explainedCount = 0;
       skill.questions.forEach((q, qi)=>{
-        if(q.explanationText){
+        if(getQuestionExplanations(q).some(e => e.by === explainerName)){
           explainedCount++;
         } else {
           skillItems.push({ skillId, skillName: skill.skill, questionIndex: qi, q });
@@ -10381,8 +10441,6 @@
         </div>
       ` : ''}
     `;
-
-    const explainerName = currentAssistantAccount.username;
 
     // Wires photo/video/voice controls for one card, returning a function
     // that uploads whatever's currently attached and hands back the URLs
@@ -11019,6 +11077,7 @@
       explanationBy: m.explanationBy || null,
       explanationPhoto: m.explanationPhoto || null,
       explanationVoice: m.explanationVoice || null,
+      explanations: m.explanations || null,
       chosenAnswer: m.chosenAnswer,
       correctAnswer: m.correctAnswer,
       chosenText: (m.options && m.chosenAnswer != null) ? (m.options[m.chosenAnswer] ?? '—') : '—',
