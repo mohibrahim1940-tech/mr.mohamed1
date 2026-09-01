@@ -4940,7 +4940,7 @@
   // Only ever called on a wrong answer's review row — shows the explanation
   // video Mr. Mohamed Ibrahim attached to that question, if there is one.
   function explanationVideoHtml(row){
-    if(!row.explanationVideo && !row.explanationText) return '';
+    if(!row.explanationVideo && !row.explanationText && !row.explanationPhoto && !row.explanationVoice) return '';
     return `
       ${row.explanationText ? `
         <div class="explanation-text-wrap">
@@ -4948,10 +4948,21 @@
           <div class="explanation-text-body">${esc(row.explanationText)}</div>
         </div>
       ` : ''}
+      ${row.explanationPhoto ? `
+        <div class="explanation-video-wrap">
+          <img src="${row.explanationPhoto}" alt="Explanation photo" style="max-width:100%;border-radius:8px;">
+        </div>
+      ` : ''}
       ${row.explanationVideo ? `
         <div class="explanation-video-wrap">
           <div class="explanation-video-label">🎬 Watch the explanation</div>
           <video controls preload="metadata" src="${row.explanationVideo}"></video>
+        </div>
+      ` : ''}
+      ${row.explanationVoice ? `
+        <div class="explanation-video-wrap">
+          <div class="explanation-video-label">🎤 Listen to the explanation</div>
+          <audio controls src="${row.explanationVoice}" style="width:100%;"></audio>
         </div>
       ` : ''}
     `;
@@ -5620,7 +5631,7 @@
             mistakeEntries.push({
               username: currentStudent.username, lesson: q.lesson || 'General', source: exam.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, explanationPhoto: q.explanationPhoto || null, explanationVoice: q.explanationVoice || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: exam.questions.length,
               status: 'delivered', answer: null, studentRating: null
             });
@@ -5636,6 +5647,8 @@
           explanationVideo: q.explanationVideo || null,
           explanationText: q.explanationText || null,
           explanationBy: q.explanationBy || null,
+          explanationPhoto: q.explanationPhoto || null,
+          explanationVoice: q.explanationVoice || null,
           chosenAnswer: answers[i],
           correctAnswer: q.correct,
           correct: answers[i] === q.correct
@@ -6500,6 +6513,18 @@
     if(currentAdminCourseFilter) sets = sets.filter(s => courseInAdminScope(s.course));
     if(currentSkillListFilter !== 'all') sets = sets.filter(s => getSkillCourses(s).includes(currentSkillListFilter));
 
+    // Build skillId -> [assistant usernames] so the list can show who's
+    // responsible for explaining each skill, without an extra click into
+    // the Assistants tab.
+    const allAssistants = await fetchAllAssistantAccounts();
+    const assignedByskillId = {};
+    allAssistants.forEach(a=>{
+      (a.assignedSkills || []).forEach(skillId=>{
+        if(!assignedByskillId[skillId]) assignedByskillId[skillId] = [];
+        assignedByskillId[skillId].push(a.username);
+      });
+    });
+
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
 
     if(sets.length === 0){
@@ -6509,11 +6534,12 @@
     emptyState.style.display = 'none';
 
     sets.forEach(set=>{
+      const assignedTo = assignedByskillId[set.id] || [];
       const row = document.createElement('div');
       row.className = 'exam-list-item';
       row.innerHTML = `
         <div>
-          <h4>${esc(set.skill)}${(set.createdByRole === 'act-admin' && currentAdminRole !== 'act-admin') ? ' <span class="tag-pill" style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);">🎓 Added by ACT admin</span>' : ''}</h4>
+          <h4>${esc(set.skill)}${(set.createdByRole === 'act-admin' && currentAdminRole !== 'act-admin') ? ' <span class="tag-pill" style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);">🎓 Added by ACT admin</span>' : ''}${assignedTo.length > 0 ? ` <span class="tag-pill" style="background:rgba(57,217,138,0.14);color:#39D98A;border-color:rgba(57,217,138,0.35);">📝 Assigned to ${esc(assignedTo.join(', '))}</span>` : ''}</h4>
           <div class="meta">${getSkillCourses(set).length > 0 ? esc(getSkillCourses(set).join(', ')) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
         </div>
         <div class="exam-list-actions">
@@ -7663,8 +7689,8 @@
           if((candidate.lesson || 'General').trim() === mLesson) match = candidate;
         }
 
-        if(match && ((match.explanationVideo && match.explanationVideo !== m.explanationVideo) || (match.explanationText && match.explanationText !== m.explanationText))){
-          updates.push(dbSet('mistakes', m.id, { ...m, explanationVideo: match.explanationVideo || m.explanationVideo || null, explanationText: match.explanationText || m.explanationText || null, explanationBy: match.explanationBy || m.explanationBy || null }));
+        if(match && ((match.explanationVideo && match.explanationVideo !== m.explanationVideo) || (match.explanationText && match.explanationText !== m.explanationText) || (match.explanationPhoto && match.explanationPhoto !== m.explanationPhoto) || (match.explanationVoice && match.explanationVoice !== m.explanationVoice))){
+          updates.push(dbSet('mistakes', m.id, { ...m, explanationVideo: match.explanationVideo || m.explanationVideo || null, explanationText: match.explanationText || m.explanationText || null, explanationBy: match.explanationBy || m.explanationBy || null, explanationPhoto: match.explanationPhoto || m.explanationPhoto || null, explanationVoice: match.explanationVoice || m.explanationVoice || null }));
         }
       });
       if(updates.length > 0) await Promise.all(updates);
@@ -7731,7 +7757,7 @@
   // not just the one mistake being viewed — then backfills it onto every
   // existing mistake that came from that same question, so it's visible
   // to every student who already got it wrong, not only future ones.
-  async function saveExplanationForQuestion(row, explanationText, explanationBy){
+  async function saveExplanationForQuestion(row, explanationText, explanationBy, extras = {}){
     const source = await findSourceRecordForMistake(row);
     if(!source) return { ok: false, reason: 'not-found' };
     const questions = source.record.questions || [];
@@ -7739,6 +7765,9 @@
     if(!match) return { ok: false, reason: 'not-found' };
     match.explanationText = explanationText;
     match.explanationBy = explanationBy;
+    if(extras.explanationPhoto !== undefined) match.explanationPhoto = extras.explanationPhoto;
+    if(extras.explanationVideo !== undefined) match.explanationVideo = extras.explanationVideo;
+    if(extras.explanationVoice !== undefined) match.explanationVoice = extras.explanationVoice;
     const ok = await dbSet(source.type, source.record.id, source.record);
     if(ok) await backfillExplanationVideos(source.record[source.titleField], questions);
     return { ok };
@@ -7748,11 +7777,14 @@
   // assistant is explaining proactively, before anyone's necessarily
   // missed it, so there's no mistake row to match against. Updates the
   // skill directly by question index instead.
-  async function saveExplanationForSkillQuestionByIndex(skillId, questionIndex, explanationText, explanationBy){
+  async function saveExplanationForSkillQuestionByIndex(skillId, questionIndex, explanationText, explanationBy, extras = {}){
     const skill = await dbGet('skills', skillId);
     if(!skill || !Array.isArray(skill.questions) || !skill.questions[questionIndex]) return { ok: false, reason: 'not-found' };
     skill.questions[questionIndex].explanationText = explanationText;
     skill.questions[questionIndex].explanationBy = explanationBy;
+    if(extras.explanationPhoto !== undefined) skill.questions[questionIndex].explanationPhoto = extras.explanationPhoto;
+    if(extras.explanationVideo !== undefined) skill.questions[questionIndex].explanationVideo = extras.explanationVideo;
+    if(extras.explanationVoice !== undefined) skill.questions[questionIndex].explanationVoice = extras.explanationVoice;
     const ok = await dbSet('skills', skillId, skill);
     if(ok) await backfillExplanationVideos(skill.skill, skill.questions);
     return { ok };
@@ -9769,6 +9801,8 @@
         explanationVideo: q.explanationVideo || null,
         explanationText: q.explanationText || null,
         explanationBy: q.explanationBy || null,
+        explanationPhoto: q.explanationPhoto || null,
+        explanationVoice: q.explanationVoice || null,
         chosenAnswer: answers[i],
         correctAnswer: q.correct,
         correct: answers[i] === q.correct
@@ -9782,7 +9816,7 @@
             mistakeEntries.push({
               username: currentStudent.username, lesson: q.lesson || 'General', source: hw.title,
               text: q.text || (q.image ? '(question with image)' : ''), image: q.image || null,
-              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, chosenAnswer: answers[i], correctAnswer: q.correct,
+              options: q.options, optionImages: q.optionImages || null, explanationVideo: q.explanationVideo || null, explanationText: q.explanationText || null, explanationBy: q.explanationBy || null, explanationPhoto: q.explanationPhoto || null, explanationVoice: q.explanationVoice || null, chosenAnswer: answers[i], correctAnswer: q.correct,
               questionNumber: i + 1, questionTotal: hw.questions.length,
               status: 'delivered', answer: null, studentRating: null
             });
@@ -10264,21 +10298,27 @@
     // have an explanation yet, regardless of whether any student has
     // actually missed it — the whole point of assigning a skill is
     // covering it before students need it, not waiting for mistakes.
+    // skillsSummary tracks every assigned skill by name with its progress,
+    // even ones that are fully explained already — so an assistant always
+    // sees their whole scope, not just what's left to do.
     const skillItems = [];
+    const skillsSummary = [];
     for(const skillId of assignedSkillIds){
       const skill = await dbGet('skills', skillId);
       if(!skill || !Array.isArray(skill.questions)) continue;
+      let explainedCount = 0;
       skill.questions.forEach((q, qi)=>{
-        if(!q.explanationText){
+        if(q.explanationText){
+          explainedCount++;
+        } else {
           skillItems.push({ skillId, skillName: skill.skill, questionIndex: qi, q });
         }
       });
+      skillsSummary.push({ skillId, skillName: skill.skill, total: skill.questions.length, explainedCount });
     }
 
-    if(missedItems.length === 0 && skillItems.length === 0){
-      container.innerHTML = assignedStudents.length === 0 && assignedSkillIds.length === 0
-        ? '<div class="admin-empty">No students or skills assigned to you yet — ask Mr. Mohamed Ibrahim to assign some in the admin panel.</div>'
-        : '<div class="admin-empty">✅ All caught up — nothing needs an explanation right now.</div>';
+    if(missedItems.length === 0 && skillsSummary.length === 0){
+      container.innerHTML = '<div class="admin-empty">No students or skills assigned to you yet — ask Mr. Mohamed Ibrahim to assign some in the admin panel.</div>';
       return;
     }
 
@@ -10295,15 +10335,34 @@
           ${image ? `<img src="${esc(image)}" alt="Question">` : ''}
           ${text ? `<div style="margin-bottom:8px;">${esc(text)}</div>` : ''}
           ${optionsHtml}
-          <div class="am-answer-tools" style="margin-top:12px;">
+          <div class="am-answer-tools explain-answer-tools" style="margin-top:12px;">
             <textarea class="explain-text-input" placeholder="Explain why the correct answer is right…"></textarea>
+            <input type="file" accept="image/*" class="explain-photo-input" style="display:none;">
+            <input type="file" accept="video/*" class="explain-video-input" style="display:none;">
+            <button type="button" class="am-tool-btn explain-photo-btn">📷 Add photo</button>
+            <button type="button" class="am-tool-btn explain-video-btn">🎥 Add video</button>
+            <button type="button" class="am-tool-btn explain-voice-btn">🎤 Record voice</button>
             <button type="button" class="btn btn-primary explain-save-btn">Save explanation</button>
           </div>
+          <div class="explain-attachments" style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;"></div>
         </div>
       `;
     }
 
     container.innerHTML = `
+      ${skillsSummary.length > 0 ? `
+        <div class="analysis-section-title" style="margin-top:0;">Your assigned skills</div>
+        <div class="admin-note">Every skill Mr. Mohamed Ibrahim has assigned to you — your goal is a complete explanation for every question in each one.</div>
+        <div class="asd-grid" style="margin-top:16px; margin-bottom:8px;">
+          ${skillsSummary.map(s => `
+            <div class="track-card">
+              <div class="track-card-name">${esc(s.skillName)}</div>
+              <div class="track-card-stat">${s.explainedCount === s.total ? '✅ Complete' : `${s.explainedCount} of ${s.total} questions explained`}</div>
+              <div class="track-card-bar-track"><div class="track-card-bar-fill" style="width:${s.total > 0 ? Math.round((s.explainedCount/s.total)*100) : 100}%;"></div></div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
       ${skillItems.length > 0 ? `
         <div class="analysis-section-title" style="margin-top:0;">Your assigned skills — complete coverage</div>
         <div class="admin-note">Every question in a skill assigned to you, whether or not anyone's missed it yet — the goal is to have all of these explained ahead of time.</div>
@@ -10325,21 +10384,150 @@
 
     const explainerName = currentAssistantAccount.username;
 
+    // Wires photo/video/voice controls for one card, returning a function
+    // that uploads whatever's currently attached and hands back the URLs
+    // to include when saving — independent per card, since several of
+    // these render on screen at once and each needs its own state.
+    function wireExplainMediaTools(card){
+      let pendingPhoto = null, pendingVideo = null, pendingVoice = null;
+      let mediaRecorder = null, recordedChunks = [];
+      const attachmentsWrap = card.querySelector('.explain-attachments');
+      const photoInput = card.querySelector('.explain-photo-input');
+      const photoBtn = card.querySelector('.explain-photo-btn');
+      const videoInput = card.querySelector('.explain-video-input');
+      const videoBtn = card.querySelector('.explain-video-btn');
+      const voiceBtn = card.querySelector('.explain-voice-btn');
+
+      function renderAttachments(){
+        attachmentsWrap.innerHTML = '';
+        if(pendingPhoto){
+          const el = document.createElement('div');
+          el.className = 'am-attachment-preview';
+          el.innerHTML = `📷 Photo attached <button type="button">✕</button>`;
+          el.querySelector('button').addEventListener('click', ()=>{ pendingPhoto = null; renderAttachments(); });
+          attachmentsWrap.appendChild(el);
+        }
+        if(pendingVideo){
+          const el = document.createElement('div');
+          el.className = 'am-attachment-preview';
+          el.innerHTML = `🎥 Video attached <button type="button">✕</button>`;
+          el.querySelector('button').addEventListener('click', ()=>{ pendingVideo = null; renderAttachments(); });
+          attachmentsWrap.appendChild(el);
+        }
+        if(pendingVoice){
+          const el = document.createElement('div');
+          el.className = 'am-attachment-preview';
+          el.innerHTML = `🎤 Voice recorded <audio controls style="height:28px;"></audio> <button type="button">✕</button>`;
+          el.querySelector('audio').src = pendingVoice.previewUrl;
+          el.querySelector('button').addEventListener('click', ()=>{ pendingVoice = null; renderAttachments(); });
+          attachmentsWrap.appendChild(el);
+        }
+      }
+
+      photoBtn.addEventListener('click', ()=> photoInput.click());
+      photoInput.addEventListener('change', (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        if(!file.type.startsWith('image/')){
+          alert('That file doesn\'t look like a photo — try picking an image instead.');
+          photoInput.value = '';
+          return;
+        }
+        const sizeMB = file.size / (1024 * 1024);
+        if(sizeMB > 15){
+          if(!confirm(`This photo is ${sizeMB.toFixed(0)} MB — quite large. Use it anyway?`)){ photoInput.value = ''; return; }
+        }
+        pendingPhoto = { file };
+        renderAttachments();
+      });
+
+      videoBtn.addEventListener('click', ()=> videoInput.click());
+      videoInput.addEventListener('change', (e)=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        if(!file.type.startsWith('video/')){
+          alert('That file doesn\'t look like a video — try picking a video file instead.');
+          videoInput.value = '';
+          return;
+        }
+        const sizeMB = file.size / (1024 * 1024);
+        if(sizeMB > 50){
+          if(!confirm(`This video is ${sizeMB.toFixed(0)} MB — that could take a while to load. Use it anyway?`)){ videoInput.value = ''; return; }
+        }
+        pendingVideo = { file };
+        renderAttachments();
+      });
+
+      voiceBtn.addEventListener('click', async ()=>{
+        if(mediaRecorder && mediaRecorder.state === 'recording'){
+          mediaRecorder.stop();
+          voiceBtn.textContent = '🎤 Record voice';
+          voiceBtn.classList.remove('recording');
+          return;
+        }
+        if(typeof MediaRecorder === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+          alert('Voice recording isn\'t supported in this browser or connection — try a photo or text instead.');
+          return;
+        }
+        try{
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const { mimeType, ext } = getSupportedAudioRecording();
+          recordedChunks = [];
+          mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+          mediaRecorder.ondataavailable = (e)=> recordedChunks.push(e.data);
+          mediaRecorder.onstop = ()=>{
+            const actualType = mediaRecorder.mimeType || mimeType || 'audio/webm';
+            const blob = new Blob(recordedChunks, { type: actualType });
+            pendingVoice = { blob, ext, contentType: actualType, previewUrl: URL.createObjectURL(blob) };
+            renderAttachments();
+            stream.getTracks().forEach(t => t.stop());
+          };
+          mediaRecorder.start();
+          voiceBtn.textContent = '⏹ Stop recording';
+          voiceBtn.classList.add('recording');
+        }catch(err){
+          if(err && err.name === 'NotAllowedError'){
+            alert('Microphone access was blocked — check your browser permissions and try again.');
+          } else {
+            alert('Could not access your microphone — check your browser permissions and try again.');
+          }
+        }
+      });
+
+      // Uploads whatever's attached and returns the extras object to merge
+      // into the save call — undefined for anything not attached, so the
+      // save functions know to leave those fields alone.
+      return async function uploadPendingAndGetExtras(){
+        const extras = {};
+        if(pendingPhoto) extras.explanationPhoto = await uploadMistakeAnswerFile(pendingPhoto.file, (pendingPhoto.file.name.split('.').pop() || 'jpg'), pendingPhoto.file.type || 'image/jpeg');
+        if(pendingVideo) extras.explanationVideo = await uploadExplanationVideo(pendingVideo.file);
+        if(pendingVoice) extras.explanationVoice = await uploadMistakeAnswerFile(pendingVoice.blob, pendingVoice.ext || 'webm', pendingVoice.contentType || 'audio/webm');
+        return extras;
+      };
+    }
+
     container.querySelectorAll('[data-skill-index]').forEach(card=>{
       const i = parseInt(card.dataset.skillIndex, 10);
       const item = skillItems[i];
       const saveBtn = card.querySelector('.explain-save-btn');
       const textInput = card.querySelector('.explain-text-input');
+      const getExtras = wireExplainMediaTools(card);
       saveBtn.addEventListener('click', async ()=>{
         const text = textInput.value.trim();
         if(!text){ alert('Type an explanation before saving.'); return; }
         saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
-        const result = await saveExplanationForSkillQuestionByIndex(item.skillId, item.questionIndex, text, explainerName);
-        if(result.ok){
-          invalidateDbCache('mistakes'); invalidateDbCache('skills');
-          renderAssistantExplainGoal();
-        } else {
-          alert('Could not save this explanation — the skill may have been edited or deleted since. Try refreshing.');
+        try{
+          const extras = await getExtras();
+          const result = await saveExplanationForSkillQuestionByIndex(item.skillId, item.questionIndex, text, explainerName, extras);
+          if(result.ok){
+            invalidateDbCache('mistakes'); invalidateDbCache('skills');
+            renderAssistantExplainGoal();
+          } else {
+            alert('Could not save this explanation — the skill may have been edited or deleted since. Try refreshing.');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save explanation';
+          }
+        }catch(err){
+          alert(err.message || 'Could not save — check your connection and try again.');
           saveBtn.disabled = false; saveBtn.textContent = 'Save explanation';
         }
       });
@@ -10350,16 +10538,23 @@
       const item = missedItems[i];
       const saveBtn = card.querySelector('.explain-save-btn');
       const textInput = card.querySelector('.explain-text-input');
+      const getExtras = wireExplainMediaTools(card);
       saveBtn.addEventListener('click', async ()=>{
         const text = textInput.value.trim();
         if(!text){ alert('Type an explanation before saving.'); return; }
         saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
-        const result = await saveExplanationForQuestion(item.row, text, explainerName);
-        if(result.ok){
-          invalidateDbCache('mistakes'); invalidateDbCache('exams'); invalidateDbCache('skills');
-          renderAssistantExplainGoal();
-        } else {
-          alert('Could not save this explanation — the original skill or exam may have been edited or deleted since. Try refreshing.');
+        try{
+          const extras = await getExtras();
+          const result = await saveExplanationForQuestion(item.row, text, explainerName, extras);
+          if(result.ok){
+            invalidateDbCache('mistakes'); invalidateDbCache('exams'); invalidateDbCache('skills');
+            renderAssistantExplainGoal();
+          } else {
+            alert('Could not save this explanation — the original skill or exam may have been edited or deleted since. Try refreshing.');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save explanation';
+          }
+        }catch(err){
+          alert(err.message || 'Could not save — check your connection and try again.');
           saveBtn.disabled = false; saveBtn.textContent = 'Save explanation';
         }
       });
@@ -10822,6 +11017,8 @@
       explanationVideo: m.explanationVideo || null,
       explanationText: m.explanationText || null,
       explanationBy: m.explanationBy || null,
+      explanationPhoto: m.explanationPhoto || null,
+      explanationVoice: m.explanationVoice || null,
       chosenAnswer: m.chosenAnswer,
       correctAnswer: m.correctAnswer,
       chosenText: (m.options && m.chosenAnswer != null) ? (m.options[m.chosenAnswer] ?? '—') : '—',
