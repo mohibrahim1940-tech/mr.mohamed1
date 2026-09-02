@@ -3628,6 +3628,18 @@
          update storage.buckets set file_size_limit = 115343360
          where id = 'explanation-videos';
 
+        Still getting "the object exceeded the maximum allowed size"
+        after raising the Global limit? Run this in SQL Editor to see
+        exactly what each bucket's OWN limit is currently set to (a
+        low per-bucket number here overrides a higher Global one):
+
+         select id, file_size_limit from storage.buckets;
+
+        If a bucket's file_size_limit is lower than you expect (or
+        set at all), that's what's actually blocking the upload — fix
+        it with the same update statement shown above, swapping in
+        that bucket's name.
+
         That's it — the admin panel can now upload video files for a
         question's explanation, and students can watch them. Keep
         videos reasonably short regardless of your plan's storage
@@ -4141,6 +4153,18 @@
   document.getElementById('waCardClose').addEventListener('click', ()=> waCard.classList.remove('open'));
 
   /* ---------------- ADMIN PANEL ---------------- */
+  // Builds a direct link to THIS project's Supabase storage settings page
+  // — extracted from the project's own URL, so the error messages below
+  // can point somewhere exact instead of "go find it in your dashboard."
+  function supabaseStorageSettingsUrl(){
+    try{
+      const ref = SUPABASE_URL.replace(/^https?:\/\//, '').split('.')[0];
+      return ref ? `https://supabase.com/dashboard/project/${ref}/storage/settings` : 'https://supabase.com/dashboard';
+    }catch(err){
+      return 'https://supabase.com/dashboard';
+    }
+  }
+
   const ADMIN_PASSCODE = 'ibrahim2026'; // demo only — replace with real auth
   const ASSISTANT_PASSCODE = 'assistant2026'; // separate, lower-access login for teaching assistants
   const ACT_ADMIN_PASSCODE = 'ACTWHANNA'; // same full admin capabilities as ADMIN_PASSCODE, but scoped to ACT students/content only
@@ -4477,7 +4501,7 @@
         throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy), not just the "Public bucket" toggle. See step 5 of the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
       }
       if(/load failed|failed to fetch|network|exceeded the maximum allowed size|payload too large/i.test(uploadError.message || '')){
-        throw new Error(`This file is too large for your current Supabase storage settings. Even on Pro, you need to raise the Global file size limit in your dashboard first (Storage → Settings), then optionally the matching per-bucket limit — see step 5 of the SUPABASE SETUP comment near the top of this file.`);
+        throw new Error(`This file is too large for your current Supabase storage settings. Go to ${supabaseStorageSettingsUrl()} and raise the "Global file size limit" to at least this file's size — being on Pro doesn't raise it automatically. If you've already done that and still see this, a bucket may have its OWN lower limit overriding it — run "select id, file_size_limit from storage.buckets;" in your SQL Editor to check (see the SUPABASE SETUP comment near the top of this file for how to fix it).`);
       }
       throw new Error(uploadError.message || 'Upload failed');
     }
@@ -4525,7 +4549,7 @@
         throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy). See step 5c of the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
       }
       if(/load failed|failed to fetch|network|exceeded the maximum allowed size|payload too large/i.test(uploadError.message || '')){
-        throw new Error(`This file is too large for your current Supabase storage settings. Even on Pro, you need to raise the Global file size limit in your dashboard first (Storage → Settings), then optionally the matching per-bucket limit — see step 5c of the SUPABASE SETUP comment near the top of this file.`);
+        throw new Error(`This file is too large for your current Supabase storage settings. Go to ${supabaseStorageSettingsUrl()} and raise the "Global file size limit" to at least this file's size — being on Pro doesn't raise it automatically. If you've already done that and still see this, a bucket may have its OWN lower limit overriding it — run "select id, file_size_limit from storage.buckets;" in your SQL Editor to check (see the SUPABASE SETUP comment near the top of this file for how to fix it).`);
       }
       throw new Error(uploadError.message || 'Upload failed');
     }
@@ -4592,7 +4616,7 @@
         throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy). See the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
       }
       if(/load failed|failed to fetch|network|exceeded the maximum allowed size|payload too large/i.test(uploadError.message || '')){
-        throw new Error(`This file is too large for your current Supabase storage settings. Even on Pro, you need to raise the Global file size limit in your dashboard first (Storage → Settings), then optionally the matching per-bucket limit — see the SUPABASE SETUP comment near the top of this file.`);
+        throw new Error(`This file is too large for your current Supabase storage settings. Go to ${supabaseStorageSettingsUrl()} and raise the "Global file size limit" to at least this file's size — being on Pro doesn't raise it automatically. If you've already done that and still see this, a bucket may have its OWN lower limit overriding it — run "select id, file_size_limit from storage.buckets;" in your SQL Editor to check (see the SUPABASE SETUP comment near the top of this file for how to fix it).`);
       }
       throw new Error(uploadError.message || 'Upload failed');
     }
@@ -6465,6 +6489,26 @@
     const timeLimitRaw = document.getElementById('hwTimeLimitInput').value;
     const timeLimit = timeLimitRaw ? parseInt(timeLimitRaw, 10) : null;
     const questions = collectQuestionsFrom(hwQuestionsContainer);
+    if(title){
+      // Homework has no single shared template — assigning the same
+      // title again creates fresh records. Without this, a newly
+      // assigned student would start with none of the explanations
+      // already given for the same questions under earlier assignments
+      // of the same homework, unlike exams and skills where this is
+      // automatic.
+      const existingHw = (await fetchAllHomework()).filter(h => !h._index && h.title === title);
+      if(existingHw.length > 0){
+        questions.forEach(q=>{
+          for(const hw of existingHw){
+            const match = matchQuestionForMistake({ lesson: q.lesson, text: q.text, image: q.image }, hw.questions || []);
+            if(match && getQuestionExplanations(match).length > 0){
+              q.explanations = getQuestionExplanations(match);
+              break;
+            }
+          }
+        });
+      }
+    }
 
     if(usernames.length === 0 || !title){
       alert('Choose at least one student and give the homework a title.');
@@ -7967,19 +8011,43 @@
   // to every student who already got it wrong, not only future ones.
   async function saveExplanationForQuestion(row, explanationText, explanationBy, extras = {}){
     const source = await findSourceRecordForMistake(row);
-    if(!source) return { ok: false, reason: 'not-found' };
-    const questions = source.record.questions || [];
-    const match = matchQuestionForMistake(row, questions);
-    if(!match) return { ok: false, reason: 'not-found' };
-    upsertQuestionExplanation(match, {
+    const entry = {
       by: explanationBy, text: explanationText || null,
       photo: extras.explanationPhoto !== undefined ? extras.explanationPhoto : null,
       video: extras.explanationVideo !== undefined ? extras.explanationVideo : null,
       voice: extras.explanationVoice !== undefined ? extras.explanationVoice : null,
+    };
+    if(source){
+      const questions = source.record.questions || [];
+      const match = matchQuestionForMistake(row, questions);
+      if(!match) return { ok: false, reason: 'not-found' };
+      upsertQuestionExplanation(match, entry);
+      const ok = await dbSet(source.type, source.record.id, source.record);
+      if(ok) await backfillExplanationVideos(source.record[source.titleField], questions);
+      return { ok };
+    }
+    // Not an exam or skill — check homework. Unlike those, a homework
+    // title isn't one shared record: assigning it to 5 students creates
+    // 5 separate records with the same title and questions, so every one
+    // of them needs the same explanation added, not just one.
+    const allHomework = await fetchAllHomework();
+    const matchingHw = allHomework.filter(h => !h._index && h.title === row.source);
+    if(matchingHw.length === 0) return { ok: false, reason: 'not-found' };
+    let anyMatched = false;
+    let representativeQuestions = null;
+    const updates = matchingHw.map(async hw=>{
+      const questions = hw.questions || [];
+      const match = matchQuestionForMistake(row, questions);
+      if(!match) return;
+      anyMatched = true;
+      upsertQuestionExplanation(match, entry);
+      if(!representativeQuestions) representativeQuestions = questions;
+      await dbSet('homework', hw.id, hw);
     });
-    const ok = await dbSet(source.type, source.record.id, source.record);
-    if(ok) await backfillExplanationVideos(source.record[source.titleField], questions);
-    return { ok };
+    await Promise.all(updates);
+    if(!anyMatched) return { ok: false, reason: 'not-found' };
+    if(representativeQuestions) await backfillExplanationVideos(row.source, representativeQuestions);
+    return { ok: true };
   }
 
   // For assigned-skill questions that may not have any mistake yet — the
