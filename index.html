@@ -3615,20 +3615,23 @@
          using (bucket_id = 'explanation-videos')
          with check (bucket_id = 'explanation-videos');
 
-        Also run this — Supabase buckets default to a 50MB upload limit,
-        which is well under what the admin panel now allows (up to
-        100MB before it even warns you). Without raising this, a video
-        between 50-100MB will look accepted in the admin panel but then
-        fail with a generic "Load failed" error the moment it actually
-        tries to upload:
+        A note on file size: Supabase enforces a Global file size limit
+        across every bucket (Storage → Settings in your dashboard) —
+        the default is 50MB, and no per-bucket setting can exceed it.
+        On the FREE plan this can't be raised at all. On Pro or higher
+        it can go up to 500GB — but you still have to actively raise
+        it yourself; upgrading alone doesn't change the number. Once
+        you've raised the Global limit, you can optionally also cap
+        this specific bucket lower (it just can't go higher than the
+        Global limit):
 
          update storage.buckets set file_size_limit = 115343360
          where id = 'explanation-videos';
 
         That's it — the admin panel can now upload video files for a
         question's explanation, and students can watch them. Keep
-        videos short (a minute or two) — the free Supabase plan
-        includes 1GB of file storage total.
+        videos reasonably short regardless of your plan's storage
+        limit — huge files are still slow for students to load.
      5b. (Required — this is what fixed the "some mistakes/homework not
         saving or not loading" problem.) Question and option images now
         upload as real files instead of being embedded as giant text
@@ -3659,9 +3662,10 @@
          using (bucket_id = 'mistake-answers')
          with check (bucket_id = 'mistake-answers');
 
-        Also run this, same reason as step 5 — the default 50MB bucket
-        limit is below what the admin panel now allows for a video
-        attached to an answer or explanation:
+        Same file-size note as step 5 applies here too — 50MB is a
+        hard limit on Supabase's free plan, not something SQL can
+        raise. If you're on Supabase Pro or higher, raise the global
+        limit in your dashboard first, then optionally:
 
          update storage.buckets set file_size_limit = 115343360
          where id = 'mistake-answers';
@@ -4472,8 +4476,8 @@
       if(/row-level security|row level security/i.test(uploadError.message || '')){
         throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy), not just the "Public bucket" toggle. See step 5 of the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
       }
-      if(/load failed|failed to fetch|network/i.test(uploadError.message || '')){
-        throw new Error(`Upload failed partway through (often means the file is too large for this Supabase bucket's current limit — the default is 50MB). See step 5 of the SUPABASE SETUP comment near the top of this file for the SQL to raise it, or try a smaller/compressed video.`);
+      if(/load failed|failed to fetch|network|exceeded the maximum allowed size|payload too large/i.test(uploadError.message || '')){
+        throw new Error(`This file is too large for your current Supabase storage settings. Even on Pro, you need to raise the Global file size limit in your dashboard first (Storage → Settings), then optionally the matching per-bucket limit — see step 5 of the SUPABASE SETUP comment near the top of this file.`);
       }
       throw new Error(uploadError.message || 'Upload failed');
     }
@@ -4520,8 +4524,8 @@
       if(/row-level security|row level security/i.test(uploadError.message || '')){
         throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy). See step 5c of the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
       }
-      if(/load failed|failed to fetch|network/i.test(uploadError.message || '')){
-        throw new Error(`Upload failed partway through (often means the file is too large for this Supabase bucket's current limit — the default is 50MB). See step 5c of the SUPABASE SETUP comment near the top of this file for the SQL to raise it, or try a smaller/compressed file.`);
+      if(/load failed|failed to fetch|network|exceeded the maximum allowed size|payload too large/i.test(uploadError.message || '')){
+        throw new Error(`This file is too large for your current Supabase storage settings. Even on Pro, you need to raise the Global file size limit in your dashboard first (Storage → Settings), then optionally the matching per-bucket limit — see step 5c of the SUPABASE SETUP comment near the top of this file.`);
       }
       throw new Error(uploadError.message || 'Upload failed');
     }
@@ -4587,8 +4591,8 @@
       if(/row-level security|row level security/i.test(uploadError.message || '')){
         throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy). See the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
       }
-      if(/load failed|failed to fetch|network/i.test(uploadError.message || '')){
-        throw new Error(`Upload failed partway through (often means the file is too large for this Supabase bucket's current limit — the default is 50MB). See the SUPABASE SETUP comment near the top of this file for the SQL to raise it, or try a smaller image.`);
+      if(/load failed|failed to fetch|network|exceeded the maximum allowed size|payload too large/i.test(uploadError.message || '')){
+        throw new Error(`This file is too large for your current Supabase storage settings. Even on Pro, you need to raise the Global file size limit in your dashboard first (Storage → Settings), then optionally the matching per-bucket limit — see the SUPABASE SETUP comment near the top of this file.`);
       }
       throw new Error(uploadError.message || 'Upload failed');
     }
@@ -4776,7 +4780,7 @@
       // this the hard way.
       const sizeMB = file.size / (1024 * 1024);
       if(sizeMB > 100){
-        const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that's large enough that it could take several minutes to load for students. For best results, compress it first (aim for well under 100 MB) or trim it shorter.\n\nUpload it anyway?`);
+        const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — make sure your Supabase Global file size limit (Storage → Settings in your dashboard) is raised to at least this size, or the upload will fail. Larger videos also take longer for students to load.\n\nUpload it anyway?`);
         if(!proceed){ videoInput.value = ''; return; }
       }
 
@@ -8778,7 +8782,7 @@
           }
           const sizeMB = file.size / (1024 * 1024);
           if(sizeMB > 100){
-            const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that could take a while to upload and for your coach to load. Keep it well under 100 MB if you can.\n\nUse it anyway?`);
+            const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — most tutoring sites (including this one) cap uploads at 50 MB, so this will likely fail. Try a shorter or compressed video, well under 50 MB.\n\nUse it anyway?`);
             if(!proceed){ videoInput.value = ''; return; }
           }
           pendingVideo = { file, ext: (file.name.split('.').pop() || 'mp4'), contentType: file.type || 'video/mp4', previewUrl: URL.createObjectURL(file) };
@@ -10660,7 +10664,7 @@
         }
         const sizeMB = file.size / (1024 * 1024);
         if(sizeMB > 100){
-          if(!confirm(`This video is ${sizeMB.toFixed(0)} MB — that could take a while to load. Use it anyway?`)){ videoInput.value = ''; return; }
+          if(!confirm(`This video is ${sizeMB.toFixed(0)} MB — make sure your coach has raised the Supabase Global file size limit to at least this size, or the upload will fail.\n\nUpload it anyway?`)){ videoInput.value = ''; return; }
         }
         pendingVideo = { file };
         renderAttachments();
@@ -11916,7 +11920,7 @@
         }
         const sizeMB = file.size / (1024 * 1024);
         if(sizeMB > 100){
-          const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that's large enough that it could take a while to load for ${row.username}. For best results, keep it well under 100 MB.\n\nUse it anyway?`);
+          const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — make sure your Supabase Global file size limit (Storage → Settings in your dashboard) is raised to at least this size, or the upload will fail. Larger videos also take longer for ${row.username} to load.\n\nUse it anyway?`);
           if(!proceed){ videoInput.value = ''; return; }
         }
         amPendingVideo = { file, ext: (file.name.split('.').pop() || 'mp4'), contentType: file.type || 'video/mp4', previewUrl: URL.createObjectURL(file) };
