@@ -4749,8 +4749,8 @@
       // Flag it clearly before uploading, rather than students discovering
       // this the hard way.
       const sizeMB = file.size / (1024 * 1024);
-      if(sizeMB > 50){
-        const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that's large enough that it could take several minutes to load for students. For best results, compress it first (aim for well under 50 MB) or trim it shorter.\n\nUpload it anyway?`);
+      if(sizeMB > 100){
+        const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that's large enough that it could take several minutes to load for students. For best results, compress it first (aim for well under 100 MB) or trim it shorter.\n\nUpload it anyway?`);
         if(!proceed){ videoInput.value = ''; return; }
       }
 
@@ -4763,8 +4763,8 @@
         videoPreview.src = url;
         videoPreview.style.display = 'block';
         removeVideoBtn.style.display = 'inline-block';
-        videoStatus.textContent = sizeMB > 50 ? `Uploaded ✓ — but ${sizeMB.toFixed(0)} MB is large; consider a shorter/compressed version if students report slow loading.` : 'Uploaded ✓';
-        videoStatus.style.color = sizeMB > 50 ? '#FFB020' : '#39D98A';
+        videoStatus.textContent = sizeMB > 100 ? `Uploaded ✓ — but ${sizeMB.toFixed(0)} MB is large; consider a shorter/compressed version if students report slow loading.` : 'Uploaded ✓';
+        videoStatus.style.color = sizeMB > 100 ? '#FFB020' : '#39D98A';
       }catch(err){
         videoStatus.textContent = err.message || 'Upload failed — try again.';
         videoStatus.style.color = 'var(--ember)';
@@ -5056,7 +5056,19 @@
       return;
     }
 
-    const valid = parsed.filter(q => q && typeof q.text === 'string' && Array.isArray(q.options) && q.options.length === 4);
+    // Coerce text and each option to strings up front — a pasted JSON block
+    // (especially AI-generated, where numeric answers are natural to leave
+    // unquoted) can easily have options like [8, 9, 10, 11] instead of
+    // ["8","9","10","11"], which is completely valid JSON but would save
+    // as numbers and break every place that expects option text.
+    parsed = Array.isArray(parsed) ? parsed.map(q=>{
+      if(!q || typeof q !== 'object') return q;
+      const fixed = { ...q };
+      if(fixed.text !== undefined && fixed.text !== null) fixed.text = String(fixed.text);
+      if(Array.isArray(fixed.options)) fixed.options = fixed.options.map(o => (o === undefined || o === null) ? o : String(o));
+      return fixed;
+    }) : parsed;
+    const valid = Array.isArray(parsed) ? parsed.filter(q => q && typeof q.text === 'string' && Array.isArray(q.options) && q.options.length === 4) : [];
     if(valid.length === 0){
       alert('No valid questions found — each one needs "text" and 4 "options".');
       return;
@@ -6211,7 +6223,19 @@
       return;
     }
 
-    const valid = parsed.filter(q => q && typeof q.text === 'string' && Array.isArray(q.options) && q.options.length === 4);
+    // Coerce text and each option to strings up front — a pasted JSON block
+    // (especially AI-generated, where numeric answers are natural to leave
+    // unquoted) can easily have options like [8, 9, 10, 11] instead of
+    // ["8","9","10","11"], which is completely valid JSON but would save
+    // as numbers and break every place that expects option text.
+    parsed = Array.isArray(parsed) ? parsed.map(q=>{
+      if(!q || typeof q !== 'object') return q;
+      const fixed = { ...q };
+      if(fixed.text !== undefined && fixed.text !== null) fixed.text = String(fixed.text);
+      if(Array.isArray(fixed.options)) fixed.options = fixed.options.map(o => (o === undefined || o === null) ? o : String(o));
+      return fixed;
+    }) : parsed;
+    const valid = Array.isArray(parsed) ? parsed.filter(q => q && typeof q.text === 'string' && Array.isArray(q.options) && q.options.length === 4) : [];
     if(valid.length === 0){
       alert('No valid questions found — each one needs "text" and 4 "options".');
       return;
@@ -6552,7 +6576,19 @@
       return;
     }
 
-    const valid = parsed.filter(q => q && typeof q.text === 'string' && Array.isArray(q.options) && q.options.length === 4);
+    // Coerce text and each option to strings up front — a pasted JSON block
+    // (especially AI-generated, where numeric answers are natural to leave
+    // unquoted) can easily have options like [8, 9, 10, 11] instead of
+    // ["8","9","10","11"], which is completely valid JSON but would save
+    // as numbers and break every place that expects option text.
+    parsed = Array.isArray(parsed) ? parsed.map(q=>{
+      if(!q || typeof q !== 'object') return q;
+      const fixed = { ...q };
+      if(fixed.text !== undefined && fixed.text !== null) fixed.text = String(fixed.text);
+      if(Array.isArray(fixed.options)) fixed.options = fixed.options.map(o => (o === undefined || o === null) ? o : String(o));
+      return fixed;
+    }) : parsed;
+    const valid = Array.isArray(parsed) ? parsed.filter(q => q && typeof q.text === 'string' && Array.isArray(q.options) && q.options.length === 4) : [];
     if(valid.length === 0){
       alert('No valid questions found — each one needs "text" and 4 "options".');
       return;
@@ -8715,8 +8751,8 @@
             return;
           }
           const sizeMB = file.size / (1024 * 1024);
-          if(sizeMB > 50){
-            const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that could take a while to upload and for your coach to load. Keep it well under 50 MB if you can.\n\nUse it anyway?`);
+          if(sizeMB > 100){
+            const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that could take a while to upload and for your coach to load. Keep it well under 100 MB if you can.\n\nUse it anyway?`);
             if(!proceed){ videoInput.value = ''; return; }
           }
           pendingVideo = { file, ext: (file.name.split('.').pop() || 'mp4'), contentType: file.type || 'video/mp4', previewUrl: URL.createObjectURL(file) };
@@ -10597,7 +10633,7 @@
           return;
         }
         const sizeMB = file.size / (1024 * 1024);
-        if(sizeMB > 50){
+        if(sizeMB > 100){
           if(!confirm(`This video is ${sizeMB.toFixed(0)} MB — that could take a while to load. Use it anyway?`)){ videoInput.value = ''; return; }
         }
         pendingVideo = { file };
@@ -11853,8 +11889,8 @@
           return;
         }
         const sizeMB = file.size / (1024 * 1024);
-        if(sizeMB > 50){
-          const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that's large enough that it could take a while to load for ${row.username}. For best results, keep it well under 50 MB.\n\nUse it anyway?`);
+        if(sizeMB > 100){
+          const proceed = confirm(`This video is ${sizeMB.toFixed(0)} MB — that's large enough that it could take a while to load for ${row.username}. For best results, keep it well under 100 MB.\n\nUse it anyway?`);
           if(!proceed){ videoInput.value = ''; return; }
         }
         amPendingVideo = { file, ext: (file.name.split('.').pop() || 'mp4'), contentType: file.type || 'video/mp4', previewUrl: URL.createObjectURL(file) };
