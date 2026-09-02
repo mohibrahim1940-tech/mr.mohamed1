@@ -3615,6 +3615,16 @@
          using (bucket_id = 'explanation-videos')
          with check (bucket_id = 'explanation-videos');
 
+        Also run this — Supabase buckets default to a 50MB upload limit,
+        which is well under what the admin panel now allows (up to
+        100MB before it even warns you). Without raising this, a video
+        between 50-100MB will look accepted in the admin panel but then
+        fail with a generic "Load failed" error the moment it actually
+        tries to upload:
+
+         update storage.buckets set file_size_limit = 115343360
+         where id = 'explanation-videos';
+
         That's it — the admin panel can now upload video files for a
         question's explanation, and students can watch them. Keep
         videos short (a minute or two) — the free Supabase plan
@@ -3648,6 +3658,13 @@
          on storage.objects for all
          using (bucket_id = 'mistake-answers')
          with check (bucket_id = 'mistake-answers');
+
+        Also run this, same reason as step 5 — the default 50MB bucket
+        limit is below what the admin panel now allows for a video
+        attached to an answer or explanation:
+
+         update storage.buckets set file_size_limit = 115343360
+         where id = 'mistake-answers';
 
         Until this exists, uploading a photo or voice answer will show
         a clear error explaining exactly this — typed text answers
@@ -4455,6 +4472,9 @@
       if(/row-level security|row level security/i.test(uploadError.message || '')){
         throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy), not just the "Public bucket" toggle. See step 5 of the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
       }
+      if(/load failed|failed to fetch|network/i.test(uploadError.message || '')){
+        throw new Error(`Upload failed partway through (often means the file is too large for this Supabase bucket's current limit — the default is 50MB). See step 5 of the SUPABASE SETUP comment near the top of this file for the SQL to raise it, or try a smaller/compressed video.`);
+      }
       throw new Error(uploadError.message || 'Upload failed');
     }
     const { data: publicUrlData } = supabaseClient.storage.from('explanation-videos').getPublicUrl(path);
@@ -4499,6 +4519,9 @@
       }
       if(/row-level security|row level security/i.test(uploadError.message || '')){
         throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy). See step 5c of the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
+      }
+      if(/load failed|failed to fetch|network/i.test(uploadError.message || '')){
+        throw new Error(`Upload failed partway through (often means the file is too large for this Supabase bucket's current limit — the default is 50MB). See step 5c of the SUPABASE SETUP comment near the top of this file for the SQL to raise it, or try a smaller/compressed file.`);
       }
       throw new Error(uploadError.message || 'Upload failed');
     }
@@ -4563,6 +4586,9 @@
       }
       if(/row-level security|row level security/i.test(uploadError.message || '')){
         throw new Error('Uploads are blocked by Supabase — you need one more setup step (a storage policy). See the SUPABASE SETUP comment near the top of this file for the exact SQL to run.');
+      }
+      if(/load failed|failed to fetch|network/i.test(uploadError.message || '')){
+        throw new Error(`Upload failed partway through (often means the file is too large for this Supabase bucket's current limit — the default is 50MB). See the SUPABASE SETUP comment near the top of this file for the SQL to raise it, or try a smaller image.`);
       }
       throw new Error(uploadError.message || 'Upload failed');
     }
