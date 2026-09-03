@@ -12055,16 +12055,15 @@
           }
           const answererName = getCurrentAnswererIdentity();
           const answer = { text: text || null, photoUrl, videoUrl: videoUrl2, voiceUrl, answeredBy: answererName, answeredAt: new Date().toISOString(), seenByStudent: false };
+          // Propagate to every other student FIRST, then save this specific
+          // mistake's own answer LAST — so it's always the final write and
+          // can never be silently overwritten by the propagation step,
+          // regardless of any timing between the two Supabase round-trips.
+          await saveExplanationForQuestion(row, text || null, answererName, {
+            explanationPhoto: photoUrl, explanationVideo: videoUrl2, explanationVoice: voiceUrl
+          });
           const ok = await dbSet('mistakes', mistakeId, { ...(await dbGet('mistakes', mistakeId)), status: 'answered', answer });
           if(ok){
-            // Share this answer with every OTHER student who's gotten the
-            // same question wrong, not just the one whose mistake this
-            // was — reuses the same explanation system "Explain
-            // Questions" already backfills through, so a question only
-            // needs answering once to help everyone stuck on it.
-            await saveExplanationForQuestion(row, text || null, answererName, {
-              explanationPhoto: photoUrl, explanationVideo: videoUrl2, explanationVoice: voiceUrl
-            });
             invalidateDbCache('mistakes');
             await openAmDetail(mistakeId, opts);
             if(typeof opts.onSent === 'function') opts.onSent();
