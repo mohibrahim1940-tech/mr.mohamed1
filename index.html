@@ -3074,6 +3074,15 @@
           <label class="field-label">Time limit in minutes (optional)</label>
           <input type="number" id="examTimeLimitInput" min="1" placeholder="e.g. 20 — leave blank for no limit">
         </div>
+        <div class="field-row">
+          <label class="field-label">Printable PDF version (optional — lets a student work through it on paper first, then enter their answers digitally below)</label>
+          <div class="q-image-controls">
+            <input type="file" accept="application/pdf" id="examPdfInput">
+            <button type="button" class="remove-video-btn" id="removeExamPdfBtn" style="display:none;">Remove PDF</button>
+          </div>
+          <span class="video-upload-status" id="examPdfUploadStatus"></span>
+          <a id="examPdfPreviewLink" href="#" target="_blank" style="display:none; color:var(--signal); font-size:0.84rem; margin-top:6px;">📄 View currently attached PDF</a>
+        </div>
 
         <label class="field-label">Questions</label>
         <div id="questionsContainer"></div>
@@ -4441,7 +4450,7 @@
       await dbSet('exams', `idx-${examId}`, {
         _index: true, id: examId, title: examData.title, course: examData.course,
         description: examData.description, questionCount: (examData.questions || []).length,
-        ts: examData.ts
+        ts: examData.ts, pdfUrl: examData.pdfUrl || null
       });
       backfillExplanationVideos(examData.title, examData.questions || []);
     }
@@ -4459,7 +4468,7 @@
   async function fetchExamsIndex(){
     await ensureIndexBackfilled('exams', (exam)=> ({
       _index: true, id: exam.id, title: exam.title, course: exam.course,
-      description: exam.description, questionCount: (exam.questions || []).length, ts: exam.ts
+      description: exam.description, questionCount: (exam.questions || []).length, ts: exam.ts, pdfUrl: exam.pdfUrl || null
     }));
     const rows = await dbGetAllByIdPrefix('exams', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -4479,6 +4488,7 @@
   const examDescInput = document.getElementById('examDescInput');
   const questionsContainer = document.getElementById('questionsContainer');
   let editingExamId = null;
+  let examPendingPdfUrl = null; // the exam's printable-PDF URL, held here while the editor is open
   let qCounter = 0;
 
   // Uploads an explanation video file to the "explanation-videos" Supabase
@@ -5141,6 +5151,11 @@
     document.getElementById('examCourseInput').disabled = false; // populateExamCourseSelect already restricts options to ACT-scoped courses for this role
     examDescInput.value = '';
     document.getElementById('examTimeLimitInput').value = '';
+    examPendingPdfUrl = null;
+    document.getElementById('examPdfInput').value = '';
+    document.getElementById('examPdfPreviewLink').style.display = 'none';
+    document.getElementById('removeExamPdfBtn').style.display = 'none';
+    document.getElementById('examPdfUploadStatus').textContent = '';
     questionsContainer.innerHTML = '';
     addQuestionBlock(null);
     examEditor.style.display = 'block';
@@ -5149,6 +5164,41 @@
 
   document.getElementById('cancelExamBtn').addEventListener('click', ()=>{
     examEditor.style.display = 'none';
+  });
+
+  document.getElementById('examPdfInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
+      alert('That file doesn\'t look like a PDF — try picking a .pdf file instead.');
+      e.target.value = '';
+      return;
+    }
+    const statusEl = document.getElementById('examPdfUploadStatus');
+    statusEl.textContent = 'Uploading…';
+    statusEl.style.color = 'var(--muted)';
+    try{
+      const url = await uploadMistakeAnswerFile(file, 'pdf', 'application/pdf');
+      examPendingPdfUrl = url;
+      statusEl.textContent = 'Uploaded ✓';
+      statusEl.style.color = '#39D98A';
+      const pdfLink = document.getElementById('examPdfPreviewLink');
+      pdfLink.href = url;
+      pdfLink.style.display = 'inline-block';
+      document.getElementById('removeExamPdfBtn').style.display = '';
+    }catch(err){
+      statusEl.textContent = '';
+      alert(err.message || 'Could not upload the PDF — check your connection and try again.');
+      e.target.value = '';
+    }
+  });
+
+  document.getElementById('removeExamPdfBtn').addEventListener('click', ()=>{
+    examPendingPdfUrl = null;
+    document.getElementById('examPdfInput').value = '';
+    document.getElementById('examPdfUploadStatus').textContent = '';
+    document.getElementById('examPdfPreviewLink').style.display = 'none';
+    document.getElementById('removeExamPdfBtn').style.display = 'none';
   });
 
   document.getElementById('saveExamBtn').addEventListener('click', async ()=>{
@@ -5166,7 +5216,7 @@
     const timeLimit = timeLimitRaw ? parseInt(timeLimitRaw, 10) : null;
 
     const examId = editingExamId || (slugify(title) + '-' + Date.now());
-    const examData = { title, course: examCourseInput.value.trim(), description: examDescInput.value.trim(), timeLimit, questions };
+    const examData = { title, course: examCourseInput.value.trim(), description: examDescInput.value.trim(), timeLimit, pdfUrl: examPendingPdfUrl || null, questions };
 
     const saveBtn = document.getElementById('saveExamBtn');
     saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
@@ -5191,6 +5241,19 @@
     document.getElementById('examCourseInput').disabled = false; // populateExamCourseSelect already restricts options to ACT-scoped courses for this role
     examDescInput.value = exam.description || '';
     document.getElementById('examTimeLimitInput').value = exam.timeLimit || '';
+    examPendingPdfUrl = exam.pdfUrl || null;
+    document.getElementById('examPdfInput').value = '';
+    document.getElementById('examPdfUploadStatus').textContent = '';
+    const pdfLink = document.getElementById('examPdfPreviewLink');
+    const removePdfBtn = document.getElementById('removeExamPdfBtn');
+    if(examPendingPdfUrl){
+      pdfLink.href = examPendingPdfUrl;
+      pdfLink.style.display = 'inline-block';
+      removePdfBtn.style.display = '';
+    } else {
+      pdfLink.style.display = 'none';
+      removePdfBtn.style.display = 'none';
+    }
     questionsContainer.innerHTML = '';
     exam.questions.forEach(q => addQuestionBlock(q));
     examEditor.style.display = 'block';
@@ -5423,6 +5486,7 @@
         <h3>${esc(exam.title)}</h3>
         <p>${esc(exam.description || (exam.questionCount + ' quick questions to check your knowledge.'))}</p>
         ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin:8px 0 -4px;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
+        ${exam.pdfUrl ? `<a href="${esc(exam.pdfUrl)}" target="_blank" rel="noopener" class="btn btn-ghost" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">📄 Download printable PDF</a>` : ''}
         <button class="btn btn-ghost start-exam-btn">${buttonLabel}</button>
       `;
       card.querySelector('.start-exam-btn').addEventListener('click', async ()=>{
@@ -10500,7 +10564,10 @@
     });
 
     const myIdentity = getCurrentAnswererIdentity();
+    const totalNeeds = allMistakes.filter(m => isMistakeInAssistantQueue(m) && m.status !== 'answered' &&
+      assigned.some(u => u.trim().toLowerCase() === (m.username||'').trim().toLowerCase())).length;
     container.innerHTML = `
+      <div class="am-counter ${totalNeeds === 0 ? 'all-done' : ''}">${totalNeeds === 0 ? '✓ All mistakes answered' : `${totalNeeds} mistake${totalNeeds===1?'':'s'} still need${totalNeeds===1?'s':''} an answer`}</div>
       <div class="asd-grid">
         ${assigned.map(uname=>{
           const mistakes = byStudent[uname] || [];
@@ -10514,8 +10581,9 @@
               <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
                 ${mistakes.length === 0
                   ? `<div style="color:var(--muted);font-size:0.82rem;">✅ Nothing to answer right now.</div>`
-                  : mistakes.map(m => `
+                  : mistakes.map((m, i) => `
                     <div class="am-mistake-card asd-mistake-row" data-mistake-id="${esc(m.id)}" style="padding:10px 12px;">
+                      <span class="am-status-badge" style="background:rgba(255,255,255,0.08);color:var(--muted);border-color:var(--line);">#${i + 1}</span>
                       <span class="am-status-badge ${m.status === 'answered' ? 'answered' : 'delivered'}">${m.status === 'answered' ? '✅' : '🔵'}</span>
                       ${m.claimedBy ? `<span class="am-status-badge delivered" style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);">🔵 ${m.claimedBy === myIdentity ? 'You' : esc(m.claimedBy)}</span>` : ''}
                       <div class="am-card-info">
