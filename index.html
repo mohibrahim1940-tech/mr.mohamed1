@@ -3166,6 +3166,15 @@
           <label class="field-label">Time limit in minutes (optional)</label>
           <input type="number" id="hwTimeLimitInput" min="1" placeholder="e.g. 15 — leave blank for no limit">
         </div>
+        <div class="field-row">
+          <label class="field-label">Printable PDF version (optional — lets a student work through it on paper first, then enter their answers digitally below)</label>
+          <div class="q-image-controls">
+            <input type="file" accept="application/pdf" id="hwPdfInput">
+            <button type="button" class="remove-video-btn" id="removeHwPdfBtn" style="display:none;">Remove PDF</button>
+          </div>
+          <span class="video-upload-status" id="hwPdfUploadStatus"></span>
+          <a id="hwPdfPreviewLink" href="#" target="_blank" style="display:none; color:var(--signal); font-size:0.84rem; margin-top:6px;">📄 View currently attached PDF</a>
+        </div>
 
         <label class="field-label">Questions</label>
         <div id="hwQuestionsContainer"></div>
@@ -4489,6 +4498,7 @@
   const questionsContainer = document.getElementById('questionsContainer');
   let editingExamId = null;
   let examPendingPdfUrl = null; // the exam's printable-PDF URL, held here while the editor is open
+  let hwPendingPdfUrl = null; // same, for the homework editor
   let qCounter = 0;
 
   // Uploads an explanation video file to the "explanation-videos" Supabase
@@ -5201,6 +5211,41 @@
     document.getElementById('removeExamPdfBtn').style.display = 'none';
   });
 
+  document.getElementById('hwPdfInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
+      alert('That file doesn\'t look like a PDF — try picking a .pdf file instead.');
+      e.target.value = '';
+      return;
+    }
+    const statusEl = document.getElementById('hwPdfUploadStatus');
+    statusEl.textContent = 'Uploading…';
+    statusEl.style.color = 'var(--muted)';
+    try{
+      const url = await uploadMistakeAnswerFile(file, 'pdf', 'application/pdf');
+      hwPendingPdfUrl = url;
+      statusEl.textContent = 'Uploaded ✓';
+      statusEl.style.color = '#39D98A';
+      const pdfLink = document.getElementById('hwPdfPreviewLink');
+      pdfLink.href = url;
+      pdfLink.style.display = 'inline-block';
+      document.getElementById('removeHwPdfBtn').style.display = '';
+    }catch(err){
+      statusEl.textContent = '';
+      alert(err.message || 'Could not upload the PDF — check your connection and try again.');
+      e.target.value = '';
+    }
+  });
+
+  document.getElementById('removeHwPdfBtn').addEventListener('click', ()=>{
+    hwPendingPdfUrl = null;
+    document.getElementById('hwPdfInput').value = '';
+    document.getElementById('hwPdfUploadStatus').textContent = '';
+    document.getElementById('hwPdfPreviewLink').style.display = 'none';
+    document.getElementById('removeHwPdfBtn').style.display = 'none';
+  });
+
   document.getElementById('saveExamBtn').addEventListener('click', async ()=>{
     const title = examTitleInput.value.trim();
     if(!title){ examTitleInput.focus(); return; }
@@ -5898,6 +5943,9 @@
         saveSucceeded = attemptResult !== false;
         const succeededEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] !== false);
         removeFromMistakeQueue(succeededEntries); // only the ones actually confirmed saved — anything that failed (or never got a chance to run) stays queued
+        if(hasMistakes && succeededEntries.length > 0){
+          createRetakeHomework(currentStudent.username, exam.title, succeededEntries).catch(err => console.error('Could not create retake homework:', err));
+        }
         failedMistakeEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] === false);
       }
 
@@ -6274,6 +6322,27 @@
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
   }
 
+  // Creates an actual homework item for a retake, containing only the
+  // questions just missed — this replaces relying on the fuzzy "did they
+  // answer a similarly-worded question right somewhere else" resolution
+  // check with something unambiguous: it only completes when the student
+  // actually opens and finishes THIS item, tracked the same reliable way
+  // as any other homework.
+  async function createRetakeHomework(username, sourceTitle, mistakeEntries){
+    if(!username || !mistakeEntries || mistakeEntries.length === 0) return;
+    const questions = mistakeEntries.map(m => ({
+      lesson: m.lesson || 'General', text: m.text || null, image: m.image || null,
+      options: m.options, optionImages: m.optionImages || null, correct: m.correctAnswer,
+      ...(m.explanations ? { explanations: m.explanations } : {})
+    }));
+    const id = generateId('hw');
+    await saveHomeworkAssignment(id, {
+      username, title: `Retake: ${sourceTitle}`, dueDate: null, timeLimit: null,
+      isRetake: true, questions, status: 'assigned', score: null, submittedAt: null,
+      ts: new Date().toISOString()
+    });
+  }
+
   async function saveHomeworkAssignment(id, data){
     const ok = await dbSet('homework', id, { id, ...data });
     if(ok){
@@ -6285,7 +6354,7 @@
         _index: true, id, username: data.username, title: data.title, dueDate: data.dueDate,
         status: data.status, score: data.score, retakeRequired: data.retakeRequired,
         retakeDeadline: data.retakeDeadline, submittedAt: data.submittedAt, ts: data.ts,
-        questionCount: (data.questions || []).length
+        questionCount: (data.questions || []).length, pdfUrl: data.pdfUrl || null
       });
       backfillExplanationVideos(data.title, data.questions || []);
     }
@@ -6307,7 +6376,7 @@
       _index: true, id: hw.id, username: hw.username, title: hw.title, dueDate: hw.dueDate,
       status: hw.status, score: hw.score, retakeRequired: hw.retakeRequired,
       retakeDeadline: hw.retakeDeadline, submittedAt: hw.submittedAt, ts: hw.ts,
-      questionCount: (hw.questions || []).length
+      questionCount: (hw.questions || []).length, pdfUrl: hw.pdfUrl || null
     }));
     const rows = await dbGetAllByIdPrefix('homework', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -6467,6 +6536,17 @@
     if(!document.getElementById('hwTitleInput').value.trim()){
       document.getElementById('hwTitleInput').value = match.title;
     }
+    // Carry over the exam's printable PDF too, if it has one — the
+    // homework is the same questions, so the same PDF applies.
+    if(match.pdfUrl){
+      hwPendingPdfUrl = match.pdfUrl;
+      const pdfLink = document.getElementById('hwPdfPreviewLink');
+      pdfLink.href = match.pdfUrl;
+      pdfLink.style.display = 'inline-block';
+      document.getElementById('removeHwPdfBtn').style.display = '';
+      document.getElementById('hwPdfUploadStatus').textContent = 'Carried over from the exam ✓';
+      document.getElementById('hwPdfUploadStatus').style.color = '#39D98A';
+    }
   });
 
   async function renderAdminHomework(){
@@ -6590,7 +6670,7 @@
       btn.textContent = `Assigning… (${successCount + 1}/${usernames.length})`;
       const id = generateId('hw');
       const ok = await saveHomeworkAssignment(id, {
-        username, title, dueDate, timeLimit, questions,
+        username, title, dueDate, timeLimit, pdfUrl: hwPendingPdfUrl || null, questions,
         status: 'assigned', score: null, submittedAt: null,
         ts: new Date().toISOString()
       });
@@ -6602,6 +6682,11 @@
       document.getElementById('hwTitleInput').value = '';
       document.getElementById('hwDateInput').value = '';
       document.getElementById('hwTimeLimitInput').value = '';
+      hwPendingPdfUrl = null;
+      document.getElementById('hwPdfInput').value = '';
+      document.getElementById('hwPdfPreviewLink').style.display = 'none';
+      document.getElementById('removeHwPdfBtn').style.display = 'none';
+      document.getElementById('hwPdfUploadStatus').textContent = '';
       document.getElementById('hwLoadSkillSelect').value = '';
       document.getElementById('hwLoadExamSelect').value = '';
       document.querySelectorAll('#hwStudentCheckboxList input').forEach(cb => cb.checked = false);
@@ -8584,7 +8669,7 @@
 
       let statusHtml;
       if(!isCompleted){
-        statusHtml = `<button class="btn btn-ghost start-hw-btn" style="padding:6px 14px; font-size:0.82rem;">Start homework</button>`;
+        statusHtml = `${entry.pdfUrl ? `<a href="${esc(entry.pdfUrl)}" target="_blank" rel="noopener" class="btn btn-ghost" style="padding:6px 14px; font-size:0.82rem; text-decoration:none;">📄 PDF</a>` : ''}<button class="btn btn-ghost start-hw-btn" style="padding:6px 14px; font-size:0.82rem;">Start homework</button>`;
       } else if(needsRetake){
         statusHtml = `
           <span class="hw-mark">${entry.score ? `${entry.score.correct}/${entry.score.total} (${entry.score.pct}%)` : ''}</span>
@@ -10212,6 +10297,9 @@
       }
       const succeededEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] !== false);
       removeFromMistakeQueue(succeededEntries); // only the ones actually confirmed saved — anything that failed (or never got a chance to run) stays queued
+      if(hasMistakes && succeededEntries.length > 0){
+        createRetakeHomework(hw.username, hw.title, succeededEntries).catch(err => console.error('Could not create retake homework:', err));
+      }
       const failedMistakeEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] === false);
       // Anonymized — just a number, no other students' names or identities.
       let classAverageHtml = '';
