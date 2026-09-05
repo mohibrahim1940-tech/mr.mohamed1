@@ -1905,6 +1905,17 @@
   .ask-sent-msg.show{display:block;}
 
   /* ---------- session reminder + history (dashboard) ---------- */
+  .announce-banner{
+    display:flex; align-items:flex-start; gap:12px;
+    background:rgba(255,107,74,0.1); border:1px solid rgba(255,107,74,0.35);
+    border-radius:12px; padding:14px 16px; margin-bottom:14px;
+  }
+  .announce-banner .text{ flex:1; font-size:0.88rem; line-height:1.5; }
+  .announce-banner .dismiss-announce-btn{
+    background:none; border:none; color:var(--muted); cursor:pointer;
+    font-size:1rem; line-height:1; padding:2px 4px; flex-shrink:0;
+  }
+  .announce-banner .dismiss-announce-btn:hover{ color:var(--text); }
   .session-reminder{
     display:flex; align-items:center; gap:16px;
     background:linear-gradient(100deg, rgba(76,111,255,0.14), rgba(255,107,74,0.1));
@@ -2123,6 +2134,20 @@
   .achievement-badge.unlocked .label{color:var(--text);}
 
   /* ---------- level/XP card ---------- */
+  .target-score-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:18px 20px; margin-bottom:28px;
+  }
+  .target-score-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .target-score-bar-outer{
+    width:100%; height:10px; border-radius:6px; background:rgba(255,255,255,0.08);
+    overflow:hidden; margin-top:8px;
+  }
+  .target-score-bar-fill{
+    height:100%; border-radius:6px;
+    background:linear-gradient(90deg, var(--signal), var(--ember));
+    transition:width 0.4s ease;
+  }
   .level-card{
     display:flex; align-items:center; gap:14px;
     background:var(--panel); border:1px solid var(--line); border-radius:16px;
@@ -2409,13 +2434,15 @@
           <span id="dashRefreshStatus">Tap to pull the latest homework, scores, and updates.</span>
           <button class="btn btn-ghost" id="dashRefreshBtn">🔄 Refresh</button>
         </div>
+        <div id="announcementsBanner"></div>
         <div class="session-reminder" id="sessionReminder">
           <div class="icon">📅</div>
-          <div>
+          <div style="flex:1;">
             <div class="label">Next session</div>
             <div class="detail" id="sessionReminderDetail">No upcoming session scheduled yet.</div>
             <div class="topic" id="sessionReminderTopic"></div>
           </div>
+          <button class="btn btn-primary" id="joinSessionBtn" style="display:none; white-space:nowrap;">🔗 Join session</button>
         </div>
 
         <div class="dash-tab-panel active" id="tabOverview">
@@ -2452,6 +2479,20 @@
             <div class="dash-card">
               <span class="field-label">Status</span>
               <div class="dash-value"><span class="status-pill status-approved">approved</span></div>
+            </div>
+          </div>
+
+          <div class="target-score-card" id="targetScoreCard">
+            <div class="target-score-header">
+              <span class="field-label">🎯 Target score</span>
+              <button type="button" class="btn btn-ghost" id="editTargetScoreBtn" style="padding:4px 12px; font-size:0.78rem;">Set target</button>
+            </div>
+            <div id="targetScoreContent"></div>
+            <div id="targetScoreEditRow" style="display:none; margin-top:10px; gap:10px; align-items:center;">
+              <input type="number" id="targetScoreInput" min="1" max="100" placeholder="e.g. 90" style="max-width:100px;">
+              <span style="color:var(--muted); font-size:0.82rem;">% average</span>
+              <button type="button" class="btn btn-primary" id="saveTargetScoreBtn" style="padding:6px 14px; font-size:0.82rem;">Save</button>
+              <button type="button" class="btn btn-ghost" id="cancelTargetScoreBtn" style="padding:6px 14px; font-size:0.82rem;">Cancel</button>
             </div>
           </div>
 
@@ -3014,6 +3055,8 @@
       <button class="admin-tab" data-tab="leaderboardPanel" data-roles="admin,act-admin">Leaderboard</button>
       <button class="admin-tab" data-tab="asksPanel" data-roles="admin,assistant,act-admin">Questions asked</button>
       <button class="admin-tab" data-tab="sessionsPanel" data-roles="admin,act-admin">Sessions</button>
+      <button class="admin-tab" data-tab="announcementsPanel" data-roles="admin,act-admin">📣 Announcements</button>
+      <button class="admin-tab" data-tab="questionAnalyticsPanel" data-roles="admin,act-admin">📉 Question Analytics</button>
       <button class="admin-tab" data-tab="reviewsPanel" data-roles="admin,assistant,act-admin">Reviews</button>
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
       <button class="admin-tab" data-tab="competitionsPanel" data-roles="admin,act-admin">🏆 Competition</button>
@@ -3294,6 +3337,10 @@
           <label class="field-label">Topic / notes</label>
           <input type="text" id="sessTopicInput" placeholder="e.g. Trigonometry review">
         </div>
+        <div class="field-row">
+          <label class="field-label">Meeting link (optional — Zoom, Google Meet, etc.)</label>
+          <input type="text" id="sessLinkInput" placeholder="https://...">
+        </div>
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveSessBtn">Save session</button>
         </div>
@@ -3307,10 +3354,47 @@
       </div>
       <div class="admin-table-wrap">
         <table class="admin-table" id="sessionsTable">
-          <thead><tr><th>Student</th><th>Date</th><th>Time</th><th>Topic / notes</th><th></th></tr></thead>
+          <thead><tr><th>Student</th><th>Date</th><th>Time</th><th>Topic / notes</th><th>Attendance</th><th></th></tr></thead>
           <tbody id="sessionsBody"></tbody>
         </table>
         <div class="admin-empty" id="sessionsEmpty" style="display:none;">No sessions recorded yet.</div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="announcementsPanel">
+      <div class="admin-note">Post something all your students see on their dashboard — a cancellation, a new exam, anything time-sensitive. Scope it to one course, or leave it for everyone.</div>
+
+      <div class="exam-editor" style="margin-top:0;">
+        <div class="field-row">
+          <label class="field-label">Message</label>
+          <textarea id="announceTextInput" placeholder="e.g. No session this Thursday — rescheduled to Saturday 4pm." style="min-height:80px;"></textarea>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Course (optional — leave blank to show to everyone)</label>
+          <select id="announceCourseInput">
+            <option value="">All students</option>
+          </select>
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-primary" id="saveAnnounceBtn">Post announcement</button>
+        </div>
+      </div>
+
+      <div class="admin-actions" style="margin-top:28px;">
+        <button class="btn btn-ghost" id="refreshAnnouncements">Refresh</button>
+      </div>
+      <div class="admin-table-wrap" id="announcementsListWrap">
+        <div class="admin-empty" id="announcementsEmpty" style="display:none;">No announcements posted yet.</div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="questionAnalyticsPanel">
+      <div class="admin-note">Every question ranked by how many different students have gotten it wrong — the top of this list is where your question bank most needs attention, whether that's a rework or just an explanation.</div>
+      <div class="admin-actions" style="margin-bottom:20px;">
+        <button class="btn btn-ghost" id="refreshQuestionAnalytics">Refresh</button>
+      </div>
+      <div id="questionAnalyticsWrap">
+        <div class="admin-empty">Loading…</div>
       </div>
     </div>
 
@@ -4435,6 +4519,8 @@
       if(tab.dataset.tab === 'leaderboardPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminLeaderboard(); }
       if(tab.dataset.tab === 'asksPanel'){ invalidateDbCache('asks'); renderAdminAsks(); }
       if(tab.dataset.tab === 'sessionsPanel'){ invalidateDbCache('sessions'); initSessionsPanel(); }
+      if(tab.dataset.tab === 'announcementsPanel'){ invalidateDbCache('announcements'); renderAdminAnnouncements(); }
+      if(tab.dataset.tab === 'questionAnalyticsPanel'){ invalidateDbCache('mistakes'); renderQuestionAnalytics(); }
       if(tab.dataset.tab === 'reviewsPanel'){ invalidateDbCache('reviews'); initReviewsPanel(); }
       if(tab.dataset.tab === 'coursesPanel'){ invalidateDbCache('courses'); renderAdminCourseList(); }
       if(tab.dataset.tab === 'competitionsPanel'){ invalidateDbCache('competitions'); showCompView('list'); renderCompetitionList(); }
@@ -6234,6 +6320,73 @@
     student.status = status;
     return await dbSet('students', studentKey(username), student);
   }
+
+  async function saveTargetScore(username, targetPct){
+    const student = await getStudent(username);
+    if(!student) return false;
+    student.targetScore = targetPct;
+    return await dbSet('students', studentKey(username), student);
+  }
+
+  async function renderTargetScoreCard(recentAvgPct){
+    if(!currentStudent) return;
+    const content = document.getElementById('targetScoreContent');
+    const editBtn = document.getElementById('editTargetScoreBtn');
+    if(!content) return;
+    const student = await getStudent(currentStudent.username);
+    const target = student ? student.targetScore : null;
+
+    if(!target){
+      content.innerHTML = `<div style="color:var(--muted); font-size:0.85rem;">No target set yet — pick a score you're aiming for to track your progress toward it.</div>`;
+      editBtn.textContent = 'Set target';
+      return;
+    }
+    editBtn.textContent = 'Edit';
+    if(recentAvgPct === null){
+      content.innerHTML = `
+        <div style="font-size:0.95rem;">Aiming for <strong>${target}%</strong> average.</div>
+        <div style="color:var(--muted); font-size:0.82rem; margin-top:4px;">Complete a homework or exam to see your progress toward it.</div>
+      `;
+      return;
+    }
+    const gap = target - recentAvgPct;
+    const barPct = Math.min(100, Math.round((recentAvgPct / target) * 100));
+    content.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:baseline; font-size:0.95rem;">
+        <span>Recent average: <strong>${recentAvgPct}%</strong></span>
+        <span style="color:var(--muted); font-size:0.82rem;">Target: ${target}%</span>
+      </div>
+      <div class="target-score-bar-outer"><div class="target-score-bar-fill" style="width:${barPct}%;"></div></div>
+      <div style="color:${gap <= 0 ? '#39D98A' : 'var(--muted)'}; font-size:0.82rem; margin-top:6px;">
+        ${gap <= 0 ? `🎉 You've hit your target!` : `${gap} points to go`}
+      </div>
+    `;
+  }
+
+  document.getElementById('editTargetScoreBtn').addEventListener('click', async ()=>{
+    if(!currentStudent) return;
+    const student = await getStudent(currentStudent.username);
+    document.getElementById('targetScoreInput').value = (student && student.targetScore) || '';
+    document.getElementById('targetScoreEditRow').style.display = 'flex';
+  });
+  document.getElementById('cancelTargetScoreBtn').addEventListener('click', ()=>{
+    document.getElementById('targetScoreEditRow').style.display = 'none';
+  });
+  document.getElementById('saveTargetScoreBtn').addEventListener('click', async ()=>{
+    if(!currentStudent) return;
+    const val = parseInt(document.getElementById('targetScoreInput').value, 10);
+    if(!val || val < 1 || val > 100){ alert('Enter a target between 1 and 100.'); return; }
+    const btn = document.getElementById('saveTargetScoreBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const ok = await saveTargetScore(currentStudent.username, val);
+    btn.disabled = false; btn.textContent = 'Save';
+    if(ok){
+      document.getElementById('targetScoreEditRow').style.display = 'none';
+      await renderOverview();
+    } else {
+      alert('Could not save your target — check your connection and try again.');
+    }
+  });
 
   async function signInStudent(username, password){
     if(!storageAvailable()) return { ok:false, reason:'nostorage' };
@@ -8154,9 +8307,62 @@
       .sort((a,b) => b.missedByCount - a.missedByCount);
   }
 
-  // Saves an explanation back to the actual question in its skill/exam —
-  // not just the one mistake being viewed — then backfills it onto every
-  // existing mistake that came from that same question, so it's visible
+  // Same grouping approach as findQuestionsNeedingExplanation, but for a
+  // different purpose: a pure difficulty ranking across every student, not
+  // a to-do list scoped to one assistant. Also reports the number of
+  // DISTINCT ATTEMPTS at each question (not just distinct students) so a
+  // miss rate can be shown, not just a raw count.
+  async function findMostMissedQuestions(){
+    const allMistakes = await fetchAllMistakes();
+    const relevant = allMistakes.filter(m => !m._index);
+    if(relevant.length === 0) return [];
+
+    const groups = {};
+    relevant.forEach(m=>{
+      const key = `${m.source}|||${(m.lesson||'General').trim()}|||${m.text && m.text !== '(question with image)' ? m.text : (m.image || '')}`;
+      if(!groups[key]) groups[key] = { sample: m, usernames: new Set(), missCount: 0 };
+      groups[key].usernames.add((m.username||'').trim().toLowerCase());
+      groups[key].missCount++;
+    });
+
+    return Object.values(groups)
+      .map(g => ({ row: g.sample, missedByCount: g.usernames.size, totalMisses: g.missCount }))
+      .sort((a,b) => b.missedByCount - a.missedByCount || b.totalMisses - a.totalMisses);
+  }
+
+  async function renderQuestionAnalytics(){
+    const wrap = document.getElementById('questionAnalyticsWrap');
+    wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
+    let items = await findMostMissedQuestions();
+    if(currentAdminCourseFilter){
+      const scopedStudents = await fetchStudentsForCurrentAdmin();
+      const allowedUsernames = new Set(scopedStudents.map(s => (s.username||'').trim().toLowerCase()));
+      items = items.filter(item => allowedUsernames.has((item.row.username||'').trim().toLowerCase()));
+    }
+    if(items.length === 0){
+      wrap.innerHTML = '<div class="admin-empty">No mistakes recorded yet — this fills in as students practice.</div>';
+      return;
+    }
+    wrap.innerHTML = items.slice(0, 50).map((item, i) => {
+      const row = item.row;
+      const optionsHtml = (row.options || []).map((opt, oi) => `
+        <div style="padding:6px 10px; margin:3px 0; border-radius:6px; background:${oi === row.correctAnswer ? 'rgba(57,217,138,0.12)' : 'var(--ink)'}; font-size:0.85rem;">
+          ${esc(opt || '')} ${oi === row.correctAnswer ? ' ✓' : ''}
+        </div>
+      `).join('');
+      return `
+        <div class="am-chat-bubble" style="margin-bottom:16px;">
+          <div class="bubble-label">#${i + 1} · ${esc(row.source)} · ${esc(row.lesson)} · <span style="color:var(--ember);">missed by ${item.missedByCount} student${item.missedByCount===1?'':'s'} (${item.totalMisses} time${item.totalMisses===1?'':'s'} total)</span></div>
+          ${row.image ? `<img src="${esc(row.image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
+          ${row.text ? `<div style="margin-bottom:8px;">${esc(row.text)}</div>` : ''}
+          ${optionsHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('refreshQuestionAnalytics').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); renderQuestionAnalytics(); });
+
   // to every student who already got it wrong, not only future ones.
   async function saveExplanationForQuestion(row, explanationText, explanationBy, extras = {}){
     const source = await findSourceRecordForMistake(row);
@@ -8276,6 +8482,19 @@
     return await dbDelete('sessions', id);
   }
 
+  /* ---------------- ANNOUNCEMENTS (admin -> all/course students) ---------------- */
+  async function saveAnnouncement(id, data){
+    return await dbSet('announcements', id, { id, ...data });
+  }
+  async function fetchAllAnnouncements(){
+    const rows = await dbGetAll('announcements');
+    rows.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
+    return rows;
+  }
+  async function deleteAnnouncement(id){
+    return await dbDelete('announcements', id);
+  }
+
   /* ---------------- ADMIN: Sessions tab ---------------- */
   async function initSessionsPanel(){
     const students = await fetchStudentsForCurrentAdmin();
@@ -8316,11 +8535,14 @@
 
     sessions.forEach(sess=>{
       const tr = document.createElement('tr');
+      const attendedMin = totalAttendedMinutes(sess);
+      const stillJoined = Array.isArray(sess.attendanceSegments) && sess.attendanceSegments.some(s => s.joinedAt && !s.leftAt);
       tr.innerHTML = `
         <td>${esc(sess.username)}</td>
         <td>${esc(sess.date || '')}</td>
         <td>${esc(sess.time || '—')}</td>
         <td>${esc(sess.topic || '')}</td>
+        <td>${stillJoined ? '🟢 In progress' : (attendedMin !== null ? `${attendedMin} min` : '—')}</td>
         <td><button class="student-action-btn delete-sess-btn">Delete</button></td>
       `;
       tr.querySelector('.delete-sess-btn').addEventListener('click', async ()=>{
@@ -8338,6 +8560,7 @@
     const date = document.getElementById('sessDateInput').value;
     const time = document.getElementById('sessTimeInput').value;
     const topic = document.getElementById('sessTopicInput').value.trim();
+    const link = document.getElementById('sessLinkInput').value.trim();
 
     if(!username || !date){
       alert('Choose a student and a date.');
@@ -8347,12 +8570,13 @@
     const btn = document.getElementById('saveSessBtn');
     btn.disabled = true; btn.textContent = 'Saving…';
     const id = generateId('sess');
-    const ok = await saveSessionRecord(id, { username, date, time, topic, ts: new Date().toISOString() });
+    const ok = await saveSessionRecord(id, { username, date, time, topic, link: link || null, ts: new Date().toISOString() });
     btn.disabled = false; btn.textContent = 'Save session';
 
     if(ok){
       document.getElementById('sessTopicInput').value = '';
       document.getElementById('sessTimeInput').value = '';
+      document.getElementById('sessLinkInput').value = '';
       await renderAdminSessions();
       await refreshDashboardIfSignedInAs(username);
     } else {
@@ -8361,9 +8585,109 @@
   });
 
   document.getElementById('refreshSessions').addEventListener('click', ()=>{ invalidateDbCache('sessions'); renderAdminSessions(); });
+
+  async function populateAnnounceCourseSelect(){
+    const select = document.getElementById('announceCourseInput');
+    const current = select.value;
+    const courses = currentAdminRole === 'act-admin' ? cachedCourseNames.filter(c => courseInAdminScope(c)) : cachedCourseNames;
+    select.innerHTML = '<option value="">All students</option>' + courses.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    if(current && Array.from(select.options).some(o => o.value === current)) select.value = current;
+  }
+
+  async function renderAdminAnnouncements(){
+    await populateAnnounceCourseSelect();
+    let announcements = await fetchAllAnnouncements();
+    if(currentAdminCourseFilter) announcements = announcements.filter(a => !a.course || courseInAdminScope(a.course));
+    const wrap = document.getElementById('announcementsListWrap');
+    const emptyState = document.getElementById('announcementsEmpty');
+    wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
+    if(announcements.length === 0){
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+    announcements.forEach(a=>{
+      const row = document.createElement('div');
+      row.className = 'exam-list-item';
+      row.innerHTML = `
+        <div>
+          <h4>${esc(a.text)}</h4>
+          <div class="meta">${a.course ? esc(a.course) : 'All students'} · ${new Date(a.ts).toLocaleString()}</div>
+        </div>
+        <div class="exam-list-actions">
+          <button class="danger delete-announce-btn">Delete</button>
+        </div>
+      `;
+      row.querySelector('.delete-announce-btn').addEventListener('click', async ()=>{
+        if(!confirm('Delete this announcement?')) return;
+        await deleteAnnouncement(a.id);
+        await renderAdminAnnouncements();
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  document.getElementById('saveAnnounceBtn').addEventListener('click', async ()=>{
+    const text = document.getElementById('announceTextInput').value.trim();
+    if(!text){ alert('Write a message first.'); return; }
+    const course = document.getElementById('announceCourseInput').value;
+    const btn = document.getElementById('saveAnnounceBtn');
+    btn.disabled = true; btn.textContent = 'Posting…';
+    const id = generateId('announce');
+    const ok = await saveAnnouncement(id, { text, course: course || null, postedBy: getCurrentAnswererIdentity(), ts: new Date().toISOString() });
+    btn.disabled = false; btn.textContent = 'Post announcement';
+    if(ok){
+      document.getElementById('announceTextInput').value = '';
+      document.getElementById('announceCourseInput').value = '';
+      await renderAdminAnnouncements();
+    } else {
+      alert('Could not post the announcement — check your connection (or that the "announcements" table exists in Supabase) and try again.');
+    }
+  });
+
+  document.getElementById('refreshAnnouncements').addEventListener('click', ()=>{ invalidateDbCache('announcements'); renderAdminAnnouncements(); });
+
   document.getElementById('sessFilterSelect').addEventListener('change', renderAdminSessions);
 
   /* ---------------- DASHBOARD: student's next-session reminder + history ---------------- */
+  // Which announcement IDs this student has already dismissed — kept in
+  // localStorage (per-device) rather than the server, since "did I already
+  // see this" doesn't need to be tracked centrally or sync across devices.
+  function getDismissedAnnouncementIds(){
+    try{ return JSON.parse(localStorage.getItem('dismissedAnnouncements') || '[]'); }catch(err){ return []; }
+  }
+  function dismissAnnouncement(id){
+    const ids = getDismissedAnnouncementIds();
+    if(!ids.includes(id)){ ids.push(id); localStorage.setItem('dismissedAnnouncements', JSON.stringify(ids)); }
+  }
+
+  async function renderAnnouncementsBanner(){
+    if(!currentStudent) return;
+    const banner = document.getElementById('announcementsBanner');
+    if(!banner) return;
+    const all = await fetchAllAnnouncements();
+    const dismissed = new Set(getDismissedAnnouncementIds());
+    const twoWeeksAgo = Date.now() - 14*24*60*60*1000;
+    const mine = all.filter(a =>
+      (!a.course || a.course === currentStudent.course) &&
+      !dismissed.has(a.id) &&
+      new Date(a.ts).getTime() > twoWeeksAgo
+    );
+    banner.innerHTML = mine.map(a => `
+      <div class="announce-banner" data-announce-id="${esc(a.id)}">
+        <div class="text">📣 ${esc(a.text)}</div>
+        <button type="button" class="dismiss-announce-btn" aria-label="Dismiss">✕</button>
+      </div>
+    `).join('');
+    banner.querySelectorAll('.dismiss-announce-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.closest('.announce-banner').dataset.announceId;
+        dismissAnnouncement(id);
+        btn.closest('.announce-banner').remove();
+      });
+    });
+  }
+
   async function renderStudentSessions(){
     if(!currentStudent) return;
     const all = await fetchAllSessions();
@@ -8375,14 +8699,22 @@
 
     const detailEl = document.getElementById('sessionReminderDetail');
     const topicEl = document.getElementById('sessionReminderTopic');
+    const joinBtn = document.getElementById('joinSessionBtn');
     if(upcoming.length > 0){
       const next = upcoming[0];
       const dateLabel = new Date(next.date + 'T00:00:00').toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
       detailEl.textContent = `${dateLabel}${next.time ? ' at ' + next.time : ''}`;
       topicEl.textContent = next.topic || '';
+      if(next.link){
+        joinBtn.style.display = '';
+        joinBtn.onclick = () => joinSessionAndTrack(next.id, next.link);
+      } else {
+        joinBtn.style.display = 'none';
+      }
     } else {
       detailEl.textContent = 'No upcoming session scheduled yet.';
       topicEl.textContent = '';
+      joinBtn.style.display = 'none';
     }
 
     const historyList = document.getElementById('sessionHistoryList');
@@ -8394,14 +8726,58 @@
     past.forEach(sess=>{
       const row = document.createElement('div');
       row.className = 'hw-row';
+      const attendedMin = totalAttendedMinutes(sess);
       row.innerHTML = `
         <span class="hw-date">${esc(sess.date || '')}</span>
         <span class="hw-title">${esc(sess.topic || 'Session')}</span>
-        <span class="hw-mark">${esc(sess.time || '')}</span>
+        <span class="hw-mark">${esc(sess.time || '')}${attendedMin !== null ? ` · attended ${attendedMin} min` : ''}</span>
       `;
       historyList.appendChild(row);
     });
   }
+
+  // Sums every completed join→leave segment for a session, in minutes.
+  // Returns null (not 0) when the student never joined at all, so "0 min
+  // attended" and "never joined" aren't shown the same way.
+  function totalAttendedMinutes(sess){
+    if(!Array.isArray(sess.attendanceSegments) || sess.attendanceSegments.length === 0) return null;
+    let totalMs = 0;
+    sess.attendanceSegments.forEach(seg=>{
+      if(seg.joinedAt && seg.leftAt) totalMs += new Date(seg.leftAt) - new Date(seg.joinedAt);
+    });
+    return Math.round(totalMs / 60000);
+  }
+
+  // Records a join, opens the meeting link in a new tab, and starts
+  // watching for the student to come back to THIS tab — the moment they
+  // do, that's taken as "they left the meeting" and the segment is closed
+  // off with how long they were away. Can't see inside a third-party
+  // video call, so time away from this tab is the closest reliable proxy.
+  let activeAttendanceSessionId = null;
+  async function joinSessionAndTrack(sessionId, link){
+    const record = await dbGet('sessions', sessionId);
+    if(!record) return;
+    const segments = Array.isArray(record.attendanceSegments) ? record.attendanceSegments.slice() : [];
+    segments.push({ joinedAt: new Date().toISOString(), leftAt: null });
+    await dbSet('sessions', sessionId, { ...record, attendanceSegments: segments });
+    activeAttendanceSessionId = sessionId;
+    window.open(link, '_blank', 'noopener');
+  }
+
+  document.addEventListener('visibilitychange', async ()=>{
+    if(document.visibilityState !== 'visible' || !activeAttendanceSessionId) return;
+    const sessionId = activeAttendanceSessionId;
+    activeAttendanceSessionId = null;
+    const record = await dbGet('sessions', sessionId);
+    if(!record || !Array.isArray(record.attendanceSegments)) return;
+    const segments = record.attendanceSegments.slice();
+    const openSegment = segments.find(s => s.joinedAt && !s.leftAt);
+    if(!openSegment) return;
+    openSegment.leftAt = new Date().toISOString();
+    await dbSet('sessions', sessionId, { ...record, attendanceSegments: segments });
+    invalidateDbCache('sessions');
+    if(currentStudent) renderStudentSessions();
+  });
 
   /* ---------------- REVIEWS (admin -> student, with skill % complete) ---------------- */
   async function saveReview(id, data){
@@ -9738,6 +10114,14 @@
     const totalCompleted = mineHw.length + mineAttempts.length;
     const allPct = [...mineHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
     const bestPct = allPct.length ? Math.max(...allPct) : 0;
+    // Last 5 graded items, most recent first — a rolling average is a more
+    // honest "where they are right now" than best-ever or all-time average,
+    // which either flatters an old great day or drags down a recent
+    // improvement with a rough first week.
+    const recentPctSorted = [...mineHw.map(h => ({ pct: h.score ? h.score.pct : 0, ts: h.submittedAt || h.ts })), ...mineAttempts.map(a => ({ pct: a.pct || 0, ts: a.ts }))]
+      .sort((a,b)=> new Date(b.ts) - new Date(a.ts)).slice(0, 5);
+    const recentAvgPct = recentPctSorted.length ? Math.round(recentPctSorted.reduce((s,r)=> s + r.pct, 0) / recentPctSorted.length) : null;
+    renderTargetScoreCard(recentAvgPct);
 
     // Per-lesson accuracy across every graded question — computed once here,
     // used both for the weakest-topic suggestion below and the mastery bars.
@@ -11158,9 +11542,10 @@
     document.getElementById('dashGrade').textContent = currentStudent.grade || '—';
     document.getElementById('dashStudentNumber').textContent = currentStudent.studentNumber || '—';
     dash.style.display = 'block';
-    ['homework','attempts','mistakes','skills','exams','sessions','reviews','competitions'].forEach(invalidateDbCache);
+    ['homework','attempts','mistakes','skills','exams','sessions','reviews','competitions','announcements'].forEach(invalidateDbCache);
     renderStudentHomework();
     renderStudentSessions();
+    renderAnnouncementsBanner();
     renderStudentReviews();
     renderStudentSkills();
     renderWeakPoints();
@@ -11205,13 +11590,14 @@
     btn.disabled = true; btn.textContent = '🔄 Refreshing…';
     status.textContent = 'Pulling the latest…';
 
-    ['homework','attempts','mistakes','skills','exams','sessions','reviews','students'].forEach(invalidateDbCache);
+    ['homework','attempts','mistakes','skills','exams','sessions','reviews','students','announcements'].forEach(invalidateDbCache);
 
     // allSettled (not all) so one failing piece can never block the rest, or
     // leave the button stuck on "Refreshing…" forever.
     const results = await Promise.allSettled([
       renderStudentHomework(),
       renderStudentSessions(),
+      renderAnnouncementsBanner(),
       renderStudentReviews(),
       renderStudentSkills(),
       renderWeakPoints(),
