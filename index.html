@@ -2421,6 +2421,7 @@
           <button class="dash-tab-btn" data-dashtab="tabAssistantChat" id="assistantChatTabBtn">💬 My Assistant Chat<span id="assistantChatNotifBadge" style="display:none;"></span></button>
           <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
           <button class="dash-tab-btn" data-dashtab="tabPlanner">🧠 Study Planner</button>
+          <button class="dash-tab-btn" data-dashtab="tabPayments">💳 My Payments</button>
           <button class="dash-tab-btn" data-dashtab="tabCompetition" id="competitionTabBtn" style="display:none;">⭐ Champions League</button>
         </nav>
         <div class="dash-sidebar-actions">
@@ -2631,6 +2632,38 @@
 
           <div class="hw-section-title">Quick actions</div>
           <div class="planner-actions" id="plannerActions"></div>
+        </div>
+
+        <div class="dash-tab-panel" id="tabPayments">
+          <div id="paymentBalanceCard"></div>
+
+          <div class="hw-section-title">Send a payment screenshot</div>
+          <div class="admin-note" style="margin-bottom:16px;">Upload a screenshot of your transfer here. Mr. Mohamed Ibrahim will confirm it, and it'll show in your history below once approved.</div>
+          <div class="exam-editor" style="margin-top:0;">
+            <div class="field-row">
+              <label class="field-label">Amount you sent</label>
+              <input type="number" id="studentPaymentAmountInput" min="0" step="0.01" placeholder="e.g. 500">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Note (optional)</label>
+              <input type="text" id="studentPaymentNoteInput" placeholder="e.g. first installment">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Transfer screenshot</label>
+              <div class="q-image-controls">
+                <input type="file" accept="image/*" id="studentPaymentImageInput">
+              </div>
+              <span class="video-upload-status" id="studentPaymentImageStatus"></span>
+            </div>
+            <div class="editor-actions">
+              <button class="btn btn-primary" id="submitStudentPaymentBtn">Send for approval</button>
+            </div>
+          </div>
+
+          <div class="hw-section-title">Your payment history</div>
+          <div id="studentPaymentHistory">
+            <div class="admin-empty">Loading…</div>
+          </div>
         </div>
 
         <div class="dash-tab-panel" id="tabCompetition">
@@ -3057,6 +3090,7 @@
       <button class="admin-tab" data-tab="sessionsPanel" data-roles="admin,act-admin">Sessions</button>
       <button class="admin-tab" data-tab="announcementsPanel" data-roles="admin,act-admin">📣 Announcements</button>
       <button class="admin-tab" data-tab="questionAnalyticsPanel" data-roles="admin,act-admin">📉 Question Analytics</button>
+      <button class="admin-tab" data-tab="paymentsPanel" data-roles="admin,act-admin">💳 Payments</button>
       <button class="admin-tab" data-tab="reviewsPanel" data-roles="admin,assistant,act-admin">Reviews</button>
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
       <button class="admin-tab" data-tab="competitionsPanel" data-roles="admin,act-admin">🏆 Competition</button>
@@ -3398,6 +3432,53 @@
       </div>
     </div>
 
+    <div class="admin-panel" id="paymentsPanel">
+      <div class="admin-note">Upload a transfer screenshot and enter the amount — the totals, who's paid in full, and who still owes are all worked out for you. Students can upload their own screenshots too; those wait here as "pending" until you confirm the amount.</div>
+
+      <div class="exam-editor" style="margin-top:0;">
+        <div class="field-row">
+          <label class="field-label">Student</label>
+          <select id="paymentStudentSelect"><option value="">Choose a student</option></select>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Amount</label>
+          <input type="number" id="paymentAmountInput" min="0" step="0.01" placeholder="e.g. 500">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Date received (optional — defaults to today)</label>
+          <input type="date" id="paymentDateInput">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Note (optional)</label>
+          <input type="text" id="paymentNoteInput" placeholder="e.g. first installment">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Transfer screenshot (optional but recommended as proof)</label>
+          <div class="q-image-controls">
+            <input type="file" accept="image/*" id="paymentImageInput">
+            <button type="button" class="remove-video-btn" id="removePaymentImageBtn" style="display:none;">Remove</button>
+          </div>
+          <span class="video-upload-status" id="paymentImageStatus"></span>
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-primary" id="savePaymentBtn">Record payment</button>
+        </div>
+      </div>
+
+      <div class="hw-section-title" style="margin-top:28px;">Who owes what</div>
+      <div class="admin-table-wrap" id="paymentSummaryWrap">
+        <div class="admin-empty">Loading…</div>
+      </div>
+
+      <div class="hw-section-title" style="margin-top:28px;">All payments</div>
+      <div class="admin-actions" style="margin-bottom:12px;">
+        <button class="btn btn-ghost" id="refreshPayments">Refresh</button>
+      </div>
+      <div class="admin-table-wrap" id="paymentsListWrap">
+        <div class="admin-empty" id="paymentsEmpty" style="display:none;">No payments recorded yet.</div>
+      </div>
+    </div>
+
     <div class="admin-panel" id="reviewsPanel">
       <div class="admin-note">Send a personal review to a student — it appears on their dashboard along with how much of that skill they've completed.</div>
 
@@ -3447,6 +3528,10 @@
         <div class="field-row">
           <label class="field-label">Course name</label>
           <input type="text" id="courseNameInput" placeholder="e.g. SAT Math Prep">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Course fee (optional — used to track who has paid in full)</label>
+          <input type="number" id="courseFeeInput" min="0" step="0.01" placeholder="e.g. 1500">
         </div>
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveCourseBtn">Add course</button>
@@ -3813,6 +3898,26 @@
      tighten these policies before handling a large number of real
      students. Ask a developer (or come back here) if you want help
      doing that later.
+
+     ---------------------------------------------------------------
+     EXTRA TABLES added after the original setup — run these once in
+     the SQL Editor if you haven't already, or the Announcements and
+     Payments tabs won't be able to save anything:
+
+       create table announcements (id text primary key, data jsonb, created_at timestamptz default now());
+       alter table announcements enable row level security;
+       create policy "public access announcements" on announcements for all using (true) with check (true);
+
+       create table payments (id text primary key, data jsonb, created_at timestamptz default now());
+       alter table payments enable row level security;
+       create policy "public access payments" on payments for all using (true) with check (true);
+
+     Note on payments: a student uploading a screenshot creates a
+     PENDING record only — it never counts toward totals until you
+     confirm the amount in the admin Payments tab. That's deliberate:
+     with the public policies above, anything a student could write
+     directly would otherwise let them credit themselves.
+
   ===================================================================== */
   const SUPABASE_URL = "https://yyukquvfrnxqgvpmqdpv.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_6kbV561yMNzqQleH1mVBog_rl08C47V";
@@ -4521,6 +4626,7 @@
       if(tab.dataset.tab === 'sessionsPanel'){ invalidateDbCache('sessions'); initSessionsPanel(); }
       if(tab.dataset.tab === 'announcementsPanel'){ invalidateDbCache('announcements'); renderAdminAnnouncements(); }
       if(tab.dataset.tab === 'questionAnalyticsPanel'){ invalidateDbCache('mistakes'); renderQuestionAnalytics(); }
+      if(tab.dataset.tab === 'paymentsPanel'){ invalidateDbCache('payments'); renderAdminPayments(); }
       if(tab.dataset.tab === 'reviewsPanel'){ invalidateDbCache('reviews'); initReviewsPanel(); }
       if(tab.dataset.tab === 'coursesPanel'){ invalidateDbCache('courses'); renderAdminCourseList(); }
       if(tab.dataset.tab === 'competitionsPanel'){ invalidateDbCache('competitions'); showCompView('list'); renderCompetitionList(); }
@@ -7155,6 +7261,47 @@
     return await dbDelete('courses', id);
   }
 
+  /* ---------------- PAYMENTS ----------------
+     A payment record is a screenshot of a transfer plus the amount it's
+     worth. Either the student or the admin can upload one; it starts as
+     'pending' and only counts toward totals once the admin confirms the
+     amount, so a student can't credit themselves by typing a number.
+
+     The amount is entered by hand at confirmation time rather than read
+     from the image automatically — reading it would need an AI service
+     with a private API key, which can't live safely in this file (it's
+     all visible in the browser). The `readAmount` field is left in the
+     record shape so an automatic reader could fill it in later as a
+     suggestion without changing anything else here. */
+  async function savePayment(id, data){
+    return await dbSet('payments', id, { id, ...data });
+  }
+  async function fetchAllPayments(){
+    const rows = await dbGetAll('payments');
+    rows.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
+    return rows;
+  }
+  async function deletePaymentRecord(id){
+    return await dbDelete('payments', id);
+  }
+
+  // What a student owes vs has paid, per course. Only 'confirmed'
+  // payments count — pending ones are shown separately so they're
+  // never silently treated as money received.
+  function summarizePaymentsForStudent(payments, username, courseFee){
+    const mine = payments.filter(p => !p._index && (p.username||'').trim().toLowerCase() === (username||'').trim().toLowerCase());
+    const confirmed = mine.filter(p => p.status === 'confirmed');
+    const pending = mine.filter(p => p.status === 'pending');
+    const paid = confirmed.reduce((sum, p) => sum + (typeof p.amount === 'number' ? p.amount : 0), 0);
+    const pendingTotal = pending.reduce((sum, p) => sum + (typeof p.amount === 'number' ? p.amount : 0), 0);
+    return {
+      paid, pendingTotal,
+      pendingCount: pending.length,
+      owed: typeof courseFee === 'number' ? Math.max(0, courseFee - paid) : null,
+      isPaidInFull: typeof courseFee === 'number' ? paid >= courseFee : null
+    };
+  }
+
   /* ---------------- MATH CHAMPIONS LEAGUE (competitions) ----------------
      Reuses the existing exam system entirely — a competition just links
      to real exams for its group stage and each knockout round. A
@@ -7353,11 +7500,25 @@
       const row = document.createElement('div');
       row.className = 'exam-list-item';
       row.innerHTML = `
-        <div><h4>${esc(course.name)}</h4></div>
+        <div>
+          <h4>${esc(course.name)}</h4>
+          <div class="meta">${typeof course.fee === 'number' ? `Fee: ${course.fee}` : 'No fee set'}</div>
+        </div>
         <div class="exam-list-actions">
+          <button class="edit-course-fee-btn">Set fee</button>
           <button class="danger delete-course-btn">Delete</button>
         </div>
       `;
+      row.querySelector('.edit-course-fee-btn').addEventListener('click', async ()=>{
+        const entered = prompt(`Course fee for "${course.name}" (leave blank to clear):`, typeof course.fee === 'number' ? course.fee : '');
+        if(entered === null) return;
+        const trimmed = entered.trim();
+        const fee = trimmed === '' ? null : parseFloat(trimmed);
+        if(trimmed !== '' && (isNaN(fee) || fee < 0)){ alert('Enter a valid amount, or leave it blank.'); return; }
+        await saveCourse(course.id, { ...course, fee });
+        invalidateDbCache('courses');
+        await renderAdminCourseList();
+      });
       row.querySelector('.delete-course-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete the course "${course.name}"?`)) return;
         await deleteCourseRecord(course.id);
@@ -7375,15 +7536,22 @@
       alert('Give the course a name.');
       return;
     }
+    const feeRaw = document.getElementById('courseFeeInput').value.trim();
+    const fee = feeRaw === '' ? null : parseFloat(feeRaw);
+    if(feeRaw !== '' && (isNaN(fee) || fee < 0)){
+      alert('Enter a valid course fee, or leave it blank.');
+      return;
+    }
 
     const btn = document.getElementById('saveCourseBtn');
     btn.disabled = true; btn.textContent = 'Saving…';
     const id = generateId('course');
-    const ok = await saveCourse(id, { name, ts: new Date().toISOString() });
+    const ok = await saveCourse(id, { name, fee, ts: new Date().toISOString() });
     btn.disabled = false; btn.textContent = 'Add course';
 
     if(ok){
       document.getElementById('courseNameInput').value = '';
+      document.getElementById('courseFeeInput').value = '';
       await renderAdminCourseList();
       await refreshCourseNamesCache();
       await populateRegisterCourseOptions();
@@ -7393,6 +7561,188 @@
   });
 
   document.getElementById('refreshCourses').addEventListener('click', ()=>{ invalidateDbCache('courses'); renderAdminCourseList(); });
+
+  /* ---------------- ADMIN: Payments ---------------- */
+  let paymentPendingImageUrl = null;
+
+  document.getElementById('paymentImageInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const statusEl = document.getElementById('paymentImageStatus');
+    statusEl.textContent = 'Uploading…';
+    statusEl.style.color = 'var(--muted)';
+    try{
+      const url = await uploadQuestionImage(file);
+      paymentPendingImageUrl = url;
+      statusEl.textContent = 'Uploaded ✓';
+      statusEl.style.color = '#39D98A';
+      document.getElementById('removePaymentImageBtn').style.display = '';
+    }catch(err){
+      statusEl.textContent = '';
+      alert(err.message || 'Could not upload that screenshot — check your connection and try again.');
+      e.target.value = '';
+    }
+  });
+
+  document.getElementById('removePaymentImageBtn').addEventListener('click', ()=>{
+    paymentPendingImageUrl = null;
+    document.getElementById('paymentImageInput').value = '';
+    document.getElementById('paymentImageStatus').textContent = '';
+    document.getElementById('removePaymentImageBtn').style.display = 'none';
+  });
+
+  async function populatePaymentStudentSelect(){
+    const select = document.getElementById('paymentStudentSelect');
+    const current = select.value;
+    const students = await fetchStudentsForCurrentAdmin();
+    const approved = students.filter(s => s.status === 'approved');
+    select.innerHTML = '<option value="">Choose a student</option>' +
+      approved.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('');
+    if(current && Array.from(select.options).some(o => o.value === current)) select.value = current;
+  }
+
+  document.getElementById('savePaymentBtn').addEventListener('click', async ()=>{
+    const username = document.getElementById('paymentStudentSelect').value;
+    const amountRaw = document.getElementById('paymentAmountInput').value.trim();
+    if(!username){ alert('Choose a student.'); return; }
+    const amount = parseFloat(amountRaw);
+    if(amountRaw === '' || isNaN(amount) || amount <= 0){ alert('Enter the amount received.'); return; }
+
+    const btn = document.getElementById('savePaymentBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const id = generateId('payment');
+    const ok = await savePayment(id, {
+      username, amount,
+      date: document.getElementById('paymentDateInput').value || new Date().toISOString().slice(0,10),
+      note: document.getElementById('paymentNoteInput').value.trim() || null,
+      imageUrl: paymentPendingImageUrl,
+      readAmount: null, // reserved for a future automatic amount reader
+      status: 'confirmed', // recorded by the admin directly, so already confirmed
+      uploadedBy: 'admin',
+      confirmedBy: getCurrentAnswererIdentity(),
+      ts: new Date().toISOString()
+    });
+    btn.disabled = false; btn.textContent = 'Record payment';
+
+    if(ok){
+      document.getElementById('paymentAmountInput').value = '';
+      document.getElementById('paymentNoteInput').value = '';
+      document.getElementById('paymentDateInput').value = '';
+      paymentPendingImageUrl = null;
+      document.getElementById('paymentImageInput').value = '';
+      document.getElementById('paymentImageStatus').textContent = '';
+      document.getElementById('removePaymentImageBtn').style.display = 'none';
+      invalidateDbCache('payments');
+      await renderAdminPayments();
+      await refreshDashboardIfSignedInAs(username);
+    } else {
+      alert('Could not save the payment — check your connection (or that the "payments" table exists in Supabase) and try again.');
+    }
+  });
+
+  async function renderAdminPayments(){
+    await populatePaymentStudentSelect();
+    const [payments, students, courses] = await Promise.all([
+      fetchAllPayments(), fetchStudentsForCurrentAdmin(), fetchAllCourses()
+    ]);
+    const feeByCourse = {};
+    courses.forEach(c => { if(typeof c.fee === 'number') feeByCourse[c.name] = c.fee; });
+
+    // --- Who owes what ---
+    const summaryWrap = document.getElementById('paymentSummaryWrap');
+    const approved = students.filter(s => s.status === 'approved');
+    if(approved.length === 0){
+      summaryWrap.innerHTML = '<div class="admin-empty">No approved students yet.</div>';
+    } else {
+      const rows = approved.map(s=>{
+        const fee = feeByCourse[s.course];
+        const sum = summarizePaymentsForStudent(payments, s.username, fee);
+        const statusHtml = sum.isPaidInFull === null
+          ? '<span style="color:var(--muted);">No fee set for their course</span>'
+          : sum.isPaidInFull
+            ? '<span style="color:#39D98A;">✓ Paid in full</span>'
+            : `<span style="color:#FFB020;">Owes ${sum.owed}</span>`;
+        return `<tr>
+          <td>${esc(s.username)}</td>
+          <td>${esc(s.course || '—')}</td>
+          <td>${typeof fee === 'number' ? fee : '—'}</td>
+          <td>${sum.paid}</td>
+          <td>${sum.pendingCount > 0 ? `${sum.pendingCount} pending (${sum.pendingTotal})` : '—'}</td>
+          <td>${statusHtml}</td>
+        </tr>`;
+      }).join('');
+      const totalCollected = payments.filter(p => !p._index && p.status === 'confirmed')
+        .reduce((sum,p)=> sum + (typeof p.amount === 'number' ? p.amount : 0), 0);
+      summaryWrap.innerHTML = `
+        <table class="admin-table">
+          <thead><tr><th>Student</th><th>Course</th><th>Fee</th><th>Paid</th><th>Pending</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div style="margin-top:12px; font-weight:700; font-size:0.95rem;">Total collected: ${totalCollected}</div>
+      `;
+    }
+
+    // --- All payments ---
+    const listWrap = document.getElementById('paymentsListWrap');
+    const emptyState = document.getElementById('paymentsEmpty');
+    listWrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
+    const scopedUsernames = new Set(students.map(s => (s.username||'').trim().toLowerCase()));
+    const visible = payments.filter(p => !p._index && scopedUsernames.has((p.username||'').trim().toLowerCase()));
+    if(visible.length === 0){
+      emptyState.style.display = 'block';
+      return;
+    }
+    emptyState.style.display = 'none';
+    visible.forEach(p=>{
+      const row = document.createElement('div');
+      row.className = 'exam-list-item';
+      const isPending = p.status === 'pending';
+      row.innerHTML = `
+        <div>
+          <h4>${esc(p.username)} — ${typeof p.amount === 'number' ? p.amount : '(amount not set)'} ${isPending ? '<span style="color:#FFB020;">• PENDING</span>' : ''}</h4>
+          <div class="meta">${esc(p.date || '')}${p.note ? ' · ' + esc(p.note) : ''} · uploaded by ${esc(p.uploadedBy || 'admin')}</div>
+          ${p.imageUrl ? `<a href="${esc(p.imageUrl)}" target="_blank" rel="noopener" style="color:var(--signal); font-size:0.82rem;">📷 View screenshot</a>` : ''}
+        </div>
+        <div class="exam-list-actions">
+          ${isPending ? '<button class="confirm-payment-btn">Confirm</button>' : ''}
+          <button class="edit-payment-amount-btn">Edit amount</button>
+          <button class="danger delete-payment-btn">Delete</button>
+        </div>
+      `;
+      if(isPending){
+        row.querySelector('.confirm-payment-btn').addEventListener('click', async ()=>{
+          const entered = prompt(`Confirm the amount received from ${p.username}:`, typeof p.amount === 'number' ? p.amount : '');
+          if(entered === null) return;
+          const amount = parseFloat(entered);
+          if(isNaN(amount) || amount <= 0){ alert('Enter a valid amount.'); return; }
+          await savePayment(p.id, { ...p, amount, status: 'confirmed', confirmedBy: getCurrentAnswererIdentity() });
+          invalidateDbCache('payments');
+          await renderAdminPayments();
+          await refreshDashboardIfSignedInAs(p.username);
+        });
+      }
+      row.querySelector('.edit-payment-amount-btn').addEventListener('click', async ()=>{
+        const entered = prompt(`Amount for this payment from ${p.username}:`, typeof p.amount === 'number' ? p.amount : '');
+        if(entered === null) return;
+        const amount = parseFloat(entered);
+        if(isNaN(amount) || amount <= 0){ alert('Enter a valid amount.'); return; }
+        await savePayment(p.id, { ...p, amount });
+        invalidateDbCache('payments');
+        await renderAdminPayments();
+        await refreshDashboardIfSignedInAs(p.username);
+      });
+      row.querySelector('.delete-payment-btn').addEventListener('click', async ()=>{
+        if(!confirm(`Delete this payment record for ${p.username}? This can't be undone.`)) return;
+        await deletePaymentRecord(p.id);
+        invalidateDbCache('payments');
+        await renderAdminPayments();
+        await refreshDashboardIfSignedInAs(p.username);
+      });
+      listWrap.appendChild(row);
+    });
+  }
+
+  document.getElementById('refreshPayments').addEventListener('click', ()=>{ invalidateDbCache('payments'); renderAdminPayments(); });
 
   /* ---------------- MATH CHAMPIONS LEAGUE (admin: create/edit) ---------------- */
   let editingCompId = null;
@@ -8516,6 +8866,7 @@
   async function renderAdminSessions(){
     const filterVal = document.getElementById('sessFilterSelect').value;
     let sessions = await fetchAllSessions();
+    if(await checkForStaleAttendance(sessions)) sessions = await fetchAllSessions();
     if(filterVal) sessions = sessions.filter(s => (s.username||'').trim().toLowerCase() === filterVal.trim().toLowerCase());
     if(currentAdminCourseFilter){
       const scopedStudents = await fetchStudentsForCurrentAdmin();
@@ -8709,10 +9060,123 @@
     return Array.isArray(sess.attendanceSegments) && sess.attendanceSegments.some(s => s.joinedAt && !s.leftAt);
   }
 
+  /* ---------------- STUDENT: Payments ---------------- */
+  let studentPaymentPendingImageUrl = null;
+
+  async function renderStudentPayments(){
+    if(!currentStudent) return;
+    const [payments, courses] = await Promise.all([fetchAllPayments(), fetchAllCourses()]);
+    const myCourse = courses.find(c => c.name === currentStudent.course);
+    const fee = myCourse && typeof myCourse.fee === 'number' ? myCourse.fee : undefined;
+    const sum = summarizePaymentsForStudent(payments, currentStudent.username, fee);
+
+    const card = document.getElementById('paymentBalanceCard');
+    if(card){
+      card.innerHTML = `
+        <div class="target-score-card">
+          <div class="target-score-header">
+            <span class="field-label">💳 Your balance</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; font-size:0.95rem;">
+            <span>Paid so far: <strong>${sum.paid}</strong></span>
+            ${typeof fee === 'number' ? `<span style="color:var(--muted); font-size:0.82rem;">Course fee: ${fee}</span>` : ''}
+          </div>
+          ${typeof fee === 'number' ? `
+            <div class="target-score-bar-outer"><div class="target-score-bar-fill" style="width:${Math.min(100, Math.round((sum.paid / fee) * 100))}%;"></div></div>
+            <div style="color:${sum.isPaidInFull ? '#39D98A' : 'var(--muted)'}; font-size:0.82rem; margin-top:6px;">
+              ${sum.isPaidInFull ? '✓ Paid in full — thank you!' : `${sum.owed} remaining`}
+            </div>
+          ` : `<div style="color:var(--muted); font-size:0.82rem; margin-top:6px;">No course fee set — ask Mr. Mohamed Ibrahim if you're unsure what's due.</div>`}
+          ${sum.pendingCount > 0 ? `<div style="color:#FFB020; font-size:0.82rem; margin-top:6px;">${sum.pendingCount} payment${sum.pendingCount===1?'':'s'} waiting for approval</div>` : ''}
+        </div>
+      `;
+    }
+
+    const historyEl = document.getElementById('studentPaymentHistory');
+    if(!historyEl) return;
+    const mine = payments.filter(p => !p._index && (p.username||'').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
+    if(mine.length === 0){
+      historyEl.innerHTML = '<div class="admin-empty">No payments recorded yet.</div>';
+      return;
+    }
+    historyEl.innerHTML = mine.map(p => `
+      <div class="hw-row">
+        <span class="hw-date">${esc(p.date || '')}</span>
+        <span class="hw-title">${typeof p.amount === 'number' ? p.amount : '(pending review)'}${p.note ? ' · ' + esc(p.note) : ''}</span>
+        <span class="hw-mark">${p.status === 'confirmed' ? '<span style="color:#39D98A;">✓ Confirmed</span>' : '<span style="color:#FFB020;">Waiting for approval</span>'}</span>
+      </div>
+    `).join('');
+  }
+
+  const studentPaymentImageInput = document.getElementById('studentPaymentImageInput');
+  if(studentPaymentImageInput){
+    studentPaymentImageInput.addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      const statusEl = document.getElementById('studentPaymentImageStatus');
+      statusEl.textContent = 'Uploading…';
+      statusEl.style.color = 'var(--muted)';
+      try{
+        const url = await uploadQuestionImage(file);
+        studentPaymentPendingImageUrl = url;
+        statusEl.textContent = 'Uploaded ✓';
+        statusEl.style.color = '#39D98A';
+      }catch(err){
+        statusEl.textContent = '';
+        alert(err.message || 'Could not upload that screenshot — check your connection and try again.');
+        e.target.value = '';
+      }
+    });
+  }
+
+  const submitStudentPaymentBtn = document.getElementById('submitStudentPaymentBtn');
+  if(submitStudentPaymentBtn){
+    submitStudentPaymentBtn.addEventListener('click', async ()=>{
+      if(!currentStudent) return;
+      const amountRaw = document.getElementById('studentPaymentAmountInput').value.trim();
+      const amount = parseFloat(amountRaw);
+      if(amountRaw === '' || isNaN(amount) || amount <= 0){ alert('Enter the amount you sent.'); return; }
+      if(!studentPaymentPendingImageUrl){ alert('Please attach a screenshot of your transfer.'); return; }
+
+      const btn = submitStudentPaymentBtn;
+      btn.disabled = true; btn.textContent = 'Sending…';
+      const id = generateId('payment');
+      const ok = await savePayment(id, {
+        username: currentStudent.username, amount,
+        date: new Date().toISOString().slice(0,10),
+        note: document.getElementById('studentPaymentNoteInput').value.trim() || null,
+        imageUrl: studentPaymentPendingImageUrl,
+        readAmount: null,
+        status: 'pending', // student-submitted, so it needs admin confirmation before it counts
+        uploadedBy: 'student',
+        confirmedBy: null,
+        ts: new Date().toISOString()
+      });
+      btn.disabled = false; btn.textContent = 'Send for approval';
+
+      if(ok){
+        document.getElementById('studentPaymentAmountInput').value = '';
+        document.getElementById('studentPaymentNoteInput').value = '';
+        document.getElementById('studentPaymentImageInput').value = '';
+        document.getElementById('studentPaymentImageStatus').textContent = '';
+        studentPaymentPendingImageUrl = null;
+        invalidateDbCache('payments');
+        await renderStudentPayments();
+        alert('Sent — Mr. Mohamed Ibrahim will confirm it shortly.');
+      } else {
+        alert('Could not send that — check your connection and try again.');
+      }
+    });
+  }
+
   async function renderStudentSessions(){
     if(!currentStudent) return;
-    const all = await fetchAllSessions();
-    const mine = all.filter(e => (e.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
+    let all = await fetchAllSessions();
+    let mine = all.filter(e => (e.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
+    if(await checkForStaleAttendance(mine)){
+      all = await fetchAllSessions();
+      mine = all.filter(e => (e.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
+    }
 
     const todayStr = new Date().toISOString().slice(0,10);
     const upcoming = mine.filter(s => s.date >= todayStr).sort((a,b)=> new Date(a.date) - new Date(b.date));
@@ -8782,11 +9246,19 @@
 
   // Records a join and opens the meeting link in a new tab. Closing the
   // segment is now entirely explicit (the "I've left the session" button)
-  // rather than inferred from switching tabs — tab-visibility tracking
-  // turned out unreliable both ways: it could close the segment too early
-  // (briefly tabbing back while still on the call) and, more often, never
-  // close it at all, since Zoom commonly opens as its own desktop app
-  // rather than staying in a browser tab this page could watch.
+  // rather than inferred from switching tabs alone — tab-visibility
+  // tracking used naively is unreliable both ways: closing too early on a
+  // brief alt-tab while still on the call, or (if Zoom opens as its own
+  // desktop app rather than a browser tab) never firing at all. This
+  // balances both: automatic detection requires the tab to stay visible
+  // for a sustained stretch before it counts as "actually left" (filtering
+  // out quick checks), while the explicit button and a stale-session
+  // auto-expiry (see checkForStaleAttendance) catch the cases automatic
+  // detection can't reach at all.
+  const SUSTAINED_VISIBLE_MS = 25000; // must stay visible this long before auto-closing
+  let activeAttendanceSessionId = null;
+  let sustainedVisibleTimer = null;
+
   async function joinSessionAndTrack(sessionId, link){
     const record = await dbGet('sessions', sessionId);
     if(!record) return;
@@ -8794,6 +9266,7 @@
     segments.push({ joinedAt: new Date().toISOString(), leftAt: null });
     await dbSet('sessions', sessionId, { ...record, attendanceSegments: segments });
     invalidateDbCache('sessions');
+    activeAttendanceSessionId = sessionId;
     window.open(link, '_blank', 'noopener');
     await renderStudentSessions();
   }
@@ -8807,7 +9280,52 @@
     openSegment.leftAt = new Date().toISOString();
     await dbSet('sessions', sessionId, { ...record, attendanceSegments: segments });
     invalidateDbCache('sessions');
+    activeAttendanceSessionId = null;
     await renderStudentSessions();
+  }
+
+  document.addEventListener('visibilitychange', ()=>{
+    if(!activeAttendanceSessionId) return;
+    if(document.visibilityState === 'visible'){
+      // Back on this tab — wait to see if they STAY here before treating
+      // it as "left the meeting", rather than closing on the first glance.
+      sustainedVisibleTimer = setTimeout(()=>{
+        if(document.visibilityState === 'visible' && activeAttendanceSessionId){
+          leaveSessionAndStopTracking(activeAttendanceSessionId);
+        }
+      }, SUSTAINED_VISIBLE_MS);
+    } else {
+      // Left again before the sustained check completed — was just a
+      // quick glance, not actually leaving the meeting. Cancel the timer.
+      if(sustainedVisibleTimer){ clearTimeout(sustainedVisibleTimer); sustainedVisibleTimer = null; }
+    }
+  });
+
+  // Catches the case automatic detection can't reach at all: Zoom opened
+  // as its own app and the student never came back to this tab (or this
+  // browser session) — the segment would otherwise stay "in progress"
+  // forever. Anything left open for over 3 hours is capped there, on the
+  // assumption a real tutoring session was never actually that long.
+  const STALE_ATTENDANCE_CAP_MS = 3 * 60 * 60 * 1000;
+  async function checkForStaleAttendance(sessions){
+    const updates = [];
+    sessions.forEach(sess=>{
+      if(!Array.isArray(sess.attendanceSegments)) return;
+      const openSegment = sess.attendanceSegments.find(s => s.joinedAt && !s.leftAt);
+      if(!openSegment) return;
+      const openedAgo = Date.now() - new Date(openSegment.joinedAt).getTime();
+      if(openedAgo > STALE_ATTENDANCE_CAP_MS){
+        const segments = sess.attendanceSegments.map(s => s === openSegment
+          ? { ...s, leftAt: new Date(new Date(s.joinedAt).getTime() + STALE_ATTENDANCE_CAP_MS).toISOString() }
+          : s);
+        updates.push(dbSet('sessions', sess.id, { ...sess, attendanceSegments: segments }));
+      }
+    });
+    if(updates.length > 0){
+      await Promise.all(updates);
+      invalidateDbCache('sessions');
+    }
+    return updates.length > 0;
   }
 
 
@@ -11574,10 +12092,11 @@
     document.getElementById('dashGrade').textContent = currentStudent.grade || '—';
     document.getElementById('dashStudentNumber').textContent = currentStudent.studentNumber || '—';
     dash.style.display = 'block';
-    ['homework','attempts','mistakes','skills','exams','sessions','reviews','competitions','announcements'].forEach(invalidateDbCache);
+    ['homework','attempts','mistakes','skills','exams','sessions','reviews','competitions','announcements','payments','courses'].forEach(invalidateDbCache);
     renderStudentHomework();
     renderStudentSessions();
     renderAnnouncementsBanner();
+    renderStudentPayments();
     renderStudentReviews();
     renderStudentSkills();
     renderWeakPoints();
@@ -11622,7 +12141,7 @@
     btn.disabled = true; btn.textContent = '🔄 Refreshing…';
     status.textContent = 'Pulling the latest…';
 
-    ['homework','attempts','mistakes','skills','exams','sessions','reviews','students','announcements'].forEach(invalidateDbCache);
+    ['homework','attempts','mistakes','skills','exams','sessions','reviews','students','announcements','payments','courses'].forEach(invalidateDbCache);
 
     // allSettled (not all) so one failing piece can never block the rest, or
     // leave the button stuck on "Refreshing…" forever.
@@ -11630,6 +12149,7 @@
       renderStudentHomework(),
       renderStudentSessions(),
       renderAnnouncementsBanner(),
+      renderStudentPayments(),
       renderStudentReviews(),
       renderStudentSkills(),
       renderWeakPoints(),
