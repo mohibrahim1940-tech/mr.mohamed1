@@ -8537,14 +8537,31 @@
       const tr = document.createElement('tr');
       const attendedMin = totalAttendedMinutes(sess);
       const stillJoined = Array.isArray(sess.attendanceSegments) && sess.attendanceSegments.some(s => s.joinedAt && !s.leftAt);
+      const isManual = typeof sess.manualMinutesOverride === 'number';
       tr.innerHTML = `
         <td>${esc(sess.username)}</td>
         <td>${esc(sess.date || '')}</td>
         <td>${esc(sess.time || '—')}</td>
         <td>${esc(sess.topic || '')}</td>
-        <td>${stillJoined ? '🟢 In progress' : (attendedMin !== null ? `${attendedMin} min` : '—')}</td>
+        <td>
+          ${stillJoined && !isManual ? '🟢 In progress' : (attendedMin !== null ? `${attendedMin} min${isManual ? ' (edited)' : ''}` : '—')}
+          <button class="student-action-btn edit-attendance-btn" style="margin-left:6px;padding:2px 8px;font-size:0.75rem;" title="Set the correct attendance time yourself">✏️</button>
+        </td>
         <td><button class="student-action-btn delete-sess-btn">Delete</button></td>
       `;
+      tr.querySelector('.edit-attendance-btn').addEventListener('click', async ()=>{
+        const current = attendedMin !== null ? attendedMin : '';
+        const entered = prompt(`Minutes ${sess.username} actually attended this session:`, current);
+        if(entered === null) return; // cancelled
+        const val = parseInt(entered, 10);
+        if(isNaN(val) || val < 0){ alert('Enter a whole number of minutes (0 or more).'); return; }
+        const record = await dbGet('sessions', sess.id);
+        if(!record) return;
+        await dbSet('sessions', sess.id, { ...record, manualMinutesOverride: val });
+        invalidateDbCache('sessions');
+        await renderAdminSessions();
+        await refreshDashboardIfSignedInAs(sess.username);
+      });
       tr.querySelector('.delete-sess-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete this session record for ${sess.username}?`)) return;
         await deleteSessionRecord(sess.id);
@@ -8688,6 +8705,10 @@
     });
   }
 
+  function hasOpenAttendanceSegment(sess){
+    return Array.isArray(sess.attendanceSegments) && sess.attendanceSegments.some(s => s.joinedAt && !s.leftAt);
+  }
+
   async function renderStudentSessions(){
     if(!currentStudent) return;
     const all = await fetchAllSessions();
@@ -8707,7 +8728,15 @@
       topicEl.textContent = next.topic || '';
       if(next.link){
         joinBtn.style.display = '';
-        joinBtn.onclick = () => joinSessionAndTrack(next.id, next.link);
+        if(hasOpenAttendanceSegment(next)){
+          joinBtn.textContent = '✅ I\'ve left the session';
+          joinBtn.style.background = '#39D98A';
+          joinBtn.onclick = () => leaveSessionAndStopTracking(next.id);
+        } else {
+          joinBtn.textContent = '🔗 Join session';
+          joinBtn.style.background = '';
+          joinBtn.onclick = () => joinSessionAndTrack(next.id, next.link);
+        }
       } else {
         joinBtn.style.display = 'none';
       }
@@ -8738,8 +8767,11 @@
 
   // Sums every completed join→leave segment for a session, in minutes.
   // Returns null (not 0) when the student never joined at all, so "0 min
-  // attended" and "never joined" aren't shown the same way.
+  // attended" and "never joined" aren't shown the same way. A manual
+  // override from the admin always wins — nothing tracked automatically
+  // can be as reliable as the person who was actually on the call.
   function totalAttendedMinutes(sess){
+    if(typeof sess.manualMinutesOverride === 'number') return sess.manualMinutesOverride;
     if(!Array.isArray(sess.attendanceSegments) || sess.attendanceSegments.length === 0) return null;
     let totalMs = 0;
     sess.attendanceSegments.forEach(seg=>{
@@ -8748,26 +8780,25 @@
     return Math.round(totalMs / 60000);
   }
 
-  // Records a join, opens the meeting link in a new tab, and starts
-  // watching for the student to come back to THIS tab — the moment they
-  // do, that's taken as "they left the meeting" and the segment is closed
-  // off with how long they were away. Can't see inside a third-party
-  // video call, so time away from this tab is the closest reliable proxy.
-  let activeAttendanceSessionId = null;
+  // Records a join and opens the meeting link in a new tab. Closing the
+  // segment is now entirely explicit (the "I've left the session" button)
+  // rather than inferred from switching tabs — tab-visibility tracking
+  // turned out unreliable both ways: it could close the segment too early
+  // (briefly tabbing back while still on the call) and, more often, never
+  // close it at all, since Zoom commonly opens as its own desktop app
+  // rather than staying in a browser tab this page could watch.
   async function joinSessionAndTrack(sessionId, link){
     const record = await dbGet('sessions', sessionId);
     if(!record) return;
     const segments = Array.isArray(record.attendanceSegments) ? record.attendanceSegments.slice() : [];
     segments.push({ joinedAt: new Date().toISOString(), leftAt: null });
     await dbSet('sessions', sessionId, { ...record, attendanceSegments: segments });
-    activeAttendanceSessionId = sessionId;
+    invalidateDbCache('sessions');
     window.open(link, '_blank', 'noopener');
+    await renderStudentSessions();
   }
 
-  document.addEventListener('visibilitychange', async ()=>{
-    if(document.visibilityState !== 'visible' || !activeAttendanceSessionId) return;
-    const sessionId = activeAttendanceSessionId;
-    activeAttendanceSessionId = null;
+  async function leaveSessionAndStopTracking(sessionId){
     const record = await dbGet('sessions', sessionId);
     if(!record || !Array.isArray(record.attendanceSegments)) return;
     const segments = record.attendanceSegments.slice();
@@ -8776,8 +8807,9 @@
     openSegment.leftAt = new Date().toISOString();
     await dbSet('sessions', sessionId, { ...record, attendanceSegments: segments });
     invalidateDbCache('sessions');
-    if(currentStudent) renderStudentSessions();
-  });
+    await renderStudentSessions();
+  }
+
 
   /* ---------------- REVIEWS (admin -> student, with skill % complete) ---------------- */
   async function saveReview(id, data){
