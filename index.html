@@ -1492,12 +1492,22 @@
   }
   #examModal #examPlayer{
     flex:1; overflow-y:auto;
-    width:100%; max-width:720px; margin:0 auto;
+    width:100%; max-width:1100px; margin:0 auto;
     padding:72px 24px 40px;
     box-sizing:border-box;
   }
   @media(min-width:640px){
     #examModal #examPlayer{ padding:80px 40px 48px; }
+  }
+  /* On a wide screen a single column of four short answers leaves most of
+     the page empty and pushes the buttons below the fold — two columns use
+     the space and keep everything visible at once. Long/image answers are
+     rare enough that they still read fine at half width. */
+  @media(min-width:900px){
+    #examModal #examOptions{
+      display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    }
+    #examModal #examOptions .exam-option{ margin-bottom:0; }
   }
 
   /* ---------- Assistant dashboard: fullscreen + modern card grid ---------- */
