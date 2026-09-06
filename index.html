@@ -2395,6 +2395,61 @@
   </section>
 
   <!-- STUDENT DASHBOARD (shown after sign-in) -->
+  <section class="section-pad wrap" id="paymentPage" style="display:none; padding-top:60px; padding-bottom:60px;">
+    <div style="max-width:620px; margin:0 auto;">
+      <div class="section-label">Step 2 of 2</div>
+      <h2 style="font-size:clamp(1.8rem,4vw,2.6rem); margin-bottom:8px;">Almost there, <span id="payPageUsername"></span>!</h2>
+      <p style="color:var(--muted); margin-bottom:28px;">Your account is created. Send your course fee below and upload the screenshot — Mr. Mohamed Ibrahim will approve your account once it's confirmed.</p>
+
+      <div class="target-score-card" style="margin-bottom:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px;">
+          <div>
+            <div class="field-label">Your course</div>
+            <div style="font-size:1.15rem; font-weight:700; margin-top:4px;" id="payPageCourse"></div>
+          </div>
+          <div style="text-align:right;">
+            <div class="field-label">Fee</div>
+            <div style="font-size:1.4rem; font-weight:700; margin-top:4px; color:var(--signal);" id="payPageFee"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hw-section-title" style="margin-top:0;">Where to send it</div>
+      <div id="regPayMethods" style="margin-bottom:28px;"></div>
+
+      <div class="hw-section-title">Upload your transfer</div>
+      <div class="exam-editor" style="margin-top:0;">
+        <div class="field-row">
+          <label class="field-label">Amount you sent</label>
+          <input type="number" id="regPayAmountInput" min="0" step="0.01" placeholder="e.g. 1000">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Transfer screenshot</label>
+          <input type="file" accept="image/*" id="regPayImageInput">
+          <span class="video-upload-status" id="regPayImageStatus"></span>
+        </div>
+        <div class="editor-actions">
+          <button type="button" class="btn btn-primary" id="regPaySubmitBtn" style="width:100%;">Send payment for approval</button>
+        </div>
+      </div>
+
+      <div class="hw-section-title">Can't pay it all at once?</div>
+      <div class="exam-editor" style="margin-top:0;">
+        <p style="color:var(--muted); font-size:0.86rem; margin-bottom:14px;">Ask to split the fee into installments — Mr. Mohamed Ibrahim will review your request and get back to you.</p>
+        <div class="field-row">
+          <input type="text" id="regInstallmentNoteInput" placeholder="Optional: how you'd like to split it">
+        </div>
+        <div class="editor-actions">
+          <button type="button" class="btn btn-ghost" id="regRequestInstallmentBtn" style="width:100%;">Request installments instead</button>
+        </div>
+      </div>
+
+      <div class="auth-error" id="regPayError"></div>
+      <div class="auth-success" id="regPaySuccess"></div>
+      <button type="button" class="btn btn-ghost" id="regPaySkipBtn" style="width:100%; margin-top:18px;">I'll pay later</button>
+    </div>
+  </section>
+
   <section class="section-pad wrap" id="studentDashboard" style="display:none; padding-top:60px; padding-bottom:60px;">
     <div class="section-head reveal">
       <div class="eyebrow">Your dashboard</div>
@@ -2912,34 +2967,6 @@
       <p class="auth-note">Passwords are hashed before they're stored — but this is a demo login system with no real backend, so don't reuse a password you use elsewhere.</p>
     </form>
 
-    <div id="registerPaymentStep" style="display:none;">
-      <div class="auth-success show" style="margin-bottom:18px;">Account created! One last step below.</div>
-      <h4 style="margin-bottom:6px;" id="regPayCourseTitle"></h4>
-      <p style="color:var(--muted); font-size:0.84rem; margin-bottom:16px;">Send the fee using one of the methods below, then upload your transfer screenshot so Mr. Mohamed Ibrahim can approve your account.</p>
-
-      <div id="regPayMethods" style="margin-bottom:18px;"></div>
-
-      <div class="field-row">
-        <label class="field-label">Amount you sent</label>
-        <input type="number" id="regPayAmountInput" min="0" step="0.01" placeholder="e.g. 1000">
-      </div>
-      <div class="field-row">
-        <label class="field-label">Transfer screenshot</label>
-        <input type="file" accept="image/*" id="regPayImageInput">
-        <span class="video-upload-status" id="regPayImageStatus"></span>
-      </div>
-      <button type="button" class="btn btn-primary" id="regPaySubmitBtn" style="width:100%; margin-bottom:12px;">Send payment for approval</button>
-
-      <div style="border-top:1px solid var(--line); padding-top:14px; margin-top:4px;">
-        <p style="color:var(--muted); font-size:0.82rem; margin-bottom:10px;">Can't pay it all at once? Ask to split it into installments — Mr. Mohamed Ibrahim will review your request.</p>
-        <input type="text" id="regInstallmentNoteInput" placeholder="Optional: how you'd like to split it" style="margin-bottom:10px;">
-        <button type="button" class="btn btn-ghost" id="regRequestInstallmentBtn" style="width:100%;">Request installments instead</button>
-      </div>
-
-      <div class="auth-error" id="regPayError"></div>
-      <div class="auth-success" id="regPaySuccess"></div>
-      <button type="button" class="btn btn-ghost" id="regPaySkipBtn" style="width:100%; margin-top:12px;">I'll pay later</button>
-    </div>
   </div>
 </div>
 
@@ -12207,37 +12234,58 @@
   async function showRegisterPaymentStep(username, course){
     regPayUsername = username;
     regPayImageUrl = null;
-    document.getElementById('registerForm').style.display = 'none';
-    const step = document.getElementById('registerPaymentStep');
-    step.style.display = 'block';
+
+    // Close the auth modal and hide the marketing page behind it — this is
+    // a real page of its own, not a step tucked inside the popup.
+    document.getElementById('authModal').classList.remove('open');
+    document.body.style.overflow = '';
+    const heroSection = document.querySelector('.hero');
+    if(heroSection) heroSection.style.display = 'none';
+    document.querySelectorAll('section.section-pad').forEach(sec=>{
+      if(sec.id !== 'paymentPage') sec.dataset._hiddenForPayment = sec.style.display || '', sec.style.display = 'none';
+    });
+
+    const page = document.getElementById('paymentPage');
+    page.style.display = 'block';
+    document.getElementById('payPageUsername').textContent = username;
     document.getElementById('regPayError').classList.remove('show');
     document.getElementById('regPaySuccess').classList.remove('show');
     document.getElementById('regPayImageStatus').textContent = '';
     document.getElementById('regPayImageInput').value = '';
     document.getElementById('regPayAmountInput').value = '';
+    window.scrollTo({ top: 0, behavior: 'instant' });
 
     const [settings, courses] = await Promise.all([fetchPaymentSettings(), fetchAllCourses()]);
     const courseRec = courses.find(c => c.name === course);
     const fee = courseRec && typeof courseRec.fee === 'number' ? courseRec.fee : null;
-    document.getElementById('regPayCourseTitle').textContent = fee !== null
-      ? `${course} — ${fee}`
-      : `${course}`;
+    document.getElementById('payPageCourse').textContent = course;
+    document.getElementById('payPageFee').textContent = fee !== null ? fee : 'Ask Mr. Ibrahim';
     if(fee !== null) document.getElementById('regPayAmountInput').value = fee;
 
     const methods = [];
-    if(settings.instapay) methods.push(`<div style="background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px;"><div style="font-size:0.76rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">InstaPay</div><div style="font-weight:700; font-size:0.95rem; margin-top:2px;">${esc(settings.instapay)}</div></div>`);
-    if(settings.vodafoneCash) methods.push(`<div style="background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px;"><div style="font-size:0.76rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Vodafone Cash</div><div style="font-weight:700; font-size:0.95rem; margin-top:2px;">${esc(settings.vodafoneCash)}</div></div>`);
-    if(settings.instructions) methods.push(`<p style="color:var(--muted); font-size:0.82rem; margin-top:10px;">${esc(settings.instructions)}</p>`);
+    if(settings.instapay) methods.push(`<div style="background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:10px;"><div style="font-size:0.76rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">InstaPay</div><div style="font-weight:700; font-size:1.05rem; margin-top:4px;">${esc(settings.instapay)}</div></div>`);
+    if(settings.vodafoneCash) methods.push(`<div style="background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:10px;"><div style="font-size:0.76rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Vodafone Cash</div><div style="font-weight:700; font-size:1.05rem; margin-top:4px;">${esc(settings.vodafoneCash)}</div></div>`);
+    if(settings.instructions) methods.push(`<p style="color:var(--muted); font-size:0.84rem; margin-top:12px;">${esc(settings.instructions)}</p>`);
     document.getElementById('regPayMethods').innerHTML = methods.length
       ? methods.join('')
-      : `<p style="color:var(--muted); font-size:0.84rem;">Payment details haven't been added yet — message Mr. Mohamed Ibrahim on WhatsApp to arrange payment.</p>`;
+      : `<p style="color:var(--muted); font-size:0.86rem;">Payment details haven't been added yet — message Mr. Mohamed Ibrahim on WhatsApp to arrange payment.</p>`;
   }
 
+  // Leaves the payment page and puts the normal marketing page back the way
+  // it was, then reopens the sign-in modal so they can log in once approved.
   function resetRegisterPaymentStep(){
-    document.getElementById('registerPaymentStep').style.display = 'none';
-    document.getElementById('registerForm').style.display = '';
+    document.getElementById('paymentPage').style.display = 'none';
+    const heroSection = document.querySelector('.hero');
+    if(heroSection) heroSection.style.display = '';
+    document.querySelectorAll('section.section-pad').forEach(sec=>{
+      if(sec.dataset._hiddenForPayment !== undefined && sec.id !== 'studentDashboard'){
+        sec.style.display = sec.dataset._hiddenForPayment;
+        delete sec.dataset._hiddenForPayment;
+      }
+    });
     regPayUsername = null;
     regPayImageUrl = null;
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   document.getElementById('regPayImageInput').addEventListener('change', async (e)=>{
@@ -12283,7 +12331,7 @@
       okEl.textContent = 'Sent! Mr. Mohamed Ibrahim will confirm your payment and approve your account.';
       okEl.classList.add('show');
       invalidateDbCache('payments');
-      setTimeout(()=>{ resetRegisterPaymentStep(); switchAuthTab('signinForm'); }, 2500);
+      setTimeout(()=>{ resetRegisterPaymentStep(); openAuthModal('signinForm'); }, 2500);
     } else {
       errEl.textContent = 'Could not send that — please try again.'; errEl.classList.add('show');
     }
@@ -12309,7 +12357,7 @@
       okEl.textContent = 'Request sent — Mr. Mohamed Ibrahim will get back to you about splitting the fee.';
       okEl.classList.add('show');
       invalidateDbCache('students');
-      setTimeout(()=>{ resetRegisterPaymentStep(); switchAuthTab('signinForm'); }, 2500);
+      setTimeout(()=>{ resetRegisterPaymentStep(); openAuthModal('signinForm'); }, 2500);
     } else {
       errEl.textContent = 'Could not send that — please try again.'; errEl.classList.add('show');
     }
@@ -12317,7 +12365,7 @@
 
   document.getElementById('regPaySkipBtn').addEventListener('click', ()=>{
     resetRegisterPaymentStep();
-    switchAuthTab('signinForm');
+    openAuthModal('signinForm');
   });
 
   function applySignedInState(){
