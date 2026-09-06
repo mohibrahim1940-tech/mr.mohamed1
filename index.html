@@ -6203,6 +6203,7 @@
         isSavingResult = true;
         let attemptResult, mistakeResults;
         try{
+          await refreshMistakeEntriesFromSource(mistakeEntries);
           [attemptResult, mistakeResults] = await Promise.all([
             saveExamAttempt({
               username: currentStudent.username, examTitle: exam.title,
@@ -8714,6 +8715,43 @@
     return { ok: true };
   }
 
+  // The exam/homework object a student is working through is the copy that
+  // was loaded when they STARTED. If an explanation gets added while they're
+  // still taking it, that copy is stale — so a mistake created from it would
+  // be saved as 'delivered' with no answer, and would never pick one up.
+  // This re-reads the live source right before saving and fills in anything
+  // that landed in the meantime.
+  async function refreshMistakeEntriesFromSource(mistakeEntries){
+    if(!mistakeEntries || mistakeEntries.length === 0) return mistakeEntries;
+    for(const entry of mistakeEntries){
+      try{
+        const source = await findSourceRecordForMistake(entry);
+        let liveQuestions = source ? (source.record.questions || []) : null;
+        if(!liveQuestions){
+          // Homework has a separate record per student, so findSourceRecordForMistake
+          // (which only covers exams and skills) won't find it — look it up by title.
+          const allHw = await fetchAllHomework();
+          const match = allHw.find(h => !h._index && h.title === entry.source && (h.questions||[]).length);
+          if(match) liveQuestions = match.questions;
+        }
+        if(!liveQuestions) continue;
+        const liveQ = matchQuestionForMistake(entry, liveQuestions);
+        if(!liveQ) continue;
+        const explanations = getQuestionExplanations(liveQ);
+        if(explanations.length > 0){
+          entry.explanations = explanations;
+          entry.status = 'answered';
+        }
+      }catch(err){
+        // A lookup failure here must never block saving the mistake itself —
+        // worst case it saves as 'delivered' and the normal backfill picks
+        // it up the next time an explanation is saved for that question.
+        console.error('Could not refresh explanations for a mistake:', err);
+      }
+    }
+    return mistakeEntries;
+  }
+
   async function backfillExplanationVideos(sourceTitle, questions){
     if(!sourceTitle || !Array.isArray(questions) || questions.length === 0) return;
     try{
@@ -8749,8 +8787,9 @@
           if((candidate.lesson || 'General').trim() === mLesson) match = candidate;
         }
 
+        if(!match) return;
         const explanationsChanged = JSON.stringify(match.explanations || null) !== JSON.stringify(m.explanations || null);
-        if(match && (explanationsChanged || (match.explanationVideo && match.explanationVideo !== m.explanationVideo) || (match.explanationText && match.explanationText !== m.explanationText) || (match.explanationPhoto && match.explanationPhoto !== m.explanationPhoto) || (match.explanationVoice && match.explanationVoice !== m.explanationVoice))){
+        if(explanationsChanged || (match.explanationVideo && match.explanationVideo !== m.explanationVideo) || (match.explanationText && match.explanationText !== m.explanationText) || (match.explanationPhoto && match.explanationPhoto !== m.explanationPhoto) || (match.explanationVoice && match.explanationVoice !== m.explanationVoice)){
           const gainedExplanation = getQuestionExplanations(match).length > 0;
           updates.push(dbSet('mistakes', m.id, {
             ...m,
@@ -11387,6 +11426,7 @@
       isSavingResult = true;
       let ok, mistakeResults;
       try{
+        await refreshMistakeEntriesFromSource(mistakeEntries);
         [ok, mistakeResults] = await Promise.all([
           saveHomeworkAssignment(hw.id, {
             ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
