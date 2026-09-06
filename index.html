@@ -6855,11 +6855,53 @@
   // as any other homework.
   async function createRetakeHomework(username, sourceTitle, mistakeEntries){
     if(!username || !mistakeEntries || mistakeEntries.length === 0) return;
-    const questions = mistakeEntries.map(m => ({
-      lesson: m.lesson || 'General', text: m.text || null, image: m.image || null,
-      options: m.options, optionImages: m.optionImages || null, correct: m.correctAnswer,
-      ...(m.explanations ? { explanations: m.explanations } : {})
-    }));
+
+    // A mistake record can be missing its option content — older records
+    // saved before some fields existed, or one whose images never finished
+    // uploading. Copying that straight into a retake produces a question of
+    // blank "no content saved" choices, which is unusable. So whenever the
+    // stored options look empty, re-read the live source question and use
+    // that instead.
+    const questions = [];
+    for(const m of mistakeEntries){
+      let options = Array.isArray(m.options) ? m.options : [];
+      let optionImages = m.optionImages || null;
+      const hasUsableOptions = options.length > 0 && options.some((opt, i) =>
+        (opt !== null && opt !== undefined && String(opt).trim().length > 0) || (optionImages && optionImages[i])
+      );
+      if(!hasUsableOptions){
+        try{
+          const source = await findSourceRecordForMistake(m);
+          let liveQuestions = source ? (source.record.questions || []) : null;
+          if(!liveQuestions){
+            const allHw = await fetchAllHomework();
+            const match = allHw.find(h => !h._index && h.title === m.source && (h.questions||[]).length);
+            if(match) liveQuestions = match.questions;
+          }
+          const liveQ = liveQuestions ? matchQuestionForMistake(m, liveQuestions) : null;
+          if(liveQ){
+            options = Array.isArray(liveQ.options) ? liveQ.options : options;
+            optionImages = liveQ.optionImages || optionImages;
+          }
+        }catch(err){
+          console.error('Could not repair retake question options:', err);
+        }
+      }
+      // Still nothing usable? Skip this one rather than putting an
+      // unanswerable blank question in front of the student.
+      const stillUnusable = !(options.length > 0 && options.some((opt, i) =>
+        (opt !== null && opt !== undefined && String(opt).trim().length > 0) || (optionImages && optionImages[i])
+      ));
+      if(stillUnusable) continue;
+
+      questions.push({
+        lesson: m.lesson || 'General', text: m.text || null, image: m.image || null,
+        options, optionImages: optionImages || null, correct: m.correctAnswer,
+        ...(m.explanations ? { explanations: m.explanations } : {})
+      });
+    }
+
+    if(questions.length === 0) return; // nothing salvageable — don't create an empty retake
     const id = generateId('hw');
     await saveHomeworkAssignment(id, {
       username, title: `Retake: ${sourceTitle}`, dueDate: null, timeLimit: null,
@@ -13485,8 +13527,33 @@
   // Shows the exact question a mistake came from — text/image and all four
   // options, with the student's wrong pick and the correct one marked —
   // so it's quick to see exactly what to go over with them.
-  function openQuestionView(row, allowDelete){
+  async function openQuestionView(row, allowDelete){
     const content = document.getElementById('questionViewContent');
+
+    // If this record's options came through empty (an older mistake, or a
+    // retake built from one), try to recover them from the live source
+    // question before falling back to "no content saved" — the real content
+    // usually still exists on the exam/skill/homework it came from.
+    const optionsLookEmpty = !Array.isArray(row.options) || row.options.length === 0 ||
+      !row.options.some((opt, i) => (opt !== null && opt !== undefined && String(opt).trim().length > 0) || (row.optionImages && row.optionImages[i]));
+    if(optionsLookEmpty){
+      try{
+        const source = await findSourceRecordForMistake(row);
+        let liveQuestions = source ? (source.record.questions || []) : null;
+        if(!liveQuestions){
+          const allHw = await fetchAllHomework();
+          const match = allHw.find(h => !h._index && h.title === row.source && (h.questions||[]).length);
+          if(match) liveQuestions = match.questions;
+        }
+        const liveQ = liveQuestions ? matchQuestionForMistake(row, liveQuestions) : null;
+        if(liveQ && Array.isArray(liveQ.options) && liveQ.options.length){
+          row = { ...row, options: liveQ.options, optionImages: liveQ.optionImages || row.optionImages };
+        }
+      }catch(err){
+        console.error('Could not recover question options:', err);
+      }
+    }
+
     const optionsHtml = (row.options || []).map((opt, i)=>{
       let cls = '';
       let tag = '';
