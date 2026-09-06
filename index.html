@@ -2911,6 +2911,35 @@
       <button type="submit" class="btn btn-primary" id="registerSubmitBtn">Create account</button>
       <p class="auth-note">Passwords are hashed before they're stored — but this is a demo login system with no real backend, so don't reuse a password you use elsewhere.</p>
     </form>
+
+    <div id="registerPaymentStep" style="display:none;">
+      <div class="auth-success show" style="margin-bottom:18px;">Account created! One last step below.</div>
+      <h4 style="margin-bottom:6px;" id="regPayCourseTitle"></h4>
+      <p style="color:var(--muted); font-size:0.84rem; margin-bottom:16px;">Send the fee using one of the methods below, then upload your transfer screenshot so Mr. Mohamed Ibrahim can approve your account.</p>
+
+      <div id="regPayMethods" style="margin-bottom:18px;"></div>
+
+      <div class="field-row">
+        <label class="field-label">Amount you sent</label>
+        <input type="number" id="regPayAmountInput" min="0" step="0.01" placeholder="e.g. 1000">
+      </div>
+      <div class="field-row">
+        <label class="field-label">Transfer screenshot</label>
+        <input type="file" accept="image/*" id="regPayImageInput">
+        <span class="video-upload-status" id="regPayImageStatus"></span>
+      </div>
+      <button type="button" class="btn btn-primary" id="regPaySubmitBtn" style="width:100%; margin-bottom:12px;">Send payment for approval</button>
+
+      <div style="border-top:1px solid var(--line); padding-top:14px; margin-top:4px;">
+        <p style="color:var(--muted); font-size:0.82rem; margin-bottom:10px;">Can't pay it all at once? Ask to split it into installments — Mr. Mohamed Ibrahim will review your request.</p>
+        <input type="text" id="regInstallmentNoteInput" placeholder="Optional: how you'd like to split it" style="margin-bottom:10px;">
+        <button type="button" class="btn btn-ghost" id="regRequestInstallmentBtn" style="width:100%;">Request installments instead</button>
+      </div>
+
+      <div class="auth-error" id="regPayError"></div>
+      <div class="auth-success" id="regPaySuccess"></div>
+      <button type="button" class="btn btn-ghost" id="regPaySkipBtn" style="width:100%; margin-top:12px;">I'll pay later</button>
+    </div>
   </div>
 </div>
 
@@ -3435,6 +3464,28 @@
     <div class="admin-panel" id="paymentsPanel">
       <div class="admin-note">Upload a transfer screenshot and enter the amount — the totals, who's paid in full, and who still owes are all worked out for you. Students can upload their own screenshots too; those wait here as "pending" until you confirm the amount.</div>
 
+      <div class="hw-section-title" style="margin-top:0;">Your payment details</div>
+      <div class="admin-note" style="margin-bottom:16px;">These are shown to students right after they register, so they know where to send the money. Leave one blank to hide it.</div>
+      <div class="exam-editor" style="margin-top:0;">
+        <div class="field-row">
+          <label class="field-label">InstaPay address / number</label>
+          <input type="text" id="instapayNumberInput" placeholder="e.g. yourname@instapay">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Vodafone Cash number</label>
+          <input type="text" id="vodafoneCashInput" placeholder="e.g. 01xxxxxxxxx">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Extra instructions (optional)</label>
+          <input type="text" id="paymentInstructionsInput" placeholder="e.g. Please put your username in the transfer note">
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-primary" id="savePaymentSettingsBtn">Save payment details</button>
+        </div>
+      </div>
+
+      <div class="hw-section-title" style="margin-top:28px;">Record a payment</div>
+
       <div class="exam-editor" style="margin-top:0;">
         <div class="field-row">
           <label class="field-label">Student</label>
@@ -3463,6 +3514,11 @@
         <div class="editor-actions">
           <button class="btn btn-primary" id="savePaymentBtn">Record payment</button>
         </div>
+      </div>
+
+      <div class="hw-section-title" style="margin-top:28px;">Installment requests</div>
+      <div class="admin-table-wrap" id="installmentRequestsWrap">
+        <div class="admin-empty" id="installmentRequestsEmpty" style="display:none;">No installment requests.</div>
       </div>
 
       <div class="hw-section-title" style="margin-top:28px;">Who owes what</div>
@@ -7277,12 +7333,25 @@
     return await dbSet('payments', id, { id, ...data });
   }
   async function fetchAllPayments(){
-    const rows = await dbGetAll('payments');
+    const rows = (await dbGetAll('payments')).filter(r => !r._settings);
     rows.sort((a,b)=> new Date(b.ts) - new Date(a.ts));
     return rows;
   }
   async function deletePaymentRecord(id){
     return await dbDelete('payments', id);
+  }
+
+  // The InstaPay / Vodafone Cash details shown to students. Stored as one
+  // fixed-id record inside the payments table rather than its own table,
+  // so this needs no extra Supabase setup step. The `_settings` flag keeps
+  // it out of the payment lists everywhere else.
+  const PAYMENT_SETTINGS_ID = 'payment-settings';
+  async function fetchPaymentSettings(){
+    const row = await dbGet('payments', PAYMENT_SETTINGS_ID);
+    return row || { instapay: '', vodafoneCash: '', instructions: '' };
+  }
+  async function savePaymentSettings(settings){
+    return await dbSet('payments', PAYMENT_SETTINGS_ID, { id: PAYMENT_SETTINGS_ID, _settings: true, ...settings });
   }
 
   // What a student owes vs has paid, per course. Only 'confirmed'
@@ -7642,11 +7711,66 @@
 
   async function renderAdminPayments(){
     await populatePaymentStudentSelect();
+    const settings = await fetchPaymentSettings();
+    document.getElementById('instapayNumberInput').value = settings.instapay || '';
+    document.getElementById('vodafoneCashInput').value = settings.vodafoneCash || '';
+    document.getElementById('paymentInstructionsInput').value = settings.instructions || '';
+
     const [payments, students, courses] = await Promise.all([
       fetchAllPayments(), fetchStudentsForCurrentAdmin(), fetchAllCourses()
     ]);
     const feeByCourse = {};
     courses.forEach(c => { if(typeof c.fee === 'number') feeByCourse[c.name] = c.fee; });
+
+    // --- Installment requests ---
+    const instWrap = document.getElementById('installmentRequestsWrap');
+    const instEmpty = document.getElementById('installmentRequestsEmpty');
+    instWrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
+    const scopedForInst = new Set(students.map(s => (s.username||'').trim().toLowerCase()));
+    const requests = students.filter(s => s.installmentRequest && scopedForInst.has((s.username||'').trim().toLowerCase()));
+    if(requests.length === 0){
+      instEmpty.style.display = 'block';
+    } else {
+      instEmpty.style.display = 'none';
+      requests.forEach(s=>{
+        const req = s.installmentRequest;
+        const row = document.createElement('div');
+        row.className = 'exam-list-item';
+        row.innerHTML = `
+          <div>
+            <h4>${esc(s.username)} — asked to pay in installments</h4>
+            <div class="meta">${esc(s.course || '')}${req.note ? ' · "' + esc(req.note) + '"' : ''} · ${req.status === 'approved' ? 'approved' : 'awaiting your decision'}</div>
+          </div>
+          <div class="exam-list-actions">
+            ${req.status !== 'approved' ? '<button class="approve-installment-btn">Approve</button>' : ''}
+            <button class="danger dismiss-installment-btn">Dismiss</button>
+          </div>
+        `;
+        const approveBtn = row.querySelector('.approve-installment-btn');
+        if(approveBtn){
+          approveBtn.addEventListener('click', async ()=>{
+            const student = await getStudent(s.username);
+            if(!student) return;
+            student.installmentRequest = { ...req, status: 'approved' };
+            await dbSet('students', studentKey(s.username), student);
+            invalidateDbCache('students');
+            await renderAdminPayments();
+            await refreshDashboardIfSignedInAs(s.username);
+          });
+        }
+        row.querySelector('.dismiss-installment-btn').addEventListener('click', async ()=>{
+          if(!confirm(`Dismiss ${s.username}'s installment request?`)) return;
+          const student = await getStudent(s.username);
+          if(!student) return;
+          delete student.installmentRequest;
+          await dbSet('students', studentKey(s.username), student);
+          invalidateDbCache('students');
+          await renderAdminPayments();
+          await refreshDashboardIfSignedInAs(s.username);
+        });
+        instWrap.appendChild(row);
+      });
+    }
 
     // --- Who owes what ---
     const summaryWrap = document.getElementById('paymentSummaryWrap');
@@ -7741,6 +7865,23 @@
       listWrap.appendChild(row);
     });
   }
+
+  document.getElementById('savePaymentSettingsBtn').addEventListener('click', async ()=>{
+    const btn = document.getElementById('savePaymentSettingsBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const ok = await savePaymentSettings({
+      instapay: document.getElementById('instapayNumberInput').value.trim(),
+      vodafoneCash: document.getElementById('vodafoneCashInput').value.trim(),
+      instructions: document.getElementById('paymentInstructionsInput').value.trim()
+    });
+    btn.disabled = false; btn.textContent = 'Save payment details';
+    if(ok){
+      invalidateDbCache('payments');
+      alert('Payment details saved — students will see these after they register.');
+    } else {
+      alert('Could not save — check your connection (or that the "payments" table exists in Supabase) and try again.');
+    }
+  });
 
   document.getElementById('refreshPayments').addEventListener('click', ()=>{ invalidateDbCache('payments'); renderAdminPayments(); });
 
@@ -12050,8 +12191,133 @@
       return;
     }
     okEl.classList.add('show');
+    const registeredUsername = data.username;
+    const registeredCourse = data.course;
     registerForm.reset();
-    setTimeout(()=> switchAuthTab('signinForm'), 1200);
+    await showRegisterPaymentStep(registeredUsername, registeredCourse);
+  });
+
+  // The payment step shown right after an account is created: what the
+  // course costs, where to send it, and somewhere to upload the transfer
+  // screenshot — so a new student can get everything done in one go
+  // instead of registering and then hunting for how to pay.
+  let regPayUsername = null;
+  let regPayImageUrl = null;
+
+  async function showRegisterPaymentStep(username, course){
+    regPayUsername = username;
+    regPayImageUrl = null;
+    document.getElementById('registerForm').style.display = 'none';
+    const step = document.getElementById('registerPaymentStep');
+    step.style.display = 'block';
+    document.getElementById('regPayError').classList.remove('show');
+    document.getElementById('regPaySuccess').classList.remove('show');
+    document.getElementById('regPayImageStatus').textContent = '';
+    document.getElementById('regPayImageInput').value = '';
+    document.getElementById('regPayAmountInput').value = '';
+
+    const [settings, courses] = await Promise.all([fetchPaymentSettings(), fetchAllCourses()]);
+    const courseRec = courses.find(c => c.name === course);
+    const fee = courseRec && typeof courseRec.fee === 'number' ? courseRec.fee : null;
+    document.getElementById('regPayCourseTitle').textContent = fee !== null
+      ? `${course} — ${fee}`
+      : `${course}`;
+    if(fee !== null) document.getElementById('regPayAmountInput').value = fee;
+
+    const methods = [];
+    if(settings.instapay) methods.push(`<div style="background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px;"><div style="font-size:0.76rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">InstaPay</div><div style="font-weight:700; font-size:0.95rem; margin-top:2px;">${esc(settings.instapay)}</div></div>`);
+    if(settings.vodafoneCash) methods.push(`<div style="background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:8px;"><div style="font-size:0.76rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Vodafone Cash</div><div style="font-weight:700; font-size:0.95rem; margin-top:2px;">${esc(settings.vodafoneCash)}</div></div>`);
+    if(settings.instructions) methods.push(`<p style="color:var(--muted); font-size:0.82rem; margin-top:10px;">${esc(settings.instructions)}</p>`);
+    document.getElementById('regPayMethods').innerHTML = methods.length
+      ? methods.join('')
+      : `<p style="color:var(--muted); font-size:0.84rem;">Payment details haven't been added yet — message Mr. Mohamed Ibrahim on WhatsApp to arrange payment.</p>`;
+  }
+
+  function resetRegisterPaymentStep(){
+    document.getElementById('registerPaymentStep').style.display = 'none';
+    document.getElementById('registerForm').style.display = '';
+    regPayUsername = null;
+    regPayImageUrl = null;
+  }
+
+  document.getElementById('regPayImageInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const statusEl = document.getElementById('regPayImageStatus');
+    statusEl.textContent = 'Uploading…';
+    statusEl.style.color = 'var(--muted)';
+    try{
+      regPayImageUrl = await uploadQuestionImage(file);
+      statusEl.textContent = 'Uploaded ✓';
+      statusEl.style.color = '#39D98A';
+    }catch(err){
+      statusEl.textContent = '';
+      alert(err.message || 'Could not upload that screenshot — please try again.');
+      e.target.value = '';
+    }
+  });
+
+  document.getElementById('regPaySubmitBtn').addEventListener('click', async ()=>{
+    const errEl = document.getElementById('regPayError');
+    const okEl = document.getElementById('regPaySuccess');
+    errEl.classList.remove('show'); okEl.classList.remove('show');
+    const amountRaw = document.getElementById('regPayAmountInput').value.trim();
+    const amount = parseFloat(amountRaw);
+    if(amountRaw === '' || isNaN(amount) || amount <= 0){
+      errEl.textContent = 'Enter the amount you sent.'; errEl.classList.add('show'); return;
+    }
+    if(!regPayImageUrl){
+      errEl.textContent = 'Please attach your transfer screenshot.'; errEl.classList.add('show'); return;
+    }
+    const btn = document.getElementById('regPaySubmitBtn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    const ok = await savePayment(generateId('payment'), {
+      username: regPayUsername, amount,
+      date: new Date().toISOString().slice(0,10),
+      note: 'Paid at registration', imageUrl: regPayImageUrl, readAmount: null,
+      status: 'pending', uploadedBy: 'student', confirmedBy: null,
+      ts: new Date().toISOString()
+    });
+    btn.disabled = false; btn.textContent = 'Send payment for approval';
+    if(ok){
+      okEl.textContent = 'Sent! Mr. Mohamed Ibrahim will confirm your payment and approve your account.';
+      okEl.classList.add('show');
+      invalidateDbCache('payments');
+      setTimeout(()=>{ resetRegisterPaymentStep(); switchAuthTab('signinForm'); }, 2500);
+    } else {
+      errEl.textContent = 'Could not send that — please try again.'; errEl.classList.add('show');
+    }
+  });
+
+  document.getElementById('regRequestInstallmentBtn').addEventListener('click', async ()=>{
+    const errEl = document.getElementById('regPayError');
+    const okEl = document.getElementById('regPaySuccess');
+    errEl.classList.remove('show'); okEl.classList.remove('show');
+    const btn = document.getElementById('regRequestInstallmentBtn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    const student = await getStudent(regPayUsername);
+    let ok = false;
+    if(student){
+      student.installmentRequest = {
+        note: document.getElementById('regInstallmentNoteInput').value.trim() || null,
+        status: 'requested', ts: new Date().toISOString()
+      };
+      ok = await dbSet('students', studentKey(regPayUsername), student);
+    }
+    btn.disabled = false; btn.textContent = 'Request installments instead';
+    if(ok){
+      okEl.textContent = 'Request sent — Mr. Mohamed Ibrahim will get back to you about splitting the fee.';
+      okEl.classList.add('show');
+      invalidateDbCache('students');
+      setTimeout(()=>{ resetRegisterPaymentStep(); switchAuthTab('signinForm'); }, 2500);
+    } else {
+      errEl.textContent = 'Could not send that — please try again.'; errEl.classList.add('show');
+    }
+  });
+
+  document.getElementById('regPaySkipBtn').addEventListener('click', ()=>{
+    resetRegisterPaymentStep();
+    switchAuthTab('signinForm');
   });
 
   function applySignedInState(){
