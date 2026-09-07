@@ -9048,7 +9048,61 @@
   // explanation is gone.
   async function deleteExplanationForQuestion(row, deletedBy){
     const source = await findSourceRecordForMistake(row);
-    if(!source) return { ok: false, reason: 'not-found' };
+
+    // Homework isn't a single shared record like an exam or skill — each
+    // assigned student has their own copy — so findSourceRecordForMistake
+    // (which only covers exams and skills) can't find it. Without this
+    // fallback, deleting an answer on any homework or retake mistake failed
+    // outright with "could not be deleted".
+    if(!source){
+      const allHomework = await fetchAllHomework();
+      const matchingHw = allHomework.filter(h => !h._index && h.title === row.source);
+      if(matchingHw.length === 0) return { ok: false, reason: 'not-found' };
+
+      let anyMatched = false;
+      let representativeQuestions = null;
+      const hwUpdates = matchingHw.map(async hw=>{
+        const questions = hw.questions || [];
+        const match = matchQuestionForMistake(row, questions);
+        if(!match) return;
+        anyMatched = true;
+        match.explanations = getQuestionExplanations(match).filter(e => e.by !== deletedBy);
+        if(match.explanationBy === deletedBy){
+          delete match.explanationText; delete match.explanationVideo;
+          delete match.explanationPhoto; delete match.explanationVoice; delete match.explanationBy;
+        }
+        if(!representativeQuestions) representativeQuestions = questions;
+        await dbSet('homework', hw.id, hw);
+      });
+      await Promise.all(hwUpdates);
+      if(!anyMatched) return { ok: false, reason: 'not-found' };
+
+      try{
+        const allMistakes = await fetchAllMistakes();
+        const matching = allMistakes.filter(m => !m._index && m.source === row.source);
+        const updates = [];
+        matching.forEach(m=>{
+          const mMatch = representativeQuestions ? matchQuestionForMistake(m, representativeQuestions) : null;
+          if(!mMatch) return;
+          const stillHasExplanations = getQuestionExplanations(mMatch);
+          const hadThisPersonsAnswer = m.answer && m.answer.answeredBy === deletedBy;
+          const stillHasOwnAnswer = m.answer && !hadThisPersonsAnswer;
+          const nowHasNothing = stillHasExplanations.length === 0 && !stillHasOwnAnswer;
+          updates.push(dbSet('mistakes', m.id, {
+            ...m,
+            explanations: stillHasExplanations,
+            explanationText: null, explanationVideo: null, explanationPhoto: null, explanationVoice: null, explanationBy: null,
+            answer: hadThisPersonsAnswer ? null : m.answer,
+            studentRating: hadThisPersonsAnswer ? null : m.studentRating,
+            status: nowHasNothing ? 'delivered' : m.status
+          }));
+        });
+        if(updates.length > 0) await Promise.all(updates);
+      }catch(err){ console.error('Could not propagate explanation deletion:', err); }
+
+      return { ok: true };
+    }
+
     const questions = source.record.questions || [];
     const match = matchQuestionForMistake(row, questions);
     if(!match) return { ok: false, reason: 'not-found' };
@@ -13896,8 +13950,32 @@
           invalidateDbCache('mistakes');
           openAmDetail(mistakeId, opts);
           if(typeof opts.onSent === 'function') opts.onSent();
+        } else if(result.reason === 'not-found'){
+          // The source question can't be matched any more (edited, renamed,
+          // or deleted since). Falling back to clearing the answer on this
+          // mistake alone still gets the wrong answer off the student's
+          // screen — better than leaving it permanently stuck.
+          const proceed = confirm("The original question couldn't be found — it may have been edited or deleted since.\n\nRemove this answer from this student's mistake anyway?");
+          if(!proceed){
+            deleteAnswerBtn.disabled = false; deleteAnswerBtn.textContent = '🗑 Delete';
+            return;
+          }
+          const record = await dbGet('mistakes', mistakeId);
+          const cleared = record ? await dbSet('mistakes', mistakeId, {
+            ...record, answer: null, studentRating: null, explanations: [],
+            explanationText: null, explanationVideo: null, explanationPhoto: null,
+            explanationVoice: null, explanationBy: null, status: 'delivered'
+          }) : false;
+          if(cleared){
+            invalidateDbCache('mistakes');
+            openAmDetail(mistakeId, opts);
+            if(typeof opts.onSent === 'function') opts.onSent();
+          } else {
+            alert('Could not delete — check your connection and try again.');
+            deleteAnswerBtn.disabled = false; deleteAnswerBtn.textContent = '🗑 Delete';
+          }
         } else {
-          alert('Could not delete — the original skill or exam may have been edited or deleted since. Try refreshing.');
+          alert('Could not delete — check your connection and try again.');
           deleteAnswerBtn.disabled = false; deleteAnswerBtn.textContent = '🗑 Delete';
         }
       });
