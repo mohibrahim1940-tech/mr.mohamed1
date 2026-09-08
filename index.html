@@ -12321,6 +12321,12 @@
   // mistakes specifically — each one clickable to open and answer right
   // here, reusing the exact same answer interface (text/photo/voice) the
   // main admin panel's Answer Mistakes tab already uses.
+  // Flat list of every mistake across all assigned students — same layout
+  // as the main admin Answer Mistakes tab (one card per question, student
+  // name on each, filter for unanswered) rather than boxes per student,
+  // so an assistant can work straight down the list.
+  let asdCurrentFilter = 'needs';
+
   async function renderAssistantMistakesBoxes(){
     if(!currentAssistantAccount) return;
     const container = document.getElementById('asdMistakesContent');
@@ -12331,66 +12337,73 @@
       return;
     }
 
+    const assignedLower = new Set(assigned.map(u => u.trim().toLowerCase()));
     const allMistakes = await gatherAllMistakeRows(null);
-    const byStudent = {};
-    assigned.forEach(u => { byStudent[u] = []; });
-    allMistakes.filter(isMistakeInAssistantQueue).forEach(m=>{
-      const match = assigned.find(u => u.trim().toLowerCase() === (m.username||'').trim().toLowerCase());
-      if(match) byStudent[match].push(m);
-    });
-    // Pending mistakes first within each box, most recent first within each group
-    Object.keys(byStudent).forEach(u=>{
-      byStudent[u].sort((a,b)=>{
-        const aPending = a.status !== 'answered', bPending = b.status !== 'answered';
-        if(aPending !== bPending) return aPending ? -1 : 1;
-        return new Date(b.ts || 0) - new Date(a.ts || 0);
-      });
+    let rows = allMistakes
+      .filter(isMistakeInAssistantQueue)
+      .filter(m => assignedLower.has((m.username||'').trim().toLowerCase()));
+
+    // Unanswered first, then most recent — the order an assistant would
+    // actually want to work through them in.
+    rows.sort((a,b)=>{
+      const aPending = a.status !== 'answered', bPending = b.status !== 'answered';
+      if(aPending !== bPending) return aPending ? -1 : 1;
+      return new Date(b.ts || 0) - new Date(a.ts || 0);
     });
 
+    const totalNeeds = rows.filter(r => r.status !== 'answered').length;
+    let visible = rows;
+    if(asdCurrentFilter === 'needs') visible = rows.filter(r => r.status !== 'answered');
+    else if(asdCurrentFilter === 'done') visible = rows.filter(r => r.status === 'answered');
+
     const myIdentity = getCurrentAnswererIdentity();
-    const totalNeeds = allMistakes.filter(m => isMistakeInAssistantQueue(m) && m.status !== 'answered' &&
-      assigned.some(u => u.trim().toLowerCase() === (m.username||'').trim().toLowerCase())).length;
     container.innerHTML = `
       <div class="am-counter ${totalNeeds === 0 ? 'all-done' : ''}">${totalNeeds === 0 ? '✓ All mistakes answered' : `${totalNeeds} mistake${totalNeeds===1?'':'s'} still need${totalNeeds===1?'s':''} an answer`}</div>
-      <div class="asd-grid">
-        ${assigned.map(uname=>{
-          const mistakes = byStudent[uname] || [];
-          const pendingCount = mistakes.filter(m => m.status !== 'answered').length;
-          return `
-            <div class="asd-card" style="cursor:default;">
-              <div class="asd-card-header">
-                <div class="asd-card-name">${esc(uname)}</div>
-                ${pendingCount > 0 ? `<span class="asd-notif-badge mistakes">🔴 ${pendingCount}</span>` : (mistakes.length > 0 ? `<span class="am-status-badge answered">✅ All answered</span>` : '')}
-              </div>
-              <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
-                ${mistakes.length === 0
-                  ? `<div style="color:var(--muted);font-size:0.82rem;">✅ Nothing to answer right now.</div>`
-                  : mistakes.map((m, i) => `
-                    <div class="am-mistake-card asd-mistake-row" data-mistake-id="${esc(m.id)}" data-username="${esc(uname)}" style="padding:10px 12px;">
-                      <span class="am-status-badge" style="background:rgba(255,255,255,0.08);color:var(--muted);border-color:var(--line);">#${i + 1}</span>
-                      <span class="am-status-badge ${m.status === 'answered' ? 'answered' : 'delivered'}">${m.status === 'answered' ? '✅' : '🔵'}</span>
-                      ${m.stillConfused ? `<span class="am-status-badge" style="background:rgba(255,176,32,0.14);color:#FFB020;border-color:rgba(255,176,32,0.4);">🙋</span>` : ''}
-                      ${m.claimedBy ? `<span class="am-status-badge delivered" style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);">🔵 ${m.claimedBy === myIdentity ? 'You' : esc(m.claimedBy)}</span>` : ''}
-                      <div class="am-card-info">
-                        <div class="snippet">${esc(m.lesson)} · ${esc(m.text)}</div>
-                      </div>
-                    </div>
-                  `).join('')
-                }
+      <div class="admin-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <select id="asdFilterSelect" style="max-width:220px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
+          <option value="needs">Needs an answer</option>
+          <option value="done">Already answered</option>
+          <option value="all">All</option>
+        </select>
+        <button class="btn btn-ghost" id="asdRefreshMistakes" style="flex:0 0 auto;">Refresh</button>
+      </div>
+      <div id="asdListWrap" style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
+        ${visible.length === 0
+          ? '<div class="admin-empty">Nothing here right now.</div>'
+          : visible.map(m => `
+            <div class="am-mistake-card asd-mistake-row" data-mistake-id="${esc(m.id)}" data-username="${esc(m.username)}">
+              <span class="am-status-badge ${m.status === 'answered' ? 'answered' : 'delivered'}">${m.status === 'answered' ? '✅ Done' : '🔵 Delivered'}</span>
+              ${m.stillConfused ? `<span class="am-status-badge" style="background:rgba(255,176,32,0.14);color:#FFB020;border-color:rgba(255,176,32,0.4);">🙋 Still confused</span>` : ''}
+              ${m.studentFollowUp ? `<span class="am-status-badge delivered" style="background:rgba(255,176,32,0.14);color:#FFB020;border-color:rgba(255,176,32,0.35);">💬 Follow-up</span>` : ''}
+              ${m.claimedBy ? `<span class="am-status-badge delivered" style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);">🔵 ${m.claimedBy === myIdentity ? 'Claimed by you' : `Claimed by ${esc(m.claimedBy)}`}</span>` : ''}
+              <div class="am-card-info">
+                <div class="name">${esc(m.username)} · ${esc(m.lesson)}</div>
+                <div class="snippet">${esc(m.text)}</div>
               </div>
             </div>
-          `;
-        }).join('')}
+          `).join('')}
       </div>
     `;
 
+    document.getElementById('asdFilterSelect').value = asdCurrentFilter;
+    document.getElementById('asdFilterSelect').addEventListener('change', (e)=>{
+      asdCurrentFilter = e.target.value;
+      renderAssistantMistakesBoxes();
+    });
+    document.getElementById('asdRefreshMistakes').addEventListener('click', ()=>{
+      invalidateDbCache('mistakes');
+      renderAssistantMistakesBoxes();
+    });
+
     container.querySelectorAll('.asd-mistake-row').forEach(row=>{
       row.addEventListener('click', ()=>{
-        // Hand the detail view this student's full ordered queue so it can
-        // offer "Next question" — otherwise answering means going Back and
-        // hunting down the next one in a long list every single time.
+        // The queue for "Next question" is this student's own mistakes in
+        // the order shown, so Next still walks through one student at a
+        // time even though the list itself is now flat.
         const uname = row.dataset.username;
-        const queue = (byStudent[uname] || []).map(m => m.id);
+        const queue = visible
+          .filter(m => (m.username||'').trim().toLowerCase() === uname.trim().toLowerCase())
+          .map(m => m.id);
         openAmDetail(row.dataset.mistakeId, {
           containerId: 'asdMistakesContent',
           skipListToggle: true,
