@@ -9187,37 +9187,33 @@
     if(!sourceTitle || !Array.isArray(questions) || questions.length === 0) return;
     try{
       const allMistakes = await fetchAllMistakes();
-      const matching = allMistakes.filter(m => !m._index && m.source === sourceTitle);
+      // Mistakes from this exact source, plus any from a DIFFERENT source
+      // that are demonstrably the same question. The same question often
+      // exists in both an exam and a homework (or the source was renamed
+      // since), and matching on title alone silently left those students
+      // without the answer.
+      const questionIdentities = questions.map(q => ({
+        image: q.image || null,
+        text: normalizeQuestionText(q.text)
+      }));
+      const matching = allMistakes.filter(m=>{
+        if(m._index) return false;
+        if(m.source === sourceTitle) return true;
+        const mText = normalizeQuestionText(m.text);
+        const hasRealText = m.text && m.text !== '(question with image)' && mText.length > 0;
+        return questionIdentities.some(qi =>
+          (m.image && qi.image && qi.image === m.image) ||
+          (hasRealText && qi.text === mText)
+        );
+      });
       if(matching.length === 0) return;
       const updates = [];
       matching.forEach(m=>{
-        const mLesson = (m.lesson || 'General').trim();
-        const sameLesson = questions.filter(q => (q.lesson || 'General').trim() === mLesson);
-        let match = null;
-
-        // Best signal: the mistake's own recorded image, compared directly
-        // against each candidate's actual image content — this is the only
-        // signal that's completely unaffected by questions being reordered,
-        // added, or removed since the mistake happened, and it's exactly
-        // what the student actually saw, not an assumption about array
-        // position. This is what actually fixes the "wrong video shown"
-        // bug for image-only questions sharing a lesson.
-        if(m.image){
-          match = sameLesson.find(q => q.image && q.image === m.image);
-        }
-        // Good signal: real (non-generic) question text is usually unique
-        // on its own, so lesson+text alone is trustworthy here.
-        if(!match && m.text && m.text !== '(question with image)'){
-          match = sameLesson.find(q => (q.text || '') === m.text);
-        }
-        // Last resort: recorded question position — only trusted when
-        // neither image nor real text could disambiguate, since reordering
-        // content can make this point at the wrong question.
-        if(!match && m.questionNumber && questions[m.questionNumber - 1]){
-          const candidate = questions[m.questionNumber - 1];
-          if((candidate.lesson || 'General').trim() === mLesson) match = candidate;
-        }
-
+        // Uses the same shared matcher as everywhere else — this used to be
+        // a separate copy of the logic, which meant improvements to one
+        // didn't reach the other and the two could disagree about whether
+        // a question matched.
+        const match = matchQuestionForMistake(m, questions);
         if(!match) return;
         const explanationsChanged = JSON.stringify(match.explanations || null) !== JSON.stringify(m.explanations || null);
         if(explanationsChanged || (match.explanationVideo && match.explanationVideo !== m.explanationVideo) || (match.explanationText && match.explanationText !== m.explanationText) || (match.explanationPhoto && match.explanationPhoto !== m.explanationPhoto) || (match.explanationVoice && match.explanationVoice !== m.explanationVoice)){
@@ -9255,15 +9251,44 @@
   // Same matching signals backfillExplanationVideos already uses (image →
   // exact text → recorded position) — reused here so "find the question
   // this mistake came from" is answered identically everywhere it matters.
+  // Collapses whitespace and case so a question still matches after a
+  // trivial edit (a trailing space, a double space, a capitalisation
+  // change). Exact string equality was silently failing to match in those
+  // cases, which meant an answer never propagated to other students.
+  function normalizeQuestionText(t){
+    return String(t == null ? '' : t).replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
   function matchQuestionForMistake(row, questions){
     const mLesson = (row.lesson || 'General').trim();
     const sameLesson = questions.filter(q => (q.lesson || 'General').trim() === mLesson);
+    const rowText = normalizeQuestionText(row.text);
+    const hasRealText = row.text && row.text !== '(question with image)' && rowText.length > 0;
+
     let match = null;
+    // 1. Image is the strongest identity signal — an identical image URL is
+    //    the same question, whatever the lesson says.
     if(row.image) match = sameLesson.find(q => q.image && q.image === row.image);
-    if(!match && row.text && row.text !== '(question with image)') match = sameLesson.find(q => (q.text || '') === row.text);
+    // 2. Then text, within the same lesson.
+    if(!match && hasRealText) match = sameLesson.find(q => normalizeQuestionText(q.text) === rowText);
+    // 3. Position within the lesson.
     if(!match && row.questionNumber && questions[row.questionNumber - 1]){
       const candidate = questions[row.questionNumber - 1];
       if((candidate.lesson || 'General').trim() === mLesson) match = candidate;
+    }
+    // 4. Lesson-blind fallbacks. A lesson can be renamed or corrected after
+    //    a mistake was recorded, which used to break matching entirely and
+    //    silently stop the answer reaching anyone else. Identical image or
+    //    identical text is strong enough on its own to be confident, so
+    //    only fall back that far — never to bare position, which could
+    //    match a completely unrelated question.
+    if(!match && row.image) match = questions.find(q => q.image && q.image === row.image);
+    if(!match && hasRealText){
+      const textMatches = questions.filter(q => normalizeQuestionText(q.text) === rowText);
+      // Only when it's unambiguous — if the same text appears more than
+      // once under different lessons, guessing could attach the answer to
+      // the wrong question.
+      if(textMatches.length === 1) match = textMatches[0];
     }
     return match;
   }
