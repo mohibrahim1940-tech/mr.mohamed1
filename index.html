@@ -13974,19 +13974,28 @@
     if(nextQuestionBtn){
       nextQuestionBtn.addEventListener('click', async ()=>{
         nextQuestionBtn.disabled = true; nextQuestionBtn.textContent = 'Loading…';
-        // Claim it on the way in, so nobody else picks up the same question
-        // while this assistant is working through the student's list.
+        // Claim EVERY remaining unanswered question in this student's queue,
+        // not just the next one — once an assistant starts working through a
+        // student they take the whole list, so another assistant can't pick
+        // off questions further down while they're still going.
         try{
-          const nextRecord = await dbGet('mistakes', nextMistakeId);
           const me = getCurrentAnswererIdentity();
-          if(nextRecord && !nextRecord.claimedBy && nextRecord.status !== 'answered'){
-            await dbSet('mistakes', nextMistakeId, { ...nextRecord, claimedBy: me });
+          const toClaim = studentQueue.slice(queueIndex + 1);
+          const claims = [];
+          for(const id of toClaim){
+            const record = await dbGet('mistakes', id);
+            if(record && !record.claimedBy && record.status !== 'answered'){
+              claims.push(dbSet('mistakes', id, { ...record, claimedBy: me }));
+            }
+          }
+          if(claims.length > 0){
+            await Promise.all(claims);
             invalidateDbCache('mistakes');
           }
         }catch(err){
-          // A failed claim shouldn't block moving on — worst case it's just
-          // unclaimed and someone else could pick it up.
-          console.error('Could not auto-claim the next question:', err);
+          // A failed claim shouldn't block moving on — worst case some stay
+          // unclaimed and someone else could pick them up.
+          console.error('Could not auto-claim the remaining questions:', err);
         }
         openAmDetail(nextMistakeId, opts);
       });
