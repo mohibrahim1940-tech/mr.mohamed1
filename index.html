@@ -2208,6 +2208,17 @@
   .achievement-badge.unlocked .label{color:var(--text);}
 
   /* ---------- level/XP card ---------- */
+  .wp-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:18px 20px; margin-bottom:12px;
+  }
+  .wp-card-head{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
+  .wp-card-title{ font-weight:700; font-size:1.02rem; }
+  .wp-card-stat{ color:var(--muted); font-size:0.82rem; }
+  .wp-bar-outer{ width:100%; height:8px; border-radius:5px; background:rgba(255,255,255,0.08); overflow:hidden; margin:10px 0 12px; }
+  .wp-bar-fill{ height:100%; border-radius:5px; background:linear-gradient(90deg, var(--ember), var(--signal)); }
+  .wp-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .wp-note{ color:var(--muted); font-size:0.8rem; margin-top:8px; }
   .target-score-card{
     background:var(--panel); border:1px solid var(--line); border-radius:16px;
     padding:18px 20px; margin-bottom:28px;
@@ -2550,6 +2561,7 @@
           <button class="dash-tab-btn" data-dashtab="tabAssistantChat" id="assistantChatTabBtn">💬 My Assistant Chat<span id="assistantChatNotifBadge" style="display:none;"></span></button>
           <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
           <button class="dash-tab-btn" data-dashtab="tabPlanner">🧠 Study Planner</button>
+          <button class="dash-tab-btn" data-dashtab="tabWeakPoints">🎯 Weak Points</button>
           <button class="dash-tab-btn" data-dashtab="tabPayments">💳 My Payments</button>
           <button class="dash-tab-btn" data-dashtab="tabCompetition" id="competitionTabBtn" style="display:none;">⭐ Champions League</button>
         </nav>
@@ -2774,6 +2786,14 @@
 
           <div class="hw-section-title">Quick actions</div>
           <div class="planner-actions" id="plannerActions"></div>
+        </div>
+
+        <div class="dash-tab-panel" id="tabWeakPoints">
+          <div class="hw-section-title" style="margin-top:0;">🎯 Your weak points</div>
+          <div class="admin-note" style="margin-bottom:20px;">Every topic you've gotten questions wrong in, worst first. Generate a fresh mock exam on any of them — it pulls <strong>different</strong> questions from that same topic, not the ones you already got wrong.</div>
+          <div id="weakPointsDetailList">
+            <div class="admin-empty">Loading…</div>
+          </div>
         </div>
 
         <div class="dash-tab-panel" id="tabPayments">
@@ -3382,6 +3402,11 @@
         <div class="field-row">
           <label class="field-label">Due date (optional)</label>
           <input type="date" id="hwDateInput">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Publish on (optional — students won't see it until 12:00 AM on this date)</label>
+          <input type="date" id="hwPublishDateInput">
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Leave blank to publish straight away. Use this to set up a whole week ahead — each one appears on its own morning.</span>
         </div>
         <div class="field-row">
           <label class="field-label">Time limit in minutes (optional)</label>
@@ -4688,12 +4713,12 @@
         : '';
     }
     refreshIntegrityBanner();
-    // Mistakes is the table this specific safety net exists for — check it
-    // proactively the moment Overview loads (in the background, not
-    // blocking the rest of the dashboard) so a problem shows up the moment
-    // the admin logs in, not only after they happen to click into the
-    // Mistakes tab first.
-    fetchAllMistakes().then(refreshIntegrityBanner);
+    // This used to call fetchAllMistakes() here, which downloads the ENTIRE
+    // mistakes table (every question's text, options and image URLs) on every
+    // single admin login — the main reason opening the admin panel got slow
+    // as the number of mistakes grew. The integrity check it fed now runs
+    // when the Mistakes tab is actually opened instead, so logging in no
+    // longer pays that cost.
 
     const [students, hw, attempts] = await Promise.all([
       fetchStudentsForCurrentAdmin(), fetchHomeworkIndex(), fetchAttemptsIndex()
@@ -4804,32 +4829,35 @@
       if(['examsPanel','homeworkPanel','skillsPanel'].includes(tab.dataset.tab)){
         await refreshSkillNamesCache();
       }
+      // NOTE: these deliberately no longer call invalidateDbCache(). There's
+      // already a 20-second cache, and blowing it away on every tab click
+      // meant re-downloading whole tables just to flick between tabs — the
+      // main reason the admin panel felt slow. Each panel still has its own
+      // Refresh button for pulling changes made by someone else.
       if(tab.dataset.tab === 'adminOverviewPanel'){
-        invalidateDbCache('students'); invalidateDbCache('homework'); invalidateDbCache('attempts');
         renderAdminOverviewDashboard();
       }
       if(tab.dataset.tab === 'examsPanel'){
         await refreshCourseNamesCache();
-        invalidateDbCache('exams');
         renderAdminExamList();
       }
-      if(tab.dataset.tab === 'homeworkPanel'){ invalidateDbCache('homework'); initHomeworkPanel(true); }
-      if(tab.dataset.tab === 'skillsPanel'){ invalidateDbCache('skills'); initSkillsPanel(); }
-      if(tab.dataset.tab === 'leaderboardPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); renderAdminLeaderboard(); }
-      if(tab.dataset.tab === 'asksPanel'){ invalidateDbCache('asks'); renderAdminAsks(); }
-      if(tab.dataset.tab === 'sessionsPanel'){ invalidateDbCache('sessions'); initSessionsPanel(); }
-      if(tab.dataset.tab === 'announcementsPanel'){ invalidateDbCache('announcements'); renderAdminAnnouncements(); }
-      if(tab.dataset.tab === 'questionAnalyticsPanel'){ invalidateDbCache('mistakes'); renderQuestionAnalytics(); }
-      if(tab.dataset.tab === 'paymentsPanel'){ invalidateDbCache('payments'); renderAdminPayments(); }
-      if(tab.dataset.tab === 'retakesPanel'){ invalidateDbCache('homework'); renderAdminRetakes(); }
-      if(tab.dataset.tab === 'reviewsPanel'){ invalidateDbCache('reviews'); initReviewsPanel(); }
-      if(tab.dataset.tab === 'coursesPanel'){ invalidateDbCache('courses'); renderAdminCourseList(); }
-      if(tab.dataset.tab === 'competitionsPanel'){ invalidateDbCache('competitions'); showCompView('list'); renderCompetitionList(); }
-      if(tab.dataset.tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(true); }
-      if(tab.dataset.tab === 'answerMistakesPanel'){ invalidateDbCache('mistakes'); amShowView('list'); renderAnswerMistakesList(); }
-      if(tab.dataset.tab === 'assistantAcctsPanel'){ invalidateDbCache('assistants'); renderAssistantAcctsTable(); }
-      if(tab.dataset.tab === 'assistantActivityPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('assistants'); renderAssistantActivity(); }
-      if(tab.dataset.tab === 'weeklyUpdatesPanel'){ invalidateDbCache('homework'); invalidateDbCache('attempts'); invalidateDbCache('students'); renderWeeklyUpdates(); }
+      if(tab.dataset.tab === 'homeworkPanel'){ initHomeworkPanel(true); }
+      if(tab.dataset.tab === 'skillsPanel'){ initSkillsPanel(); }
+      if(tab.dataset.tab === 'leaderboardPanel'){ renderAdminLeaderboard(); }
+      if(tab.dataset.tab === 'asksPanel'){ renderAdminAsks(); }
+      if(tab.dataset.tab === 'sessionsPanel'){ initSessionsPanel(); }
+      if(tab.dataset.tab === 'announcementsPanel'){ renderAdminAnnouncements(); }
+      if(tab.dataset.tab === 'questionAnalyticsPanel'){ renderQuestionAnalytics(); }
+      if(tab.dataset.tab === 'paymentsPanel'){ renderAdminPayments(); }
+      if(tab.dataset.tab === 'retakesPanel'){ renderAdminRetakes(); }
+      if(tab.dataset.tab === 'reviewsPanel'){ initReviewsPanel(); }
+      if(tab.dataset.tab === 'coursesPanel'){ renderAdminCourseList(); }
+      if(tab.dataset.tab === 'competitionsPanel'){ showCompView('list'); renderCompetitionList(); }
+      if(tab.dataset.tab === 'mistakesPanel'){ initMistakesPanel(true); }
+      if(tab.dataset.tab === 'answerMistakesPanel'){ amShowView('list'); renderAnswerMistakesList(); }
+      if(tab.dataset.tab === 'assistantAcctsPanel'){ renderAssistantAcctsTable(); }
+      if(tab.dataset.tab === 'assistantActivityPanel'){ renderAssistantActivity(); }
+      if(tab.dataset.tab === 'weeklyUpdatesPanel'){ renderWeeklyUpdates(); }
     });
   });
 
@@ -6922,7 +6950,7 @@
         status: data.status, score: data.score, retakeRequired: data.retakeRequired,
         retakeDeadline: data.retakeDeadline, submittedAt: data.submittedAt, ts: data.ts,
         questionCount: (data.questions || []).length, pdfUrl: data.pdfUrl || null,
-        isRetake: data.isRetake || false
+        isRetake: data.isRetake || false, publishAt: data.publishAt || null
       });
       backfillExplanationVideos(data.title, data.questions || []);
     }
@@ -6944,7 +6972,7 @@
       _index: true, id: hw.id, username: hw.username, title: hw.title, dueDate: hw.dueDate,
       status: hw.status, score: hw.score, retakeRequired: hw.retakeRequired,
       retakeDeadline: hw.retakeDeadline, submittedAt: hw.submittedAt, ts: hw.ts,
-      isRetake: hw.isRetake || false,
+      isRetake: hw.isRetake || false, publishAt: hw.publishAt || null,
       questionCount: (hw.questions || []).length, pdfUrl: hw.pdfUrl || null
     }));
     const rows = await dbGetAllByIdPrefix('homework', 'idx-');
@@ -7145,7 +7173,7 @@
         <td>${esc(entry.username)}</td>
         <td>${esc(entry.title || '')}</td>
         <td>${esc(entry.dueDate || '—')}</td>
-        <td><span class="status-pill ${isCompleted ? 'status-approved' : 'status-pending'}">${isCompleted ? 'completed' : 'assigned'}</span></td>
+        <td><span class="status-pill ${isCompleted ? 'status-approved' : (isHomeworkPublished(entry) ? 'status-pending' : 'status-pending')}" ${!isCompleted && !isHomeworkPublished(entry) ? 'style="background:rgba(76,111,255,0.14);color:var(--signal);border-color:rgba(76,111,255,0.35);"' : ''}>${isCompleted ? 'completed' : (isHomeworkPublished(entry) ? 'assigned' : '🕒 scheduled ' + new Date(entry.publishAt).toLocaleDateString())}</span></td>
         <td>${isCompleted && entry.score ? `${entry.score.correct}/${entry.score.total} (${entry.score.pct}%)` : '—'}</td>
         <td style="white-space:nowrap;">
           ${!isCompleted ? `<button class="student-action-btn mark-complete-btn" title="Use this if a student says they finished it but it's still stuck on Assigned">Mark completed</button>` : ''}
@@ -7241,12 +7269,17 @@
 
     const btn = document.getElementById('saveHwBtn');
     btn.disabled = true;
+    // Stored as midnight local time on the chosen day, so "publish on the
+    // 5th" means it appears the moment the 5th begins for the student.
+    const publishDateRaw = document.getElementById('hwPublishDateInput').value;
+    const publishAt = publishDateRaw ? new Date(publishDateRaw + 'T00:00:00').toISOString() : null;
     let successCount = 0;
     for(const username of usernames){
       btn.textContent = `Assigning… (${successCount + 1}/${usernames.length})`;
       const id = generateId('hw');
       const ok = await saveHomeworkAssignment(id, {
         username, title, dueDate, timeLimit, pdfUrl: hwPendingPdfUrl || null, questions,
+        publishAt,
         status: 'assigned', score: null, submittedAt: null,
         ts: new Date().toISOString()
       });
@@ -7257,6 +7290,7 @@
     if(successCount === usernames.length){
       document.getElementById('hwTitleInput').value = '';
       document.getElementById('hwDateInput').value = '';
+      document.getElementById('hwPublishDateInput').value = '';
       document.getElementById('hwTimeLimitInput').value = '';
       hwPendingPdfUrl = null;
       document.getElementById('hwPdfInput').value = '';
@@ -10172,6 +10206,16 @@
 
 
   /* ---------------- DASHBOARD: student's own homework & progress ---------------- */
+  // Scheduled homework stays invisible to the student until its publish
+  // moment. Anything without a publishAt (all existing homework) counts as
+  // published, so nothing already assigned is affected.
+  function isHomeworkPublished(hw){
+    if(!hw || !hw.publishAt) return true;
+    const when = new Date(hw.publishAt);
+    if(isNaN(when)) return true; // unreadable date shouldn't hide it forever
+    return Date.now() >= when.getTime();
+  }
+
   async function renderStudentHomework(){
     if(!currentStudent) return;
     const list = document.getElementById('hwList');
@@ -10179,7 +10223,10 @@
     const progressFill = document.getElementById('hwProgressFill');
 
     const all = await fetchHomeworkIndex();
-    const mine = all.filter(e => (e.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
+    const mine = all.filter(e =>
+      (e.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase() &&
+      isHomeworkPublished(e)
+    );
 
     const total = mine.length;
     const completedCount = mine.filter(e => e.status === 'completed').length;
@@ -10299,6 +10346,244 @@
   // Aggregates every mistake (from exams, homework, and skill practice) by
   // lesson/skill, so the student can see which topics they're missing most —
   // with a direct "Practice" button if a matching skill set exists.
+  // Builds a practice exam from a topic the student is weak in, using
+  // questions they have NOT already gotten wrong — the point is fresh
+  // practice on the same skill, not a rerun of the questions they've
+  // already seen (that's what retakes are for).
+  // The weekly mock: one 50-question paper spanning every topic the student
+  // is weak in, with more questions from the topics they get wrong most.
+  // Unlocks once a week so it stays a real checkpoint rather than something
+  // they can grind repeatedly.
+  const WEEKLY_MOCK_SIZE = 50;
+  const WEEKLY_MOCK_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+
+  function lastWeeklyMockAt(){
+    if(!currentStudent) return null;
+    try{
+      const raw = localStorage.getItem('weeklyMockTaken:' + currentStudent.username.trim().toLowerCase());
+      return raw ? new Date(raw) : null;
+    }catch(err){ return null; }
+  }
+  function markWeeklyMockTaken(){
+    if(!currentStudent) return;
+    try{
+      localStorage.setItem('weeklyMockTaken:' + currentStudent.username.trim().toLowerCase(), new Date().toISOString());
+    }catch(err){ /* storage unavailable — the mock still works, it just won't lock */ }
+  }
+  function weeklyMockAvailableIn(){
+    const last = lastWeeklyMockAt();
+    if(!last || isNaN(last)) return 0;
+    const readyAt = last.getTime() + WEEKLY_MOCK_INTERVAL_MS;
+    return Math.max(0, readyAt - Date.now());
+  }
+
+  async function buildWeeklyMock(tally, myMistakes){
+    const lessons = Object.entries(tally).sort((a,b)=> b[1].missed - a[1].missed);
+    if(lessons.length === 0) return [];
+
+    // Pull the available pool for each weak topic in parallel.
+    const pools = {};
+    await Promise.all(lessons.map(async ([lesson])=>{
+      pools[lesson] = await buildMockExamForLesson(lesson, myMistakes, Infinity);
+    }));
+
+    // Share out the 50 slots in proportion to how often each topic is
+    // missed, so the weakest areas get the most practice — but every weak
+    // topic gets at least one question so nothing is ignored entirely.
+    const totalMissed = lessons.reduce((sum, [,s]) => sum + s.missed, 0);
+    const picked = [];
+    const quotas = lessons.map(([lesson, s])=>({
+      lesson,
+      quota: Math.max(1, Math.round((s.missed / totalMissed) * WEEKLY_MOCK_SIZE))
+    }));
+
+    quotas.forEach(({ lesson, quota })=>{
+      picked.push(...(pools[lesson] || []).slice(0, quota));
+    });
+
+    // If quotas under-filled (a topic had fewer questions than its share),
+    // top up from whatever is left over rather than serving a short paper.
+    if(picked.length < WEEKLY_MOCK_SIZE){
+      const already = new Set(picked);
+      for(const { lesson } of quotas){
+        for(const q of (pools[lesson] || [])){
+          if(picked.length >= WEEKLY_MOCK_SIZE) break;
+          if(!already.has(q)){ picked.push(q); already.add(q); }
+        }
+        if(picked.length >= WEEKLY_MOCK_SIZE) break;
+      }
+    }
+
+    for(let i = picked.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [picked[i], picked[j]] = [picked[j], picked[i]];
+    }
+    return picked.slice(0, WEEKLY_MOCK_SIZE);
+  }
+
+  async function buildMockExamForLesson(lesson, myMistakes, limit){
+    const wrongKeys = new Set(
+      myMistakes
+        .filter(m => (m.lesson || 'General').trim().toLowerCase() === lesson.trim().toLowerCase())
+        .map(m => m.image ? 'img:' + m.image : 'txt:' + normalizeQuestionText(m.text))
+    );
+
+    // Pull candidates from every skill and exam the student can access.
+    let [skillsIdx, examsIdx] = await Promise.all([fetchSkillsIndex(), fetchExamsIndex()]);
+    if(currentStudent){
+      skillsIdx = skillsIdx.filter(s => { const c = getSkillCourses(s); return c.length === 0 || c.includes(currentStudent.course); });
+      examsIdx = examsIdx.filter(e => !e.course || e.course === currentStudent.course);
+    }
+
+    const pool = [];
+    const seen = new Set();
+    const addFrom = (questions)=>{
+      (questions || []).forEach(q=>{
+        if((q.lesson || 'General').trim().toLowerCase() !== lesson.trim().toLowerCase()) return;
+        const key = q.image ? 'img:' + q.image : 'txt:' + normalizeQuestionText(q.text);
+        if(wrongKeys.has(key)) return;   // already got this one wrong — not "other questions"
+        if(seen.has(key)) return;        // same question in two places
+        seen.add(key);
+        pool.push(q);
+      });
+    };
+
+    for(const s of skillsIdx){
+      const full = await dbGet('skills', s.id);
+      if(full) addFrom(full.questions);
+    }
+    for(const e of examsIdx){
+      const full = await dbGet('exams', e.id);
+      if(full) addFrom(full.questions);
+    }
+
+    // Shuffle so repeat practice isn't identical every time.
+    for(let i = pool.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    return pool.slice(0, limit === undefined ? 10 : (limit === Infinity ? pool.length : limit));
+  }
+
+  async function renderWeakPointsPage(){
+    if(!currentStudent) return;
+    const el = document.getElementById('weakPointsDetailList');
+    if(!el) return;
+    el.innerHTML = '<div class="admin-empty">Loading…</div>';
+
+    const allMistakes = await fetchAllMistakes();
+    const mine = allMistakes.filter(m => !m._index &&
+      (m.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
+
+    if(mine.length === 0){
+      el.innerHTML = '<div class="admin-empty">No mistakes yet — nothing to work on. This fills in as you practice.</div>';
+      return;
+    }
+
+    const tally = {};
+    mine.forEach(m=>{
+      const lesson = (m.lesson || 'General').trim();
+      if(!tally[lesson]) tally[lesson] = { missed: 0, mastered: 0 };
+      tally[lesson].missed++;
+      if(m.masteredByStudent) tally[lesson].mastered++;
+    });
+
+    const weak = Object.entries(tally).sort((a,b)=> b[1].missed - a[1].missed);
+    const maxMissed = weak[0][1].missed;
+
+    // --- Weekly mock card ---
+    const waitMs = weeklyMockAvailableIn();
+    const daysLeft = Math.ceil(waitMs / (24*60*60*1000));
+    const last = lastWeeklyMockAt();
+    const weeklyCard = `
+      <div class="wp-card" style="border-color:rgba(76,111,255,0.4); background:linear-gradient(100deg, rgba(76,111,255,0.1), rgba(255,107,74,0.06));">
+        <div class="wp-card-head">
+          <span class="wp-card-title">📝 Your weekly mock exam</span>
+          <span class="wp-card-stat">${WEEKLY_MOCK_SIZE} questions</span>
+        </div>
+        <div class="wp-note" style="margin:8px 0 12px;">
+          One paper covering every topic below, with the most questions from your weakest areas. New one each week.
+          ${last && !isNaN(last) ? `<br>Last taken: ${last.toLocaleDateString()}` : ''}
+        </div>
+        <div class="wp-actions">
+          ${waitMs > 0
+            ? `<button class="btn btn-ghost" disabled style="padding:8px 16px; font-size:0.84rem; opacity:0.6;">🔒 Next mock in ${daysLeft} day${daysLeft===1?'':'s'}</button>
+               <button class="btn btn-ghost wp-weekly-anyway-btn" style="padding:8px 16px; font-size:0.84rem;">Practice it anyway</button>`
+            : `<button class="btn btn-primary wp-weekly-btn" style="padding:8px 16px; font-size:0.84rem;">📝 Start weekly mock</button>`}
+        </div>
+        <div class="wp-note wp-weekly-status"></div>
+      </div>
+    `;
+
+    el.innerHTML = weeklyCard + weak.map(([lesson, s])=>{
+      const remaining = s.missed - s.mastered;
+      return `
+        <div class="wp-card" data-lesson="${esc(lesson)}">
+          <div class="wp-card-head">
+            <span class="wp-card-title">${esc(lesson)}</span>
+            <span class="wp-card-stat">${s.missed} wrong${s.mastered > 0 ? ` · ${s.mastered} marked mastered` : ''}</span>
+          </div>
+          <div class="wp-bar-outer"><div class="wp-bar-fill" style="width:${Math.round((s.missed / maxMissed) * 100)}%;"></div></div>
+          <div class="wp-actions">
+            <button class="btn btn-primary wp-mock-btn" style="padding:8px 16px; font-size:0.84rem;">🎯 Generate mock exam</button>
+          </div>
+          <div class="wp-note wp-status"></div>
+        </div>
+      `;
+    }).join('');
+
+    // Weekly mock — the "anyway" variant lets them practise off-schedule
+    // without resetting the weekly clock, so extra practice is never
+    // discouraged but the weekly checkpoint stays meaningful.
+    const startWeekly = async (btn, countsForWeek)=>{
+      const status = el.querySelector('.wp-weekly-status');
+      const original = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Building…';
+      status.textContent = '';
+      try{
+        const questions = await buildWeeklyMock(tally, mine);
+        btn.disabled = false; btn.textContent = original;
+        if(questions.length === 0){
+          status.textContent = "There aren't any other questions in your weak topics yet — ask Mr. Mohamed Ibrahim to add more.";
+          return;
+        }
+        if(countsForWeek) markWeeklyMockTaken();
+        startExam({ title: `Weekly mock — ${questions.length} questions`, questions });
+      }catch(err){
+        btn.disabled = false; btn.textContent = original;
+        status.textContent = 'Could not build that right now — check your connection and try again.';
+        console.error('Weekly mock build failed:', err);
+      }
+    };
+    const weeklyBtn = el.querySelector('.wp-weekly-btn');
+    if(weeklyBtn) weeklyBtn.addEventListener('click', ()=> startWeekly(weeklyBtn, true));
+    const weeklyAnywayBtn = el.querySelector('.wp-weekly-anyway-btn');
+    if(weeklyAnywayBtn) weeklyAnywayBtn.addEventListener('click', ()=> startWeekly(weeklyAnywayBtn, false));
+
+    el.querySelectorAll('.wp-mock-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const card = btn.closest('.wp-card');
+        const lesson = card.dataset.lesson;
+        const status = card.querySelector('.wp-status');
+        btn.disabled = true; btn.textContent = 'Building…';
+        status.textContent = '';
+        try{
+          const questions = await buildMockExamForLesson(lesson, mine);
+          btn.disabled = false; btn.textContent = '🎯 Generate mock exam';
+          if(questions.length === 0){
+            status.textContent = `No other "${lesson}" questions available yet — you've already seen everything in this topic. Ask Mr. Mohamed Ibrahim to add more.`;
+            return;
+          }
+          startExam({ title: `Mock exam — ${lesson}`, questions });
+        }catch(err){
+          btn.disabled = false; btn.textContent = '🎯 Generate mock exam';
+          status.textContent = 'Could not build that right now — check your connection and try again.';
+          console.error('Mock exam build failed:', err);
+        }
+      });
+    });
+  }
+
   async function renderWeakPoints(){
     if(!currentStudent) return;
     const wpList = document.getElementById('weakPointsList');
@@ -10957,7 +11242,7 @@
     if(!currentStudent) return 0;
     const hw = await fetchHomeworkIndex();
     const uname = currentStudent.username.trim().toLowerCase();
-    const mine = hw.filter(h => (h.username||'').trim().toLowerCase() === uname);
+    const mine = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && isHomeworkPublished(h));
     mine.sort((a,b)=> new Date(a.ts || 0) - new Date(b.ts || 0));
 
     const now = new Date();
@@ -13026,6 +13311,7 @@
     renderStudentSessions();
     renderAnnouncementsBanner();
     renderStudentPayments();
+    renderWeakPointsPage();
     renderStudentReviews();
     renderStudentSkills();
     renderWeakPoints();
@@ -13052,6 +13338,7 @@
       if(btn.dataset.dashtab === 'tabSkills') renderStudentSkills();
       if(btn.dataset.dashtab === 'tabHw'){ renderStudentHomework(); renderWeakPoints(); }
       if(btn.dataset.dashtab === 'tabMistakes') renderMistakeHistory();
+      if(btn.dataset.dashtab === 'tabWeakPoints') renderWeakPointsPage();
       if(btn.dataset.dashtab === 'tabAssistantChat') renderAssistantChatList();
       if(btn.dataset.dashtab === 'tabGraph' && typeof drawGraph === 'function') drawGraph();
       if(btn.dataset.dashtab === 'tabPlanner') renderStudyPlanner();
@@ -13079,6 +13366,7 @@
       renderStudentSessions(),
       renderAnnouncementsBanner(),
       renderStudentPayments(),
+      renderWeakPointsPage(),
       renderStudentReviews(),
       renderStudentSkills(),
       renderWeakPoints(),
