@@ -2208,6 +2208,28 @@
   .achievement-badge.unlocked .label{color:var(--text);}
 
   /* ---------- level/XP card ---------- */
+  .hw-week-cal{
+    background:var(--ink); border:1px solid var(--line); border-radius:12px;
+    padding:14px; margin-bottom:12px;
+  }
+  .hw-week-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .hw-week-days{ display:grid; grid-template-columns:repeat(7, 1fr); gap:6px; }
+  .hw-day-btn{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:10px 4px; cursor:pointer; text-align:center;
+    transition:border-color .2s, background .2s;
+  }
+  .hw-day-btn:hover{ border-color:rgba(76,111,255,0.5); }
+  .hw-day-btn.selected{ border-color:var(--signal); background:rgba(76,111,255,0.14); }
+  .hw-day-btn.is-today{ border-color:rgba(255,176,32,0.5); }
+  .hw-day-btn .dow{ font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; }
+  .hw-day-btn .dnum{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.05rem; margin-top:2px; }
+  .hw-day-btn .cnt{
+    margin-top:4px; font-size:0.66rem; color:var(--signal); font-weight:700; min-height:0.9em;
+  }
+  @media(max-width:560px){
+    .hw-week-days{ grid-template-columns:repeat(4, 1fr); }
+  }
   .wp-card{
     background:var(--panel); border:1px solid var(--line); border-radius:14px;
     padding:18px 20px; margin-bottom:12px;
@@ -3405,6 +3427,14 @@
         </div>
         <div class="field-row">
           <label class="field-label">Publish on (optional — students won't see it until 12:00 AM on this date)</label>
+          <div class="hw-week-cal" id="hwWeekCal">
+            <div class="hw-week-nav">
+              <button type="button" class="btn btn-ghost" id="hwWeekPrev" style="padding:4px 12px; font-size:0.8rem;">←</button>
+              <span id="hwWeekLabel" style="font-weight:700; font-size:0.88rem;"></span>
+              <button type="button" class="btn btn-ghost" id="hwWeekNext" style="padding:4px 12px; font-size:0.8rem;">→</button>
+            </div>
+            <div class="hw-week-days" id="hwWeekDays"></div>
+          </div>
           <input type="date" id="hwPublishDateInput">
           <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Leave blank to publish straight away. Use this to set up a whole week ahead — each one appears on its own morning.</span>
         </div>
@@ -4189,7 +4219,7 @@
 
       const uname = student.username.trim().toLowerCase();
       const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
-      const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname);
+      const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && isHomeworkPublished(h));
       const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
       const completedHw = mineHw.filter(h => h.status === 'completed');
 
@@ -4625,7 +4655,7 @@
       const active = document.querySelector('.admin-tab.active');
       if(!active || !document.getElementById('adminOverlay')?.classList.contains('open')) return;
       const tab = active.dataset.tab;
-      if(tab === 'homeworkPanel'){ invalidateDbCache('homework'); initHomeworkPanel(); }
+      if(tab === 'homeworkPanel'){ invalidateDbCache('homework'); initHomeworkPanel(); renderHwWeekCalendar(); }
       else if(tab === 'mistakesPanel'){ invalidateDbCache('mistakes'); invalidateDbCache('attempts'); initMistakesPanel(); }
     }, 30000);
   }
@@ -4841,7 +4871,7 @@
         await refreshCourseNamesCache();
         renderAdminExamList();
       }
-      if(tab.dataset.tab === 'homeworkPanel'){ initHomeworkPanel(true); }
+      if(tab.dataset.tab === 'homeworkPanel'){ initHomeworkPanel(true); renderHwWeekCalendar(); }
       if(tab.dataset.tab === 'skillsPanel'){ initSkillsPanel(); }
       if(tab.dataset.tab === 'leaderboardPanel'){ renderAdminLeaderboard(); }
       if(tab.dataset.tab === 'asksPanel'){ renderAdminAsks(); }
@@ -7291,6 +7321,7 @@
       document.getElementById('hwTitleInput').value = '';
       document.getElementById('hwDateInput').value = '';
       document.getElementById('hwPublishDateInput').value = '';
+      renderHwWeekCalendar();
       document.getElementById('hwTimeLimitInput').value = '';
       hwPendingPdfUrl = null;
       document.getElementById('hwPdfInput').value = '';
@@ -7315,6 +7346,84 @@
 
   document.getElementById('refreshHomework').addEventListener('click', ()=>{ invalidateDbCache('homework'); renderAdminHomework(); });
   document.getElementById('hwFilterSelect').addEventListener('change', renderAdminHomework);
+
+  /* ---------------- Week calendar for scheduling homework ----------------
+     Lets a whole week be planned at a glance: pick a day, fill in the
+     homework, assign — then pick the next day without retyping dates.
+     Each day also shows how many assignments are already scheduled on it,
+     so gaps and doubled-up days are obvious. */
+  let hwWeekStart = null; // Monday of the week currently shown
+
+  function startOfWeek(d){
+    const date = new Date(d);
+    date.setHours(0,0,0,0);
+    const day = (date.getDay() + 6) % 7; // shift so Monday = 0
+    date.setDate(date.getDate() - day);
+    return date;
+  }
+  function toDateInputValue(d){
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+
+  async function renderHwWeekCalendar(){
+    const daysWrap = document.getElementById('hwWeekDays');
+    if(!daysWrap) return;
+    if(!hwWeekStart) hwWeekStart = startOfWeek(new Date());
+
+    const selected = document.getElementById('hwPublishDateInput').value;
+    const todayStr = toDateInputValue(new Date());
+
+    // Count what's already scheduled per day so the week fills in visibly.
+    let scheduledByDate = {};
+    try{
+      const idx = await fetchHomeworkIndex();
+      idx.forEach(hw=>{
+        if(!hw.publishAt) return;
+        const d = new Date(hw.publishAt);
+        if(isNaN(d)) return;
+        const key = toDateInputValue(d);
+        scheduledByDate[key] = (scheduledByDate[key] || 0) + 1;
+      });
+    }catch(err){ /* counts are a nicety — never block the picker */ }
+
+    const weekEnd = new Date(hwWeekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+    const fmt = (d)=> d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+    document.getElementById('hwWeekLabel').textContent = `${fmt(hwWeekStart)} – ${fmt(weekEnd)}`;
+
+    const dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    daysWrap.innerHTML = dows.map((dow, i)=>{
+      const d = new Date(hwWeekStart); d.setDate(d.getDate() + i);
+      const val = toDateInputValue(d);
+      const count = scheduledByDate[val] || 0;
+      return `
+        <button type="button" class="hw-day-btn ${selected === val ? 'selected' : ''} ${val === todayStr ? 'is-today' : ''}" data-date="${val}">
+          <div class="dow">${dow}</div>
+          <div class="dnum">${d.getDate()}</div>
+          <div class="cnt">${count > 0 ? count + ' set' : ''}</div>
+        </button>
+      `;
+    }).join('');
+
+    daysWrap.querySelectorAll('.hw-day-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const input = document.getElementById('hwPublishDateInput');
+        // Clicking the already-selected day clears it (publish immediately).
+        input.value = (input.value === btn.dataset.date) ? '' : btn.dataset.date;
+        renderHwWeekCalendar();
+      });
+    });
+  }
+
+  document.getElementById('hwWeekPrev').addEventListener('click', ()=>{
+    hwWeekStart.setDate(hwWeekStart.getDate() - 7);
+    renderHwWeekCalendar();
+  });
+  document.getElementById('hwWeekNext').addEventListener('click', ()=>{
+    hwWeekStart.setDate(hwWeekStart.getDate() + 7);
+    renderHwWeekCalendar();
+  });
+  document.getElementById('hwPublishDateInput').addEventListener('change', renderHwWeekCalendar);
 
   // if the student currently signed in on this browser is the one being edited,
   // refresh their dashboard immediately so admin changes show without a reload
