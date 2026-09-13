@@ -2208,6 +2208,19 @@
   .achievement-badge.unlocked .label{color:var(--text);}
 
   /* ---------- level/XP card ---------- */
+  .plan-entry-row{
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    background:var(--ink); border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; margin-bottom:8px;
+  }
+  .plan-entry-row .day-num{ width:90px; flex-shrink:0; }
+  .plan-entry-row select{ flex:1; min-width:180px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 10px; border-radius:8px; }
+  .plan-entry-row input[type="text"]{ flex:1; min-width:160px; }
+  .plan-day-badge{
+    display:inline-block; background:rgba(76,111,255,0.14); color:var(--signal);
+    border:1px solid rgba(76,111,255,0.35); border-radius:12px;
+    padding:2px 10px; font-size:0.76rem; font-weight:700; white-space:nowrap;
+  }
   .hw-week-cal{
     background:var(--ink); border:1px solid var(--line); border-radius:12px;
     padding:14px; margin-bottom:12px;
@@ -3200,6 +3213,40 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="recordingModal" style="z-index:600;">
+  <div class="modal-box" style="max-width:900px;">
+    <button class="modal-close" id="closeRecordingModal">&times;</button>
+    <h3 id="recordingModalTitle">Session recording</h3>
+    <div id="recordingPlayerWrap" style="position:relative; width:100%; padding-top:56.25%; background:#000; border-radius:12px; overflow:hidden; margin:14px 0;">
+      <iframe id="recordingPlayerFrame" src="" allow="fullscreen" allowfullscreen
+        style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"></iframe>
+    </div>
+    <div id="recordingViewNote" style="color:var(--muted); font-size:0.84rem;"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="applyPlanModal" style="z-index:500;">
+  <div class="modal-box" style="max-width:520px;">
+    <button class="modal-close" id="closeApplyPlanModal">&times;</button>
+    <h3 id="applyPlanTitle">Apply plan</h3>
+    <p style="color:var(--muted); font-size:0.84rem; margin-bottom:16px;">Pick a start date and the students. Each day in the plan becomes a homework, scheduled to appear on its own morning.</p>
+    <div class="field-row">
+      <label class="field-label">Start date (Day 1)</label>
+      <input type="date" id="applyPlanStartDate">
+    </div>
+    <div class="field-row">
+      <label class="field-label">Students</label>
+      <div class="admin-actions" style="margin-bottom:8px;">
+        <button type="button" class="btn btn-ghost" id="applyPlanSelectAll" style="padding:4px 12px; font-size:0.78rem;">Select all</button>
+        <button type="button" class="btn btn-ghost" id="applyPlanClear" style="padding:4px 12px; font-size:0.78rem;">Clear</button>
+      </div>
+      <div id="applyPlanStudentList" style="max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:8px;"></div>
+    </div>
+    <div id="applyPlanPreview" style="color:var(--muted); font-size:0.82rem; margin:12px 0;"></div>
+    <button class="btn btn-primary" id="applyPlanConfirmBtn" style="width:100%;">Apply plan</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="assignSkillsModal" style="z-index:500;">
   <div class="modal-box auth-modal-box">
     <button class="modal-close" id="closeAssignSkillsModal" aria-label="Close">×</button>
@@ -3277,6 +3324,7 @@
       <button class="admin-tab" data-tab="questionAnalyticsPanel" data-roles="admin,act-admin">📉 Question Analytics</button>
       <button class="admin-tab" data-tab="paymentsPanel" data-roles="admin,act-admin">💳 Payments</button>
       <button class="admin-tab" data-tab="retakesPanel" data-roles="admin,act-admin">🔁 Retakes</button>
+      <button class="admin-tab" data-tab="plansPanel" data-roles="admin,act-admin">📋 Course Plans</button>
       <button class="admin-tab" data-tab="reviewsPanel" data-roles="admin,assistant,act-admin">Reviews</button>
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
       <button class="admin-tab" data-tab="competitionsPanel" data-roles="admin,act-admin">🏆 Competition</button>
@@ -3336,6 +3384,19 @@
         <div class="field-row">
           <label class="field-label">Time limit in minutes (optional)</label>
           <input type="number" id="examTimeLimitInput" min="1" placeholder="e.g. 20 — leave blank for no limit">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Publish on (optional — students won't see it until 12:00 AM on this date)</label>
+          <div class="hw-week-cal" id="examWeekCal">
+            <div class="hw-week-nav">
+              <button type="button" class="btn btn-ghost" id="examWeekPrev" style="padding:4px 12px; font-size:0.8rem;">←</button>
+              <span id="examWeekLabel" style="font-weight:700; font-size:0.88rem;"></span>
+              <button type="button" class="btn btn-ghost" id="examWeekNext" style="padding:4px 12px; font-size:0.8rem;">→</button>
+            </div>
+            <div class="hw-week-days" id="examWeekDays"></div>
+          </div>
+          <input type="date" id="examPublishDateInput">
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Leave blank to publish straight away. Click a day to schedule it, click it again to clear.</span>
         </div>
         <div class="field-row">
           <label class="field-label">Printable PDF version (optional — lets a student work through it on paper first, then enter their answers digitally below)</label>
@@ -3574,6 +3635,15 @@
           <label class="field-label">Meeting link (optional — Zoom, Google Meet, etc.)</label>
           <input type="text" id="sessLinkInput" placeholder="https://...">
         </div>
+        <div class="field-row">
+          <label class="field-label">Recording link (optional — add after the session)</label>
+          <input type="text" id="sessRecordingInput" placeholder="https://... (Bunny Stream embed, YouTube, etc.)">
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Plays embedded inside this site, which is what makes domain-lock protection work. Paste the <strong>embed</strong> URL from Bunny Stream (or a YouTube link).</span>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Views allowed per student (optional — blank means unlimited)</label>
+          <input type="number" id="sessViewLimitInput" min="1" placeholder="e.g. 2">
+        </div>
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveSessBtn">Save session</button>
         </div>
@@ -3587,7 +3657,7 @@
       </div>
       <div class="admin-table-wrap">
         <table class="admin-table" id="sessionsTable">
-          <thead><tr><th>Student</th><th>Date</th><th>Time</th><th>Topic / notes</th><th>Attendance</th><th></th></tr></thead>
+          <thead><tr><th>Student</th><th>Date</th><th>Time</th><th>Topic / notes</th><th>Attendance</th><th>Views</th><th></th></tr></thead>
           <tbody id="sessionsBody"></tbody>
         </table>
         <div class="admin-empty" id="sessionsEmpty" style="display:none;">No sessions recorded yet.</div>
@@ -3724,6 +3794,35 @@
       </div>
 
       <div class="admin-table-wrap" id="retakesListWrap">
+        <div class="admin-empty">Loading…</div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="plansPanel">
+      <div class="admin-note">Lay out a whole course once — "Day 1: this skill, Day 3: that skill" — then apply it to any student with a start date. Each homework is created and scheduled to appear automatically on its own day, so you set the course up once and it runs itself.</div>
+
+      <div class="hw-section-title" style="margin-top:0;">Build a plan</div>
+      <div class="exam-editor" style="margin-top:0;">
+        <div class="field-row">
+          <label class="field-label">Plan name</label>
+          <input type="text" id="planNameInput" placeholder="e.g. SAT Math — 6 week course">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Days in this plan</label>
+          <div id="planEntriesWrap"></div>
+          <button type="button" class="btn btn-ghost" id="addPlanEntryBtn" style="margin-top:10px; padding:6px 14px; font-size:0.82rem;">+ Add a day</button>
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-primary" id="savePlanBtn">Save plan</button>
+          <button class="btn btn-ghost" id="cancelPlanEditBtn" style="display:none;">Cancel edit</button>
+        </div>
+      </div>
+
+      <div class="hw-section-title" style="margin-top:28px;">Your plans</div>
+      <div class="admin-actions" style="margin-bottom:12px;">
+        <button class="btn btn-ghost" id="refreshPlans">Refresh</button>
+      </div>
+      <div id="plansListWrap">
         <div class="admin-empty">Loading…</div>
       </div>
     </div>
@@ -4160,6 +4259,10 @@
        create table payments (id text primary key, data jsonb, created_at timestamptz default now());
        alter table payments enable row level security;
        create policy "public access payments" on payments for all using (true) with check (true);
+
+       create table plans (id text primary key, data jsonb, created_at timestamptz default now());
+       alter table plans enable row level security;
+       create policy "public access plans" on plans for all using (true) with check (true);
 
      Note on payments: a student uploading a screenshot creates a
      PENDING record only — it never counts toward totals until you
@@ -4880,6 +4983,7 @@
       if(tab.dataset.tab === 'questionAnalyticsPanel'){ renderQuestionAnalytics(); }
       if(tab.dataset.tab === 'paymentsPanel'){ renderAdminPayments(); }
       if(tab.dataset.tab === 'retakesPanel'){ renderAdminRetakes(); }
+      if(tab.dataset.tab === 'plansPanel'){ renderAdminPlans(); }
       if(tab.dataset.tab === 'reviewsPanel'){ initReviewsPanel(); }
       if(tab.dataset.tab === 'coursesPanel'){ renderAdminCourseList(); }
       if(tab.dataset.tab === 'competitionsPanel'){ showCompView('list'); renderCompetitionList(); }
@@ -4903,7 +5007,7 @@
       // have to download every exam's full content just to show a title card.
       await dbSet('exams', `idx-${examId}`, {
         _index: true, id: examId, title: examData.title, course: examData.course,
-        description: examData.description, questionCount: (examData.questions || []).length,
+        description: examData.description, questionCount: (examData.questions || []).length, publishAt: examData.publishAt || null,
         ts: examData.ts, pdfUrl: examData.pdfUrl || null
       });
       backfillExplanationVideos(examData.title, examData.questions || []);
@@ -4922,7 +5026,7 @@
   async function fetchExamsIndex(){
     await ensureIndexBackfilled('exams', (exam)=> ({
       _index: true, id: exam.id, title: exam.title, course: exam.course,
-      description: exam.description, questionCount: (exam.questions || []).length, ts: exam.ts, pdfUrl: exam.pdfUrl || null
+      description: exam.description, questionCount: (exam.questions || []).length, ts: exam.ts, pdfUrl: exam.pdfUrl || null, publishAt: exam.publishAt || null
     }));
     const rows = await dbGetAllByIdPrefix('exams', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -5665,6 +5769,8 @@
     document.getElementById('examPdfPreviewLink').style.display = 'none';
     document.getElementById('removeExamPdfBtn').style.display = 'none';
     document.getElementById('examPdfUploadStatus').textContent = '';
+    document.getElementById('examPublishDateInput').value = '';
+    renderExamWeekCalendar();
     questionsContainer.innerHTML = '';
     addQuestionBlock(null);
     examEditor.style.display = 'block';
@@ -5776,7 +5882,9 @@
     const timeLimit = timeLimitRaw ? parseInt(timeLimitRaw, 10) : null;
 
     const examId = editingExamId || (slugify(title) + '-' + Date.now());
-    const examData = { title, course: examCourseInput.value.trim(), description: examDescInput.value.trim(), timeLimit, pdfUrl: examPendingPdfUrl || null, questions };
+    const examPublishRaw = document.getElementById('examPublishDateInput').value;
+    const examData = { title, course: examCourseInput.value.trim(), description: examDescInput.value.trim(), timeLimit, pdfUrl: examPendingPdfUrl || null,
+      publishAt: examPublishRaw ? new Date(examPublishRaw + 'T00:00:00').toISOString() : null, questions };
 
     const saveBtn = document.getElementById('saveExamBtn');
     saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
@@ -5801,6 +5909,8 @@
     document.getElementById('examCourseInput').disabled = false; // populateExamCourseSelect already restricts options to ACT-scoped courses for this role
     examDescInput.value = exam.description || '';
     document.getElementById('examTimeLimitInput').value = exam.timeLimit || '';
+    document.getElementById('examPublishDateInput').value = exam.publishAt ? toDateInputValue(new Date(exam.publishAt)) : '';
+    renderExamWeekCalendar();
     examPendingPdfUrl = exam.pdfUrl || null;
     document.getElementById('examPdfInput').value = '';
     document.getElementById('examPdfUploadStatus').textContent = '';
@@ -5840,7 +5950,7 @@
       row.innerHTML = `
         <div>
           <h4>${esc(exam.title)}</h4>
-          <div class="meta">${exam.course ? esc(exam.course) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${exam.questionCount} question${exam.questionCount===1?'':'s'}</div>
+          <div class="meta">${exam.course ? esc(exam.course) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${exam.questionCount} question${exam.questionCount===1?'':'s'}${!isHomeworkPublished(exam) ? ` · <span style="color:var(--signal);">🕒 scheduled ${new Date(exam.publishAt).toLocaleDateString()}</span>` : ''}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-exam-btn">Edit</button>
@@ -6020,8 +6130,8 @@
     // course set at all stays visible to everyone (keeps older,
     // unscoped content working exactly as it always did).
     const exams = currentStudent
-      ? allExams.filter(e => !e.course || e.course === currentStudent.course)
-      : allExams;
+      ? allExams.filter(e => (!e.course || e.course === currentStudent.course) && isHomeworkPublished(e))
+      : allExams.filter(isHomeworkPublished);
 
     if(exams.length === 0){
       grid.innerHTML = '<div class="exams-empty">No practice exams published yet — check back soon.</div>';
@@ -7425,6 +7535,67 @@
   });
   document.getElementById('hwPublishDateInput').addEventListener('change', renderHwWeekCalendar);
 
+  // Same week picker for exams — exams need scheduling just as much as
+  // homework does, otherwise a paper you prepare on Sunday is visible the
+  // moment you save it.
+  let examWeekStart = null;
+  async function renderExamWeekCalendar(){
+    const daysWrap = document.getElementById('examWeekDays');
+    if(!daysWrap) return;
+    if(!examWeekStart) examWeekStart = startOfWeek(new Date());
+
+    const selected = document.getElementById('examPublishDateInput').value;
+    const todayStr = toDateInputValue(new Date());
+
+    let scheduledByDate = {};
+    try{
+      const idx = await fetchExamsIndex();
+      idx.forEach(ex=>{
+        if(!ex.publishAt) return;
+        const d = new Date(ex.publishAt);
+        if(isNaN(d)) return;
+        const key = toDateInputValue(d);
+        scheduledByDate[key] = (scheduledByDate[key] || 0) + 1;
+      });
+    }catch(err){ /* counts are a nicety — never block the picker */ }
+
+    const weekEnd = new Date(examWeekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+    const fmt = (d)=> d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+    document.getElementById('examWeekLabel').textContent = `${fmt(examWeekStart)} – ${fmt(weekEnd)}`;
+
+    const dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    daysWrap.innerHTML = dows.map((dow, i)=>{
+      const d = new Date(examWeekStart); d.setDate(d.getDate() + i);
+      const val = toDateInputValue(d);
+      const count = scheduledByDate[val] || 0;
+      return `
+        <button type="button" class="hw-day-btn ${selected === val ? 'selected' : ''} ${val === todayStr ? 'is-today' : ''}" data-date="${val}">
+          <div class="dow">${dow}</div>
+          <div class="dnum">${d.getDate()}</div>
+          <div class="cnt">${count > 0 ? count + ' set' : ''}</div>
+        </button>
+      `;
+    }).join('');
+
+    daysWrap.querySelectorAll('.hw-day-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const input = document.getElementById('examPublishDateInput');
+        input.value = (input.value === btn.dataset.date) ? '' : btn.dataset.date;
+        renderExamWeekCalendar();
+      });
+    });
+  }
+
+  document.getElementById('examWeekPrev').addEventListener('click', ()=>{
+    examWeekStart.setDate(examWeekStart.getDate() - 7);
+    renderExamWeekCalendar();
+  });
+  document.getElementById('examWeekNext').addEventListener('click', ()=>{
+    examWeekStart.setDate(examWeekStart.getDate() + 7);
+    renderExamWeekCalendar();
+  });
+  document.getElementById('examPublishDateInput').addEventListener('change', renderExamWeekCalendar);
+
   // if the student currently signed in on this browser is the one being edited,
   // refresh their dashboard immediately so admin changes show without a reload
   async function refreshDashboardIfSignedInAs(username){
@@ -8432,6 +8603,226 @@
   document.getElementById('refreshRetakes').addEventListener('click', ()=>{ invalidateDbCache('homework'); renderAdminRetakes(); });
   document.getElementById('retakeFilterSelect').addEventListener('change', renderAdminRetakes);
   document.getElementById('retakeStudentFilter').addEventListener('change', renderAdminRetakes);
+
+  /* ---------------- ADMIN: Course Plans ----------------
+     A plan is a reusable course outline written in RELATIVE days ("Day 1,
+     Day 3, Day 6"), each pointing at an existing skill or exam. Applying it
+     to a student converts those relative days into REAL dates from their
+     chosen start date, creating one scheduled homework per entry. So the
+     same plan works for a student starting today and one starting in March,
+     and every homework appears automatically on its own morning. */
+  let editingPlanId = null;
+
+  async function savePlanRecord(id, data){ return await dbSet('plans', id, { id, ...data }); }
+  async function fetchAllPlans(){
+    const rows = await dbGetAll('plans');
+    rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+    return rows;
+  }
+  async function deletePlanRecord(id){ return await dbDelete('plans', id); }
+
+  async function addPlanEntryRow(entry){
+    const wrap = document.getElementById('planEntriesWrap');
+    const [skills, exams] = await Promise.all([fetchSkillsIndex(), fetchExamsIndex()]);
+    const row = document.createElement('div');
+    row.className = 'plan-entry-row';
+    const dayVal = entry ? entry.day : (wrap.querySelectorAll('.plan-entry-row').length + 1);
+    row.innerHTML = `
+      <input type="number" class="day-num" min="1" value="${dayVal}" placeholder="Day">
+      <select class="plan-source-select">
+        <option value="">— pick a skill or exam —</option>
+        <optgroup label="Skills">
+          ${skills.map(s => `<option value="skill:${esc(s.id)}">${esc(s.skill)} (${s.questionCount})</option>`).join('')}
+        </optgroup>
+        <optgroup label="Exams">
+          ${exams.map(e => `<option value="exam:${esc(e.id)}">${esc(e.title)} (${e.questionCount})</option>`).join('')}
+        </optgroup>
+      </select>
+      <input type="text" class="plan-entry-title" placeholder="Homework title (optional)">
+      <button type="button" class="student-action-btn remove-plan-entry">✕</button>
+    `;
+    if(entry){
+      row.querySelector('.plan-source-select').value = entry.source || '';
+      row.querySelector('.plan-entry-title').value = entry.title || '';
+    }
+    row.querySelector('.remove-plan-entry').addEventListener('click', ()=> row.remove());
+    wrap.appendChild(row);
+  }
+
+  function collectPlanEntries(){
+    return Array.from(document.querySelectorAll('#planEntriesWrap .plan-entry-row'))
+      .map(row=>({
+        day: parseInt(row.querySelector('.day-num').value, 10),
+        source: row.querySelector('.plan-source-select').value,
+        title: row.querySelector('.plan-entry-title').value.trim() || null
+      }))
+      .filter(e => e.day > 0 && e.source)
+      .sort((a,b)=> a.day - b.day);
+  }
+
+  document.getElementById('addPlanEntryBtn').addEventListener('click', ()=> addPlanEntryRow(null));
+
+  document.getElementById('savePlanBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('planNameInput').value.trim();
+    if(!name){ alert('Give the plan a name.'); return; }
+    const entries = collectPlanEntries();
+    if(entries.length === 0){ alert('Add at least one day with a skill or exam picked.'); return; }
+    const btn = document.getElementById('savePlanBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const id = editingPlanId || generateId('plan');
+    const ok = await savePlanRecord(id, { name, entries, ts: new Date().toISOString() });
+    btn.disabled = false; btn.textContent = 'Save plan';
+    if(ok){
+      resetPlanEditor();
+      invalidateDbCache('plans');
+      await renderAdminPlans();
+    } else {
+      alert('Could not save the plan — check your connection (or that the "plans" table exists in Supabase) and try again.');
+    }
+  });
+
+  function resetPlanEditor(){
+    editingPlanId = null;
+    document.getElementById('planNameInput').value = '';
+    document.getElementById('planEntriesWrap').innerHTML = '';
+    document.getElementById('savePlanBtn').textContent = 'Save plan';
+    document.getElementById('cancelPlanEditBtn').style.display = 'none';
+  }
+  document.getElementById('cancelPlanEditBtn').addEventListener('click', resetPlanEditor);
+
+  async function renderAdminPlans(){
+    const wrap = document.getElementById('plansListWrap');
+    wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
+    const plans = await fetchAllPlans();
+    if(plans.length === 0){
+      wrap.innerHTML = '<div class="admin-empty">No plans yet — build one above.</div>';
+      return;
+    }
+    wrap.innerHTML = '';
+    plans.forEach(plan=>{
+      const row = document.createElement('div');
+      row.className = 'exam-list-item';
+      const lastDay = Math.max(...plan.entries.map(e => e.day));
+      row.innerHTML = `
+        <div>
+          <h4>${esc(plan.name)}</h4>
+          <div class="meta">${plan.entries.length} homework${plan.entries.length===1?'':'s'} · runs ${lastDay} day${lastDay===1?'':'s'}</div>
+          <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
+            ${plan.entries.slice(0, 12).map(e => `<span class="plan-day-badge">Day ${e.day}</span>`).join('')}
+            ${plan.entries.length > 12 ? `<span class="plan-day-badge">+${plan.entries.length - 12}</span>` : ''}
+          </div>
+        </div>
+        <div class="exam-list-actions">
+          <button class="apply-plan-btn">Apply to students</button>
+          <button class="edit-plan-btn">Edit</button>
+          <button class="danger delete-plan-btn">Delete</button>
+        </div>
+      `;
+      row.querySelector('.apply-plan-btn').addEventListener('click', ()=> openApplyPlanModal(plan));
+      row.querySelector('.edit-plan-btn').addEventListener('click', async ()=>{
+        editingPlanId = plan.id;
+        document.getElementById('planNameInput').value = plan.name;
+        document.getElementById('planEntriesWrap').innerHTML = '';
+        for(const e of plan.entries) await addPlanEntryRow(e);
+        document.getElementById('savePlanBtn').textContent = 'Update plan';
+        document.getElementById('cancelPlanEditBtn').style.display = '';
+        document.getElementById('planNameInput').scrollIntoView({behavior:'smooth', block:'center'});
+      });
+      row.querySelector('.delete-plan-btn').addEventListener('click', async ()=>{
+        if(!confirm(`Delete the plan "${plan.name}"? Homework already assigned from it is not affected.`)) return;
+        await deletePlanRecord(plan.id);
+        invalidateDbCache('plans');
+        await renderAdminPlans();
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  document.getElementById('refreshPlans').addEventListener('click', ()=>{ invalidateDbCache('plans'); renderAdminPlans(); });
+
+  let applyingPlan = null;
+  async function openApplyPlanModal(plan){
+    applyingPlan = plan;
+    document.getElementById('applyPlanTitle').textContent = `Apply "${plan.name}"`;
+    document.getElementById('applyPlanStartDate').value = toDateInputValue(new Date());
+    const students = (await fetchStudentsForCurrentAdmin()).filter(s => s.status === 'approved');
+    document.getElementById('applyPlanStudentList').innerHTML = students.length === 0
+      ? '<div class="admin-empty">No approved students yet.</div>'
+      : students.map(s => `<label style="display:flex; align-items:center; gap:8px; padding:6px 4px; cursor:pointer;"><input type="checkbox" value="${esc(s.username)}"> ${esc(s.username)}</label>`).join('');
+    updateApplyPlanPreview();
+    document.getElementById('applyPlanModal').classList.add('open');
+  }
+
+  function updateApplyPlanPreview(){
+    if(!applyingPlan) return;
+    const startRaw = document.getElementById('applyPlanStartDate').value;
+    const el = document.getElementById('applyPlanPreview');
+    if(!startRaw){ el.textContent = 'Pick a start date to see the schedule.'; return; }
+    const start = new Date(startRaw + 'T00:00:00');
+    const lines = applyingPlan.entries.slice(0, 5).map(e=>{
+      const d = new Date(start); d.setDate(d.getDate() + (e.day - 1));
+      return `Day ${e.day} → ${d.toLocaleDateString()}`;
+    });
+    const more = applyingPlan.entries.length > 5 ? ` …and ${applyingPlan.entries.length - 5} more` : '';
+    el.textContent = lines.join('  ·  ') + more;
+  }
+  document.getElementById('applyPlanStartDate').addEventListener('change', updateApplyPlanPreview);
+  document.getElementById('closeApplyPlanModal').addEventListener('click', ()=> document.getElementById('applyPlanModal').classList.remove('open'));
+  document.getElementById('applyPlanSelectAll').addEventListener('click', ()=>{
+    document.querySelectorAll('#applyPlanStudentList input').forEach(cb => cb.checked = true);
+  });
+  document.getElementById('applyPlanClear').addEventListener('click', ()=>{
+    document.querySelectorAll('#applyPlanStudentList input').forEach(cb => cb.checked = false);
+  });
+
+  document.getElementById('applyPlanConfirmBtn').addEventListener('click', async ()=>{
+    if(!applyingPlan) return;
+    const startRaw = document.getElementById('applyPlanStartDate').value;
+    if(!startRaw){ alert('Pick a start date.'); return; }
+    const usernames = Array.from(document.querySelectorAll('#applyPlanStudentList input:checked')).map(cb => cb.value);
+    if(usernames.length === 0){ alert('Pick at least one student.'); return; }
+
+    const btn = document.getElementById('applyPlanConfirmBtn');
+    btn.disabled = true;
+    const start = new Date(startRaw + 'T00:00:00');
+
+    // Load each referenced skill/exam once, not once per student.
+    const sourceCache = {};
+    for(const entry of applyingPlan.entries){
+      if(sourceCache[entry.source] !== undefined) continue;
+      const [kind, id] = entry.source.split(':');
+      const rec = await dbGet(kind === 'skill' ? 'skills' : 'exams', id);
+      sourceCache[entry.source] = rec || null;
+    }
+
+    let created = 0, skipped = 0;
+    const total = usernames.length * applyingPlan.entries.length;
+    for(const username of usernames){
+      for(const entry of applyingPlan.entries){
+        btn.textContent = `Assigning… (${created + skipped + 1}/${total})`;
+        const src = sourceCache[entry.source];
+        if(!src || !(src.questions || []).length){ skipped++; continue; }
+        const publishDate = new Date(start);
+        publishDate.setDate(publishDate.getDate() + (entry.day - 1));
+        const ok = await saveHomeworkAssignment(generateId('hw'), {
+          username,
+          title: entry.title || src.skill || src.title || `Day ${entry.day}`,
+          dueDate: null, timeLimit: null, pdfUrl: src.pdfUrl || null,
+          publishAt: publishDate.toISOString(),
+          questions: src.questions,
+          status: 'assigned', score: null, submittedAt: null,
+          fromPlan: applyingPlan.name,
+          ts: new Date().toISOString()
+        });
+        if(ok) created++; else skipped++;
+      }
+    }
+    btn.disabled = false; btn.textContent = 'Apply plan';
+    document.getElementById('applyPlanModal').classList.remove('open');
+    invalidateDbCache('homework');
+    alert(`Done — ${created} homework${created===1?'':'s'} scheduled${skipped > 0 ? `, ${skipped} skipped (empty or missing source)` : ''}.`);
+    for(const u of usernames) await refreshDashboardIfSignedInAs(u);
+  });
 
   /* ---------------- MATH CHAMPIONS LEAGUE (admin: create/edit) ---------------- */
   let editingCompId = null;
@@ -9704,8 +10095,57 @@
           ${stillJoined && !isManual ? '🟢 In progress' : (attendedMin !== null ? `${attendedMin} min${isManual ? ' (edited)' : ''}` : '—')}
           <button class="student-action-btn edit-attendance-btn" style="margin-left:6px;padding:2px 8px;font-size:0.75rem;" title="Set the correct attendance time yourself">✏️</button>
         </td>
-        <td><button class="student-action-btn delete-sess-btn">Delete</button></td>
+        <td>${sess.recordingUrl
+          ? `${sess.recordingViews || 0}${typeof sess.recordingViewLimit === 'number' ? ' / ' + sess.recordingViewLimit : ' / ∞'}`
+          : '—'}</td>
+        <td>
+          <button class="student-action-btn recording-btn" title="Add or change the recording link">${sess.recordingUrl ? '🎬 Edit' : '🎬 Add'}</button>
+          ${sess.recordingUrl ? '<button class="student-action-btn limit-btn" title="Set how many views this student gets">👁 Limit</button><button class="student-action-btn reset-views-btn" title="Give this student their views back">↺</button>' : ''}
+          <button class="student-action-btn delete-sess-btn">Delete</button>
+        </td>
       `;
+      // Recordings are added AFTER the session happens, so this has to be
+      // editable on an existing row rather than only at creation time.
+      const limitBtn = tr.querySelector('.limit-btn');
+      if(limitBtn){
+        limitBtn.addEventListener('click', async ()=>{
+          const current = typeof sess.recordingViewLimit === 'number' ? sess.recordingViewLimit : '';
+          const entered = prompt(`How many times may ${sess.username} watch this recording? (blank = unlimited)`, current);
+          if(entered === null) return;
+          const trimmed = entered.trim();
+          const val = trimmed === '' ? null : parseInt(trimmed, 10);
+          if(trimmed !== '' && (isNaN(val) || val < 0)){ alert('Enter a whole number, or leave blank for unlimited.'); return; }
+          const record = await dbGet('sessions', sess.id);
+          if(!record) return;
+          await dbSet('sessions', sess.id, { ...record, recordingViewLimit: val });
+          invalidateDbCache('sessions');
+          await renderAdminSessions();
+          await refreshDashboardIfSignedInAs(sess.username);
+        });
+      }
+      const resetBtn = tr.querySelector('.reset-views-btn');
+      if(resetBtn){
+        resetBtn.addEventListener('click', async ()=>{
+          if(!confirm(`Reset ${sess.username}'s view count back to 0 for this recording?`)) return;
+          const record = await dbGet('sessions', sess.id);
+          if(!record) return;
+          await dbSet('sessions', sess.id, { ...record, recordingViews: 0 });
+          invalidateDbCache('sessions');
+          await renderAdminSessions();
+          await refreshDashboardIfSignedInAs(sess.username);
+        });
+      }
+      tr.querySelector('.recording-btn').addEventListener('click', async ()=>{
+        const entered = prompt(`Recording link for ${sess.username}'s session on ${sess.date} (leave blank to remove):`, sess.recordingUrl || '');
+        if(entered === null) return;
+        const url = entered.trim();
+        const record = await dbGet('sessions', sess.id);
+        if(!record) return;
+        await dbSet('sessions', sess.id, { ...record, recordingUrl: url || null });
+        invalidateDbCache('sessions');
+        await renderAdminSessions();
+        await refreshDashboardIfSignedInAs(sess.username);
+      });
       tr.querySelector('.edit-attendance-btn').addEventListener('click', async ()=>{
         const current = attendedMin !== null ? attendedMin : '';
         const entered = prompt(`Minutes ${sess.username} actually attended this session:`, current);
@@ -9744,13 +10184,21 @@
     const btn = document.getElementById('saveSessBtn');
     btn.disabled = true; btn.textContent = 'Saving…';
     const id = generateId('sess');
-    const ok = await saveSessionRecord(id, { username, date, time, topic, link: link || null, ts: new Date().toISOString() });
+    const recordingUrl = document.getElementById('sessRecordingInput').value.trim();
+    const viewLimitRaw = document.getElementById('sessViewLimitInput').value.trim();
+    const ok = await saveSessionRecord(id, { username, date, time, topic, link: link || null,
+      recordingUrl: recordingUrl || null,
+      recordingViewLimit: viewLimitRaw ? parseInt(viewLimitRaw, 10) : null,
+      recordingViews: 0,
+      ts: new Date().toISOString() });
     btn.disabled = false; btn.textContent = 'Save session';
 
     if(ok){
       document.getElementById('sessTopicInput').value = '';
       document.getElementById('sessTimeInput').value = '';
       document.getElementById('sessLinkInput').value = '';
+      document.getElementById('sessRecordingInput').value = '';
+      document.getElementById('sessViewLimitInput').value = '';
       await renderAdminSessions();
       await refreshDashboardIfSignedInAs(username);
     } else {
@@ -10030,11 +10478,75 @@
       row.innerHTML = `
         <span class="hw-date">${esc(sess.date || '')}</span>
         <span class="hw-title">${esc(sess.topic || 'Session')}</span>
-        <span class="hw-mark">${esc(sess.time || '')}${attendedMin !== null ? ` · attended ${attendedMin} min` : ''}</span>
+        <span class="hw-mark">
+          ${esc(sess.time || '')}${attendedMin !== null ? ` · attended ${attendedMin} min` : ''}
+          ${sess.recordingUrl ? (()=>{
+            const used = sess.recordingViews || 0;
+            const limit = typeof sess.recordingViewLimit === 'number' ? sess.recordingViewLimit : null;
+            const outOfViews = limit !== null && used >= limit;
+            if(outOfViews) return `<span style="color:var(--muted); font-size:0.78rem; margin-left:10px;">🎬 No views left (${used}/${limit})</span>`;
+            return `<button type="button" class="btn btn-ghost watch-recording-btn" data-session-id="${esc(sess.id)}" style="padding:4px 12px; font-size:0.78rem; margin-left:10px;">🎬 Watch recording${limit !== null ? ` (${limit - used} left)` : ''}</button>`;
+          })() : ''}
+        </span>
       `;
       historyList.appendChild(row);
     });
+
+    // Play embedded rather than opening a new tab — embedding on this site
+    // is exactly what makes a host's domain-lock protection work, and it's
+    // also the only way a view can be counted at all.
+    historyList.querySelectorAll('.watch-recording-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const sessionId = btn.dataset.sessionId;
+        btn.disabled = true;
+        const record = await dbGet('sessions', sessionId);
+        if(!record || !record.recordingUrl){ btn.disabled = false; return; }
+
+        const used = record.recordingViews || 0;
+        const limit = typeof record.recordingViewLimit === 'number' ? record.recordingViewLimit : null;
+        if(limit !== null && used >= limit){
+          btn.disabled = false;
+          alert(`You've used all ${limit} of your views for this recording.`);
+          await renderStudentSessions();
+          return;
+        }
+
+        // Count the view before playing, so closing the tab mid-video
+        // doesn't hand out a free extra view.
+        await dbSet('sessions', sessionId, { ...record, recordingViews: used + 1,
+          recordingLastViewedAt: new Date().toISOString() });
+        invalidateDbCache('sessions');
+        btn.disabled = false;
+
+        document.getElementById('recordingModalTitle').textContent = record.topic || 'Session recording';
+        document.getElementById('recordingPlayerFrame').src = toEmbedUrl(record.recordingUrl);
+        const noteEl = document.getElementById('recordingViewNote');
+        noteEl.textContent = limit !== null
+          ? `View ${used + 1} of ${limit}.${used + 1 >= limit ? ' This is your last one.' : ''}`
+          : '';
+        document.getElementById('recordingModal').classList.add('open');
+        await renderStudentSessions();
+      });
+    });
   }
+
+  // Converts a normal share link into the embeddable form. Anything already
+  // an embed URL (Bunny Stream, an /embed/ path) is passed straight through.
+  function toEmbedUrl(url){
+    if(!url) return '';
+    const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+    if(yt) return `https://www.youtube.com/embed/${yt[1]}`;
+    const drive = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/);
+    if(drive) return `https://drive.google.com/file/d/${drive[1]}/preview`;
+    return url; // Bunny Stream embed URLs and anything else already embeddable
+  }
+
+  document.getElementById('closeRecordingModal').addEventListener('click', ()=>{
+    // Clearing the src actually stops playback — just hiding the modal
+    // leaves the video running in the background.
+    document.getElementById('recordingPlayerFrame').src = '';
+    document.getElementById('recordingModal').classList.remove('open');
+  });
 
   // Sums every completed join→leave segment for a session, in minutes.
   // Returns null (not 0) when the student never joined at all, so "0 min
