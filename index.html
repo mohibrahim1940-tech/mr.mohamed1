@@ -2183,6 +2183,73 @@
     .dash-sidebar-actions{flex-direction:row;}
   }
 
+  /* ---------- phones ----------
+     On a real phone the wrapping tab block grew to ~500px tall and pushed
+     every bit of actual content below the fold. A horizontal scrolling
+     strip keeps all the tabs reachable in one thumb-swipe while giving the
+     content back the top of the screen. */
+  @media(max-width:640px){
+    /* A grid/flex child defaults to min-width:auto, meaning it refuses to
+       shrink below its content. Without these, the nowrap tab strip below
+       stretched the entire page to ~1500px instead of scrolling inside its
+       own container. */
+    .dash-shell{ min-width:0; }
+    .dash-shell > *{ min-width:0; }
+    .dash-sidebar{
+      background:none; border:none; padding:0; margin-bottom:18px;
+      min-width:0; max-width:100%; overflow:hidden;
+    }
+    .dash-sidebar-user{ margin-bottom:12px; }
+    .dash-sidebar-nav{
+      flex-wrap:nowrap;
+      overflow-x:auto;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+      gap:8px;
+      padding-bottom:6px;
+      max-width:100%;
+    }
+    .dash-sidebar-nav::-webkit-scrollbar{ display:none; }
+    .dash-sidebar-nav .dash-tab-btn{
+      flex:0 0 auto; white-space:nowrap;
+      padding:9px 15px; font-size:0.85rem;
+    }
+    .dash-sidebar-actions{ gap:8px; }
+    .dash-sidebar-actions .btn{ flex:1; padding:10px 12px; font-size:0.82rem; }
+
+    /* Header was so cramped that "Log out" wrapped onto two lines. */
+    .brand span{ font-size:0.95rem; }
+    .logo{ width:36px; height:36px; }
+    .nav-cta{ gap:8px; }
+    .nav-cta a, .nav-cta .who{ font-size:0.8rem; white-space:nowrap; }
+
+    /* Give content the full width back */
+    .dash-overview-top{ gap:12px; margin-bottom:20px; }
+    .streak-card, .level-card{ min-width:0; flex:1 1 100%; }
+    .dash-card{ flex:1 1 calc(50% - 6px); min-width:0; }
+    .hw-row{ flex-wrap:wrap; gap:6px; }
+    .hw-row .hw-title{ flex:1 1 100%; }
+    .exam-list-item{ flex-direction:column; align-items:flex-start; gap:10px; }
+    .exam-list-actions{ width:100%; flex-wrap:wrap; }
+    .wp-card-head{ gap:6px; }
+    .wp-actions .btn{ width:100%; }
+    /* Tables are the worst offenders on a phone — let them scroll
+       sideways rather than squashing every column into nothing. */
+    .admin-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .admin-table{ min-width:560px; }
+
+    /* The exam player is where students spend the most time — make the
+       tap targets finger-sized and stop the nav buttons cramping. */
+    #examModal #examPlayer{ padding:60px 16px 32px; }
+    .exam-option{ padding:15px 14px; }
+    .exam-option span{ font-size:0.95rem; }
+    .exam-nav{ flex-direction:column-reverse; gap:10px; }
+    .exam-nav .btn{ width:100%; padding:13px; }
+    .q-nav-grid{ gap:6px; }
+    /* Recording player fills the width properly */
+    #recordingModal .modal-box{ padding:20px 14px; }
+  }
+
   /* ---------- streak + achievements (overview) ---------- */
   .dash-overview-top{display:flex; gap:20px; flex-wrap:wrap; margin-bottom:28px;}
   .streak-card{
@@ -2596,6 +2663,7 @@
           <button class="dash-tab-btn" data-dashtab="tabAssistantChat" id="assistantChatTabBtn">💬 My Assistant Chat<span id="assistantChatNotifBadge" style="display:none;"></span></button>
           <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
           <button class="dash-tab-btn" data-dashtab="tabPlanner">🧠 Study Planner</button>
+          <button class="dash-tab-btn" data-dashtab="tabRecordings">🎬 Recordings</button>
           <button class="dash-tab-btn" data-dashtab="tabWeakPoints">🎯 Weak Points</button>
           <button class="dash-tab-btn" data-dashtab="tabPayments">💳 My Payments</button>
           <button class="dash-tab-btn" data-dashtab="tabCompetition" id="competitionTabBtn" style="display:none;">⭐ Champions League</button>
@@ -2821,6 +2889,14 @@
 
           <div class="hw-section-title">Quick actions</div>
           <div class="planner-actions" id="plannerActions"></div>
+        </div>
+
+        <div class="dash-tab-panel" id="tabRecordings">
+          <div class="hw-section-title" style="margin-top:0;">🎬 Session recordings</div>
+          <div class="admin-note" style="margin-bottom:20px;">Recordings and notes from your sessions. Some recordings have a limited number of views — the button tells you how many you have left.</div>
+          <div id="recordingsList">
+            <div class="admin-empty">Loading…</div>
+          </div>
         </div>
 
         <div class="dash-tab-panel" id="tabWeakPoints">
@@ -3614,10 +3690,13 @@
 
       <div class="exam-editor" style="margin-top:0;">
         <div class="field-row">
-          <label class="field-label">Student</label>
-          <select id="sessStudentSelect">
-            <option value="" disabled selected>Choose a student</option>
-          </select>
+          <label class="field-label">Student(s)</label>
+          <div class="admin-actions" style="margin-bottom:8px;">
+            <button type="button" class="btn btn-ghost" id="sessSelectAllBtn" style="padding:4px 12px; font-size:0.78rem;">Select all</button>
+            <button type="button" class="btn btn-ghost" id="sessClearBtn" style="padding:4px 12px; font-size:0.78rem;">Clear</button>
+            <span id="sessSelectedCount" style="color:var(--muted); font-size:0.8rem; margin-left:auto;">0 selected</span>
+          </div>
+          <div id="sessStudentCheckboxList" style="max-height:200px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:8px;"></div>
         </div>
         <div class="field-row">
           <label class="field-label">Date</label>
@@ -3639,6 +3718,14 @@
           <label class="field-label">Recording link (optional — add after the session)</label>
           <input type="text" id="sessRecordingInput" placeholder="https://... (Bunny Stream embed, YouTube, etc.)">
           <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Plays embedded inside this site, which is what makes domain-lock protection work. Paste the <strong>embed</strong> URL from Bunny Stream (or a YouTube link).</span>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Session PDF (optional — notes, worksheet, or slides for this session)</label>
+          <div class="q-image-controls">
+            <input type="file" accept="application/pdf" id="sessPdfInput">
+            <button type="button" class="remove-video-btn" id="removeSessPdfBtn" style="display:none;">Remove PDF</button>
+          </div>
+          <span class="video-upload-status" id="sessPdfStatus"></span>
         </div>
         <div class="field-row">
           <label class="field-label">Views allowed per student (optional — blank means unlimited)</label>
@@ -10045,20 +10132,70 @@
   /* ---------------- ADMIN: Sessions tab ---------------- */
   async function initSessionsPanel(){
     const students = await fetchStudentsForCurrentAdmin();
-    const studentSelect = document.getElementById('sessStudentSelect');
+    const listWrap = document.getElementById('sessStudentCheckboxList');
     const filterSelect = document.getElementById('sessFilterSelect');
     const dateInput = document.getElementById('sessDateInput');
     if(!dateInput.value){ dateInput.value = new Date().toISOString().slice(0,10); }
 
     const currentFilterVal = filterSelect.value;
-    studentSelect.innerHTML = '<option value="" disabled selected>Choose a student</option>' +
-      students.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('');
+    // Checkbox list rather than a single dropdown — a session usually
+    // covers a group, so scheduling it one student at a time was tedious.
+    const previouslyChecked = new Set(
+      Array.from(listWrap.querySelectorAll('input:checked')).map(cb => cb.value)
+    );
+    listWrap.innerHTML = students.length === 0
+      ? '<div class="admin-empty">No students yet.</div>'
+      : students.map(s => `<label style="display:flex; align-items:center; gap:8px; padding:5px 4px; cursor:pointer;"><input type="checkbox" value="${esc(s.username)}"${previouslyChecked.has(s.username) ? ' checked' : ''}> ${esc(s.username)}</label>`).join('');
+    listWrap.querySelectorAll('input').forEach(cb => cb.addEventListener('change', updateSessSelectedCount));
+    updateSessSelectedCount();
+
     filterSelect.innerHTML = '<option value="">All students</option>' +
       students.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('');
     if(students.some(s => s.username === currentFilterVal)) filterSelect.value = currentFilterVal;
 
     await renderAdminSessions();
   }
+
+  function updateSessSelectedCount(){
+    const n = document.querySelectorAll('#sessStudentCheckboxList input:checked').length;
+    document.getElementById('sessSelectedCount').textContent = `${n} selected`;
+  }
+  document.getElementById('sessSelectAllBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#sessStudentCheckboxList input').forEach(cb => cb.checked = true);
+    updateSessSelectedCount();
+  });
+  document.getElementById('sessClearBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('#sessStudentCheckboxList input').forEach(cb => cb.checked = false);
+    updateSessSelectedCount();
+  });
+
+  // Session PDF upload
+  let sessPendingPdfUrl = null;
+  document.getElementById('sessPdfInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
+      alert('That file doesn\'t look like a PDF — try picking a .pdf file instead.');
+      e.target.value = ''; return;
+    }
+    const statusEl = document.getElementById('sessPdfStatus');
+    statusEl.textContent = 'Uploading…'; statusEl.style.color = 'var(--muted)';
+    try{
+      sessPendingPdfUrl = await uploadMistakeAnswerFile(file, 'pdf', 'application/pdf');
+      statusEl.textContent = 'Uploaded ✓'; statusEl.style.color = '#39D98A';
+      document.getElementById('removeSessPdfBtn').style.display = '';
+    }catch(err){
+      statusEl.textContent = '';
+      alert(err.message || 'Could not upload that PDF — check your connection and try again.');
+      e.target.value = '';
+    }
+  });
+  document.getElementById('removeSessPdfBtn').addEventListener('click', ()=>{
+    sessPendingPdfUrl = null;
+    document.getElementById('sessPdfInput').value = '';
+    document.getElementById('sessPdfStatus').textContent = '';
+    document.getElementById('removeSessPdfBtn').style.display = 'none';
+  });
 
   async function renderAdminSessions(){
     const filterVal = document.getElementById('sessFilterSelect').value;
@@ -10101,11 +10238,25 @@
         <td>
           <button class="student-action-btn recording-btn" title="Add or change the recording link">${sess.recordingUrl ? '🎬 Edit' : '🎬 Add'}</button>
           ${sess.recordingUrl ? '<button class="student-action-btn limit-btn" title="Set how many views this student gets">👁 Limit</button><button class="student-action-btn reset-views-btn" title="Give this student their views back">↺</button>' : ''}
+          <button class="student-action-btn sess-pdf-btn" title="Add or change the session PDF">${sess.pdfUrl ? '📄 Edit' : '📄 Add'}</button>
           <button class="student-action-btn delete-sess-btn">Delete</button>
         </td>
       `;
       // Recordings are added AFTER the session happens, so this has to be
       // editable on an existing row rather than only at creation time.
+      // Session notes are usually written up after the session, so this has
+      // to be addable to an existing row, not only at creation time.
+      tr.querySelector('.sess-pdf-btn').addEventListener('click', async ()=>{
+        const entered = prompt(`PDF link for ${sess.username}'s session on ${sess.date} (leave blank to remove):`, sess.pdfUrl || '');
+        if(entered === null) return;
+        const url = entered.trim();
+        const record = await dbGet('sessions', sess.id);
+        if(!record) return;
+        await dbSet('sessions', sess.id, { ...record, pdfUrl: url || null });
+        invalidateDbCache('sessions');
+        await renderAdminSessions();
+        await refreshDashboardIfSignedInAs(sess.username);
+      });
       const limitBtn = tr.querySelector('.limit-btn');
       if(limitBtn){
         limitBtn.addEventListener('click', async ()=>{
@@ -10170,39 +10321,54 @@
   }
 
   document.getElementById('saveSessBtn').addEventListener('click', async ()=>{
-    const username = document.getElementById('sessStudentSelect').value;
+    const usernames = Array.from(document.querySelectorAll('#sessStudentCheckboxList input:checked')).map(cb => cb.value);
     const date = document.getElementById('sessDateInput').value;
     const time = document.getElementById('sessTimeInput').value;
     const topic = document.getElementById('sessTopicInput').value.trim();
     const link = document.getElementById('sessLinkInput').value.trim();
 
-    if(!username || !date){
-      alert('Choose a student and a date.');
+    if(usernames.length === 0 || !date){
+      alert('Choose at least one student and a date.');
       return;
     }
 
     const btn = document.getElementById('saveSessBtn');
-    btn.disabled = true; btn.textContent = 'Saving…';
-    const id = generateId('sess');
+    btn.disabled = true;
     const recordingUrl = document.getElementById('sessRecordingInput').value.trim();
     const viewLimitRaw = document.getElementById('sessViewLimitInput').value.trim();
-    const ok = await saveSessionRecord(id, { username, date, time, topic, link: link || null,
-      recordingUrl: recordingUrl || null,
-      recordingViewLimit: viewLimitRaw ? parseInt(viewLimitRaw, 10) : null,
-      recordingViews: 0,
-      ts: new Date().toISOString() });
+
+    // One record per student, so attendance, recording views and the PDF
+    // are all tracked individually even for a group session.
+    let successCount = 0;
+    for(const username of usernames){
+      btn.textContent = `Saving… (${successCount + 1}/${usernames.length})`;
+      const ok = await saveSessionRecord(generateId('sess'), { username, date, time, topic, link: link || null,
+        recordingUrl: recordingUrl || null,
+        recordingViewLimit: viewLimitRaw ? parseInt(viewLimitRaw, 10) : null,
+        recordingViews: 0,
+        pdfUrl: sessPendingPdfUrl || null,
+        ts: new Date().toISOString() });
+      if(ok) successCount++;
+    }
     btn.disabled = false; btn.textContent = 'Save session';
 
-    if(ok){
+    if(successCount === usernames.length){
       document.getElementById('sessTopicInput').value = '';
       document.getElementById('sessTimeInput').value = '';
       document.getElementById('sessLinkInput').value = '';
       document.getElementById('sessRecordingInput').value = '';
       document.getElementById('sessViewLimitInput').value = '';
+      sessPendingPdfUrl = null;
+      document.getElementById('sessPdfInput').value = '';
+      document.getElementById('sessPdfStatus').textContent = '';
+      document.getElementById('removeSessPdfBtn').style.display = 'none';
+      document.querySelectorAll('#sessStudentCheckboxList input').forEach(cb => cb.checked = false);
+      updateSessSelectedCount();
       await renderAdminSessions();
-      await refreshDashboardIfSignedInAs(username);
+      for(const u of usernames) await refreshDashboardIfSignedInAs(u);
     } else {
-      alert('Could not save the session — please try again.');
+      alert(`Saved for ${successCount} of ${usernames.length} students — check your connection and try again for the rest.`);
+      await renderAdminSessions();
     }
   });
 
@@ -10496,37 +10662,89 @@
     // is exactly what makes a host's domain-lock protection work, and it's
     // also the only way a view can be counted at all.
     historyList.querySelectorAll('.watch-recording-btn').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const sessionId = btn.dataset.sessionId;
-        btn.disabled = true;
-        const record = await dbGet('sessions', sessionId);
-        if(!record || !record.recordingUrl){ btn.disabled = false; return; }
+      btn.addEventListener('click', ()=> playRecording(btn, renderStudentSessions));
+    });
+  }
 
-        const used = record.recordingViews || 0;
-        const limit = typeof record.recordingViewLimit === 'number' ? record.recordingViewLimit : null;
-        if(limit !== null && used >= limit){
-          btn.disabled = false;
-          alert(`You've used all ${limit} of your views for this recording.`);
-          await renderStudentSessions();
-          return;
-        }
+  // Shared by the session history and the Recordings page. Plays embedded
+  // rather than opening a new tab — embedding on this site is exactly what
+  // makes a host's domain-lock protection work, and it's the only way a
+  // view can be counted at all.
+  async function playRecording(btn, rerender){
+    const sessionId = btn.dataset.sessionId;
+    btn.disabled = true;
+    const record = await dbGet('sessions', sessionId);
+    if(!record || !record.recordingUrl){ btn.disabled = false; return; }
 
-        // Count the view before playing, so closing the tab mid-video
-        // doesn't hand out a free extra view.
-        await dbSet('sessions', sessionId, { ...record, recordingViews: used + 1,
-          recordingLastViewedAt: new Date().toISOString() });
-        invalidateDbCache('sessions');
-        btn.disabled = false;
+    const used = record.recordingViews || 0;
+    const limit = typeof record.recordingViewLimit === 'number' ? record.recordingViewLimit : null;
+    if(limit !== null && used >= limit){
+      btn.disabled = false;
+      alert(`You've used all ${limit} of your views for this recording.`);
+      if(rerender) await rerender();
+      return;
+    }
 
-        document.getElementById('recordingModalTitle').textContent = record.topic || 'Session recording';
-        document.getElementById('recordingPlayerFrame').src = toEmbedUrl(record.recordingUrl);
-        const noteEl = document.getElementById('recordingViewNote');
-        noteEl.textContent = limit !== null
-          ? `View ${used + 1} of ${limit}.${used + 1 >= limit ? ' This is your last one.' : ''}`
-          : '';
-        document.getElementById('recordingModal').classList.add('open');
-        await renderStudentSessions();
-      });
+    // Count the view before playing, so closing the tab mid-video doesn't
+    // hand out a free extra view.
+    await dbSet('sessions', sessionId, { ...record, recordingViews: used + 1,
+      recordingLastViewedAt: new Date().toISOString() });
+    invalidateDbCache('sessions');
+    btn.disabled = false;
+
+    document.getElementById('recordingModalTitle').textContent = record.topic || 'Session recording';
+    document.getElementById('recordingPlayerFrame').src = toEmbedUrl(record.recordingUrl);
+    document.getElementById('recordingViewNote').textContent = limit !== null
+      ? `View ${used + 1} of ${limit}.${used + 1 >= limit ? ' This is your last one.' : ''}`
+      : '';
+    document.getElementById('recordingModal').classList.add('open');
+    if(rerender) await rerender();
+  }
+
+  // Dedicated recordings page — same view-limit rules as the session
+  // history, but gathered in one place with the session PDF alongside.
+  async function renderRecordingsPage(){
+    if(!currentStudent) return;
+    const el = document.getElementById('recordingsList');
+    if(!el) return;
+    const all = await fetchAllSessions();
+    const mine = all.filter(s => !s._index &&
+      (s.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase() &&
+      (s.recordingUrl || s.pdfUrl))
+      .sort((a,b)=> new Date(b.date || 0) - new Date(a.date || 0));
+
+    if(mine.length === 0){
+      el.innerHTML = '<div class="admin-empty">No recordings or session notes yet — they appear here after a session.</div>';
+      return;
+    }
+
+    el.innerHTML = mine.map(sess=>{
+      const used = sess.recordingViews || 0;
+      const limit = typeof sess.recordingViewLimit === 'number' ? sess.recordingViewLimit : null;
+      const outOfViews = limit !== null && used >= limit;
+      const dateLabel = sess.date ? new Date(sess.date + 'T00:00:00').toLocaleDateString(undefined, { weekday:'short', month:'short', day:'numeric' }) : '';
+      return `
+        <div class="wp-card">
+          <div class="wp-card-head">
+            <span class="wp-card-title">${esc(sess.topic || 'Session')}</span>
+            <span class="wp-card-stat">${esc(dateLabel)}</span>
+          </div>
+          <div class="wp-actions" style="margin-top:12px;">
+            ${sess.recordingUrl
+              ? (outOfViews
+                  ? `<span style="color:var(--muted); font-size:0.84rem;">🎬 No views left (${used}/${limit})</span>`
+                  : `<button type="button" class="btn btn-primary watch-recording-btn" data-session-id="${esc(sess.id)}" style="padding:8px 16px; font-size:0.84rem;">🎬 Watch recording${limit !== null ? ` (${limit - used} left)` : ''}</button>`)
+              : ''}
+            ${sess.pdfUrl ? `<a href="${esc(sess.pdfUrl)}" target="_blank" rel="noopener" class="btn btn-ghost" style="padding:8px 16px; font-size:0.84rem; text-decoration:none;">📄 Session notes (PDF)</a>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Same handler as the session-history buttons — kept in one function so
+    // the view-limit rules can't drift apart between the two places.
+    el.querySelectorAll('.watch-recording-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> playRecording(btn, renderRecordingsPage));
     });
   }
 
@@ -13933,6 +14151,7 @@
     renderAnnouncementsBanner();
     renderStudentPayments();
     renderWeakPointsPage();
+    renderRecordingsPage();
     renderStudentReviews();
     renderStudentSkills();
     renderWeakPoints();
@@ -13960,6 +14179,7 @@
       if(btn.dataset.dashtab === 'tabHw'){ renderStudentHomework(); renderWeakPoints(); }
       if(btn.dataset.dashtab === 'tabMistakes') renderMistakeHistory();
       if(btn.dataset.dashtab === 'tabWeakPoints') renderWeakPointsPage();
+      if(btn.dataset.dashtab === 'tabRecordings') renderRecordingsPage();
       if(btn.dataset.dashtab === 'tabAssistantChat') renderAssistantChatList();
       if(btn.dataset.dashtab === 'tabGraph' && typeof drawGraph === 'function') drawGraph();
       if(btn.dataset.dashtab === 'tabPlanner') renderStudyPlanner();
@@ -13988,6 +14208,7 @@
       renderAnnouncementsBanner(),
       renderStudentPayments(),
       renderWeakPointsPage(),
+      renderRecordingsPage(),
       renderStudentReviews(),
       renderStudentSkills(),
       renderWeakPoints(),
