@@ -2293,6 +2293,10 @@
   .achievement-badge.unlocked .label{color:var(--text);}
 
   /* ---------- level/XP card ---------- */
+  /* Part buttons sit in a row; without this they inherit the modal's
+     full-width button styling and stack vertically. */
+  #recordingPartTabs .rec-part-btn{ flex:0 0 auto; width:auto; display:inline-flex; }
+
   .skill-picker{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .skill-picker .skill-search{
     flex:1 1 190px; min-width:150px;
@@ -3329,6 +3333,7 @@
       <iframe id="recordingPlayerFrame" src="" allow="fullscreen" allowfullscreen
         style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"></iframe>
     </div>
+    <div id="recordingPartTabs" style="display:none; gap:8px; flex-wrap:wrap; margin-bottom:12px;"></div>
     <div id="recordingViewNote" style="color:var(--muted); font-size:0.84rem;"></div>
     <div style="margin-top:10px;">
       <a id="recordingFallbackLink" href="#" target="_blank" rel="noopener" style="display:none; color:var(--muted); font-size:0.8rem;">Video not loading? Open it directly ↗</a>
@@ -3511,8 +3516,8 @@
         </div>
         <div class="field-row">
           <label class="field-label">Lesson recording (optional — your explanation of this material)</label>
-          <input type="text" id="examRecordingInput" placeholder="https://... (YouTube, Bunny Stream, Google Drive)">
-          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Students get a "Watch the lesson" button on this exam.</span>
+          <textarea id="examRecordingInput" rows="3" placeholder="https://...&#10;https://...  (one per line for parts)"></textarea>
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">One link per line for multi-part recordings. Optionally name a part with <code>Part 1 | https://…</code>.</span>
         </div>
         <div class="field-row">
           <label class="field-label">Printable PDF version (optional — lets a student work through it on paper first, then enter their answers digitally below)</label>
@@ -3673,8 +3678,8 @@
         </div>
         <div class="field-row">
           <label class="field-label">Lesson recording (optional — your explanation of this skill)</label>
-          <input type="text" id="skillRecordingInput" placeholder="https://... (YouTube, Bunny Stream, Google Drive)">
-          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Students get a "Watch the lesson" button on this skill.</span>
+          <textarea id="skillRecordingInput" rows="3" placeholder="https://...&#10;https://...  (one per line for parts)"></textarea>
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">One link per line for multi-part recordings. Optionally name a part with <code>Part 1 | https://…</code>.</span>
         </div>
 
         <label class="field-label">Questions</label>
@@ -3761,7 +3766,7 @@
         </div>
         <div class="field-row">
           <label class="field-label">Recording link (optional — add after the session)</label>
-          <input type="text" id="sessRecordingInput" placeholder="https://... (Bunny Stream embed, YouTube, etc.)">
+          <textarea id="sessRecordingInput" rows="3" placeholder="https://...&#10;https://...  (one per line for parts)"></textarea>
           <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Plays embedded inside this site, which is what makes domain-lock protection work. Paste the <strong>embed</strong> URL from Bunny Stream (or a YouTube link).</span>
         </div>
         <div class="field-row">
@@ -6319,7 +6324,7 @@
         <p>${esc(exam.description || (exam.questionCount + ' quick questions to check your knowledge.'))}</p>
         ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin:8px 0 -4px;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
         ${exam.pdfUrl ? `<a href="${esc(exam.pdfUrl)}" target="_blank" rel="noopener" class="btn btn-ghost" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">📄 Download printable PDF</a>` : ''}
-        ${exam.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(exam.recordingUrl)}" data-title="${esc(exam.title)}" style="display:block;width:100%;margin-bottom:8px;">🎬 Watch the lesson</button><div class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem; text-align:center; margin-bottom:8px;"></div>` : ''}
+        ${exam.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(exam.recordingUrl)}" data-title="${esc(exam.title)}" style="display:block;width:100%;margin-bottom:8px;">🎬 Watch the lesson${parseRecordingParts(exam.recordingUrl).length > 1 ? ` (${parseRecordingParts(exam.recordingUrl).length} parts)` : ''}</button><div class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem; text-align:center; margin-bottom:8px;"></div>` : ''}
         <button class="btn btn-ghost start-exam-btn">${buttonLabel}</button>
       `;
       card.querySelector('.start-exam-btn').addEventListener('click', async ()=>{
@@ -10804,14 +10809,18 @@
     btn.disabled = false;
 
     document.getElementById('recordingModalTitle').textContent = record.topic || 'Session recording';
-    const embedSrc = toEmbedUrl(record.recordingUrl);
-    document.getElementById('recordingPlayerFrame').src = embedSrc;
+    const parts = parseRecordingParts(record.recordingUrl);
     // Some videos genuinely can't be embedded (the owner disabled it, or it's
     // a plain Drive link with restricted sharing). Rather than leaving the
     // student staring at a blank box, always offer the direct link too.
     const fallback = document.getElementById('recordingFallbackLink');
-    fallback.href = record.recordingUrl;
-    fallback.style.display = 'inline-block';
+    const showPart = (i)=>{
+      document.getElementById('recordingPlayerFrame').src = toEmbedUrl(parts[i].url);
+      fallback.href = parts[i].url;
+      fallback.style.display = 'inline-block';
+      renderRecordingParts(parts, i, showPart);
+    };
+    if(parts.length > 0) showPart(0);
     document.getElementById('recordingViewNote').textContent = limit !== null
       ? `View ${used + 1} of ${limit}.${used + 1 >= limit ? ' This is your last one.' : ''}`
       : '';
@@ -10881,14 +10890,20 @@
       return;
     }
 
+    const parts = parseRecordingParts(url);
+    if(parts.length === 0) return;
     document.getElementById('recordingModalTitle').textContent = title || 'Lesson recording';
-    document.getElementById('recordingPlayerFrame').src = toEmbedUrl(url);
+    const fallback = document.getElementById('recordingFallbackLink');
+    const showPart = (i)=>{
+      document.getElementById('recordingPlayerFrame').src = toEmbedUrl(parts[i].url);
+      fallback.href = parts[i].url;
+      fallback.style.display = 'inline-block';
+      renderRecordingParts(parts, i, showPart);
+    };
+    showPart(0);
     document.getElementById('recordingViewNote').textContent = result.remaining === null
       ? ''
       : `${result.remaining} lesson view${result.remaining === 1 ? '' : 's'} left.`;
-    const fallback = document.getElementById('recordingFallbackLink');
-    fallback.href = url;
-    fallback.style.display = 'inline-block';
     document.getElementById('recordingModal').classList.add('open');
     await refreshLessonCreditDisplays();
   }
@@ -10919,6 +10934,41 @@
     openLessonRecording(btn.dataset.rec, btn.dataset.title);
   });
 
+  // Renders the part switcher inside the player. Switching parts is free —
+  // the view credit is charged once when the recording is opened, not per
+  // part, otherwise a 3-part lesson would cost triple to watch.
+  function renderRecordingParts(parts, activeIndex, onPick){
+    const wrap = document.getElementById('recordingPartTabs');
+    if(parts.length <= 1){ wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+    wrap.style.display = 'flex';
+    wrap.innerHTML = parts.map((p, i) =>
+      `<button type="button" class="btn ${i === activeIndex ? 'btn-primary' : 'btn-ghost'} rec-part-btn" data-i="${i}" style="padding:6px 14px; font-size:0.8rem;">${esc(p.label)}</button>`
+    ).join('');
+    wrap.querySelectorAll('.rec-part-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> onPick(parseInt(btn.dataset.i, 10)));
+    });
+  }
+
+  // A recording field can hold several links — one per line — so a long
+  // lesson can be split into parts. Each line is optionally "Label | url".
+  // A single link (the common case) just comes back as one unnamed part.
+  function parseRecordingParts(raw){
+    if(!raw) return [];
+    return String(raw).split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map((line, i)=>{
+        const bar = line.indexOf('|');
+        if(bar > -1){
+          const label = line.slice(0, bar).trim();
+          const url = line.slice(bar + 1).trim();
+          if(url) return { label: label || `Part ${i + 1}`, url };
+        }
+        return { label: `Part ${i + 1}`, url: line };
+      })
+      .filter(p => p.url);
+  }
+
   // Converts a normal share link into the embeddable form. Anything already
   // an embed URL (Bunny Stream, an /embed/ path) is passed straight through.
   function toEmbedUrl(url){
@@ -10938,6 +10988,8 @@
     // Clearing the src actually stops playback — just hiding the modal
     // leaves the video running in the background.
     document.getElementById('recordingPlayerFrame').src = '';
+    document.getElementById('recordingPartTabs').innerHTML = '';
+    document.getElementById('recordingPartTabs').style.display = 'none';
     document.getElementById('recordingModal').classList.remove('open');
   });
 
@@ -11202,7 +11254,7 @@
         <h3>${esc(set.skill)}</h3>
         <p>${set.questionCount} question${set.questionCount === 1 ? '' : 's'} to practice.</p>
         ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin:8px 0 -4px;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
-        ${set.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(set.recordingUrl)}" data-title="${esc(set.skill)}" style="display:block;width:100%;margin-bottom:8px;">🎬 Watch the lesson</button><div class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem; text-align:center; margin-bottom:8px;"></div>` : ''}
+        ${set.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(set.recordingUrl)}" data-title="${esc(set.skill)}" style="display:block;width:100%;margin-bottom:8px;">🎬 Watch the lesson${parseRecordingParts(set.recordingUrl).length > 1 ? ` (${parseRecordingParts(set.recordingUrl).length} parts)` : ''}</button><div class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem; text-align:center; margin-bottom:8px;"></div>` : ''}
         <button class="btn btn-ghost start-skill-btn">${needsRetake ? 'Retake now' : 'Start practice'}</button>
       `;
       card.querySelector('.start-skill-btn').addEventListener('click', async ()=>{
