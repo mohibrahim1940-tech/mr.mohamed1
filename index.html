@@ -3694,6 +3694,7 @@
 
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveSkillBtn">Save skill set</button>
+          <button type="button" class="btn btn-ghost" id="previewSkillPdfBtn">📄 Preview PDF</button>
           <button class="btn btn-ghost" id="cancelSkillEditBtn" type="button" style="display:none;">Cancel edit</button>
         </div>
       </div>
@@ -6120,10 +6121,19 @@
           <div class="meta">${exam.course ? esc(exam.course) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${exam.questionCount} question${exam.questionCount===1?'':'s'}${!isHomeworkPublished(exam) ? ` · <span style="color:var(--signal);">🕒 scheduled ${new Date(exam.publishAt).toLocaleDateString()}</span>` : ''}</div>
         </div>
         <div class="exam-list-actions">
+          <button class="exam-pdf-btn" title="Make a printable PDF of these questions">📄 PDF</button>
           <button class="edit-exam-btn">Edit</button>
           <button class="danger delete-exam-btn">Delete</button>
         </div>
       `;
+      row.querySelector('.exam-pdf-btn').addEventListener('click', async (e)=>{
+        const btn = e.currentTarget;
+        btn.disabled = true; btn.textContent = 'Building…';
+        const full = await dbGet('exams', exam.id);
+        btn.disabled = false; btn.textContent = '📄 PDF';
+        if(!full){ alert('Could not load that exam — please try again.'); return; }
+        openQuestionsAsPdf(full.title, full.questions, { course: full.course || '' });
+      });
       row.querySelector('.edit-exam-btn').addEventListener('click', ()=> editExam(exam.id));
       row.querySelector('.delete-exam-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete "${exam.title}"? This can't be undone.`)) return;
@@ -7966,10 +7976,20 @@
           <div class="meta">${getSkillCourses(set).length > 0 ? esc(getSkillCourses(set).join(', ')) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${set.questionCount} classified question${set.questionCount === 1 ? '' : 's'}</div>
         </div>
         <div class="exam-list-actions">
+          <button class="skill-pdf-btn" title="Make a printable PDF of these questions">📄 PDF</button>
           <button class="edit-skill-btn" title="Edit this skill set" aria-label="Edit this skill set">✏️ Edit</button>
           <button class="danger delete-skill-btn">Delete</button>
         </div>
       `;
+      row.querySelector('.skill-pdf-btn').addEventListener('click', async (e)=>{
+        const btn = e.currentTarget;
+        btn.disabled = true; btn.textContent = 'Building…';
+        // The list only holds a summary, so pull the real questions first.
+        const full = await dbGet('skills', set.id);
+        btn.disabled = false; btn.textContent = '📄 PDF';
+        if(!full){ alert('Could not load that skill — please try again.'); return; }
+        openQuestionsAsPdf(full.skill, full.questions, { course: getSkillCourses(full).join(', ') });
+      });
       row.querySelector('.edit-skill-btn').addEventListener('click', ()=> editSkill(set.id));
       row.querySelector('.delete-skill-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete the "${set.skill}" skill set?`)) return;
@@ -8008,6 +8028,15 @@
   }
 
   document.getElementById('cancelSkillEditBtn').addEventListener('click', resetSkillForm);
+
+  // Preview straight from the editor, before saving — useful when you're
+  // building a worksheet and want to see how it lays out on paper.
+  document.getElementById('previewSkillPdfBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('skillNameInput').value.trim() || 'Skill worksheet';
+    const questions = collectQuestionsFrom(skillQuestionsContainer);
+    questions.forEach(q => { q.lesson = name; });
+    openQuestionsAsPdf(name, questions, {});
+  });
 
   document.getElementById('saveSkillBtn').addEventListener('click', async ()=>{
     const skill = document.getElementById('skillNameInput').value.trim();
@@ -10947,6 +10976,81 @@
     wrap.querySelectorAll('.rec-part-btn').forEach(btn=>{
       btn.addEventListener('click', ()=> onPick(parseInt(btn.dataset.i, 10)));
     });
+  }
+
+  // Builds a printable worksheet from a set of questions and opens the
+  // browser's print dialog, where "Save as PDF" produces the file. Done this
+  // way rather than with a PDF library so it needs no extra downloads, works
+  // offline, and handles question images and Arabic text correctly.
+  function openQuestionsAsPdf(title, questions, opts){
+    opts = opts || {};
+    const qs = questions || [];
+    if(qs.length === 0){ alert('There are no questions to put in a PDF yet.'); return; }
+
+    const esc2 = (s)=> String(s == null ? '' : s)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+    const body = qs.map((q, i)=>{
+      const opts4 = (q.options || []).map((o, oi)=>{
+        const letter = String.fromCharCode(65 + oi);
+        const img = q.optionImages && q.optionImages[oi];
+        const text = (o !== null && o !== undefined && String(o).trim()) ? esc2(o) : '';
+        return `<div class="opt"><span class="letter">${letter})</span> ${text}${img ? `<br><img class="opt-img" src="${esc2(img)}">` : ''}</div>`;
+      }).join('');
+      return `
+        <div class="q">
+          <div class="q-head">
+            <span class="q-num">${i + 1}.</span>
+            <span class="q-lesson">${esc2(q.lesson || '')}</span>
+          </div>
+          ${q.text ? `<div class="q-text">${esc2(q.text)}</div>` : ''}
+          ${q.image ? `<img class="q-img" src="${esc2(q.image)}">` : ''}
+          <div class="opts">${opts4}</div>
+        </div>`;
+    }).join('');
+
+    // The answer key goes on its own page so a worksheet can be handed out
+    // without it, but it's there when marking.
+    const key = qs.map((q, i)=>
+      `<span class="key-item"><b>${i + 1}.</b> ${String.fromCharCode(65 + (q.correct ?? 0))}</span>`
+    ).join('');
+
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc2(title)}</title>
+      <style>
+        *{box-sizing:border-box;}
+        body{font-family:'Segoe UI',Arial,sans-serif; color:#111; margin:0; padding:28px 32px; line-height:1.5;}
+        h1{font-size:20px; margin:0 0 4px;}
+        .sub{color:#666; font-size:12px; margin-bottom:18px; border-bottom:1px solid #ddd; padding-bottom:12px;}
+        .meta-row{display:flex; gap:24px; font-size:12px; color:#444; margin-bottom:18px;}
+        .meta-row span{border-bottom:1px solid #999; flex:1; padding-bottom:2px;}
+        .q{margin-bottom:18px; page-break-inside:avoid; break-inside:avoid;}
+        .q-head{display:flex; align-items:baseline; gap:8px;}
+        .q-num{font-weight:700;}
+        .q-lesson{font-size:10px; color:#888; text-transform:uppercase; letter-spacing:.04em;}
+        .q-text{margin:4px 0 8px; font-size:14px;}
+        .q-img{max-width:320px; max-height:220px; display:block; margin:6px 0;}
+        .opts{display:grid; grid-template-columns:1fr 1fr; gap:4px 18px; margin-left:18px;}
+        .opt{font-size:13px; padding:3px 0;}
+        .letter{font-weight:700; color:#444;}
+        .opt-img{max-width:130px; max-height:90px; display:block; margin-top:3px;}
+        .key{page-break-before:always; break-before:page; border-top:2px solid #111; padding-top:14px;}
+        .key h2{font-size:15px; margin:0 0 10px;}
+        .key-item{display:inline-block; width:70px; font-size:13px; margin-bottom:4px;}
+        @media print{ body{padding:14px 18px;} }
+      </style></head><body>
+      <h1>${esc2(title)}</h1>
+      <div class="sub">${qs.length} question${qs.length === 1 ? '' : 's'}${opts.course ? ' · ' + esc2(opts.course) : ''}</div>
+      <div class="meta-row"><span>Name:</span><span>Date:</span><span>Score:</span></div>
+      ${body}
+      <div class="key"><h2>Answer key</h2>${key}</div>
+      </body></html>`;
+
+    const w = window.open('', '_blank');
+    if(!w){ alert('Your browser blocked the popup. Allow popups for this site, then try again.'); return; }
+    w.document.write(html);
+    w.document.close();
+    // Wait for images to load, otherwise they print blank.
+    w.onload = ()=> setTimeout(()=> w.print(), 400);
   }
 
   // A recording field can hold several links — one per line — so a long
