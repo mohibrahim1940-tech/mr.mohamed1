@@ -2293,6 +2293,20 @@
   .achievement-badge.unlocked .label{color:var(--text);}
 
   /* ---------- level/XP card ---------- */
+  .skill-picker{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .skill-picker .skill-search{
+    flex:1 1 190px; min-width:150px;
+    background:var(--ink); border:1px solid var(--line); color:var(--text);
+    padding:9px 12px; border-radius:8px; font-size:0.86rem;
+    font-family:'Inter',sans-serif;
+  }
+  .skill-picker .q-lesson{ flex:2 1 240px; min-width:180px; }
+  .skill-picker .skill-search:focus{ outline:none; border-color:var(--signal); }
+
+  /* Inside the skill editor the skill's own name IS the label, so asking
+     for it again on every question is just busywork. */
+  #skillQuestionsContainer .q-lesson-row{ display:none; }
+
   .plan-entry-row{
     display:flex; gap:10px; align-items:center; flex-wrap:wrap;
     background:var(--ink); border:1px solid var(--line); border-radius:10px;
@@ -3496,6 +3510,11 @@
           <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Leave blank to publish straight away. Click a day to schedule it, click it again to clear.</span>
         </div>
         <div class="field-row">
+          <label class="field-label">Lesson recording (optional — your explanation of this material)</label>
+          <input type="text" id="examRecordingInput" placeholder="https://... (YouTube, Bunny Stream, Google Drive)">
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Students get a "Watch the lesson" button on this exam.</span>
+        </div>
+        <div class="field-row">
           <label class="field-label">Printable PDF version (optional — lets a student work through it on paper first, then enter their answers digitally below)</label>
           <div class="q-image-controls">
             <input type="file" accept="application/pdf" id="examPdfInput">
@@ -3651,6 +3670,11 @@
         <div class="field-row">
           <label class="field-label">Course(s) — pick as many as apply</label>
           <div id="skillCourseCheckboxes" class="skill-course-checkboxes"></div>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Lesson recording (optional — your explanation of this skill)</label>
+          <input type="text" id="skillRecordingInput" placeholder="https://... (YouTube, Bunny Stream, Google Drive)">
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Students get a "Watch the lesson" button on this skill.</span>
         </div>
 
         <label class="field-label">Questions</label>
@@ -5116,6 +5140,7 @@
       await dbSet('exams', `idx-${examId}`, {
         _index: true, id: examId, title: examData.title, course: examData.course,
         description: examData.description, questionCount: (examData.questions || []).length, publishAt: examData.publishAt || null,
+        recordingUrl: examData.recordingUrl || null,
         ts: examData.ts, pdfUrl: examData.pdfUrl || null
       });
       backfillExplanationVideos(examData.title, examData.questions || []);
@@ -5134,7 +5159,7 @@
   async function fetchExamsIndex(){
     await ensureIndexBackfilled('exams', (exam)=> ({
       _index: true, id: exam.id, title: exam.title, course: exam.course,
-      description: exam.description, questionCount: (exam.questions || []).length, ts: exam.ts, pdfUrl: exam.pdfUrl || null, publishAt: exam.publishAt || null
+      description: exam.description, questionCount: (exam.questions || []).length, ts: exam.ts, pdfUrl: exam.pdfUrl || null, publishAt: exam.publishAt || null, recordingUrl: exam.recordingUrl || null
     }));
     const rows = await dbGetAllByIdPrefix('exams', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -5344,6 +5369,28 @@
     ).join('');
   }
 
+  // Filters a question block's skill dropdown as the admin types. With a
+  // long skill list, scrolling a plain <select> to find one is slow — this
+  // narrows it to matches instantly and auto-selects when only one is left.
+  function wireSkillSearch(block){
+    const search = block.querySelector('.skill-search');
+    const select = block.querySelector('.q-lesson');
+    if(!search || !select) return;
+    // Keep the full option list so filtering is non-destructive.
+    const allOptions = Array.from(select.options).map(o => ({ value: o.value, text: o.text }));
+    search.addEventListener('input', ()=>{
+      const term = search.value.trim().toLowerCase();
+      const keep = allOptions.filter(o => !o.value || o.text.toLowerCase().includes(term));
+      const previous = select.value;
+      select.innerHTML = keep.map(o =>
+        `<option value="${esc(o.value)}"${o.value === previous ? ' selected' : ''}>${esc(o.text)}</option>`
+      ).join('');
+      // Exactly one real match left — pick it, so a quick type-and-move works.
+      const realMatches = keep.filter(o => o.value);
+      if(term && realMatches.length === 1) select.value = realMatches[0].value;
+    });
+  }
+
   function addQuestionBlock(data, container){
     container = container || questionsContainer;
     qCounter++;
@@ -5399,11 +5446,14 @@
         <span class="video-upload-status"></span>
         <video class="q-video-preview" controls preload="metadata" style="${block._explanationVideo ? 'display:block;' : ''}" ${block._explanationVideo ? `src="${block._explanationVideo}"` : ''}></video>
       </div>
-      <div class="field-row" style="margin-bottom:14px;">
-        <select class="q-lesson">
-          <option value="">No skill / general</option>
-          ${buildSkillOptionsHtml(data && data.lesson)}
-        </select>
+      <div class="field-row q-lesson-row" style="margin-bottom:14px;">
+        <div class="skill-picker">
+          <input type="text" class="skill-search" placeholder="🔍 Search skills…" autocomplete="off">
+          <select class="q-lesson" size="1">
+            <option value="">No skill / general</option>
+            ${buildSkillOptionsHtml(data && data.lesson)}
+          </select>
+        </div>
       </div>
       <div class="field-row" style="margin-bottom:14px;">
         <input type="text" class="q-text" placeholder="Question text (optional if you added an image)" value="${data ? esc(data.text || '') : ''}">
@@ -5587,6 +5637,7 @@
       });
     });
 
+    wireSkillSearch(block);
     container.appendChild(block);
   }
 
@@ -5878,6 +5929,7 @@
     document.getElementById('removeExamPdfBtn').style.display = 'none';
     document.getElementById('examPdfUploadStatus').textContent = '';
     document.getElementById('examPublishDateInput').value = '';
+    document.getElementById('examRecordingInput').value = '';
     renderExamWeekCalendar();
     questionsContainer.innerHTML = '';
     addQuestionBlock(null);
@@ -5992,7 +6044,8 @@
     const examId = editingExamId || (slugify(title) + '-' + Date.now());
     const examPublishRaw = document.getElementById('examPublishDateInput').value;
     const examData = { title, course: examCourseInput.value.trim(), description: examDescInput.value.trim(), timeLimit, pdfUrl: examPendingPdfUrl || null,
-      publishAt: examPublishRaw ? new Date(examPublishRaw + 'T00:00:00').toISOString() : null, questions };
+      publishAt: examPublishRaw ? new Date(examPublishRaw + 'T00:00:00').toISOString() : null,
+      recordingUrl: document.getElementById('examRecordingInput').value.trim() || null, questions };
 
     const saveBtn = document.getElementById('saveExamBtn');
     saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
@@ -6018,6 +6071,7 @@
     examDescInput.value = exam.description || '';
     document.getElementById('examTimeLimitInput').value = exam.timeLimit || '';
     document.getElementById('examPublishDateInput').value = exam.publishAt ? toDateInputValue(new Date(exam.publishAt)) : '';
+    document.getElementById('examRecordingInput').value = exam.recordingUrl || '';
     renderExamWeekCalendar();
     examPendingPdfUrl = exam.pdfUrl || null;
     document.getElementById('examPdfInput').value = '';
@@ -6265,6 +6319,7 @@
         <p>${esc(exam.description || (exam.questionCount + ' quick questions to check your knowledge.'))}</p>
         ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin:8px 0 -4px;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
         ${exam.pdfUrl ? `<a href="${esc(exam.pdfUrl)}" target="_blank" rel="noopener" class="btn btn-ghost" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">📄 Download printable PDF</a>` : ''}
+        ${exam.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(exam.recordingUrl)}" data-title="${esc(exam.title)}" style="display:block;width:100%;margin-bottom:8px;">🎬 Watch the lesson</button><div class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem; text-align:center; margin-bottom:8px;"></div>` : ''}
         <button class="btn btn-ghost start-exam-btn">${buttonLabel}</button>
       `;
       card.querySelector('.start-exam-btn').addEventListener('click', async ()=>{
@@ -6283,6 +6338,7 @@
       grid.appendChild(card);
     });
     applyDashSearchFilter('examsSearchInput', 'examsGrid');
+    refreshLessonCreditDisplays();
   }
 
   // Builds a lookup of the current student's most recent attempt per exam/skill
@@ -6967,6 +7023,31 @@
     if(!student) return false;
     student.status = status;
     return await dbSet('students', studentKey(username), student);
+  }
+
+  /* ---------------- Lesson view credits ----------------
+     Rather than a separate limit on every recording, each student gets a
+     pool of views they spend on whichever lessons they choose. Leaving the
+     pool unset means unlimited, so nothing changes for students you don't
+     want to restrict. */
+  function lessonCreditsRemaining(student){
+    if(!student || typeof student.lessonViewCredits !== 'number') return null; // null = unlimited
+    return Math.max(0, student.lessonViewCredits - (student.lessonViewsUsed || 0));
+  }
+
+  async function spendLessonCredit(username){
+    const student = await getStudent(username);
+    if(!student) return { ok:false };
+    if(typeof student.lessonViewCredits !== 'number') return { ok:true, remaining:null }; // unlimited
+    const used = student.lessonViewsUsed || 0;
+    if(used >= student.lessonViewCredits) return { ok:false, remaining:0 };
+    student.lessonViewsUsed = used + 1;
+    const saved = await dbSet('students', studentKey(username), student);
+    if(saved && currentStudent && currentStudent.username === username){
+      currentStudent.lessonViewsUsed = student.lessonViewsUsed;
+      currentStudent.lessonViewCredits = student.lessonViewCredits;
+    }
+    return { ok: saved, remaining: student.lessonViewCredits - student.lessonViewsUsed };
   }
 
   async function saveTargetScore(username, targetPct){
@@ -7721,7 +7802,8 @@
       await dbSet('skills', `idx-${id}`, {
         _index: true, id, skill: data.skill, course: data.course,
         courses: Array.isArray(data.courses) ? data.courses : (data.course ? [data.course] : []),
-        createdByRole: data.createdByRole, questionCount: (data.questions || []).length, ts: data.ts
+        createdByRole: data.createdByRole, questionCount: (data.questions || []).length, ts: data.ts,
+        recordingUrl: data.recordingUrl || null
       });
       backfillExplanationVideos(data.skill, data.questions || []);
     }
@@ -7750,7 +7832,8 @@
         await dbSet('skills', `idx-${skill.id}`, {
           _index: true, id: skill.id, skill: skill.skill, course: skill.course || null,
           courses: Array.isArray(skill.courses) ? skill.courses : (skill.course ? [skill.course] : []),
-          createdByRole: skill.createdByRole, questionCount: (skill.questions || []).length, ts: skill.ts
+          createdByRole: skill.createdByRole, questionCount: (skill.questions || []).length, ts: skill.ts,
+          recordingUrl: skill.recordingUrl || null
         });
       }
       if(fullSkills.length > 0) invalidateDbCache('skills');
@@ -7766,7 +7849,7 @@
     await ensureIndexBackfilled('skills', (skill)=> ({
       _index: true, id: skill.id, skill: skill.skill, course: skill.course || null,
       courses: Array.isArray(skill.courses) ? skill.courses : (skill.course ? [skill.course] : []),
-      questionCount: (skill.questions || []).length, ts: skill.ts
+      questionCount: (skill.questions || []).length, ts: skill.ts, recordingUrl: skill.recordingUrl || null
     }));
     const rows = await dbGetAllByIdPrefix('skills', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -7900,6 +7983,7 @@
     editingSkillId = set.id;
     document.getElementById('skillNameInput').value = set.skill;
     populateSkillCourseCheckboxes(getSkillCourses(set));
+    document.getElementById('skillRecordingInput').value = set.recordingUrl || '';
     skillQuestionsContainer.innerHTML = '';
     (set.questions || []).forEach(q => addQuestionBlock(q, skillQuestionsContainer));
     document.getElementById('saveSkillBtn').textContent = 'Save changes';
@@ -7912,6 +7996,7 @@
     document.getElementById('saveSkillBtn').textContent = 'Save skill set';
     document.getElementById('cancelSkillEditBtn').style.display = 'none';
     document.getElementById('skillNameInput').value = '';
+    document.getElementById('skillRecordingInput').value = '';
     populateSkillCourseCheckboxes(currentAdminRole === 'act-admin' ? [ACT_ADMIN_COURSE] : []);
     skillQuestionsContainer.innerHTML = '';
     addQuestionBlock(null, skillQuestionsContainer);
@@ -7954,7 +8039,12 @@
     // edits it later, since the point is knowing where it came from.
     const existing = wasEditing ? await dbGet('skills', id) : null;
     const createdByRole = existing && existing.createdByRole ? existing.createdByRole : currentAdminRole;
-    const ok = await saveSkillSet(id, { skill, courses, course: courses[0] || null, questions, createdByRole, ts: new Date().toISOString() });
+    // Every question in a skill set belongs to that skill by definition —
+    // label them automatically rather than making the admin pick it 20 times.
+    questions.forEach(q => { q.lesson = skill; });
+    const ok = await saveSkillSet(id, { skill, courses, course: courses[0] || null, questions, createdByRole,
+      recordingUrl: document.getElementById('skillRecordingInput').value.trim() || null,
+      ts: new Date().toISOString() });
     btn.disabled = false;
 
     if(ok){
@@ -10776,6 +10866,59 @@
     });
   }
 
+  // Lesson recordings attached to a skill or exam. Unlike session recordings
+  // these are reference material for the topic itself, so there's no view
+  // limit — a student should be able to rewatch an explanation freely.
+  async function openLessonRecording(url, title){
+    if(!currentStudent){ openAuthModal('signinForm'); return; }
+
+    // Spend one of the student's lesson-view credits. Unlimited students
+    // pass straight through; anyone out of credits is stopped here.
+    const result = await spendLessonCredit(currentStudent.username);
+    if(!result.ok){
+      alert("You've used all your lesson views. Ask Mr. Mohamed Ibrahim for more.");
+      await refreshLessonCreditDisplays();
+      return;
+    }
+
+    document.getElementById('recordingModalTitle').textContent = title || 'Lesson recording';
+    document.getElementById('recordingPlayerFrame').src = toEmbedUrl(url);
+    document.getElementById('recordingViewNote').textContent = result.remaining === null
+      ? ''
+      : `${result.remaining} lesson view${result.remaining === 1 ? '' : 's'} left.`;
+    const fallback = document.getElementById('recordingFallbackLink');
+    fallback.href = url;
+    fallback.style.display = 'inline-block';
+    document.getElementById('recordingModal').classList.add('open');
+    await refreshLessonCreditDisplays();
+  }
+
+  // Keeps every "views left" label in sync after a credit is spent.
+  async function refreshLessonCreditDisplays(){
+    if(!currentStudent) return;
+    const student = await getStudent(currentStudent.username);
+    const remaining = lessonCreditsRemaining(student);
+    document.querySelectorAll('.lesson-credit-badge').forEach(el=>{
+      el.textContent = remaining === null ? '' : `${remaining} lesson view${remaining === 1 ? '' : 's'} left`;
+      el.style.display = remaining === null ? 'none' : '';
+    });
+    // Out of credits — grey the buttons out so it's obvious before clicking.
+    document.querySelectorAll('.lesson-rec-btn').forEach(btn=>{
+      if(remaining === 0){ btn.disabled = true; btn.style.opacity = '0.5'; btn.title = 'No lesson views left'; }
+      else { btn.disabled = false; btn.style.opacity = ''; btn.title = ''; }
+    });
+  }
+
+  // Delegated so it works for skill and exam cards alike, however they're
+  // re-rendered.
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.lesson-rec-btn');
+    if(!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openLessonRecording(btn.dataset.rec, btn.dataset.title);
+  });
+
   // Converts a normal share link into the embeddable form. Anything already
   // an embed URL (Bunny Stream, an /embed/ path) is passed straight through.
   function toEmbedUrl(url){
@@ -11059,6 +11202,7 @@
         <h3>${esc(set.skill)}</h3>
         <p>${set.questionCount} question${set.questionCount === 1 ? '' : 's'} to practice.</p>
         ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin:8px 0 -4px;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
+        ${set.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(set.recordingUrl)}" data-title="${esc(set.skill)}" style="display:block;width:100%;margin-bottom:8px;">🎬 Watch the lesson</button><div class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem; text-align:center; margin-bottom:8px;"></div>` : ''}
         <button class="btn btn-ghost start-skill-btn">${needsRetake ? 'Retake now' : 'Start practice'}</button>
       `;
       card.querySelector('.start-skill-btn').addEventListener('click', async ()=>{
@@ -11073,6 +11217,7 @@
       grid.appendChild(card);
     });
     applyDashSearchFilter('skillsSearchInput', 'skillsGrid');
+    refreshLessonCreditDisplays();
   }
 
 
@@ -16179,12 +16324,36 @@
           ${!isAssistant ? `<button class="student-action-btn accept-btn" ${status==='approved' ? 'disabled' : ''}>Accept</button>` : ''}
           ${!isAssistant ? `<button class="student-action-btn decline-btn" ${status==='declined' ? 'disabled' : ''}>Decline</button>` : ''}
           <button class="student-action-btn analysis-btn">Analysis</button>
+          ${!isAssistant ? `<button class="student-action-btn lesson-credits-btn" title="Give this student lesson-recording views">🎬 ${typeof s.lessonViewCredits === 'number' ? `${Math.max(0, s.lessonViewCredits - (s.lessonViewsUsed || 0))}/${s.lessonViewCredits} views` : 'Views: ∞'}</button>` : ''}
           ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="student-action-btn" style="color:#39D98A;border-color:#39D98A;text-decoration:none;display:inline-block;">WhatsApp</a>` : ''}
           <button class="student-action-btn parent-link-btn" title="Get a shareable, read-only link for this student's parent — no login needed">👨‍👩‍👧 Parent link</button>
           ${!isAssistant ? `<button class="student-action-btn reset-pass-btn" title="Passwords are stored securely and can't be viewed — set a new one instead">Reset password</button>` : ''}
           ${!isAssistant ? `<button class="student-action-btn delete-student-btn">Delete</button>` : ''}
         </td>
       `;
+      const creditsBtn = tr.querySelector('.lesson-credits-btn');
+      if(creditsBtn){
+        creditsBtn.addEventListener('click', async ()=>{
+          const current = typeof s.lessonViewCredits === 'number' ? s.lessonViewCredits : '';
+          const entered = prompt(
+            `How many lesson-recording views should ${s.username} get in total?\n` +
+            `They spend these on whichever lessons they choose.\n` +
+            `Leave blank for unlimited.\n\n` +
+            `Used so far: ${s.lessonViewsUsed || 0}`, current);
+          if(entered === null) return;
+          const trimmed = entered.trim();
+          const val = trimmed === '' ? null : parseInt(trimmed, 10);
+          if(trimmed !== '' && (isNaN(val) || val < 0)){ alert('Enter a whole number, or leave blank for unlimited.'); return; }
+          const student = await getStudent(s.username);
+          if(!student) return;
+          if(val === null) delete student.lessonViewCredits;
+          else student.lessonViewCredits = val;
+          await dbSet('students', studentKey(s.username), student);
+          invalidateDbCache('students');
+          await renderAdminStudents();
+          await refreshDashboardIfSignedInAs(s.username);
+        });
+      }
       const viewIpBtn = tr.querySelector('.view-ip-history-btn');
       if(viewIpBtn){
         viewIpBtn.addEventListener('click', ()=>{
