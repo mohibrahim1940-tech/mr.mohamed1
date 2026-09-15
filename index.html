@@ -3793,6 +3793,21 @@
         </select>
         <button class="btn btn-ghost" id="refreshSessions">Refresh</button>
       </div>
+      <div class="hw-section-title" style="margin-top:28px;">🎬 Who watched what</div>
+      <div class="admin-note" style="margin-bottom:14px;">Time shown is how long the player was open — a good measure of attention, though it can't prove the video was actually playing (browsers don't let a site read inside a YouTube or Drive player).</div>
+      <div class="admin-actions" style="margin-bottom:12px;">
+        <select id="watchFilterSelect" style="max-width:240px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
+          <option value="all">All recordings</option>
+          <option value="watched">Watched</option>
+          <option value="not">Not watched yet</option>
+        </select>
+        <button class="btn btn-ghost" id="refreshWatchStats">Refresh</button>
+      </div>
+      <div class="admin-table-wrap" id="watchStatsWrap">
+        <div class="admin-empty">Loading…</div>
+      </div>
+
+      <div class="hw-section-title" style="margin-top:28px;">All sessions</div>
       <div class="admin-table-wrap">
         <table class="admin-table" id="sessionsTable">
           <thead><tr><th>Student</th><th>Date</th><th>Time</th><th>Topic / notes</th><th>Attendance</th><th>Views</th><th></th></tr></thead>
@@ -7050,6 +7065,58 @@
     return Math.max(0, student.lessonViewCredits - (student.lessonViewsUsed || 0));
   }
 
+  /* ---------------- Recording watch tracking ----------------
+     Stored on the student record as a map of recordingKey -> stats, so it
+     needs no extra Supabase table.
+
+     IMPORTANT about what this measures: a YouTube/Drive/Bunny player runs in
+     a sandboxed frame the browser won't let this page read, so there is no
+     way to know real playback position. What's recorded is how long the
+     player was OPEN. That's a solid proxy for attention but it is not proof
+     of watching, and the admin view labels it that way rather than claiming
+     more than it knows. */
+  let activeWatch = null; // { username, key, title, startedAt }
+
+  function recordingKeyFor(kind, id){ return `${kind}:${id}`; }
+
+  function beginWatchTracking(username, key, title){
+    // Close any previous one first, so a student jumping straight from one
+    // recording to another doesn't leave a session open forever.
+    if(activeWatch) endWatchTracking();
+    activeWatch = { username, key, title, startedAt: Date.now() };
+  }
+
+  async function endWatchTracking(){
+    if(!activeWatch) return;
+    const { username, key, title, startedAt } = activeWatch;
+    activeWatch = null;
+    const seconds = Math.round((Date.now() - startedAt) / 1000);
+    if(seconds < 2) return; // opened and immediately closed — not a watch
+    try{
+      const student = await getStudent(username);
+      if(!student) return;
+      const stats = student.recordingStats || {};
+      const entry = stats[key] || { opens: 0, seconds: 0, title: title || '' };
+      entry.opens += 1;
+      entry.seconds += seconds;
+      entry.title = title || entry.title;
+      entry.lastAt = new Date().toISOString();
+      stats[key] = entry;
+      student.recordingStats = stats;
+      await dbSet('students', studentKey(username), student);
+      invalidateDbCache('students');
+    }catch(err){
+      console.error('Could not record watch time:', err);
+    }
+  }
+
+  // Catch the cases where the modal isn't closed cleanly — tab closed,
+  // browser backgrounded, navigating away.
+  window.addEventListener('beforeunload', ()=>{ if(activeWatch) endWatchTracking(); });
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'hidden' && activeWatch) endWatchTracking();
+  });
+
   async function spendLessonCredit(username){
     const student = await getStudent(username);
     if(!student) return { ok:false };
@@ -10299,6 +10366,7 @@
     if(students.some(s => s.username === currentFilterVal)) filterSelect.value = currentFilterVal;
 
     await renderAdminSessions();
+    renderWatchStats();
   }
 
   function updateSessSelectedCount(){
@@ -10516,6 +10584,99 @@
       await renderAdminSessions();
     }
   });
+
+  // Cross-references every student against every recording so you can see
+  // who's watched, who hasn't, and roughly how long they spent.
+  function formatWatchTime(seconds){
+    if(!seconds) return '—';
+    if(seconds < 60) return seconds + 's';
+    const m = Math.floor(seconds / 60), s = seconds % 60;
+    if(m < 60) return `${m}m ${s}s`;
+    return `${Math.floor(m / 60)}h ${m % 60}m`;
+  }
+
+  async function renderWatchStats(){
+    const wrap = document.getElementById('watchStatsWrap');
+    wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
+    const [students, sessions, skillsIdx, examsIdx] = await Promise.all([
+      fetchStudentsForCurrentAdmin(), fetchAllSessions(), fetchSkillsIndex(), fetchExamsIndex()
+    ]);
+    const approved = students.filter(s => s.status === 'approved');
+
+    // Everything that HAS a recording, from all three sources.
+    const recordings = [];
+    sessions.filter(s => !s._index && s.recordingUrl).forEach(s=>{
+      recordings.push({ key: recordingKeyFor('session', s.id), label: `${s.topic || 'Session'} (${s.date || ''})`,
+        kind: 'Session', onlyFor: s.username });
+    });
+    skillsIdx.filter(s => s.recordingUrl).forEach(s=>{
+      recordings.push({ key: recordingKeyFor('lesson', s.skill), label: s.skill, kind: 'Skill', onlyFor: null });
+    });
+    examsIdx.filter(e => e.recordingUrl).forEach(e=>{
+      recordings.push({ key: recordingKeyFor('lesson', e.title), label: e.title, kind: 'Exam', onlyFor: null });
+    });
+
+    if(recordings.length === 0){
+      wrap.innerHTML = '<div class="admin-empty">No recordings added yet — add one to a session, skill or exam and watch data appears here.</div>';
+      return;
+    }
+
+    const filter = document.getElementById('watchFilterSelect').value;
+    const rows = [];
+    recordings.forEach(rec=>{
+      // A session recording belongs to one student; skill/exam lessons are
+      // available to everyone, so each student gets their own row.
+      const audience = rec.onlyFor
+        ? approved.filter(s => (s.username||'').trim().toLowerCase() === rec.onlyFor.trim().toLowerCase())
+        : approved;
+      audience.forEach(stu=>{
+        const stat = (stu.recordingStats || {})[rec.key];
+        const watched = !!(stat && stat.opens > 0);
+        if(filter === 'watched' && !watched) return;
+        if(filter === 'not' && watched) return;
+        rows.push({
+          student: stu.username, label: rec.label, kind: rec.kind, watched,
+          opens: stat ? stat.opens : 0,
+          seconds: stat ? stat.seconds : 0,
+          lastAt: stat ? stat.lastAt : null
+        });
+      });
+    });
+
+    if(rows.length === 0){
+      wrap.innerHTML = '<div class="admin-empty">Nothing matches that filter.</div>';
+      return;
+    }
+
+    // Unwatched first — that's the list you'd actually act on.
+    rows.sort((a,b)=>{
+      if(a.watched !== b.watched) return a.watched ? 1 : -1;
+      return b.seconds - a.seconds;
+    });
+
+    wrap.innerHTML = `
+      <table class="admin-table">
+        <thead><tr><th>Student</th><th>Recording</th><th>Type</th><th>Status</th><th>Times opened</th><th>Time spent</th><th>Last watched</th></tr></thead>
+        <tbody>${rows.map(r => `
+          <tr>
+            <td>${esc(r.student)}</td>
+            <td>${esc(r.label)}</td>
+            <td>${esc(r.kind)}</td>
+            <td>${r.watched
+              ? '<span class="retake-pill done">✓ Watched</span>'
+              : '<span class="retake-pill overdue">Not yet</span>'}</td>
+            <td>${r.opens || '—'}</td>
+            <td>${formatWatchTime(r.seconds)}</td>
+            <td>${r.lastAt ? new Date(r.lastAt).toLocaleDateString() : '—'}</td>
+          </tr>`).join('')}</tbody>
+      </table>
+    `;
+  }
+
+  document.getElementById('refreshWatchStats').addEventListener('click', ()=>{
+    invalidateDbCache('students'); renderWatchStats();
+  });
+  document.getElementById('watchFilterSelect').addEventListener('change', renderWatchStats);
 
   document.getElementById('refreshSessions').addEventListener('click', ()=>{ invalidateDbCache('sessions'); renderAdminSessions(); });
 
@@ -10850,6 +11011,7 @@
       renderRecordingParts(parts, i, showPart);
     };
     if(parts.length > 0) showPart(0);
+    beginWatchTracking(currentStudent.username, recordingKeyFor('session', sessionId), record.topic || 'Session recording');
     document.getElementById('recordingViewNote').textContent = limit !== null
       ? `View ${used + 1} of ${limit}.${used + 1 >= limit ? ' This is your last one.' : ''}`
       : '';
@@ -10930,6 +11092,7 @@
       renderRecordingParts(parts, i, showPart);
     };
     showPart(0);
+    beginWatchTracking(currentStudent.username, recordingKeyFor('lesson', title || url), title || 'Lesson');
     document.getElementById('recordingViewNote').textContent = result.remaining === null
       ? ''
       : `${result.remaining} lesson view${result.remaining === 1 ? '' : 's'} left.`;
@@ -11091,6 +11254,7 @@
   document.getElementById('closeRecordingModal').addEventListener('click', ()=>{
     // Clearing the src actually stops playback — just hiding the modal
     // leaves the video running in the background.
+    endWatchTracking();
     document.getElementById('recordingPlayerFrame').src = '';
     document.getElementById('recordingPartTabs').innerHTML = '';
     document.getElementById('recordingPartTabs').style.display = 'none';
