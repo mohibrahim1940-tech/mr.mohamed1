@@ -3465,6 +3465,7 @@
       <button class="admin-tab" data-tab="paymentsPanel" data-roles="admin,act-admin">💳 Payments</button>
       <button class="admin-tab" data-tab="retakesPanel" data-roles="admin,act-admin">🔁 Retakes</button>
       <button class="admin-tab" data-tab="plansPanel" data-roles="admin,act-admin">📋 Course Plans</button>
+      <button class="admin-tab" data-tab="booksPanel" data-roles="admin,act-admin">📕 Books</button>
       <button class="admin-tab" data-tab="reviewsPanel" data-roles="admin,assistant,act-admin">Reviews</button>
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
       <button class="admin-tab" data-tab="competitionsPanel" data-roles="admin,act-admin">🏆 Competition</button>
@@ -4008,6 +4009,38 @@
         <button class="btn btn-ghost" id="refreshPlans">Refresh</button>
       </div>
       <div id="plansListWrap">
+        <div class="admin-empty">Loading…</div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="booksPanel">
+      <div class="admin-note">Group exams into books. Put a book on a course (in the Courses tab) and every exam inside it becomes visible to those students — so you organise once instead of tagging exams one by one.</div>
+
+      <div class="exam-editor" style="margin-top:0;">
+        <div class="field-row">
+          <label class="field-label">Book name</label>
+          <input type="text" id="bookNameInput" placeholder="e.g. Barron's SAT Math">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Exams in this book</label>
+          <div class="admin-actions" style="margin-bottom:8px;">
+            <input type="text" id="bookExamSearch" placeholder="🔍 Filter exams…" autocomplete="off"
+              style="max-width:240px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:8px 12px; border-radius:8px; font-family:'Inter',sans-serif;">
+            <span id="bookExamCount" style="color:var(--muted); font-size:0.8rem; margin-left:auto;">0 selected</span>
+          </div>
+          <div id="bookExamList" style="max-height:280px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:8px;"></div>
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-primary" id="saveBookBtn">Save book</button>
+          <button class="btn btn-ghost" id="cancelBookEditBtn" style="display:none;">Cancel</button>
+        </div>
+      </div>
+
+      <div class="hw-section-title" style="margin-top:28px;">Your books</div>
+      <div class="admin-actions" style="margin-bottom:12px;">
+        <button class="btn btn-ghost" id="refreshBooks">Refresh</button>
+      </div>
+      <div id="booksListWrap">
         <div class="admin-empty">Loading…</div>
       </div>
     </div>
@@ -5174,6 +5207,7 @@
       if(tab.dataset.tab === 'paymentsPanel'){ renderAdminPayments(); }
       if(tab.dataset.tab === 'retakesPanel'){ renderAdminRetakes(); }
       if(tab.dataset.tab === 'plansPanel'){ renderAdminPlans(); }
+      if(tab.dataset.tab === 'booksPanel'){ renderAdminBooks(); renderBookExamPicker(null); }
       if(tab.dataset.tab === 'reviewsPanel'){ initReviewsPanel(); }
       if(tab.dataset.tab === 'coursesPanel'){ renderAdminCourseList(); }
       if(tab.dataset.tab === 'competitionsPanel'){ showCompView('list'); renderCompetitionList(); }
@@ -9126,6 +9160,165 @@
       wrap.appendChild(row);
     });
   }
+
+  /* ---------------- ADMIN: Books ----------------
+     A "book" is just a name shared by a group of exams — it lives on the
+     exams themselves (exam.book), so this needs no extra Supabase table and
+     works with any exams you already tagged by hand. */
+  let editingBookName = null;
+
+  async function renderBookExamPicker(selectedBook){
+    const listEl = document.getElementById('bookExamList');
+    const exams = await fetchExamsIndex();
+    const term = (document.getElementById('bookExamSearch').value || '').trim().toLowerCase();
+
+    // Keep anything already ticked when the filter changes.
+    const ticked = new Set(
+      Array.from(listEl.querySelectorAll('input:checked')).map(cb => cb.value)
+    );
+    if(selectedBook){
+      exams.forEach(e => { if(e.book === selectedBook) ticked.add(e.id); });
+    }
+
+    const visible = exams
+      .filter(e => !term || (e.title || '').toLowerCase().includes(term))
+      .sort((a,b)=> (a.title || '').localeCompare(b.title || ''));
+
+    listEl.innerHTML = visible.length === 0
+      ? '<div class="admin-empty">No exams match.</div>'
+      : visible.map(e => {
+          // Flag exams already in a DIFFERENT book so you don't move one by
+          // accident without realising.
+          const otherBook = e.book && e.book !== editingBookName ? e.book : null;
+          return `<label style="display:flex; align-items:center; gap:8px; padding:6px 4px; cursor:pointer;">
+            <input type="checkbox" value="${esc(e.id)}"${ticked.has(e.id) ? ' checked' : ''}>
+            <span>${esc(e.title)}</span>
+            <span style="color:var(--muted); font-size:0.76rem;">${e.questionCount} q</span>
+            ${otherBook ? `<span style="color:#FFB020; font-size:0.74rem; margin-left:auto;">in "${esc(otherBook)}"</span>` : ''}
+          </label>`;
+        }).join('');
+
+    listEl.querySelectorAll('input').forEach(cb => cb.addEventListener('change', updateBookExamCount));
+    updateBookExamCount();
+  }
+
+  function updateBookExamCount(){
+    const n = document.querySelectorAll('#bookExamList input:checked').length;
+    document.getElementById('bookExamCount').textContent = `${n} selected`;
+  }
+
+  document.getElementById('bookExamSearch').addEventListener('input', ()=> renderBookExamPicker(null));
+
+  document.getElementById('saveBookBtn').addEventListener('click', async ()=>{
+    const name = document.getElementById('bookNameInput').value.trim();
+    if(!name){ alert('Give the book a name.'); return; }
+    const chosen = new Set(Array.from(document.querySelectorAll('#bookExamList input:checked')).map(cb => cb.value));
+
+    const btn = document.getElementById('saveBookBtn');
+    btn.disabled = true;
+    const exams = await fetchExamsIndex();
+    let changed = 0;
+
+    for(const idx of exams){
+      const shouldBeIn = chosen.has(idx.id);
+      const currentlyIn = idx.book === name;
+      // Only touch exams whose membership actually changes, and never steal
+      // one that belongs to a different book unless it was ticked here.
+      if(shouldBeIn === currentlyIn) continue;
+      if(!shouldBeIn && idx.book !== name) continue;
+      btn.textContent = `Saving… (${changed + 1})`;
+      const full = await dbGet('exams', idx.id);
+      if(!full) continue;
+      full.book = shouldBeIn ? name : null;
+      await saveExam(idx.id, full);
+      changed++;
+    }
+    btn.disabled = false; btn.textContent = 'Save book';
+    invalidateDbCache('exams');
+    resetBookEditor();
+    await renderAdminBooks();
+    await populateBookSuggestions();
+  });
+
+  function resetBookEditor(){
+    editingBookName = null;
+    document.getElementById('bookNameInput').value = '';
+    document.getElementById('bookExamSearch').value = '';
+    document.getElementById('bookExamList').innerHTML = '';
+    document.getElementById('saveBookBtn').textContent = 'Save book';
+    document.getElementById('cancelBookEditBtn').style.display = 'none';
+    renderBookExamPicker(null);
+  }
+  document.getElementById('cancelBookEditBtn').addEventListener('click', resetBookEditor);
+
+  async function renderAdminBooks(){
+    const wrap = document.getElementById('booksListWrap');
+    wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
+    const [exams, courses] = await Promise.all([fetchExamsIndex(), fetchAllCourses()]);
+
+    const byBook = {};
+    exams.forEach(e => {
+      if(!e.book) return;
+      if(!byBook[e.book]) byBook[e.book] = [];
+      byBook[e.book].push(e);
+    });
+    // A book listed on a course but with no exams yet still deserves a row,
+    // otherwise it looks like it vanished.
+    courses.forEach(c => (c.books || []).forEach(b => { if(!byBook[b]) byBook[b] = []; }));
+
+    const names = Object.keys(byBook).sort();
+    if(names.length === 0){
+      wrap.innerHTML = '<div class="admin-empty">No books yet — name one above and tick the exams that belong to it.</div>';
+      return;
+    }
+
+    wrap.innerHTML = '';
+    names.forEach(name=>{
+      const list = byBook[name];
+      const usedBy = courses.filter(c => (c.books || []).includes(name)).map(c => c.name);
+      const row = document.createElement('div');
+      row.className = 'exam-list-item';
+      row.innerHTML = `
+        <div>
+          <h4>📕 ${esc(name)}</h4>
+          <div class="meta">${list.length} exam${list.length === 1 ? '' : 's'} · ${
+            usedBy.length ? 'on ' + esc(usedBy.join(', ')) : '<span style="color:#FFB020;">not on any course yet</span>'}</div>
+          ${list.length ? `<div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
+            ${list.slice(0, 8).map(e => `<span class="plan-day-badge">${esc(e.title)}</span>`).join('')}
+            ${list.length > 8 ? `<span class="plan-day-badge">+${list.length - 8}</span>` : ''}
+          </div>` : ''}
+        </div>
+        <div class="exam-list-actions">
+          <button class="edit-book-btn">Edit</button>
+          <button class="danger unbook-btn">Remove book</button>
+        </div>
+      `;
+      row.querySelector('.edit-book-btn').addEventListener('click', async ()=>{
+        editingBookName = name;
+        document.getElementById('bookNameInput').value = name;
+        document.getElementById('bookExamSearch').value = '';
+        document.getElementById('bookExamList').innerHTML = '';
+        await renderBookExamPicker(name);
+        document.getElementById('saveBookBtn').textContent = 'Update book';
+        document.getElementById('cancelBookEditBtn').style.display = '';
+        document.getElementById('bookNameInput').scrollIntoView({ behavior:'smooth', block:'center' });
+      });
+      row.querySelector('.unbook-btn').addEventListener('click', async ()=>{
+        if(!confirm(`Remove the book "${name}"? The exams stay — they just won't be grouped under it any more.`)) return;
+        for(const e of list){
+          const full = await dbGet('exams', e.id);
+          if(full){ full.book = null; await saveExam(e.id, full); }
+        }
+        invalidateDbCache('exams');
+        await renderAdminBooks();
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  document.getElementById('refreshBooks').addEventListener('click', ()=>{
+    invalidateDbCache('exams'); renderAdminBooks(); renderBookExamPicker(null);
+  });
 
   document.getElementById('refreshPlans').addEventListener('click', ()=>{ invalidateDbCache('plans'); renderAdminPlans(); });
 
