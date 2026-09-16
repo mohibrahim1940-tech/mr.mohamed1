@@ -3375,6 +3375,12 @@
       <input type="date" id="applyPlanStartDate">
     </div>
     <div class="field-row">
+      <label class="field-label">Course</label>
+      <select id="applyPlanCourseFilter">
+        <option value="">All courses</option>
+      </select>
+    </div>
+    <div class="field-row">
       <label class="field-label">Students</label>
       <div class="admin-actions" style="margin-bottom:8px;">
         <button type="button" class="btn btn-ghost" id="applyPlanSelectAll" style="padding:4px 12px; font-size:0.78rem;">Select all</button>
@@ -3619,15 +3625,15 @@
           </div>
         </div>
         <div class="field-row">
-          <label class="field-label">Load questions from a skill (optional)</label>
+          <label class="field-label">Add questions from a skill (optional — pick several to combine)</label>
           <select id="hwLoadSkillSelect">
-            <option value="">— Start blank, or pick a skill below —</option>
+            <option value="">— Add questions from a skill —</option>
           </select>
         </div>
         <div class="field-row">
-          <label class="field-label">Load questions from an exam (optional)</label>
+          <label class="field-label">Add questions from an exam (optional — adds to whatever is already below)</label>
           <select id="hwLoadExamSelect">
-            <option value="">— Or pick an exam instead —</option>
+            <option value="">— Add questions from an exam —</option>
           </select>
         </div>
         <div class="field-row">
@@ -7563,7 +7569,7 @@
 
     let skillSets = await fetchSkillsIndex();
     if(currentAdminCourseFilter) skillSets = skillSets.filter(s => !s.course || courseInAdminScope(s.course));
-    loadSkillSelect.innerHTML = '<option value="">— Start blank, or pick a skill below —</option>' +
+    loadSkillSelect.innerHTML = '<option value="">— Add questions from a skill —</option>' +
       skillSets.map(s => `<option value="${esc(s.id)}">${esc(s.skill)} (${s.questionCount} question${s.questionCount===1?'':'s'})</option>`).join('');
     // Only force these back to blank on a genuine fresh tab-open — not on a
     // background auto-refresh, which shouldn't silently reset a dropdown an
@@ -7572,7 +7578,7 @@
 
     let examSets = await fetchExamsIndex();
     if(currentAdminCourseFilter) examSets = examSets.filter(e => !e.course || courseInAdminScope(e.course));
-    loadExamSelect.innerHTML = '<option value="">— Or pick an exam instead —</option>' +
+    loadExamSelect.innerHTML = '<option value="">— Add questions from an exam —</option>' +
       examSets.map(e => `<option value="${esc(e.id)}">${esc(e.title)} (${e.questionCount} question${e.questionCount===1?'':'s'})</option>`).join('');
     loadExamSelect.value = resetLoaders ? '' : (examSets.some(e => e.id === currentLoadExamVal) ? currentLoadExamVal : '');
 
@@ -7599,40 +7605,69 @@
     updateHwSelectedCount();
   });
 
+  // Both loaders ADD to whatever is already in the editor rather than
+  // replacing it, so a homework can combine a skill and an exam (or several
+  // of each). Clearing everything out is what the ✕ on each question and
+  // the Clear button are for.
+  function appendLoadedQuestions(questions){
+    // Skip anything already in the editor, so loading the same source twice
+    // by accident doesn't produce duplicates.
+    const existing = new Set(
+      collectQuestionsFrom(hwQuestionsContainer).map(q =>
+        q.image ? 'img:' + q.image : 'txt:' + normalizeQuestionText(q.text))
+    );
+    let added = 0, skipped = 0;
+    (questions || []).forEach(q=>{
+      const key = q.image ? 'img:' + q.image : 'txt:' + normalizeQuestionText(q.text);
+      if(existing.has(key)){ skipped++; return; }
+      existing.add(key);
+      addQuestionBlock(q, hwQuestionsContainer);
+      added++;
+    });
+    // Remove the blank starter block once real questions arrive.
+    const blocks = Array.from(hwQuestionsContainer.querySelectorAll('.question-block'));
+    blocks.forEach(b=>{
+      const hasText = (b.querySelector('.q-text')?.value || '').trim();
+      const hasImg = b._imageData;
+      const hasOpt = Array.from(b.querySelectorAll('.q-option')).some(o => o.value.trim());
+      if(!hasText && !hasImg && !hasOpt && blocks.length > 1) b.remove();
+    });
+    return { added, skipped };
+  }
+
   document.getElementById('hwLoadSkillSelect').addEventListener('change', async (e)=>{
     const skillId = e.target.value;
     if(!skillId) return;
-    document.getElementById('hwLoadExamSelect').value = '';
     const select = e.target;
-    const originalLabel = select.options[select.selectedIndex].textContent;
     select.disabled = true;
     const match = await dbGet('skills', skillId);
     select.disabled = false;
     if(!match){ alert('Could not load that skill — please try again.'); return; }
 
-    hwQuestionsContainer.innerHTML = '';
-    match.questions.forEach(q => addQuestionBlock(q, hwQuestionsContainer));
+    const { added, skipped } = appendLoadedQuestions(match.questions);
     if(!document.getElementById('hwTitleInput').value.trim()){
       document.getElementById('hwTitleInput').value = match.skill;
     }
+    if(skipped > 0) alert(`Added ${added} question${added===1?'':'s'} from "${match.skill}". ${skipped} ${skipped===1?'was':'were'} already in this homework.`);
+    // Reset so the same source can be picked again later if wanted.
+    select.value = '';
   });
 
   document.getElementById('hwLoadExamSelect').addEventListener('change', async (e)=>{
     const examId = e.target.value;
     if(!examId) return;
-    document.getElementById('hwLoadSkillSelect').value = '';
     const select = e.target;
-    const originalLabel = select.options[select.selectedIndex].textContent;
     select.disabled = true;
     const match = await dbGet('exams', examId);
     select.disabled = false;
     if(!match){ alert('Could not load that exam — please try again.'); return; }
 
-    hwQuestionsContainer.innerHTML = '';
-    match.questions.forEach(q => addQuestionBlock(q, hwQuestionsContainer));
+    const { added, skipped } = appendLoadedQuestions(match.questions);
     if(!document.getElementById('hwTitleInput').value.trim()){
       document.getElementById('hwTitleInput').value = match.title;
     }
+    if(skipped > 0) alert(`Added ${added} question${added===1?'':'s'} from "${match.title}". ${skipped} ${skipped===1?'was':'were'} already in this homework.`);
+    select.value = '';
     // Carry over the exam's printable PDF too, if it has one — the
     // homework is the same questions, so the same PDF applies.
     if(match.pdfUrl){
@@ -9047,6 +9082,9 @@
   async function addPlanEntryRow(entry){
     const wrap = document.getElementById('planEntriesWrap');
     const [skills, exams] = await Promise.all([fetchSkillsIndex(), fetchExamsIndex()]);
+    // A book can be dropped into a plan as a single entry — it expands into
+    // one homework per exam on consecutive days when the plan is applied.
+    const bookNames = [...new Set(exams.map(e => e.book).filter(Boolean))].sort();
     const row = document.createElement('div');
     row.className = 'plan-entry-row';
     const dayVal = entry ? entry.day : (wrap.querySelectorAll('.plan-entry-row').length + 1);
@@ -9059,6 +9097,9 @@
         </optgroup>
         <optgroup label="Exams">
           ${exams.map(e => `<option value="exam:${esc(e.id)}">${esc(e.title)} (${e.questionCount})</option>`).join('')}
+        </optgroup>
+        <optgroup label="Books — spreads every exam across consecutive days">
+          ${bookNames.map(b => `<option value="book:${esc(b)}">📕 ${esc(b)}</option>`).join('')}
         </optgroup>
       </select>
       <input type="text" class="plan-entry-title" placeholder="Homework title (optional)">
@@ -9327,26 +9368,57 @@
     applyingPlan = plan;
     document.getElementById('applyPlanTitle').textContent = `Apply "${plan.name}"`;
     document.getElementById('applyPlanStartDate').value = toDateInputValue(new Date());
-    const students = (await fetchStudentsForCurrentAdmin()).filter(s => s.status === 'approved');
-    document.getElementById('applyPlanStudentList').innerHTML = students.length === 0
-      ? '<div class="admin-empty">No approved students yet.</div>'
-      : students.map(s => `<label style="display:flex; align-items:center; gap:8px; padding:6px 4px; cursor:pointer;"><input type="checkbox" value="${esc(s.username)}"> ${esc(s.username)}</label>`).join('');
+    const courseSelect = document.getElementById('applyPlanCourseFilter');
+    const courses = await fetchAllCourses();
+    courseSelect.innerHTML = '<option value="">All courses</option>' +
+      courses.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+    courseSelect.value = '';
+    await renderApplyPlanStudents();
     updateApplyPlanPreview();
     document.getElementById('applyPlanModal').classList.add('open');
   }
 
-  function updateApplyPlanPreview(){
+  // Narrowing by course first makes picking students far quicker once you
+  // have a roster spanning several courses.
+  async function renderApplyPlanStudents(){
+    const course = document.getElementById('applyPlanCourseFilter').value;
+    let students = (await fetchStudentsForCurrentAdmin()).filter(s => s.status === 'approved');
+    if(course) students = students.filter(s => s.course === course);
+    document.getElementById('applyPlanStudentList').innerHTML = students.length === 0
+      ? '<div class="admin-empty">No approved students on that course.</div>'
+      : students.map(s => `<label style="display:flex; align-items:center; gap:8px; padding:6px 4px; cursor:pointer;"><input type="checkbox" value="${esc(s.username)}"> ${esc(s.username)}</label>`).join('');
+  }
+  document.getElementById('applyPlanCourseFilter').addEventListener('change', renderApplyPlanStudents);
+
+  async function updateApplyPlanPreview(){
     if(!applyingPlan) return;
     const startRaw = document.getElementById('applyPlanStartDate').value;
     const el = document.getElementById('applyPlanPreview');
     if(!startRaw){ el.textContent = 'Pick a start date to see the schedule.'; return; }
     const start = new Date(startRaw + 'T00:00:00');
-    const lines = applyingPlan.entries.slice(0, 5).map(e=>{
+
+    // A book entry becomes one homework per exam, so the real day count can
+    // be much larger than the number of rows in the plan — show the true
+    // total rather than misleading them.
+    let totalItems = 0;
+    let bookNote = '';
+    try{
+      const examsIdx = await fetchExamsIndex();
+      applyingPlan.entries.forEach(e=>{
+        if(e.source.startsWith('book:')){
+          const n = examsIdx.filter(x => x.book === e.source.slice(5)).length;
+          totalItems += n;
+          bookNote = ' (books expanded)';
+        } else totalItems += 1;
+      });
+    }catch(err){ totalItems = applyingPlan.entries.length; }
+
+    const lines = applyingPlan.entries.slice(0, 4).map(e=>{
       const d = new Date(start); d.setDate(d.getDate() + (e.day - 1));
-      return `Day ${e.day} → ${d.toLocaleDateString()}`;
+      const label = e.source.startsWith('book:') ? `📕 ${e.source.slice(5)}` : `Day ${e.day}`;
+      return `${label} → ${d.toLocaleDateString()}`;
     });
-    const more = applyingPlan.entries.length > 5 ? ` …and ${applyingPlan.entries.length - 5} more` : '';
-    el.textContent = lines.join('  ·  ') + more;
+    el.textContent = `${totalItems} homework${totalItems === 1 ? '' : 's'} per student${bookNote} · ` + lines.join('  ·  ');
   }
   document.getElementById('applyPlanStartDate').addEventListener('change', updateApplyPlanPreview);
   document.getElementById('closeApplyPlanModal').addEventListener('click', ()=> document.getElementById('applyPlanModal').classList.remove('open'));
@@ -9368,9 +9440,27 @@
     btn.disabled = true;
     const start = new Date(startRaw + 'T00:00:00');
 
+    // A "book:" entry stands for every exam in that book, spread across
+    // consecutive days from its own day. Expand those first so the rest of
+    // the scheduling logic only ever sees plain one-day entries.
+    const examsIdx = await fetchExamsIndex();
+    const expanded = [];
+    for(const entry of applyingPlan.entries){
+      if(entry.source.startsWith('book:')){
+        const bookName = entry.source.slice(5);
+        const inBook = examsIdx.filter(e => e.book === bookName);
+        inBook.forEach((e, i)=>{
+          expanded.push({ day: entry.day + i, source: `exam:${e.id}`, title: entry.title || null, _fromBook: bookName });
+        });
+      } else {
+        expanded.push(entry);
+      }
+    }
+    expanded.sort((a,b)=> a.day - b.day);
+
     // Load each referenced skill/exam once, not once per student.
     const sourceCache = {};
-    for(const entry of applyingPlan.entries){
+    for(const entry of expanded){
       if(sourceCache[entry.source] !== undefined) continue;
       const [kind, id] = entry.source.split(':');
       const rec = await dbGet(kind === 'skill' ? 'skills' : 'exams', id);
@@ -9378,9 +9468,9 @@
     }
 
     let created = 0, skipped = 0;
-    const total = usernames.length * applyingPlan.entries.length;
+    const total = usernames.length * expanded.length;
     for(const username of usernames){
-      for(const entry of applyingPlan.entries){
+      for(const entry of expanded){
         btn.textContent = `Assigning… (${created + skipped + 1}/${total})`;
         const src = sourceCache[entry.source];
         if(!src || !(src.questions || []).length){ skipped++; continue; }
@@ -9394,6 +9484,7 @@
           questions: src.questions,
           status: 'assigned', score: null, submittedAt: null,
           fromPlan: applyingPlan.name,
+          ...(entry._fromBook ? { fromBook: entry._fromBook } : {}),
           ts: new Date().toISOString()
         });
         if(ok) created++; else skipped++;
