@@ -1437,6 +1437,30 @@
 
   /* ---------- public practice exams ---------- */
   .exam-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+
+  /* Skills read better as a scannable list than as a wall of small boxes —
+     easier to find a specific one when there are dozens. */
+  .skill-row-list{ display:flex; flex-direction:column; gap:10px; }
+  .skill-row-list .exam-card{
+    display:flex; flex-direction:row; align-items:center; justify-content:space-between;
+    gap:18px; flex-wrap:wrap; padding:16px 20px;
+  }
+  /* The base card makes its <p> flex-grow to push buttons to the bottom of
+     a tall box. In row form that stretches the row to full height, so the
+     growth has to be cancelled. */
+  .skill-row-list .exam-card p{ flex-grow:0; }
+  .skill-row-list .exam-card:hover{ transform:none; border-color:rgba(76,111,255,0.4); }
+  .skill-row-list .exam-card .exam-card-main{ flex:1 1 320px; min-width:0; }
+  .skill-row-list .exam-card h3{ margin:0 0 3px; font-size:1.02rem; }
+  .skill-row-list .exam-card .exam-meta{ margin:0; }
+  .skill-row-list .exam-card .exam-card-actions{
+    display:flex; gap:8px; flex-wrap:wrap; flex:0 0 auto; align-items:center;
+  }
+  .skill-row-list .exam-card .exam-card-actions .btn{ width:auto; margin:0; }
+  @media(max-width:640px){
+    .skill-row-list .exam-card{ flex-direction:column; align-items:stretch; }
+    .skill-row-list .exam-card .exam-card-actions .btn{ width:100%; }
+  }
   .dash-search{
     width:100%; padding:12px 16px; border-radius:8px;
     border:1px solid var(--line); background:var(--ink); color:var(--text);
@@ -2815,7 +2839,7 @@
 
           <div class="hw-section-title">Practice by skill</div>
           <input type="text" class="dash-search" id="skillsSearchInput" placeholder="Search skills…">
-          <div class="exam-grid" id="skillsGrid">
+          <div class="skill-row-list" id="skillsGrid">
             <div class="exams-empty">Loading skills…</div>
           </div>
         </div>
@@ -3515,6 +3539,12 @@
           <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Leave blank to publish straight away. Click a day to schedule it, click it again to clear.</span>
         </div>
         <div class="field-row">
+          <label class="field-label">Book (optional — students only see this exam if the book is on their course)</label>
+          <input type="text" id="examBookInput" list="bookSuggestions" placeholder="e.g. Barron's SAT Math">
+          <datalist id="bookSuggestions"></datalist>
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Leave blank and the exam shows to everyone on the course, as before.</span>
+        </div>
+        <div class="field-row">
           <label class="field-label">Lesson recording (optional — your explanation of this material)</label>
           <textarea id="examRecordingInput" rows="3" placeholder="https://...&#10;https://...  (one per line for parts)"></textarea>
           <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">One link per line for multi-part recordings. Optionally name a part with <code>Part 1 | https://…</code>.</span>
@@ -3700,6 +3730,8 @@
       </div>
 
       <div class="admin-actions" style="margin-top:28px;">
+        <input type="text" id="skillAdminSearch" placeholder="🔍 Search skills…" autocomplete="off"
+          style="max-width:260px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:9px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
         <button class="btn btn-ghost" id="refreshSkills">Refresh</button>
         <button class="btn btn-ghost skill-course-filter-btn active" data-filter="all">All</button>
         <span id="skillCourseFilterExtra"></span>
@@ -4033,6 +4065,11 @@
         <div class="field-row">
           <label class="field-label">Course fee (optional — used to track who has paid in full)</label>
           <input type="number" id="courseFeeInput" min="0" step="0.01" placeholder="e.g. 1500">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Books on this course (one per line)</label>
+          <textarea id="courseBooksInput" rows="3" placeholder="Barron's SAT Math&#10;Princeton Review"></textarea>
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Exams tagged with one of these books become visible to students on this course.</span>
         </div>
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveCourseBtn">Add course</button>
@@ -5161,7 +5198,7 @@
       await dbSet('exams', `idx-${examId}`, {
         _index: true, id: examId, title: examData.title, course: examData.course,
         description: examData.description, questionCount: (examData.questions || []).length, publishAt: examData.publishAt || null,
-        recordingUrl: examData.recordingUrl || null,
+        recordingUrl: examData.recordingUrl || null, book: examData.book || null,
         ts: examData.ts, pdfUrl: examData.pdfUrl || null
       });
       backfillExplanationVideos(examData.title, examData.questions || []);
@@ -5180,7 +5217,7 @@
   async function fetchExamsIndex(){
     await ensureIndexBackfilled('exams', (exam)=> ({
       _index: true, id: exam.id, title: exam.title, course: exam.course,
-      description: exam.description, questionCount: (exam.questions || []).length, ts: exam.ts, pdfUrl: exam.pdfUrl || null, publishAt: exam.publishAt || null, recordingUrl: exam.recordingUrl || null
+      description: exam.description, questionCount: (exam.questions || []).length, ts: exam.ts, pdfUrl: exam.pdfUrl || null, publishAt: exam.publishAt || null, recordingUrl: exam.recordingUrl || null, book: exam.book || null
     }));
     const rows = await dbGetAllByIdPrefix('exams', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -5951,6 +5988,8 @@
     document.getElementById('examPdfUploadStatus').textContent = '';
     document.getElementById('examPublishDateInput').value = '';
     document.getElementById('examRecordingInput').value = '';
+    document.getElementById('examBookInput').value = '';
+    populateBookSuggestions();
     renderExamWeekCalendar();
     questionsContainer.innerHTML = '';
     addQuestionBlock(null);
@@ -6066,7 +6105,8 @@
     const examPublishRaw = document.getElementById('examPublishDateInput').value;
     const examData = { title, course: examCourseInput.value.trim(), description: examDescInput.value.trim(), timeLimit, pdfUrl: examPendingPdfUrl || null,
       publishAt: examPublishRaw ? new Date(examPublishRaw + 'T00:00:00').toISOString() : null,
-      recordingUrl: document.getElementById('examRecordingInput').value.trim() || null, questions };
+      recordingUrl: document.getElementById('examRecordingInput').value.trim() || null,
+      book: document.getElementById('examBookInput').value.trim() || null, questions };
 
     const saveBtn = document.getElementById('saveExamBtn');
     saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
@@ -6093,6 +6133,7 @@
     document.getElementById('examTimeLimitInput').value = exam.timeLimit || '';
     document.getElementById('examPublishDateInput').value = exam.publishAt ? toDateInputValue(new Date(exam.publishAt)) : '';
     document.getElementById('examRecordingInput').value = exam.recordingUrl || '';
+    document.getElementById('examBookInput').value = exam.book || '';
     renderExamWeekCalendar();
     examPendingPdfUrl = exam.pdfUrl || null;
     document.getElementById('examPdfInput').value = '';
@@ -6133,7 +6174,7 @@
       row.innerHTML = `
         <div>
           <h4>${esc(exam.title)}</h4>
-          <div class="meta">${exam.course ? esc(exam.course) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${exam.questionCount} question${exam.questionCount===1?'':'s'}${!isHomeworkPublished(exam) ? ` · <span style="color:var(--signal);">🕒 scheduled ${new Date(exam.publishAt).toLocaleDateString()}</span>` : ''}</div>
+          <div class="meta">${exam.course ? esc(exam.course) + ' · ' : '<span style="color:#FFB020;">⚠ No course set — visible to ALL students · </span>'}${exam.questionCount} question${exam.questionCount===1?'':'s'}${exam.book ? ` · 📕 ${esc(exam.book)}` : ''}${!isHomeworkPublished(exam) ? ` · <span style="color:var(--signal);">🕒 scheduled ${new Date(exam.publishAt).toLocaleDateString()}</span>` : ''}</div>
         </div>
         <div class="exam-list-actions">
           <button class="exam-pdf-btn" title="Make a printable PDF of these questions">📄 PDF</button>
@@ -6321,8 +6362,22 @@
     // Only exams matching this student's own course — an exam with no
     // course set at all stays visible to everyone (keeps older,
     // unscoped content working exactly as it always did).
+    // Book gating: an exam tagged with a book is only visible to students
+    // whose course carries that book. Untagged exams behave exactly as
+    // before, so nothing existing changes.
+    let myBooks = [];
+    if(currentStudent){
+      try{
+        const courses = await fetchAllCourses();
+        const mine = courses.find(c => c.name === currentStudent.course);
+        myBooks = (mine && Array.isArray(mine.books)) ? mine.books.map(b => b.trim().toLowerCase()) : [];
+      }catch(err){ myBooks = []; }
+    }
     const exams = currentStudent
-      ? allExams.filter(e => (!e.course || e.course === currentStudent.course) && isHomeworkPublished(e))
+      ? allExams.filter(e =>
+          (!e.course || e.course === currentStudent.course) &&
+          isHomeworkPublished(e) &&
+          (!e.book || myBooks.includes(String(e.book).trim().toLowerCase())))
       : allExams.filter(isHomeworkPublished);
 
     if(exams.length === 0){
@@ -7810,6 +7865,20 @@
   // homework does, otherwise a paper you prepare on Sunday is visible the
   // moment you save it.
   let examWeekStart = null;
+  // Offers books already used on exams or listed on courses, so the same
+  // book doesn't end up saved under three slightly different spellings.
+  async function populateBookSuggestions(){
+    const list = document.getElementById('bookSuggestions');
+    if(!list) return;
+    try{
+      const [exams, courses] = await Promise.all([fetchExamsIndex(), fetchAllCourses()]);
+      const names = new Set();
+      exams.forEach(e => { if(e.book) names.add(e.book); });
+      courses.forEach(c => (c.books || []).forEach(b => names.add(b)));
+      list.innerHTML = [...names].sort().map(n => `<option value="${esc(n)}">`).join('');
+    }catch(err){ /* suggestions are a convenience, never block the editor */ }
+  }
+
   async function renderExamWeekCalendar(){
     const daysWrap = document.getElementById('examWeekDays');
     if(!daysWrap) return;
@@ -8013,6 +8082,12 @@
     if(currentAdminCourseFilter) sets = sets.filter(s => courseInAdminScope(s.course));
     if(currentSkillListFilter !== 'all') sets = sets.filter(s => getSkillCourses(s).includes(currentSkillListFilter));
 
+    const searchTerm = (document.getElementById('skillAdminSearch').value || '').trim().toLowerCase();
+    if(searchTerm) sets = sets.filter(s => (s.skill || '').toLowerCase().includes(searchTerm));
+    // Alphabetical is far easier to scan than newest-first once you have
+    // more than a handful of skills.
+    sets = sets.slice().sort((a,b)=> (a.skill || '').localeCompare(b.skill || ''));
+
     // Build skillId -> [assistant usernames] so the list can show who's
     // responsible for explaining each skill, without an extra click into
     // the Assistants tab.
@@ -8157,6 +8232,8 @@
       alert('Could not save the skill set — please try again.');
     }
   });
+
+  document.getElementById('skillAdminSearch').addEventListener('input', ()=> renderAdminSkillList());
 
   document.getElementById('refreshSkills').addEventListener('click', ()=>{ invalidateDbCache('skills'); renderAdminSkillList(); });
 
@@ -8452,10 +8529,11 @@
       row.innerHTML = `
         <div>
           <h4>${esc(course.name)}</h4>
-          <div class="meta">${typeof course.fee === 'number' ? `Fee: ${course.fee}` : 'No fee set'}</div>
+          <div class="meta">${typeof course.fee === 'number' ? `Fee: ${course.fee}` : 'No fee set'}${Array.isArray(course.books) && course.books.length ? ` · 📕 ${esc(course.books.join(', '))}` : ''}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-course-fee-btn">Set fee</button>
+          <button class="edit-course-books-btn">📕 Books</button>
           <button class="danger delete-course-btn">Delete</button>
         </div>
       `;
@@ -8466,6 +8544,15 @@
         const fee = trimmed === '' ? null : parseFloat(trimmed);
         if(trimmed !== '' && (isNaN(fee) || fee < 0)){ alert('Enter a valid amount, or leave it blank.'); return; }
         await saveCourse(course.id, { ...course, fee });
+        invalidateDbCache('courses');
+        await renderAdminCourseList();
+      });
+      row.querySelector('.edit-course-books-btn').addEventListener('click', async ()=>{
+        const current = Array.isArray(course.books) ? course.books.join('\n') : '';
+        const entered = prompt(`Books on "${course.name}" — one per line.\nExams tagged with these become visible to this course.`, current);
+        if(entered === null) return;
+        const books = entered.split(/\r?\n/).map(b => b.trim()).filter(Boolean);
+        await saveCourse(course.id, { ...course, books });
         invalidateDbCache('courses');
         await renderAdminCourseList();
       });
@@ -8496,12 +8583,15 @@
     const btn = document.getElementById('saveCourseBtn');
     btn.disabled = true; btn.textContent = 'Saving…';
     const id = generateId('course');
-    const ok = await saveCourse(id, { name, fee, ts: new Date().toISOString() });
+    const books = document.getElementById('courseBooksInput').value
+      .split(/\r?\n/).map(b => b.trim()).filter(Boolean);
+    const ok = await saveCourse(id, { name, fee, books, ts: new Date().toISOString() });
     btn.disabled = false; btn.textContent = 'Add course';
 
     if(ok){
       document.getElementById('courseNameInput').value = '';
       document.getElementById('courseFeeInput').value = '';
+      document.getElementById('courseBooksInput').value = '';
       await renderAdminCourseList();
       await refreshCourseNamesCache();
       await populateRegisterCourseOptions();
@@ -11511,7 +11601,8 @@
     const latestByTitle = await getLatestAttemptsByTitle();
 
     grid.innerHTML = '';
-    sets.forEach(set=>{
+    // Alphabetical so a student can find a named skill quickly.
+    sets.slice().sort((a,b)=> (a.skill || '').localeCompare(b.skill || '')).forEach(set=>{
       const card = document.createElement('div');
       card.className = 'exam-card';
       const latest = latestByTitle[set.skill];
@@ -11519,11 +11610,15 @@
       const overdue = needsRetake && latest.retakeDeadline && new Date(latest.retakeDeadline) < new Date();
 
       card.innerHTML = `
-        <h3>${esc(set.skill)}</h3>
-        <p>${set.questionCount} question${set.questionCount === 1 ? '' : 's'} to practice.</p>
-        ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin:8px 0 -4px;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
-        ${set.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(set.recordingUrl)}" data-title="${esc(set.skill)}" style="display:block;width:100%;margin-bottom:8px;">🎬 Watch the lesson${parseRecordingParts(set.recordingUrl).length > 1 ? ` (${parseRecordingParts(set.recordingUrl).length} parts)` : ''}</button><div class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem; text-align:center; margin-bottom:8px;"></div>` : ''}
-        <button class="btn btn-ghost start-skill-btn">${needsRetake ? 'Retake now' : 'Start practice'}</button>
+        <div class="exam-card-main">
+          <h3>${esc(set.skill)}</h3>
+          <p class="exam-meta">${set.questionCount} question${set.questionCount === 1 ? '' : 's'} to practice.</p>
+          ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin-top:6px; display:inline-block;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
+        </div>
+        <div class="exam-card-actions">
+          ${set.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(set.recordingUrl)}" data-title="${esc(set.skill)}">🎬 Watch the lesson${parseRecordingParts(set.recordingUrl).length > 1 ? ` (${parseRecordingParts(set.recordingUrl).length} parts)` : ''}</button><span class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem;"></span>` : ''}
+          <button class="btn btn-ghost start-skill-btn">${needsRetake ? 'Retake now' : 'Start practice'}</button>
+        </div>
       `;
       card.querySelector('.start-skill-btn').addEventListener('click', async ()=>{
         const btn = card.querySelector('.start-skill-btn');
