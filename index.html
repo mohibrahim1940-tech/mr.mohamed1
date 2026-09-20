@@ -1561,6 +1561,23 @@
     background:rgba(var(--accent-rgb),0.08); border:1px solid var(--accent-edge);
   }
   .explanation-text-body{ font-size:0.9rem; line-height:1.6; white-space:pre-wrap; }
+  .explanation-card{
+    margin-top:12px; padding:14px 16px; border-radius:10px;
+    background:rgba(var(--accent-rgb),0.08); border:1px solid var(--accent-edge);
+  }
+  .explanation-card > * + *{ margin-top:10px; }
+  .explanation-card .explanation-video-label{ margin-bottom:0; }
+  .explanation-photo-link{ display:inline-block; max-width:100%; }
+  .explanation-photo{
+    display:block; max-width:100%; max-height:420px; object-fit:contain;
+    border-radius:8px; border:1px solid var(--line); background:var(--ink); cursor:zoom-in;
+  }
+  .explanation-video{ display:block; width:100%; max-width:560px; border-radius:8px; border:1px solid var(--line); background:#000; }
+  .explanation-embed{ position:relative; width:100%; max-width:560px; aspect-ratio:16/9; border-radius:8px; overflow:hidden; background:#000; }
+  .explanation-embed iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .explanation-voice{ display:flex; flex-direction:column; gap:6px; }
+  .explanation-voice-tag{ font-size:0.76rem; color:var(--muted); }
+  .explanation-voice audio{ width:100%; max-width:560px; }
 
   .option-row{align-items:flex-start;}
   .option-row input[type="radio"]{margin-top:9px;}
@@ -2210,6 +2227,37 @@
   .rb-opt.is-wrong-pick{ border-color:var(--ember); background:var(--ember-soft); }
   .rb-opt.is-wrong-pick .tag{ color:var(--ember); }
   .rb-nav{ display:flex; justify-content:space-between; gap:10px; margin-top:12px; }
+  .rb-expl{
+    margin-top:14px; padding:14px 16px; border-radius:12px;
+    background:var(--panel); border:1px solid var(--accent-edge);
+    border-left:4px solid var(--brand);
+    animation:rbRise .3s ease both;
+  }
+  .rb-expl-title{ font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:0.95rem; margin-bottom:6px; }
+  .rb-expl .explanation-card{ margin-top:8px; }
+  .rb-expl-note{ color:var(--muted); font-size:0.84rem; margin-bottom:10px; }
+  .rb-expl-wait{ display:flex; align-items:center; gap:10px; color:var(--muted); font-size:0.86rem; border-left-color:var(--line-strong); }
+  .rb-expl-empty{ border-color:var(--line); border-left-color:var(--amber); }
+  .rb-expl-sent{ border-color:var(--line); border-left-color:var(--success); }
+  .rb-ask-row{ margin-top:4px; }
+  @media(min-width:600px){
+    .ask-row.rb-ask-row{ flex-direction:row; align-items:center; }
+    .ask-row.rb-ask-row input[type="text"]{ flex:1; margin:0; }
+    .ask-row.rb-ask-row .btn-blue{ width:auto; padding:11px 24px; flex-shrink:0; }
+  }
+  .rb-ask-error{ color:var(--ember); font-size:0.8rem; margin-top:6px; min-height:1em; }
+  .rb-spinner{
+    width:14px; height:14px; border-radius:50%; flex-shrink:0;
+    border:2px solid var(--line-strong); border-top-color:var(--brand);
+    animation:rbSpin .8s linear infinite;
+  }
+  @keyframes rbSpin{ to{ transform:rotate(360deg); } }
+  /* A small bulb on tiles that have an explanation, so students can see at a
+     glance which questions are worth opening. */
+  .rb-tile.has-expl::after{
+    content:'\1F4A1'; position:absolute; bottom:1px; left:3px;
+    font-size:0.58rem; line-height:1;
+  }
   .rb-nav button{ padding:8px 14px; font-size:0.84rem; }
 
   .rb-topics{ margin-top:18px; }
@@ -6513,6 +6561,7 @@
             <span><i style="background:var(--success)"></i>Correct</span>
             <span><i style="background:var(--ember)"></i>Wrong</span>
             <span><i style="background:var(--panel-2); border:1px dashed var(--line-strong)"></i>Not answered</span>
+            <span>\ud83d\udca1 Has an explanation</span>
             <span style="margin-left:auto;">Tap a number to see that question</span>
           </div>
           <div class="rb-detail-slot"></div>
@@ -6521,10 +6570,131 @@
     };
   }
 
-  function wireResultBoard(container, rows){
+  /* Explanations are saved onto the ORIGINAL skill or exam, and onto every
+     copy of a homework that existed at the time. A student's own copy of
+     homework is taken when it's assigned, so an explanation added later --
+     or one written on the skill a plan pulled from -- never reaches it.
+     This looks for each question everywhere its explanation could be,
+     matching on the question itself (its image, or its wording together
+     with its answer choices) so an unrelated question with similar wording
+     is never picked up. */
+  function questionKeys(q){
+    const keys = [];
+    if(q.image) keys.push('img:' + q.image);
+    const t = normalizeQuestionText(q.text);
+    if(t && t !== '(question with image)'){
+      const opts = (q.options || []).map(o => normalizeQuestionText(o));
+      keys.push('all:' + t + '#' + opts.join('|'));
+      const correctIdx = q.correctAnswer != null ? q.correctAnswer : q.correct;
+      const right = opts[correctIdx];
+      if(right) keys.push('ans:' + t + '#' + right);
+    }
+    return keys;
+  }
+  function explanationSignature(e){
+    return [e.by || '', e.text || '', e.video || '', e.photo || '', e.voice || ''].join('␟');
+  }
+  // An assistant's answer to one student's mistake is stored on that mistake
+  // as { text, photoUrl, videoUrl, voiceUrl, answeredBy } -- a different
+  // shape from a question's explanations list. This turns it into the same
+  // shape so both render the same way.
+  function mistakeAnswerAsExplanation(answer){
+    if(!answer) return null;
+    const e = { by: answer.answeredBy || null, text: answer.text || null,
+                photo: answer.photoUrl || null, video: answer.videoUrl || null, voice: answer.voiceUrl || null };
+    return (e.text || e.photo || e.video || e.voice) ? e : null;
+  }
+
+  async function findLiveExplanations(rows, context){
+    // One explanation per person per question -- Mr. Mohamed Ibrahim's and
+    // each assistant's side by side. When the same person's explanation
+    // turns up in several places, the most authoritative copy wins (lower
+    // rank): the skill/exam itself is where every save lands first, and the
+    // student's own quiz copy is the most likely to be out of date.
+    const RANK = { source:0, ownLive:1, mistake:2, otherHw:3, quizCopy:4 };
+    const perRow = rows.map(()=> new Map());
+    const order = rows.map(()=> []);
+    function add(i, exp, rank){
+      if(!exp || !(exp.text || exp.video || exp.photo || exp.voice)) return;
+      const who = String(exp.by || '').trim().toLowerCase() || '(coach)';
+      const cur = perRow[i].get(who);
+      if(!cur){ perRow[i].set(who, { exp, rank }); order[i].push(who); }
+      else if(rank < cur.rank) perRow[i].set(who, { exp, rank });
+    }
+    const keyIndex = rows.map(r => questionKeys(r));
+    function rowsMatching(q){
+      const keys = questionKeys(q);
+      if(keys.length === 0) return [];
+      const hits = [];
+      keyIndex.forEach((rk, i)=>{ if(rk.some(k => keys.includes(k))) hits.push(i); });
+      return hits;
+    }
+    function absorb(questions, rank){
+      if(!Array.isArray(questions)) return;
+      questions.forEach(q=>{
+        const ex = getQuestionExplanations(q);
+        if(ex.length === 0) return;
+        rowsMatching(q).forEach(i => ex.forEach(e => add(i, e, rank)));
+      });
+    }
+    const anyEmpty = ()=> perRow.some(m => m.size === 0);
+
+    rows.forEach((r, i) => getQuestionExplanations(r).forEach(e => add(i, e, RANK.quizCopy)));
+
+    try{
+      // Every skill and exam -- where your and your assistants' explanations
+      // are saved first.
+      const [exams, skills] = await Promise.all([fetchAllExams(), fetchAllSkills()]);
+      exams.forEach(e => absorb(e.questions, RANK.source));
+      skills.forEach(sk => absorb(sk.questions, RANK.source));
+
+      // This student's own homework as it stands now.
+      if(context.kind === 'homework' && context.ownId){
+        const live = await dbGet('homework', context.ownId);
+        if(live) absorb(live.questions, RANK.ownLive);
+      }
+
+      // Mistake records: an assistant's answer is always saved here, even
+      // when it couldn't be attached to the original question (a retake, or
+      // a skill that has since been renamed). Newest first, so if someone
+      // re-answered, their latest wording is the one kept.
+      const mistakes = (await fetchAllMistakes())
+        .filter(m => !m._index)
+        .sort((a,b)=> new Date((b.answer && b.answer.answeredAt) || b.ts || 0) - new Date((a.answer && a.answer.answeredAt) || a.ts || 0));
+      mistakes.forEach(m=>{
+        const hits = rowsMatching(m);
+        if(hits.length === 0) return;
+        const fromAnswer = mistakeAnswerAsExplanation(m.answer);
+        const copies = getQuestionExplanations(m);
+        hits.forEach(i=>{
+          if(fromAnswer) add(i, fromAnswer, RANK.mistake);
+          copies.forEach(e => add(i, e, RANK.mistake));
+        });
+      });
+
+      // Last resort, only for questions still without anything: other
+      // students' copies of this same homework.
+      if(anyEmpty() && context.kind === 'homework' && context.title){
+        const idx = await fetchHomeworkIndex();
+        const others = idx.filter(h => h.title === context.title && h.id !== context.ownId).slice(0, 40);
+        for(let n = 0; n < others.length && anyEmpty(); n += 8){
+          const batch = await Promise.all(others.slice(n, n + 8).map(h => dbGet('homework', h.id)));
+          batch.forEach(h => { if(h) absorb(h.questions, RANK.otherHw); });
+        }
+      }
+    }catch(err){
+      console.error('Could not look up explanations for the results screen:', err);
+    }
+    return perRow.map((m, i) => order[i].map(who => m.get(who).exp));
+  }
+
+  function wireResultBoard(container, rows, context){
+    context = context || {};
     const board = container.querySelector('.rb');
     if(!board) return;
     const statuses = rows.map(resultStatus);
+    let searching = true;           // still looking for explanations elsewhere
+    const asked = new Set();        // questions the student has already asked about
     const slot = board.querySelector('.rb-detail-slot');
     const tiles = [...board.querySelectorAll('.rb-tile')];
     let filter = 'all';
@@ -6580,15 +6750,71 @@
           ${r.image ? `<img class="rb-qimg" src="${r.image}" alt="Question image">` : ''}
           ${r.text && r.text !== '(question with image)' ? `<div class="rb-detail-text">${esc(r.text)}</div>` : ''}
           <div class="rb-opts">${opts}</div>
-          ${explanationVideoHtml(r)}
+          ${explanationAreaHtml(i)}
           <div class="rb-nav">
             <button type="button" class="btn btn-ghost rb-prev" ${pos <= 0 ? 'disabled style="opacity:.4"' : ''}>← Previous</button>
             <button type="button" class="btn btn-ghost rb-next" ${pos < 0 || pos >= list.length - 1 ? 'disabled style="opacity:.4"' : ''}>Next →</button>
           </div>
         </div>`;
+      wireAskBox(i);
       const prev = slot.querySelector('.rb-prev'), next = slot.querySelector('.rb-next');
       if(prev) prev.addEventListener('click', ()=>{ if(pos > 0) show(list[pos - 1]); });
       if(next) next.addEventListener('click', ()=>{ if(pos >= 0 && pos < list.length - 1) show(list[pos + 1]); });
+    }
+
+    function explanationAreaHtml(i){
+      const r = rows[i];
+      if(getQuestionExplanations(r).length > 0){
+        return `<div class="rb-expl"><div class="rb-expl-title">\ud83d\udca1 Explanation</div>${explanationVideoHtml(r)}</div>`;
+      }
+      if(searching){
+        return `<div class="rb-expl rb-expl-wait"><span class="rb-spinner"></span> Looking for an explanation\u2026</div>`;
+      }
+      if(!currentStudent) return '';
+      if(asked.has(i)){
+        return `<div class="rb-expl rb-expl-sent"><div class="rb-expl-title">\u2713 Question sent</div>
+          <div class="rb-expl-note">Mr. Mohamed Ibrahim will see it. When he answers, the explanation shows up here and in your Mistake History.</div></div>`;
+      }
+      return `<div class="rb-expl rb-expl-empty">
+          <div class="rb-expl-title">No explanation for this one yet</div>
+          <div class="rb-expl-note">Stuck on it? Ask and Mr. Mohamed Ibrahim will explain.</div>
+          <div class="ask-row rb-ask-row">
+            <input type="text" class="rb-ask-input" placeholder="What part is confusing?">
+            <button type="button" class="btn btn-blue rb-ask-send">Send</button>
+          </div>
+          <div class="rb-ask-error"></div>
+        </div>`;
+    }
+
+    function wireAskBox(i){
+      const btn = slot.querySelector('.rb-ask-send');
+      if(!btn) return;
+      const input = slot.querySelector('.rb-ask-input');
+      const err = slot.querySelector('.rb-ask-error');
+      const send = async ()=>{
+        const message = input.value.trim();
+        if(!message){ input.focus(); return; }
+        btn.disabled = true; btn.textContent = 'Sending\u2026';
+        const r = rows[i];
+        let ok = false;
+        try{
+          ok = await saveAsk({
+            username: currentStudent ? currentStudent.username : 'Unknown',
+            homeworkTitle: context.title || '',
+            questionText: r.text || (r.image ? '(question with image)' : ''),
+            questionImage: r.image || null,
+            lesson: r.lesson || 'General',
+            message
+          });
+        }catch(e){ console.error('Ask from results failed:', e); }
+        if(ok){ asked.add(i); show(i); }
+        else {
+          btn.disabled = false; btn.textContent = 'Send';
+          err.textContent = 'Could not send \u2014 check your connection and try again.';
+        }
+      };
+      btn.addEventListener('click', send);
+      input.addEventListener('keydown', e => { if(e.key === 'Enter') send(); });
     }
 
     tiles.forEach(t => t.addEventListener('click', ()=>{
@@ -6607,9 +6833,28 @@
       else show(current);
     }));
 
+    const markExplained = ()=>{
+      tiles.forEach(t=>{
+        const i = Number(t.dataset.i);
+        t.classList.toggle('has-expl', getQuestionExplanations(rows[i]).length > 0);
+      });
+    };
+    markExplained();
+
     // Open straight onto the first mistake, so reviewing starts immediately.
     const firstWrong = statuses.indexOf('wrong');
     if(firstWrong >= 0) show(firstWrong);
+
+    // Fill in explanations saved anywhere else, without holding up the
+    // results. Whatever is open re-draws once the search finishes.
+    findLiveExplanations(rows, context).then(found=>{
+      found.forEach((list, i)=>{ if(list.length > 0) rows[i].explanations = list; });
+    }).finally(()=>{
+      searching = false;
+      if(!board.isConnected) return;
+      markExplained();
+      if(current >= 0) show(current);
+    });
   }
 
   // Confetti for a strong result -- plain DOM pieces, no library, and
@@ -6680,34 +6925,40 @@
     return explanations;
   }
 
+  // A video explanation can be an uploaded file or a pasted YouTube / Google
+  // Drive link. A file plays in a <video>; a link has to go in an embed
+  // frame, or it just shows a broken player.
+  function explanationVideoPlayerHtml(url, who){
+    const isLink = /youtube\.com|youtu\.be|drive\.google\.com|vimeo\.com|player\.|iframe\.mediadelivery/.test(url);
+    if(isLink){
+      return `<div class="explanation-embed"><iframe src="${esc(toEmbedUrl(url))}" title="Video explanation from ${who}"
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>`;
+    }
+    return `<video class="explanation-video" controls preload="metadata" playsinline src="${esc(url)}"></video>`;
+  }
+
+  // One card per person: their name once at the top, then whatever they sent
+  // -- written steps, a photo of their working, a video, a voice note -- in
+  // that order. Photos open full size when tapped, since handwritten working
+  // is usually too small to read inline on a phone.
   function explanationVideoHtml(row){
     const explanations = getQuestionExplanations(row);
     if(explanations.length === 0) return '';
-    return explanations.map(exp => `
-      ${exp.text ? `
-        <div class="explanation-text-wrap">
-          <div class="explanation-video-label">📝 Explanation${exp.by ? ` from ${esc(exp.by)}` : ' from your coach'}</div>
-          <div class="explanation-text-body">${esc(exp.text)}</div>
-        </div>
-      ` : ''}
-      ${exp.photo ? `
-        <div class="explanation-video-wrap">
-          <img src="${exp.photo}" alt="Explanation photo" style="max-width:100%;border-radius:8px;">
-        </div>
-      ` : ''}
-      ${exp.video ? `
-        <div class="explanation-video-wrap">
-          <div class="explanation-video-label">🎬 Watch the explanation${exp.by ? ` from ${esc(exp.by)}` : ''}</div>
-          <video controls preload="metadata" src="${exp.video}"></video>
-        </div>
-      ` : ''}
-      ${exp.voice ? `
-        <div class="explanation-video-wrap">
-          <div class="explanation-video-label">🎤 Listen to the explanation${exp.by ? ` from ${esc(exp.by)}` : ''}</div>
-          <audio controls src="${exp.voice}" style="width:100%;"></audio>
-        </div>
-      ` : ''}
-    `).join('');
+    return explanations.map(exp=>{
+      if(!exp || !(exp.text || exp.photo || exp.video || exp.voice)) return '';
+      const who = exp.by ? esc(exp.by) : 'your coach';
+      const icons = [exp.text && '📝', exp.photo && '📷', exp.video && '🎬', exp.voice && '🎤'].filter(Boolean).join(' ');
+      return `
+        <div class="explanation-card">
+          <div class="explanation-video-label">${icons} Explanation from ${who}</div>
+          ${exp.text ? `<div class="explanation-text-body">${esc(exp.text)}</div>` : ''}
+          ${exp.photo ? `<a class="explanation-photo-link" href="${esc(exp.photo)}" target="_blank" rel="noopener" title="Open full size">
+              <img class="explanation-photo" src="${esc(exp.photo)}" alt="Photo explanation from ${who}" loading="lazy">
+            </a>` : ''}
+          ${exp.video ? explanationVideoPlayerHtml(exp.video, who) : ''}
+          ${exp.voice ? `<div class="explanation-voice"><span class="explanation-voice-tag">🎤 Voice note</span><audio controls preload="none" src="${esc(exp.voice)}"></audio></div>` : ''}
+        </div>`;
+    }).join('');
   }
 
   document.getElementById('addQuestionBtn').addEventListener('click', ()=> addQuestionBlock(null));
@@ -7767,7 +8018,7 @@
       `;
       const examSticker = examPlayer.querySelector('.score-sticker');
       if(examSticker) examSticker.classList.add('rb-bounce');
-      wireResultBoard(examPlayer, boardRows);
+      wireResultBoard(examPlayer, boardRows, { kind:'exam', title: exam.title });
       celebrateResult(pct);
       const retryBtn = document.getElementById('retrySaveBtn');
       if(retryBtn){
@@ -13652,7 +13903,7 @@
             <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'your coach')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
             ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
             ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
-            ${row.answer.videoUrl ? `<video controls preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
+            ${row.answer.videoUrl ? `<div style="margin-top:8px;">${explanationVideoPlayerHtml(row.answer.videoUrl, esc(row.answer.answeredBy || 'your coach'))}</div>` : ''}
             ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
             <div style="margin-top:12px;">
               <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">${row.studentRating ? 'Your rating:' : 'How helpful was this?'}</div>
@@ -13661,6 +13912,15 @@
               </div>
             </div>
           </div>
+          ${(()=>{
+            // Whoever answered this mistake directly is shown above; everyone
+            // else's explanation of the same question (Mr. Mohamed Ibrahim's
+            // and other assistants') still belongs here rather than being
+            // hidden behind that one answer.
+            const answerer = String(row.answer.answeredBy || '').trim().toLowerCase();
+            const others = getQuestionExplanations(row).filter(e => String(e.by || '').trim().toLowerCase() !== answerer);
+            return others.length ? `<div class="am-chat-bubble answer-bubble">${explanationVideoHtml({ explanations: others })}</div>` : '';
+          })()}
         ` : `
           <div class="am-chat-bubble answer-bubble">
             ${explanationVideoHtml(row)}
@@ -15165,7 +15425,7 @@
       `;
       const hwSticker = examPlayer.querySelector('.score-sticker');
       if(hwSticker) hwSticker.classList.add('rb-bounce');
-      wireResultBoard(examPlayer, results);
+      wireResultBoard(examPlayer, results, { kind:'homework', title: hw.title, ownId: hw.id });
       celebrateResult(pct);
       const retryBtn = document.getElementById('retrySaveBtn');
       if(retryBtn){
@@ -16833,12 +17093,16 @@
       ${row.image ? `<img class="exam-q-image" src="${row.image}" alt="Question image" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
       <div class="exam-q-text" style="margin-bottom:20px;">${esc(row.text)}</div>
       ${optionsHtml}
-      ${explanationVideoHtml(row)}
+      ${row.answer
+        ? explanationVideoHtml({ explanations: getQuestionExplanations(row).filter(e =>
+            String(e.by || '').trim().toLowerCase() !== String(row.answer.answeredBy || '').trim().toLowerCase()) })
+        : explanationVideoHtml(row)}
       ${row.answer ? `
         <div class="am-chat-bubble answer-bubble" style="margin-top:16px;">
           <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'assistant')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
           ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
           ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+          ${row.answer.videoUrl ? explanationVideoPlayerHtml(row.answer.videoUrl, esc(row.answer.answeredBy || 'assistant')) : ''}
           ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
           ${currentStudent && !currentAdminRole ? `
             <div style="margin-top:12px;">
