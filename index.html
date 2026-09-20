@@ -71,6 +71,7 @@
     --accent-mid:rgba(76,111,255,0.6);
     --accent-edge:rgba(76,111,255,0.30);
     --bar-bg:rgba(11,13,18,0.88);
+    --tile-ink:#0B0D12;
     --rank-1:#FFD166;
     --rank-2:#C7CBD1;
     --rank-3:#E0A458;
@@ -118,6 +119,7 @@
     --accent-mid:rgba(18,168,177,0.55);
     --accent-edge:rgba(18,168,177,0.35);
     --bar-bg:rgba(255,255,255,0.88);
+    --tile-ink:#FFFFFF;
     --rank-1:#C9971B;
     --rank-2:#8A929B;
     --rank-3:#A9702F;
@@ -129,6 +131,11 @@
   *{margin:0;padding:0;box-sizing:border-box;}
 
   html{scroll-behavior:smooth;}
+  /* Keeps the scrollbar's space reserved even while a popup has the page
+     pinned, so on a computer with a visible scrollbar the page doesn't jump
+     sideways each time a popup opens. Phones have overlay scrollbars, so
+     this changes nothing there. */
+  html{scrollbar-gutter:stable;}
 
   body{
     background:var(--ink);
@@ -1039,6 +1046,19 @@
 
   @media(max-width:960px){.resource-grid{grid-template-columns:1fr;}}
 
+  /* ---------- scroll ownership for popups ----------
+     While any popup or the admin panel is open, the page underneath is
+     frozen in place (see lockPageScroll in the script) so a swipe can only
+     ever move the thing you're looking at. overscroll-behavior stops a swipe
+     that reaches the end of a popup from carrying on into the page, and from
+     triggering pull-to-refresh on Android. */
+  @media(max-width:860px){
+    .modal-overlay, .admin-bar{ backdrop-filter:none; -webkit-backdrop-filter:none; }
+  }
+  body.scroll-locked{ position:fixed; left:0; right:0; width:100%; overflow:hidden; }
+  .modal-overlay, .admin-overlay, .modal-box, #examPlayer{ overscroll-behavior:contain; }
+  .modal-box, .admin-overlay, #examPlayer{ -webkit-overflow-scrolling:touch; }
+
   /* ---------- lead modal ---------- */
   .modal-overlay{
     position:fixed;inset:0;
@@ -1063,7 +1083,7 @@
     border-radius:18px;
     padding:34px 30px;
     max-width:400px;width:100%;
-    max-height:90vh;overflow-y:auto;
+    max-height:90vh;max-height:90dvh;overflow-y:auto;
     position:relative;
     transform:translateY(14px);
     transition:transform .25s ease;
@@ -2099,6 +2119,127 @@
   .weak-count{
     font-family:'IBM Plex Mono',monospace;font-size:0.78rem;
     color:var(--muted);flex-shrink:0;min-width:70px;text-align:right;
+  }
+
+  /* ---------- results board ----------
+     After a quiz the student sees every question at once: a tile per
+     question coloured by how it went, a tally, a best-run streak and a
+     per-topic breakdown. Tapping a tile opens that question underneath with
+     every option marked, so reviewing is one tap rather than a scroll. */
+  .rb{ text-align:left; margin:6px 0 22px; }
+  .rb-tally{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px; }
+  .rb-stat{
+    border-radius:14px; padding:14px 8px; text-align:center; border:1px solid;
+    animation:rbRise .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  .rb-stat:nth-child(2){ animation-delay:.08s; }
+  .rb-stat:nth-child(3){ animation-delay:.16s; }
+  .rb-stat .n{ font-family:'IBM Plex Mono',monospace; font-size:1.9rem; font-weight:600; line-height:1.1; display:block; }
+  .rb-stat .l{ font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; display:block; margin-top:2px; }
+  .rb-stat.right{ background:var(--success-soft); border-color:rgba(var(--success-rgb),0.35); color:var(--success); }
+  .rb-stat.wrong{ background:var(--ember-soft); border-color:rgba(var(--ember-rgb),0.35); color:var(--ember); }
+  .rb-stat.skip{ background:var(--hover); border-color:var(--line); color:var(--muted); }
+
+  .rb-badges{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:16px; }
+  .rb-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:20px;
+    padding:6px 13px; font-size:0.82rem; color:var(--text);
+    animation:rbRise .5s .25s cubic-bezier(.22,1,.36,1) both;
+  }
+
+  .rb-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:6px 0 10px; }
+  .rb-title{ font-family:'Space Grotesk',sans-serif; font-size:1rem; font-weight:600; }
+  .rb-filters{ display:inline-flex; gap:4px; background:var(--ink); border:1px solid var(--line); border-radius:10px; padding:3px; }
+  .rb-filter{
+    background:transparent; border:none; color:var(--muted); cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:0.78rem; padding:5px 11px; border-radius:7px;
+  }
+  .rb-filter.active{ background:var(--panel-2); color:var(--text); box-shadow:var(--shadow-sm); }
+
+  .rb-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(46px, 1fr)); gap:8px; }
+  .rb-tile{
+    position:relative; aspect-ratio:1/1; border:none; border-radius:10px; cursor:pointer;
+    font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:0.95rem;
+    color:var(--tile-ink); display:flex; align-items:center; justify-content:center;
+    animation:rbPop .42s var(--d, 0s) cubic-bezier(.34,1.56,.64,1) both;
+    transition:translate .15s ease, filter .2s ease, box-shadow .15s ease;
+  }
+  .rb-tile:hover{ translate:0 -2px; box-shadow:var(--shadow-md); }
+  .rb-tile.right{ background:var(--success); }
+  .rb-tile.wrong{ background:var(--ember); animation:rbPop .42s var(--d, 0s) cubic-bezier(.34,1.56,.64,1) both, rbShake .45s calc(var(--d, 0s) + .45s) ease both; }
+  .rb-tile.skip{ background:var(--panel-2); color:var(--muted); border:1.5px dashed var(--line-strong); }
+  .rb-tile .mk{ position:absolute; top:3px; right:5px; font-size:0.62rem; line-height:1; opacity:0.85; }
+  /* Phones: smaller tiles so a 50-question paper stays a compact block
+     instead of a long scroll. */
+  @media(max-width:520px){
+    .rb-grid{ grid-template-columns:repeat(auto-fill, minmax(38px, 1fr)); gap:6px; }
+    .rb-tile{ font-size:0.82rem; border-radius:8px; }
+    .rb-tile .mk{ top:2px; right:3px; font-size:0.55rem; }
+    .rb-stat .n{ font-size:1.5rem; }
+  }
+  .rb-tile.active{ outline:3px solid var(--text); outline-offset:2px; }
+  /* filter, not opacity: the pop-in animation holds opacity at 1 once it
+     finishes, which would silently cancel a dim done with opacity. */
+  .rb-tile.dim{ filter:grayscale(1) opacity(0.22); }
+  .rb-legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:10px; font-size:0.76rem; color:var(--muted); }
+  .rb-legend i{ display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+
+  .rb-detail{
+    margin-top:14px; border:1px solid var(--line); border-radius:14px;
+    background:var(--panel-2); padding:16px; animation:rbRise .3s ease both;
+  }
+  .rb-detail-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .rb-detail-q{ font-family:'IBM Plex Mono',monospace; font-size:0.74rem; color:var(--muted); letter-spacing:0.05em; text-transform:uppercase; }
+  .rb-status{ font-size:0.78rem; font-weight:600; padding:4px 11px; border-radius:20px; }
+  .rb-status.right{ background:var(--success-soft); color:var(--success); }
+  .rb-status.wrong{ background:var(--ember-soft); color:var(--ember); }
+  .rb-status.skip{ background:var(--hover-strong); color:var(--muted); }
+  .rb-detail img.rb-qimg{ max-width:100%; max-height:240px; border-radius:8px; margin-bottom:10px; background:var(--ink); }
+  .rb-detail-text{ font-weight:600; margin-bottom:12px; }
+  .rb-opts{ display:grid; gap:7px; }
+  .rb-opt{
+    display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:9px;
+    border:1px solid var(--line); background:var(--panel); font-size:0.9rem;
+  }
+  .rb-opt .ltr{ font-family:'IBM Plex Mono',monospace; font-size:0.78rem; color:var(--muted); width:18px; flex-shrink:0; }
+  .rb-opt img{ max-height:48px; max-width:90px; border-radius:4px; }
+  .rb-opt .tag{ margin-left:auto; font-size:0.74rem; font-weight:600; white-space:nowrap; }
+  .rb-opt.is-correct{ border-color:var(--success); background:var(--success-soft); }
+  .rb-opt.is-correct .tag{ color:var(--success); }
+  .rb-opt.is-wrong-pick{ border-color:var(--ember); background:var(--ember-soft); }
+  .rb-opt.is-wrong-pick .tag{ color:var(--ember); }
+  .rb-nav{ display:flex; justify-content:space-between; gap:10px; margin-top:12px; }
+  .rb-nav button{ padding:8px 14px; font-size:0.84rem; }
+
+  .rb-topics{ margin-top:18px; }
+  .rb-topic{ display:grid; grid-template-columns:minmax(90px, 1fr) 2fr 46px; gap:10px; align-items:center; padding:5px 0; font-size:0.84rem; }
+  .rb-topic .nm{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rb-topic .bar{ height:8px; border-radius:6px; background:var(--ring-track); overflow:hidden; }
+  .rb-topic .bar span{ display:block; height:100%; border-radius:6px; width:0; animation:rbBar 1s .3s cubic-bezier(.22,1,.36,1) forwards; }
+  .rb-topic .sc{ font-family:'IBM Plex Mono',monospace; font-size:0.78rem; color:var(--muted); text-align:right; }
+
+  .score-sticker.rb-bounce{ animation:rbBounce 1.1s cubic-bezier(.34,1.56,.64,1) both; display:inline-block; }
+
+  @keyframes rbPop{ from{ transform:scale(.2); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  @keyframes rbShake{ 0%,100%{ transform:translateX(0); } 20%{ transform:translateX(-3px); } 40%{ transform:translateX(3px); } 60%{ transform:translateX(-2px); } 80%{ transform:translateX(2px); } }
+  @keyframes rbRise{ from{ transform:translateY(10px); opacity:0; } to{ transform:none; opacity:1; } }
+  @keyframes rbBar{ to{ width:var(--w); } }
+  @keyframes rbBounce{ 0%{ transform:scale(.3) rotate(-12deg); opacity:0; } 60%{ transform:scale(1.18) rotate(6deg); opacity:1; } 100%{ transform:scale(1) rotate(0); } }
+
+  .confetti-piece{
+    position:fixed; top:-14px; z-index:600; pointer-events:none;
+    width:9px; height:14px; border-radius:2px;
+    animation:confettiFall var(--dur, 2.6s) var(--delay, 0s) cubic-bezier(.25,.46,.45,.94) forwards;
+  }
+  @keyframes confettiFall{
+    0%{ transform:translate3d(0,0,0) rotate(0); opacity:1; }
+    100%{ transform:translate3d(var(--dx, 0px), 105vh, 0) rotate(var(--rot, 720deg)); opacity:0.9; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .rb-tile, .rb-stat, .rb-badge, .rb-detail, .score-sticker.rb-bounce{ animation:none !important; }
+    .rb-topic .bar span{ animation:none; width:var(--w); }
+    .confetti-piece{ display:none; }
   }
 
   /* ---------- progress rings ----------
@@ -4592,6 +4733,58 @@
     document.querySelectorAll('.site-logo-img').forEach(img => { img.src = LOGO_DATA_URI; });
   })();
 
+  /* ---------------- PAGE SCROLL LOCK ----------------
+     Phones scroll whatever is under the finger and hand any leftover swipe
+     to the page behind, so with a popup open the home page used to slide
+     around underneath it and eat half of every swipe. While anything is open
+     the body is pinned where it was; when the last one closes it is put back
+     at exactly the same spot. It watches the popups' own "open" class, so
+     every existing open/close path is covered without touching any of them. */
+  (function lockPageScroll(){
+    let locked = false;
+    let savedY = 0;
+    const selector = '.modal-overlay.open, .admin-overlay.open';
+    // The lock notices a popup closing a moment after it happens. Some flows
+    // close a popup and scroll the page in the same instant (registering
+    // closes sign-in and jumps to the top of the payment page). While the
+    // page is pinned, a scroll request is remembered as the spot to land on
+    // instead of being lost and then overwritten by the restore.
+    const nativeScrollTo = window.scrollTo.bind(window);
+    window.scrollTo = function(a, b){
+      if(locked){
+        const top = (a && typeof a === 'object') ? a.top : b;
+        if(typeof top === 'number' && isFinite(top)) savedY = Math.max(0, top);
+        return;
+      }
+      return nativeScrollTo.apply(window, arguments);
+    };
+    function sync(){
+      const open = !!document.querySelector(selector);
+      if(open && !locked){
+        savedY = window.scrollY || window.pageYOffset || 0;
+        document.body.style.top = `-${savedY}px`;
+        document.body.classList.add('scroll-locked');
+        locked = true;
+      } else if(!open && locked){
+        document.body.classList.remove('scroll-locked');
+        document.body.style.top = '';
+        // The page has smooth scrolling switched on; the restore must be
+        // instant or closing a popup would visibly glide the page back.
+        const html = document.documentElement;
+        const prev = html.style.scrollBehavior;
+        html.style.scrollBehavior = 'auto';
+        nativeScrollTo(0, savedY);
+        html.style.scrollBehavior = prev;
+        locked = false;
+      }
+    }
+    const watcher = new MutationObserver(sync);
+    document.querySelectorAll('.modal-overlay, .admin-overlay').forEach(el=>{
+      watcher.observe(el, { attributes:true, attributeFilter:['class'] });
+    });
+    sync();
+  })();
+
   /* ---------------- THEME (dark / light) ----------------
      The whole site is painted from CSS variables, so switching themes is
      just swapping one attribute on <html>. The choice is remembered per
@@ -6224,6 +6417,226 @@
     return { emoji:'🌱', label:'Growing!' };
   }
 
+  /* ---------------- RESULTS BOARD ----------------
+     Shared by the exam and homework result screens. `rows` is one entry per
+     question in order: { text, image, options, optionImages, lesson,
+     chosenAnswer, correctAnswer, explanations... }. */
+  function resultStatus(row){
+    if(row.chosenAnswer == null || row.chosenAnswer < 0) return 'skip';
+    return row.chosenAnswer === row.correctAnswer ? 'right' : 'wrong';
+  }
+
+  // A warmer line than a bare percentage -- it speaks in Mr. Mohamed
+  // Ibrahim's voice and changes with how the quiz went.
+  function resultMessage(pct, wrong){
+    if(pct >= 100) return { cls:'happy', text:`🏆 Perfect score! I'm so proud of you.` };
+    if(pct >= 90)  return { cls:'happy', text:`🌟 Outstanding — only ${wrong} away from perfect!` };
+    if(pct >= 75)  return { cls:'happy', text:`🎉 I'm happy — great work on this one!` };
+    if(pct >= 50)  return { cls:'sad',   text:`💪 Good effort — fix these ${wrong} and you're there.` };
+    return { cls:'sad', text:`😔 I'm sad — let's go over this together next session.` };
+  }
+
+  function buildResultBoard(rows){
+    const statuses = rows.map(resultStatus);
+    const right = statuses.filter(x => x === 'right').length;
+    const wrong = statuses.filter(x => x === 'wrong').length;
+    const skip  = statuses.filter(x => x === 'skip').length;
+
+    // Longest run of correct answers in a row -- small, but students love it.
+    let best = 0, run = 0;
+    statuses.forEach(x => { run = x === 'right' ? run + 1 : 0; if(run > best) best = run; });
+
+    const badges = [];
+    if(best >= 3) badges.push(`🔥 Best run: ${best} in a row`);
+    if(wrong === 0 && skip === 0) badges.push('✨ No mistakes at all');
+    else if(wrong === 0 && skip > 0) badges.push('🎯 Everything you answered was right');
+    const firstHalf = statuses.slice(0, Math.ceil(statuses.length / 2));
+    const secondHalf = statuses.slice(Math.ceil(statuses.length / 2));
+    const rate = arr => arr.length ? arr.filter(x => x === 'right').length / arr.length : 0;
+    if(statuses.length >= 6 && rate(secondHalf) - rate(firstHalf) >= 0.2) badges.push('📈 Stronger finish than start');
+
+    // Per-topic breakdown, only when the quiz actually spans more than one.
+    const topics = {};
+    rows.forEach((r, i)=>{
+      const k = (r.lesson || 'General').trim() || 'General';
+      if(!topics[k]) topics[k] = { right:0, total:0 };
+      topics[k].total++;
+      if(statuses[i] === 'right') topics[k].right++;
+    });
+    const topicNames = Object.keys(topics);
+    const topicsHtml = topicNames.length > 1 ? `
+      <div class="rb-topics">
+        <div class="rb-title" style="margin-bottom:6px;">By topic</div>
+        ${topicNames
+          .sort((a,b)=> (topics[a].right/topics[a].total) - (topics[b].right/topics[b].total))
+          .map(k=>{
+            const t = topics[k];
+            const pctT = Math.round(t.right / t.total * 100);
+            const colour = pctT >= 75 ? 'var(--success)' : pctT >= 50 ? 'var(--amber)' : 'var(--ember)';
+            return `<div class="rb-topic">
+              <span class="nm" title="${esc(k)}">${esc(k)}</span>
+              <span class="bar"><span style="--w:${pctT}%; background:${colour};"></span></span>
+              <span class="sc">${t.right}/${t.total}</span>
+            </div>`;
+          }).join('')}
+      </div>` : '';
+
+    // Stagger the tile pop-in, but keep a 50-question quiz from taking an age.
+    const step = Math.min(0.035, 1.4 / Math.max(rows.length, 1));
+    const mark = { right:'✓', wrong:'✗', skip:'–' };
+    const tiles = statuses.map((st, i) => `
+      <button type="button" class="rb-tile ${st}" data-i="${i}" style="--d:${(i * step).toFixed(3)}s"
+        aria-label="Question ${i+1}: ${st === 'right' ? 'correct' : st === 'wrong' ? 'wrong' : 'not answered'}">
+        ${i + 1}<span class="mk">${mark[st]}</span>
+      </button>`).join('');
+
+    return {
+      right, wrong, skip, statuses,
+      html: `
+        <div class="rb">
+          <div class="rb-tally">
+            <div class="rb-stat right"><span class="n" data-count="${right}">0</span><span class="l">✓ Correct</span></div>
+            <div class="rb-stat wrong"><span class="n" data-count="${wrong}">0</span><span class="l">✗ Wrong</span></div>
+            <div class="rb-stat skip"><span class="n" data-count="${skip}">0</span><span class="l">– Skipped</span></div>
+          </div>
+          ${badges.length ? `<div class="rb-badges">${badges.map(b => `<span class="rb-badge">${b}</span>`).join('')}</div>` : ''}
+          <div class="rb-head">
+            <div class="rb-title">Every question</div>
+            <div class="rb-filters">
+              <button type="button" class="rb-filter active" data-f="all">All</button>
+              <button type="button" class="rb-filter" data-f="wrong">✗ Wrong</button>
+              <button type="button" class="rb-filter" data-f="right">✓ Right</button>
+            </div>
+          </div>
+          <div class="rb-grid">${tiles}</div>
+          <div class="rb-legend">
+            <span><i style="background:var(--success)"></i>Correct</span>
+            <span><i style="background:var(--ember)"></i>Wrong</span>
+            <span><i style="background:var(--panel-2); border:1px dashed var(--line-strong)"></i>Not answered</span>
+            <span style="margin-left:auto;">Tap a number to see that question</span>
+          </div>
+          <div class="rb-detail-slot"></div>
+          ${topicsHtml}
+        </div>`
+    };
+  }
+
+  function wireResultBoard(container, rows){
+    const board = container.querySelector('.rb');
+    if(!board) return;
+    const statuses = rows.map(resultStatus);
+    const slot = board.querySelector('.rb-detail-slot');
+    const tiles = [...board.querySelectorAll('.rb-tile')];
+    let filter = 'all';
+    let current = -1;
+
+    // Count the tally up from zero rather than printing it flat.
+    board.querySelectorAll('.rb-stat .n').forEach(el=>{
+      const target = Number(el.dataset.count) || 0;
+      if(target === 0){ el.textContent = '0'; return; }
+      const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(reduce){ el.textContent = target; return; }
+      const start = performance.now(), dur = 900;
+      const tick = (now)=>{
+        const t = Math.min(1, (now - start) / dur);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - t, 3)));
+        if(t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+
+    const visibleIdx = ()=> statuses.map((st, i) => ({ st, i }))
+      .filter(x => filter === 'all' || x.st === filter).map(x => x.i);
+
+    function show(i){
+      current = i;
+      tiles.forEach(t => t.classList.toggle('active', Number(t.dataset.i) === i));
+      const r = rows[i];
+      const st = statuses[i];
+      const letters = 'ABCDEFGH';
+      const opts = (r.options || []).map((text, k)=>{
+        const img = r.optionImages && r.optionImages[k];
+        if(!text && !img) return '';
+        const isCorrect = k === r.correctAnswer;
+        const isWrongPick = k === r.chosenAnswer && !isCorrect;
+        const tag = isCorrect
+          ? (k === r.chosenAnswer ? '✓ Your answer' : '✓ Correct answer')
+          : (isWrongPick ? '✗ Your answer' : '');
+        return `<div class="rb-opt${isCorrect ? ' is-correct' : ''}${isWrongPick ? ' is-wrong-pick' : ''}">
+          <span class="ltr">${letters[k] || k + 1}</span>
+          ${img ? `<img src="${img}" alt="Option ${k+1}">` : ''}
+          ${text ? `<span>${esc(text)}</span>` : ''}
+          ${tag ? `<span class="tag">${tag}</span>` : ''}
+        </div>`;
+      }).join('');
+      const list = visibleIdx();
+      const pos = list.indexOf(i);
+      slot.innerHTML = `
+        <div class="rb-detail">
+          <div class="rb-detail-top">
+            <span class="rb-detail-q">Question ${i + 1} of ${rows.length}${r.lesson ? ' · ' + esc(r.lesson) : ''}</span>
+            <span class="rb-status ${st}">${st === 'right' ? '✓ Correct' : st === 'wrong' ? '✗ Wrong' : '– Not answered'}</span>
+          </div>
+          ${r.image ? `<img class="rb-qimg" src="${r.image}" alt="Question image">` : ''}
+          ${r.text && r.text !== '(question with image)' ? `<div class="rb-detail-text">${esc(r.text)}</div>` : ''}
+          <div class="rb-opts">${opts}</div>
+          ${explanationVideoHtml(r)}
+          <div class="rb-nav">
+            <button type="button" class="btn btn-ghost rb-prev" ${pos <= 0 ? 'disabled style="opacity:.4"' : ''}>← Previous</button>
+            <button type="button" class="btn btn-ghost rb-next" ${pos < 0 || pos >= list.length - 1 ? 'disabled style="opacity:.4"' : ''}>Next →</button>
+          </div>
+        </div>`;
+      const prev = slot.querySelector('.rb-prev'), next = slot.querySelector('.rb-next');
+      if(prev) prev.addEventListener('click', ()=>{ if(pos > 0) show(list[pos - 1]); });
+      if(next) next.addEventListener('click', ()=>{ if(pos >= 0 && pos < list.length - 1) show(list[pos + 1]); });
+    }
+
+    tiles.forEach(t => t.addEventListener('click', ()=>{
+      const i = Number(t.dataset.i);
+      show(i);
+      slot.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }));
+
+    board.querySelectorAll('.rb-filter').forEach(btn => btn.addEventListener('click', ()=>{
+      filter = btn.dataset.f;
+      board.querySelectorAll('.rb-filter').forEach(b => b.classList.toggle('active', b === btn));
+      tiles.forEach(t => t.classList.toggle('dim', filter !== 'all' && statuses[Number(t.dataset.i)] !== filter));
+      const list = visibleIdx();
+      if(list.length === 0){ slot.innerHTML = ''; current = -1; tiles.forEach(t => t.classList.remove('active')); return; }
+      if(!list.includes(current)) show(list[0]);
+      else show(current);
+    }));
+
+    // Open straight onto the first mistake, so reviewing starts immediately.
+    const firstWrong = statuses.indexOf('wrong');
+    if(firstWrong >= 0) show(firstWrong);
+  }
+
+  // Confetti for a strong result -- plain DOM pieces, no library, and
+  // skipped entirely for anyone who has asked their device for less motion.
+  function celebrateResult(pct){
+    if(pct < 75) return;
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const count = pct >= 100 ? 140 : pct >= 90 ? 90 : 40;
+    const palette = ['var(--brand)', 'var(--success)', 'var(--gold)', 'var(--signal)', 'var(--ember)', 'var(--grad-m)'];
+    const host = document.getElementById('examModal') || document.body;
+    const pieces = [];
+    for(let n = 0; n < count; n++){
+      const el = document.createElement('span');
+      el.className = 'confetti-piece';
+      el.style.left = (Math.random() * 100) + 'vw';
+      el.style.background = palette[n % palette.length];
+      el.style.setProperty('--dx', ((Math.random() - 0.5) * 240).toFixed(0) + 'px');
+      el.style.setProperty('--rot', ((Math.random() * 900) + 360).toFixed(0) + 'deg');
+      el.style.setProperty('--dur', (2.2 + Math.random() * 1.6).toFixed(2) + 's');
+      el.style.setProperty('--delay', (Math.random() * 0.5).toFixed(2) + 's');
+      if(Math.random() < 0.35){ el.style.width = '8px'; el.style.height = '8px'; el.style.borderRadius = '50%'; }
+      host.appendChild(el);
+      pieces.push(el);
+    }
+    setTimeout(()=> pieces.forEach(el => el.remove()), 4600);
+  }
+
   // For "Your answer / Correct answer" style review lines — shows the
   // option's text if it has any, otherwise a small thumbnail if that option
   // was an image, otherwise a plain dash.
@@ -7284,27 +7697,19 @@
         }catch(err){ console.error('Could not compute class average:', err); }
       }
 
-      const feedback = pct >= 75
-        ? `<div class="result-feedback happy">🎉 I'm happy — great work on this one!</div>`
-        : `<div class="result-feedback sad">😔 I'm sad — let's go over this together next session.</div>`;
+      // Every question, right and wrong, not just the mistakes. Signed-out
+      // visitors have no reviewResults, so build the same rows directly.
+      const boardRows = reviewResults || exam.questions.map((q,i) => ({
+        ...q, lesson: q.lesson || 'General',
+        chosenAnswer: answers[i], correctAnswer: q.correct, correct: answers[i] === q.correct
+      }));
+      const board = buildResultBoard(boardRows);
+      const message = resultMessage(pct, board.wrong + board.skip);
+      const feedback = `<div class="result-feedback ${message.cls}">${message.text}</div>`;
 
-      const reviewHtml = (reviewResults && hasMistakes) ? `
-        <div class="score-review">
-          <div class="score-review-title">Review your mistakes</div>
-          ${reviewResults.filter(r => !r.correct).map(r => `
-            <div class="score-review-item">
-              ${r.image ? `<img src="${r.image}" alt="Question image">` : ''}
-              <div>${esc(r.text)}</div>
-              <div class="score-review-answers">
-                Your answer: <span class="wrong">${formatOptionAnswer(r, r.chosenAnswer)}</span> ·
-                Correct answer: <span class="right">${formatOptionAnswer(r, r.correctAnswer)}</span>
-              </div>
-              ${explanationVideoHtml(r)}
-            </div>
-          `).join('')}
-        </div>
-        ${currentStudent ? `<div class="retake-notice">You must retake this within 24 hours. It'll show up on your dashboard until you do.</div>` : ''}
-      ` : '';
+      const reviewHtml = board.html + ((hasMistakes && currentStudent)
+        ? `<div class="retake-notice">You must retake this within 24 hours. It'll show up on your dashboard until you do.</div>`
+        : '');
 
       const savedNoticeHtml = currentStudent
         ? (!saveSucceeded
@@ -7360,10 +7765,17 @@
           <button class="btn btn-ghost" id="examCloseBtn" style="margin-top:10px;width:100%;">Close</button>
         </div>
       `;
+      const examSticker = examPlayer.querySelector('.score-sticker');
+      if(examSticker) examSticker.classList.add('rb-bounce');
+      wireResultBoard(examPlayer, boardRows);
+      celebrateResult(pct);
       const retryBtn = document.getElementById('retrySaveBtn');
       if(retryBtn){
         retryBtn.addEventListener('click', async ()=>{
           retryBtn.disabled = true; retryBtn.textContent = 'Retrying…';
+          // The double-submit guard would otherwise swallow this deliberate
+          // second attempt and the retry would silently do nothing.
+          scoreRendered = false;
           await renderScore();
         });
       }
@@ -14715,27 +15127,13 @@
         }
       }catch(err){ console.error('Could not compute class average:', err); }
 
-      const feedback = pct >= 75
-        ? `<div class="result-feedback happy">🎉 I'm happy — great work on this one!</div>`
-        : `<div class="result-feedback sad">😔 I'm sad — let's go over this together next session.</div>`;
+      const board = buildResultBoard(results);
+      const message = resultMessage(pct, board.wrong + board.skip);
+      const feedback = `<div class="result-feedback ${message.cls}">${message.text}</div>`;
 
-      const reviewHtml = hasMistakes ? `
-        <div class="score-review">
-          <div class="score-review-title">Review your mistakes</div>
-          ${results.filter(r => !r.correct).map(r => `
-            <div class="score-review-item">
-              ${r.image ? `<img src="${r.image}" alt="Question image">` : ''}
-              <div>${esc(r.text)}</div>
-              <div class="score-review-answers">
-                Your answer: <span class="wrong">${formatOptionAnswer(r, r.chosenAnswer)}</span> ·
-                Correct answer: <span class="right">${formatOptionAnswer(r, r.correctAnswer)}</span>
-              </div>
-              ${explanationVideoHtml(r)}
-            </div>
-          `).join('')}
-        </div>
-        <div class="retake-notice">📋 Your wrong answers have been added to your Mistake History — answer them there within 24 hours to clear this.</div>
-      ` : '';
+      const reviewHtml = board.html + (hasMistakes
+        ? `<div class="retake-notice">📋 Your wrong answers have been added to your Mistake History — answer them there within 24 hours to clear this.</div>`
+        : '');
 
       const sticker = getScoreSticker(pct);
       const estScoreHtml = (currentStudent && isEstCourse(currentStudent.course))
@@ -14765,10 +15163,16 @@
           <button class="btn btn-primary" id="examCloseBtn" style="width:100%;">Close</button>
         </div>
       `;
+      const hwSticker = examPlayer.querySelector('.score-sticker');
+      if(hwSticker) hwSticker.classList.add('rb-bounce');
+      wireResultBoard(examPlayer, results);
+      celebrateResult(pct);
       const retryBtn = document.getElementById('retrySaveBtn');
       if(retryBtn){
         retryBtn.addEventListener('click', async ()=>{
           retryBtn.disabled = true; retryBtn.textContent = 'Retrying…';
+          // Same as the exam player: let a deliberate retry past the guard.
+          homeworkSubmitted = false;
           await submitHomework();
         });
       }
