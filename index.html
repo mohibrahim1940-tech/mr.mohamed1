@@ -72,6 +72,8 @@
     --accent-edge:rgba(76,111,255,0.30);
     --bar-bg:rgba(11,13,18,0.88);
     --tile-ink:#0B0D12;
+    --chart-line:#5DE1E6;
+    --chart-ref:#6B7280;
     --rank-1:#FFD166;
     --rank-2:#C7CBD1;
     --rank-3:#E0A458;
@@ -120,6 +122,8 @@
     --accent-edge:rgba(18,168,177,0.35);
     --bar-bg:rgba(255,255,255,0.88);
     --tile-ink:#FFFFFF;
+    --chart-line:#0E8F98;
+    --chart-ref:#A3ADB3;
     --rank-1:#C9971B;
     --rank-2:#8A929B;
     --rank-3:#A9702F;
@@ -2138,6 +2142,152 @@
     color:var(--muted);flex-shrink:0;min-width:70px;text-align:right;
   }
 
+  /* ---------- level-up moment ---------- */
+  #levelUpModal .levelup-box{ max-width:360px; text-align:center; overflow:hidden; padding:34px 28px 26px; }
+  .levelup-rays{
+    position:absolute; left:50%; top:112px; width:420px; height:420px; margin:-210px 0 0 -210px;
+    background:repeating-conic-gradient(from 0deg, rgba(var(--accent-rgb),0.16) 0deg 10deg, transparent 10deg 30deg);
+    border-radius:50%; pointer-events:none;
+    -webkit-mask:radial-gradient(circle, #000 25%, transparent 68%); mask:radial-gradient(circle, #000 25%, transparent 68%);
+    animation:luSpin 14s linear infinite;
+  }
+  .levelup-kicker{
+    position:relative; font-family:'IBM Plex Mono',monospace; font-size:0.78rem; letter-spacing:0.25em;
+    text-transform:uppercase; color:var(--brand); font-weight:600;
+    animation:rbRise .5s .1s both;
+  }
+  .levelup-badge{
+    position:relative; width:112px; height:112px; margin:16px auto 14px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, var(--grad-a), var(--grad-m) 55%, var(--grad-b));
+    box-shadow:0 0 0 6px rgba(var(--accent-rgb),0.18), 0 14px 36px -10px rgba(var(--accent-rgb),0.65);
+    color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:3rem;
+    animation:luPop .8s .15s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .levelup-box h3{ position:relative; font-size:1.35rem; margin-bottom:6px; animation:rbRise .5s .45s both; }
+  .levelup-sub{ position:relative; color:var(--muted); font-size:0.86rem; margin-bottom:16px; animation:rbRise .5s .55s both; }
+  .levelup-bar{ position:relative; height:10px; border-radius:6px; background:var(--ring-track); overflow:hidden; }
+  .levelup-bar span{ display:block; height:100%; width:0; border-radius:6px; background:linear-gradient(90deg, var(--grad-a), var(--grad-b)); transition:width 1.2s .7s cubic-bezier(.22,1,.36,1); }
+  .levelup-xp{ position:relative; font-family:'IBM Plex Mono',monospace; font-size:0.74rem; color:var(--muted); margin-top:6px; }
+  @keyframes luPop{ 0%{ transform:scale(.2) rotate(-25deg); opacity:0; } 100%{ transform:none; opacity:1; } }
+  @keyframes luSpin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){
+    .levelup-rays, .levelup-badge, .levelup-kicker, .levelup-box h3, .levelup-sub{ animation:none !important; }
+    .levelup-bar span{ transition:none; }
+  }
+
+  /* ---------- score forecast ----------
+     One series (the student's results), a dashed projection, and a dashed
+     target reference -- dashes meaning "projected / threshold", which is why
+     the gridlines stay solid. One axis only: EST students see the 200-800
+     scale, everyone else percent. Colours validated for contrast against
+     both theme surfaces (see --chart-line / --chart-ref). */
+  .fc-wrap{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px 18px 12px; margin-bottom:20px; }
+  .fc-stats{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:12px; }
+  .fc-stat{ background:var(--ink); border:1px solid var(--line-soft); border-radius:12px; padding:10px 12px; }
+  .fc-stat .k{ font-family:'IBM Plex Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+  .fc-stat .v{ font-family:'IBM Plex Mono',monospace; font-size:1.45rem; font-weight:600; color:var(--text); line-height:1.25; }
+  .fc-stat .v small{ font-size:0.72rem; color:var(--muted); font-weight:400; }
+  .fc-stat .d{ font-size:0.74rem; color:var(--muted); }
+  .fc-up{ color:var(--success); } .fc-down{ color:var(--ember); }
+  .fc-note{ font-size:0.84rem; color:var(--text); margin:2px 0 10px; }
+  .fc-note .muted{ color:var(--muted); }
+  .fc-svg{ width:100%; height:auto; display:block; overflow:visible; touch-action:pan-y; }
+  .fc-grid line{ stroke:var(--line); stroke-width:1; }
+  .fc-axis text{ fill:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:10px; }
+  .fc-future{ fill:var(--hover); }
+  .fc-line{ fill:none; stroke:var(--chart-line); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+  .fc-proj{ fill:none; stroke:var(--chart-line); stroke-width:2; stroke-dasharray:5 5; stroke-linecap:round; }
+  .fc-target{ stroke:var(--chart-ref); stroke-width:1.5; stroke-dasharray:4 4; }
+  .fc-dot{ fill:var(--chart-line); stroke:var(--panel); stroke-width:2; }
+  .fc-dot.end{ r:5; }
+  .fc-label{ fill:var(--text); font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+  .fc-label.ref{ fill:var(--muted); font-weight:500; }
+  .fc-cross{ stroke:var(--line-strong); stroke-width:1; }
+  .fc-hit{ fill:transparent; cursor:crosshair; }
+  .fc-tip{
+    position:absolute; pointer-events:none; z-index:3;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:8px; box-shadow:var(--shadow-md);
+    padding:7px 10px; font-size:0.78rem; color:var(--text); white-space:nowrap; transform:translate(-50%, calc(-100% - 12px));
+  }
+  .fc-tip .t{ color:var(--muted); font-size:0.72rem; }
+  .fc-foot{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:6px; flex-wrap:wrap; }
+  .fc-legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:0.74rem; color:var(--muted); }
+  .fc-legend i{ display:inline-block; width:18px; height:0; border-top:2px solid var(--chart-line); vertical-align:middle; margin-right:5px; }
+  .fc-legend i.proj{ border-top-style:dashed; }
+  .fc-legend i.ref{ border-top:1.5px dashed var(--chart-ref); }
+  .fc-table-btn{ background:none; border:none; color:var(--muted); font-size:0.76rem; cursor:pointer; text-decoration:underline; padding:0; font-family:inherit; }
+  .fc-table{ width:100%; margin-top:10px; font-size:0.8rem; border-collapse:collapse; }
+  .fc-table th, .fc-table td{ text-align:left; padding:5px 6px; border-bottom:1px solid var(--line-soft); }
+  .fc-table th{ color:var(--muted); font-weight:500; }
+  @media(max-width:520px){
+    .fc-stats{ gap:6px; } .fc-stat{ padding:8px; } .fc-stat .v{ font-size:1.15rem; }
+  }
+
+  /* ---------- class topic map (admin) ----------
+     Diverging scale around the 70-79% bar: red below, blue above, grey at
+     the bar. Each arm was checked as its own one-hue ramp in both themes
+     (monotone lightness, visible steps, light end clears the surface), and
+     every cell prints its number, so colour is never the only signal. */
+  :root{
+    --tm-r3:#f08a86; --tm-r2:#d9504d; --tm-r1:#8f3533;
+    --tm-mid:#3a3b40;
+    --tm-b1:#256abf; --tm-b2:#5598e7; --tm-b3:#9ec5f4;
+    --tm-ink-dark:#0B0D12; --tm-ink-light:#FFFFFF;
+  }
+  :root[data-theme="light"]{
+    --tm-r3:#b8302f; --tm-r2:#e0605c; --tm-r1:#ee9c97;
+    --tm-mid:#e4e3de;
+    --tm-b1:#86b6ef; --tm-b2:#3987e5; --tm-b3:#1c5cab;
+  }
+  .tm-select{ max-width:200px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:8px; font-family:'Inter',sans-serif; }
+  .tm-insights{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:10px; margin-bottom:12px; }
+  .tm-insight{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px; font-size:0.86rem; }
+  .tm-insight .k{ font-family:'IBM Plex Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+  .tm-scroll{ overflow:auto; max-height:560px; border:1px solid var(--line); border-radius:12px; background:var(--panel); position:relative; }
+  .tm-grid{ border-collapse:separate; border-spacing:2px; font-size:0.8rem; }
+  .tm-grid th{ font-weight:500; color:var(--muted); text-align:left; white-space:nowrap; }
+  .tm-grid thead th{
+    position:sticky; top:0; z-index:2; background:var(--panel);
+    height:118px; vertical-align:bottom; padding:0 0 6px;
+  }
+  .tm-grid thead th .rot{
+    display:inline-block; transform:rotate(-55deg); transform-origin:left bottom;
+    width:26px; white-space:nowrap; margin-left:18px; font-size:0.74rem; color:var(--text);
+  }
+  .tm-grid tbody th, .tm-grid thead th.corner{
+    position:sticky; left:0; z-index:1; background:var(--panel);
+    padding:0 10px 0 8px; max-width:150px; overflow:hidden; text-overflow:ellipsis; color:var(--text);
+  }
+  .tm-grid thead th.corner{ z-index:3; }
+  .tm-grid tbody th .ov{ font-family:'IBM Plex Mono',monospace; color:var(--muted); font-size:0.72rem; margin-left:6px; }
+  .tm-grid tr.tm-class th, .tm-grid tr.tm-class td{ border-bottom:2px solid var(--line); }
+  .tm-grid tr.tm-class th{ font-weight:600; }
+  .tm-cell{
+    width:46px; min-width:46px; height:30px; text-align:center; border-radius:4px;
+    font-family:'IBM Plex Mono',monospace; font-size:0.74rem; font-weight:600; cursor:default;
+  }
+  .tm-cell.none{ background:transparent; outline:1px dashed var(--line); outline-offset:-3px; }
+  .tm-cell.thin{ opacity:0.55; }
+  .tm-legend{ display:flex; align-items:center; gap:4px; flex-wrap:wrap; margin-top:10px; font-size:0.72rem; color:var(--muted); }
+  .tm-legend span.sw{ width:30px; height:14px; border-radius:3px; display:inline-block; }
+  .tm-legend .lab{ margin:0 8px 0 3px; }
+  .tm-tip{
+    position:fixed; pointer-events:none; z-index:700; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:8px; box-shadow:var(--shadow-md); padding:7px 10px; font-size:0.78rem; color:var(--text); white-space:nowrap;
+  }
+  .tm-tip .t{ color:var(--muted); font-size:0.72rem; }
+  .tm-foot{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .tm-progress{ color:var(--muted); font-size:0.84rem; padding:14px; }
+
+  /* ---------- recording watch stats (admin) ---------- */
+  .watch-cover{ display:flex; align-items:center; gap:8px; min-width:120px; }
+  .watch-cover-bar{ flex:1; height:8px; border-radius:6px; background:var(--ring-track); overflow:hidden; }
+  .watch-cover-bar span{ display:block; height:100%; border-radius:6px; }
+  .watch-cover-num{ font-family:'IBM Plex Mono',monospace; font-size:0.78rem; min-width:34px; text-align:right; }
+  .watch-cover-parts{ font-size:0.72rem; color:var(--muted); margin-top:3px; }
+  .watch-est{ font-size:0.68rem; color:var(--amber); border:1px solid rgba(var(--ember-rgb),0.25); border-radius:10px; padding:1px 6px; margin-left:4px; }
+
   /* ---------- results board ----------
      After a quiz the student sees every question at once: a tile per
      question coloured by how it went, a tally, a best-run streak and a
@@ -3271,7 +3421,7 @@
 
           <div class="highlights-row" id="highlightsRow"></div>
 
-          <div class="hw-section-title">Progress over time</div>
+          <div class="hw-section-title">Progress &amp; forecast</div>
           <div id="myProgressChartWrap">
             <div class="admin-empty">No graded homework or exams yet — this fills in as you practice.</div>
           </div>
@@ -3648,6 +3798,20 @@
   </div>
 </footer>
 
+<!-- LEVEL-UP CELEBRATION -->
+<div class="modal-overlay" id="levelUpModal" style="z-index:650;">
+  <div class="modal-box levelup-box" role="dialog" aria-labelledby="levelUpTitle">
+    <div class="levelup-rays" aria-hidden="true"></div>
+    <div class="levelup-kicker">Level up!</div>
+    <div class="levelup-badge"><span id="levelUpNum">2</span></div>
+    <h3 id="levelUpTitle">You reached Level 2</h3>
+    <p class="levelup-sub" id="levelUpSub"></p>
+    <div class="levelup-bar"><span id="levelUpBar"></span></div>
+    <div class="levelup-xp" id="levelUpXp"></div>
+    <button type="button" class="btn btn-primary" id="levelUpClose" style="width:100%; margin-top:18px;">Keep going →</button>
+  </div>
+</div>
+
 <!-- EXAM TAKING MODAL -->
 <div class="modal-overlay" id="examModal">
   <div class="modal-box exam-modal-box">
@@ -3974,6 +4138,19 @@
 
       <div class="hw-section-title">Class performance</div>
       <div id="ovClassChart"><div class="admin-empty">Loading…</div></div>
+
+      <div class="hw-section-title">🗺 Class topic map</div>
+      <div class="admin-note" style="margin-bottom:12px;">Every student against every topic, from their homework and exams. Blue is at or above the bar, red is below it, grey is right around 70–79%. Weakest students are at the top and weakest topics on the left, so the things to act on are in the top-left corner. Retakes aren't counted, so this shows how students do the first time.</div>
+      <div class="admin-actions" style="margin-bottom:12px;">
+        <select id="topicMapCourse" class="tm-select"><option value="">All courses</option></select>
+        <select id="topicMapPeriod" class="tm-select">
+          <option value="30">Last 30 days</option>
+          <option value="90" selected>Last 90 days</option>
+          <option value="0">All time</option>
+        </select>
+        <button class="btn btn-ghost" id="topicMapRefresh">Refresh</button>
+      </div>
+      <div id="topicMapWrap"><div class="admin-empty">Loading…</div></div>
     </div>
 
     <div class="admin-panel" id="examsPanel">
@@ -4312,12 +4489,14 @@
         <button class="btn btn-ghost" id="refreshSessions">Refresh</button>
       </div>
       <div class="hw-section-title" style="margin-top:28px;">🎬 Who watched what</div>
-      <div class="admin-note" style="margin-bottom:14px;">Time shown is how long the player was open — a good measure of attention, though it can't prove the video was actually playing (browsers don't let a site read inside a YouTube or Drive player).</div>
+      <div class="admin-note" style="margin-bottom:14px;">For YouTube recordings, <strong>Watched</strong> is real playing time — paused time doesn't count — and <strong>Covered</strong> is how much of the video they've actually seen, so rewinding and rewatching the same part isn't counted twice. Other links (like Google Drive) can't report playback, so their time is how long the video was on screen and is marked <em>estimate</em>. Progress saves every 15 seconds, so closing the tab or locking a phone doesn't lose it.</div>
       <div class="admin-actions" style="margin-bottom:12px;">
         <select id="watchFilterSelect" style="max-width:240px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
           <option value="all">All recordings</option>
-          <option value="watched">Watched</option>
-          <option value="not">Not watched yet</option>
+          <option value="not">Not started</option>
+          <option value="unfinished">Started but not finished</option>
+          <option value="finished">Finished</option>
+          <option value="watched">Started (any)</option>
         </select>
         <button class="btn btn-ghost" id="refreshWatchStats">Refresh</button>
       </div>
@@ -5745,7 +5924,155 @@
             `;
           }).join('')}</div>`;
     }
+    renderClassTopicMap().catch(err => console.error('Topic map failed:', err));
   }
+
+  /* ---------------- CLASS TOPIC MAP (admin) ---------------- */
+  function tmBin(pct){
+    if(pct < 40) return { bg:'var(--tm-r3)', dark:true };
+    if(pct < 55) return { bg:'var(--tm-r2)', dark:true };
+    if(pct < 70) return { bg:'var(--tm-r1)', dark:false };
+    if(pct < 80) return { bg:'var(--tm-mid)', dark:false };
+    if(pct < 87) return { bg:'var(--tm-b1)', dark:false };
+    if(pct < 94) return { bg:'var(--tm-b2)', dark:true };
+    return { bg:'var(--tm-b3)', dark:true };
+  }
+  // Text on each cell uses the ink that reads on it; which end is "dark"
+  // flips between the themes, so it's worked out from the actual fill.
+  // Picks whichever ink -- near-black or white -- contrasts more with the
+  // cell. Every step of the scale clears 4.5:1 this way in both themes
+  // (the tightest is 4.8:1); a simple light/dark cut-off left mid-blue and
+  // mid-red cells at 3.5:1.
+  function tmInkFor(el){
+    const c = getComputedStyle(el).backgroundColor.match(/[\d.]+/g);
+    if(!c) return 'var(--text)';
+    const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    const L = 0.2126 * lin(+c[0]) + 0.7152 * lin(+c[1]) + 0.0722 * lin(+c[2]);
+    const onDark = (L + 0.05) / (0.0045 + 0.05);   // vs #0B0D12
+    const onWhite = 1.05 / (L + 0.05);
+    return onDark >= onWhite ? 'var(--tm-ink-dark)' : 'var(--tm-ink-light)';
+  }
+
+  let topicMapRun = 0;
+  async function renderClassTopicMap(){
+    const wrap = document.getElementById('topicMapWrap');
+    if(!wrap) return;
+    const run = ++topicMapRun;
+    const courseSel = document.getElementById('topicMapCourse');
+    const days = Number(document.getElementById('topicMapPeriod').value || 0);
+
+    const [students, hwIdx, atIdx] = await Promise.all([fetchStudentsForCurrentAdmin(), fetchHomeworkIndex(), fetchAttemptsIndex()]);
+    if(run !== topicMapRun) return;
+    const approved = students.filter(st => st.status === 'approved');
+    // Course choices from the students actually in scope.
+    const courses = [...new Set(approved.map(st => (st.course || '').trim()).filter(Boolean))].sort();
+    const keep = courseSel.value;
+    courseSel.innerHTML = '<option value="">All courses</option>' + courses.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    courseSel.value = courses.includes(keep) ? keep : '';
+    const course = courseSel.value;
+    const inScope = approved.filter(st => !course || (st.course || '').trim() === course);
+    const byUser = {};
+    inScope.forEach(st => { byUser[(st.username || '').trim().toLowerCase()] = st; });
+
+    const since = days ? Date.now() - days * 864e5 : 0;
+    const pick = (row, when) => byUser[(row.username || '').trim().toLowerCase()] && new Date(when || row.ts || 0).getTime() >= since;
+    const hwRows = hwIdx.filter(h => h.status === 'completed' && !h.isRetake && !/^Retake: /.test(h.title || '') && pick(h, h.submittedAt));
+    const atRows = atIdx.filter(a => !a.retakeDayKey && pick(a, a.ts));
+
+    // Older records were saved before topic summaries existed; work theirs
+    // out once from the full record and store it, so this is only slow the
+    // very first time.
+    const missing = [...hwRows.filter(h => !h.topics).map(h => ({ kind:'homework', row:h })),
+                     ...atRows.filter(a => !a.topics).map(a => ({ kind:'attempts', row:a }))];
+    for(let n = 0; n < missing.length; n += 8){
+      if(run !== topicMapRun) return;
+      wrap.innerHTML = `<div class="tm-progress">Preparing the topic map for the first time… ${Math.min(n + 8, missing.length)} of ${missing.length} older results</div>`;
+      await Promise.all(missing.slice(n, n + 8).map(async m=>{
+        const full = await dbGet(m.kind, m.row.id);
+        const topics = full ? topicSummary(full.results) : null;
+        m.row.topics = topics || {};
+        if(full) await dbSet(m.kind, `idx-${m.row.id}`, { ...m.row, topics: m.row.topics });
+      }));
+    }
+    if(run !== topicMapRun) return;
+
+    // student -> topic -> [right, total]
+    const grid = {}, classTot = {};
+    const add = (user, topics)=>{
+      if(!topics) return;
+      Object.entries(topics).forEach(([t, v])=>{
+        if(!Array.isArray(v) || !v[1]) return;
+        const g = grid[user] = grid[user] || {};
+        g[t] = g[t] || [0, 0]; g[t][0] += v[0]; g[t][1] += v[1];
+        classTot[t] = classTot[t] || [0, 0]; classTot[t][0] += v[0]; classTot[t][1] += v[1];
+      });
+    };
+    hwRows.forEach(h => add((h.username || '').trim().toLowerCase(), h.topics));
+    atRows.forEach(a => add((a.username || '').trim().toLowerCase(), a.topics));
+
+    const users = Object.keys(grid);
+    const topics = Object.keys(classTot);
+    if(users.length === 0 || topics.length === 0){
+      wrap.innerHTML = `<div class="admin-empty">No graded homework or exams ${days ? `in the last ${days} days` : 'yet'}${course ? ` for ${esc(course)}` : ''}.</div>`;
+      return;
+    }
+    const pctOf = v => Math.round(v[0] / v[1] * 100);
+    topics.sort((a,b)=> pctOf(classTot[a]) - pctOf(classTot[b]));
+    const overall = u => { const vals = Object.values(grid[u]); const r = vals.reduce((s,v)=>s+v[0],0), t = vals.reduce((s,v)=>s+v[1],0); return t ? Math.round(r / t * 100) : 0; };
+    users.sort((a,b)=> overall(a) - overall(b));
+    const nameOf = u => byUser[u] ? (byUser[u].username || u) : u;
+
+    // Headline findings, in words, so the map is readable without decoding.
+    const weakTopics = topics.filter(t => classTot[t][1] >= 5 && pctOf(classTot[t]) < 70).slice(0, 3);
+    const strugglers = users.filter(u => overall(u) < 60);
+    const tmCell = (v, who, topic)=>{
+      if(!v) return `<td class="tm-cell none" data-tip="${esc(who)} · ${esc(topic)}|no answers yet"></td>`;
+      const pct = pctOf(v), bin = tmBin(pct);
+      return `<td class="tm-cell${v[1] < 3 ? ' thin' : ''}" style="background:${bin.bg};" data-tip="${esc(who)} · ${esc(topic)}|${v[0]} of ${v[1]} right (${pct}%)${v[1] < 3 ? ' — too few answers to judge' : ''}">${pct}</td>`;
+    };
+    const head = `<tr><th class="corner"></th>${topics.map(t => `<th title="${esc(t)}"><span class="rot">${esc(t.length > 22 ? t.slice(0, 21) + '…' : t)}</span></th>`).join('')}</tr>`;
+    const classRow = `<tr class="tm-class"><th>Whole class</th>${topics.map(t => tmCell(classTot[t], 'Whole class', t)).join('')}</tr>`;
+    const body = users.map(u => `<tr><th title="${esc(nameOf(u))}">${esc(nameOf(u))}<span class="ov">${overall(u)}%</span></th>${topics.map(t => tmCell(grid[u][t], nameOf(u), t)).join('')}</tr>`).join('');
+    const legendBins = [['var(--tm-r3)','<40%'],['var(--tm-r2)','40–54'],['var(--tm-r1)','55–69'],['var(--tm-mid)','70–79'],['var(--tm-b1)','80–86'],['var(--tm-b2)','87–93'],['var(--tm-b3)','94+']];
+    const tableRows = users.flatMap(u => topics.filter(t => grid[u][t]).map(t => `<tr><td>${esc(nameOf(u))}</td><td>${esc(t)}</td><td>${grid[u][t][0]} / ${grid[u][t][1]}</td><td>${pctOf(grid[u][t])}%</td></tr>`)).join('');
+
+    wrap.innerHTML = `
+      <div class="tm-insights">
+        <div class="tm-insight"><div class="k">Reteach first</div>${weakTopics.length ? weakTopics.map(t => `<strong>${esc(t)}</strong> ${pctOf(classTot[t])}%`).join(' · ') : 'No topic is below 70% for the class — nothing urgent'}</div>
+        <div class="tm-insight"><div class="k">Below 60% overall</div>${strugglers.length ? strugglers.slice(0, 6).map(u => `<strong>${esc(nameOf(u))}</strong> ${overall(u)}%`).join(' · ') + (strugglers.length > 6 ? ` +${strugglers.length - 6} more` : '') : 'Nobody — good sign'}</div>
+        <div class="tm-insight"><div class="k">Covered</div>${users.length} student${users.length === 1 ? '' : 's'} · ${topics.length} topic${topics.length === 1 ? '' : 's'} · ${hwRows.length + atRows.length} graded result${hwRows.length + atRows.length === 1 ? '' : 's'}</div>
+      </div>
+      <div class="tm-scroll"><table class="tm-grid" aria-label="Accuracy by student and topic"><thead>${head}</thead><tbody>${classRow}${body}</tbody></table></div>
+      <div class="tm-foot">
+        <div class="tm-legend">${legendBins.map(([c,l]) => `<span class="sw" style="background:${c};"></span><span class="lab">${l}</span>`).join('')}<span class="lab">· faded = fewer than 3 answers</span></div>
+        <button type="button" class="fc-table-btn" id="topicMapTableBtn">View as table</button>
+      </div>
+      <table class="fc-table" id="topicMapTable" hidden><thead><tr><th>Student</th><th>Topic</th><th>Right</th><th>%</th></tr></thead><tbody>${tableRows}</tbody></table>`;
+
+    wrap.querySelectorAll('.tm-cell:not(.none)').forEach(td => { td.style.color = tmInkFor(td); });
+    let tip = document.getElementById('tmTip');
+    if(!tip){ tip = document.createElement('div'); tip.id = 'tmTip'; tip.className = 'tm-tip'; tip.style.display = 'none'; document.body.appendChild(tip); }
+    const showTip = (td, x, y)=>{
+      const [who, what] = (td.dataset.tip || '').split('|');
+      tip.innerHTML = `<div>${who}</div><div class="t">${what}</div>`;
+      tip.style.display = '';
+      tip.style.left = Math.min(window.innerWidth - tip.offsetWidth - 8, x + 12) + 'px';
+      tip.style.top = (y - tip.offsetHeight - 10) + 'px';
+    };
+    wrap.querySelectorAll('.tm-cell').forEach(td=>{
+      td.addEventListener('mousemove', e => showTip(td, e.clientX, e.clientY));
+      td.addEventListener('mouseleave', ()=>{ tip.style.display = 'none'; });
+      td.addEventListener('click', e => { showTip(td, e.clientX, e.clientY); setTimeout(()=>{ tip.style.display = 'none'; }, 2200); });
+    });
+    const tBtn = document.getElementById('topicMapTableBtn'), tTab = document.getElementById('topicMapTable');
+    tBtn.addEventListener('click', ()=>{ tTab.hidden = !tTab.hidden; tBtn.textContent = tTab.hidden ? 'View as table' : 'Hide table'; });
+  }
+  document.getElementById('topicMapCourse').addEventListener('change', renderClassTopicMap);
+  document.getElementById('topicMapPeriod').addEventListener('change', renderClassTopicMap);
+  document.getElementById('topicMapRefresh').addEventListener('click', ()=>{
+    invalidateDbCache('homework'); invalidateDbCache('attempts'); invalidateDbCache('students');
+    renderClassTopicMap();
+  });
 
   /* ---------------- ADMIN TABS ---------------- */
   document.querySelectorAll('.admin-tab').forEach(tab=>{
@@ -6859,12 +7186,14 @@
 
   // Confetti for a strong result -- plain DOM pieces, no library, and
   // skipped entirely for anyone who has asked their device for less motion.
-  function celebrateResult(pct){
+  function celebrateResult(pct, hostEl){
     if(pct < 75) return;
     if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const count = pct >= 100 ? 140 : pct >= 90 ? 90 : 40;
     const palette = ['var(--brand)', 'var(--success)', 'var(--gold)', 'var(--signal)', 'var(--ember)', 'var(--grad-m)'];
-    const host = document.getElementById('examModal') || document.body;
+    // Confetti inside a hidden popup is invisible, so it goes into whichever
+    // screen the student is actually looking at.
+    const host = hostEl || document.querySelector('.modal-overlay.open') || document.body;
     const pieces = [];
     for(let n = 0; n < count; n++){
       const el = document.createElement('span');
@@ -7574,6 +7903,233 @@
   // single safe hook if that ever stops being true.
   function refreshProgressRings(){}
 
+  /* ---------------- LEVEL-UP MOMENT ----------------
+     The highest level a student has already been celebrated for is kept on
+     their account (not the device), so each level is celebrated exactly once
+     wherever they happen to be signed in. The first time this runs for an
+     existing student it quietly records where they are -- nobody gets a
+     surprise "Level 7!" the day this goes live. */
+  let levelUpShowing = false;
+  async function maybeCelebrateLevel(level, xp){
+    if(!currentStudent || levelUpShowing) return;
+    try{
+      invalidateDbCache('students');
+      const st = await getStudent(currentStudent.username);
+      if(!st) return;
+      const seen = typeof st.celebratedLevel === 'number' ? st.celebratedLevel : null;
+      if(seen !== null && level <= seen) return;
+      st.celebratedLevel = level;
+      await dbSet('students', studentKey(currentStudent.username), st);
+      if(seen === null) return;
+      showLevelUp(seen, level, xp);
+    }catch(err){ console.error('Level-up check failed:', err); }
+  }
+
+  function showLevelUp(fromLevel, level, xp){
+    levelUpShowing = true;
+    const into = xp % 100;
+    document.getElementById('levelUpNum').textContent = level;
+    document.getElementById('levelUpTitle').textContent = `You reached Level ${level}`;
+    document.getElementById('levelUpSub').textContent = level - fromLevel > 1
+      ? `That's ${level - fromLevel} levels in one go — amazing work.`
+      : `Every homework you finish, every perfect score and every day of your streak earns XP.`;
+    document.getElementById('levelUpXp').textContent = `${into} / 100 XP towards Level ${level + 1}`;
+    const bar = document.getElementById('levelUpBar');
+    bar.style.width = '0';
+    const modal = document.getElementById('levelUpModal');
+    modal.classList.add('open');
+    requestAnimationFrame(()=> requestAnimationFrame(()=>{ bar.style.width = Math.max(3, into) + '%'; }));
+    // Count the badge up from the old level for a moment of anticipation.
+    const num = document.getElementById('levelUpNum');
+    if(level - fromLevel > 1 && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
+      let n = fromLevel;
+      num.textContent = n;
+      const t = setInterval(()=>{ n++; num.textContent = n; if(n >= level) clearInterval(t); }, 180);
+    }
+    celebrateResult(100, modal);
+  }
+  function closeLevelUp(){
+    document.getElementById('levelUpModal').classList.remove('open');
+    levelUpShowing = false;
+  }
+  document.getElementById('levelUpClose').addEventListener('click', closeLevelUp);
+  document.getElementById('levelUpModal').addEventListener('click', e => { if(e.target.id === 'levelUpModal') closeLevelUp(); });
+
+  /* ---------------- SCORE FORECAST ----------------
+     Fits a straight line through the student's recent results and extends it
+     four weeks. Deliberately cautious: it needs at least 4 results spread
+     over a week before it projects anything, and caps the projected change
+     at 20 points over the four weeks, so one great or awful day can't
+     promise a jump that won't happen. */
+  const FORECAST_DAYS = 28;
+  function computeForecast(timeline){
+    const pts = timeline.map(t => ({ ...t, time: new Date(t.date).getTime() }))
+      .filter(t => isFinite(t.time)).sort((a,b)=> a.time - b.time);
+    if(pts.length === 0) return null;
+    const recent = pts.filter(t => t.time >= pts[pts.length - 1].time - 60 * 864e5).slice(-12);
+    const lastTime = pts[pts.length - 1].time;
+    const avgRecent = Math.round(pts.slice(-5).reduce((s,t)=> s + t.pct, 0) / Math.min(5, pts.length));
+    const spanDays = (recent[recent.length - 1].time - recent[0].time) / 864e5;
+    if(recent.length < 4 || spanDays < 7){
+      return { pts, current: avgRecent, projected: null, slopePerWeek: null, lastTime, canForecast: false };
+    }
+    const xs = recent.map(t => (t.time - lastTime) / 864e5), ys = recent.map(t => t.pct);
+    const mx = xs.reduce((a,b)=>a+b,0) / xs.length, my = ys.reduce((a,b)=>a+b,0) / ys.length;
+    let num = 0, den = 0;
+    xs.forEach((x,i)=>{ num += (x - mx) * (ys[i] - my); den += (x - mx) * (x - mx); });
+    const slope = den ? num / den : 0;                    // points per day
+    const current = Math.max(0, Math.min(100, Math.round(my - slope * mx)));   // fitted value today
+    const change = Math.max(-20, Math.min(20, slope * FORECAST_DAYS));
+    const projected = Math.max(0, Math.min(100, Math.round(current + change)));
+    return { pts, current, projected, slopePerWeek: slope * 7, lastTime, canForecast: true };
+  }
+
+  function buildForecastHtml(timeline, opts){
+    const fc = computeForecast(timeline);
+    if(!fc) return '';
+    const est = !!opts.est, target = opts.target || null;
+    const show = pct => est ? `${pctToEstScore(pct)}` : `${pct}<small>%</small>`;
+    const showPlain = pct => est ? `${pctToEstScore(pct)}` : `${pct}%`;
+    const unit = est ? ' <small>/ 800</small>' : '';
+    const delta = fc.canForecast ? (est ? pctToEstScore(fc.projected) - pctToEstScore(fc.current) : fc.projected - fc.current) : 0;
+
+    let note;
+    if(!fc.canForecast){
+      note = `<span class="muted">The forecast appears after 4 results spread over at least a week — you're at ${fc.pts.length}.</span>`;
+    } else if(target && fc.current >= target){
+      note = `🎉 You're already at your target of ${showPlain(target)}. Keep it there.`;
+    } else if(target && fc.slopePerWeek > 0.25){
+      const weeks = Math.ceil((target - fc.current) / fc.slopePerWeek);
+      note = weeks <= 26
+        ? `At this pace you'd reach your target of <strong>${showPlain(target)}</strong> in about <strong>${weeks} week${weeks === 1 ? '' : 's'}</strong>.`
+        : `You're improving, but slowly — at this pace your target of ${showPlain(target)} is more than 6 months away.`;
+    } else if(fc.slopePerWeek > 0.25){
+      note = `You're heading up. Set a target score to see how long it will take to reach it.`;
+    } else if(fc.slopePerWeek < -0.25){
+      note = `Your recent scores are slipping. Go back over your Mistake History before the next homework.`;
+    } else {
+      note = `Your scores are holding steady. Pushing on your weakest topic is the quickest way up.`;
+    }
+
+    const stats = `
+      <div class="fc-stats">
+        <div class="fc-stat"><div class="k">Now</div><div class="v">${show(fc.current)}${unit}</div><div class="d">your level right now</div></div>
+        <div class="fc-stat"><div class="k">In 4 weeks</div><div class="v">${fc.canForecast ? show(fc.projected) : '—'}${fc.canForecast ? unit : ''}</div>
+          <div class="d">${fc.canForecast ? `<span class="${delta > 0 ? 'fc-up' : delta < 0 ? 'fc-down' : ''}">${delta > 0 ? '↗ +' : delta < 0 ? '↘ ' : '→ '}${delta}</span> at this pace` : 'needs more results'}</div></div>
+        <div class="fc-stat"><div class="k">Target</div><div class="v">${target ? show(target) : '—'}${target ? unit : ''}</div><div class="d">${target ? (fc.current >= target ? '✓ reached' : `${est ? pctToEstScore(target) - pctToEstScore(fc.current) : target - fc.current} to go`) : 'not set yet'}</div></div>
+      </div>`;
+
+    // ---- chart geometry ----
+    // Drawn at the width it will actually occupy, so text stays full size
+    // on a phone instead of a wide chart being shrunk until it's unreadable.
+    const W = Math.round(Math.max(300, Math.min(760, opts.width || 640))), H = 210, L = 40, R = 64, T = 14, B = 24;
+    const first = fc.pts[0].time;
+    const endTime = fc.lastTime + (fc.canForecast ? FORECAST_DAYS * 864e5 : 0);
+    const span = Math.max(864e5, endTime - first);
+    const X = t => L + (t - first) / span * (W - L - R);
+    const Y = pct => T + (1 - pct / 100) * (H - T - B);
+    const ticks = [0, 25, 50, 75, 100];
+    const grid = ticks.map(v => `<line x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}"></line>`).join('');
+    const yLabels = ticks.map(v => `<text x="${L - 8}" y="${Y(v) + 3}" text-anchor="end">${est ? pctToEstScore(v) : v + '%'}</text>`).join('');
+    const fmt = t => new Date(t).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+    const xLabels = [
+      `<text x="${X(first)}" y="${H - 6}" text-anchor="start">${fmt(first)}</text>`,
+      fc.canForecast ? `<text x="${X(fc.lastTime)}" y="${H - 6}" text-anchor="middle">Today</text>` : '',
+      `<text x="${X(endTime)}" y="${H - 6}" text-anchor="end">${fmt(endTime)}</text>`
+    ].join('');
+    const linePath = fc.pts.map((t,i) => `${i ? 'L' : 'M'}${X(t.time).toFixed(1)},${Y(t.pct).toFixed(1)}`).join(' ');
+    const dots = fc.pts.map((t,i) => `<circle class="fc-dot${i === fc.pts.length - 1 ? ' end' : ''}" cx="${X(t.time).toFixed(1)}" cy="${Y(t.pct).toFixed(1)}" r="4"></circle>`).join('');
+    const future = fc.canForecast ? `<rect class="fc-future" x="${X(fc.lastTime)}" y="${T}" width="${X(endTime) - X(fc.lastTime)}" height="${H - T - B}" rx="4"></rect>` : '';
+    // The forecast and target labels both sit at the right edge; when their
+    // values are close, push them apart so neither covers the other.
+    let projLabelY = fc.canForecast ? Y(fc.projected) + 4 : null;
+    let tgtLabelY = target ? Y(target) + 4 : null;
+    if(projLabelY !== null && tgtLabelY !== null && Math.abs(projLabelY - tgtLabelY) < 15){
+      const mid = (projLabelY + tgtLabelY) / 2, upper = fc.projected >= target;
+      projLabelY = mid + (upper ? -8 : 8);
+      tgtLabelY = mid + (upper ? 8 : -8);
+    }
+    const proj = fc.canForecast
+      ? `<path class="fc-proj" d="M${X(fc.lastTime).toFixed(1)},${Y(fc.current).toFixed(1)} L${X(endTime).toFixed(1)},${Y(fc.projected).toFixed(1)}"></path>
+         <text class="fc-label" x="${X(endTime) + 6}" y="${projLabelY}">${showPlain(fc.projected)}</text>`
+      : '';
+    const tgt = target
+      ? `<line class="fc-target" x1="${L}" x2="${W - R}" y1="${Y(target)}" y2="${Y(target)}"></line>
+         <text class="fc-label ref" x="${W - R + 6}" y="${tgtLabelY}">🎯 ${showPlain(target)}</text>`
+      : '';
+    const lastLabel = !fc.canForecast
+      ? `<text class="fc-label" x="${X(fc.lastTime) + 6}" y="${Y(fc.pts[fc.pts.length - 1].pct) + 4}">${showPlain(fc.pts[fc.pts.length - 1].pct)}</text>` : '';
+
+    const rows = fc.pts.slice().reverse().map(t => `<tr><td>${fmt(t.time)}</td><td>${esc(t.title || '')}</td><td>${showPlain(t.pct)}</td></tr>`).join('');
+    return {
+      fc,
+      html: `
+        <div class="fc-wrap">
+          ${stats}
+          <div class="fc-note">${note}</div>
+          <div class="fc-plot" style="position:relative;">
+            <svg class="fc-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Your scores over time${fc.canForecast ? `, currently ${showPlain(fc.current)}, projected ${showPlain(fc.projected)} in four weeks` : ''}${target ? `, target ${showPlain(target)}` : ''}">
+              <g class="fc-grid">${grid}</g>
+              ${future}
+              <g class="fc-axis">${yLabels}${xLabels}</g>
+              ${tgt}
+              <path class="fc-line" d="${linePath}"></path>
+              ${proj}
+              ${dots}
+              ${lastLabel}
+              <line class="fc-cross" x1="0" x2="0" y1="${T}" y2="${H - B}" style="display:none;"></line>
+              <rect class="fc-hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}"></rect>
+            </svg>
+            <div class="fc-tip" style="display:none;"></div>
+          </div>
+          <div class="fc-foot">
+            <div class="fc-legend">
+              <span><i></i>Your results</span>
+              ${fc.canForecast ? '<span><i class="proj"></i>Forecast</span>' : ''}
+              ${target ? '<span><i class="ref"></i>Target</span>' : ''}
+            </div>
+            <button type="button" class="fc-table-btn">View as table</button>
+          </div>
+          <table class="fc-table" hidden><thead><tr><th>Date</th><th>Homework / exam</th><th>Score</th></tr></thead><tbody>${rows}</tbody></table>
+        </div>`,
+      geometry: { W, L, R, X, Y, pts: fc.pts, showPlain, fmt }
+    };
+  }
+
+  // Hover / tap: a crosshair snaps to the nearest result and a tooltip names
+  // it -- the whole plot is the hit area, not the 8px dots.
+  function wireForecast(container, built){
+    const wrap = container.querySelector('.fc-wrap');
+    if(!wrap || !built) return;
+    const svg = wrap.querySelector('.fc-svg'), hit = wrap.querySelector('.fc-hit');
+    const cross = wrap.querySelector('.fc-cross'), tip = wrap.querySelector('.fc-tip');
+    const g = built.geometry;
+    const move = (clientX)=>{
+      const box = svg.getBoundingClientRect();
+      const vx = (clientX - box.left) / box.width * g.W;
+      let best = null, bestD = Infinity;
+      g.pts.forEach(t => { const d = Math.abs(g.X(t.time) - vx); if(d < bestD){ bestD = d; best = t; } });
+      if(!best) return;
+      const cx = g.X(best.time), cy = g.Y(best.pct);
+      cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.style.display = '';
+      tip.innerHTML = `<div><strong>${g.showPlain(best.pct)}</strong> · ${esc(best.title || '')}</div><div class="t">${g.fmt(best.time)}</div>`;
+      tip.style.left = (cx / g.W * box.width) + 'px';
+      tip.style.top = (cy / 210 * box.height) + 'px';
+      tip.style.display = '';
+    };
+    const hide = ()=>{ cross.style.display = 'none'; tip.style.display = 'none'; };
+    hit.addEventListener('mousemove', e => move(e.clientX));
+    hit.addEventListener('mouseleave', hide);
+    hit.addEventListener('touchstart', e => { if(e.touches[0]) move(e.touches[0].clientX); }, { passive:true });
+    hit.addEventListener('touchmove', e => { if(e.touches[0]) move(e.touches[0].clientX); }, { passive:true });
+    hit.addEventListener('touchend', ()=> setTimeout(hide, 1600));
+    const btn = wrap.querySelector('.fc-table-btn'), table = wrap.querySelector('.fc-table');
+    btn.addEventListener('click', ()=>{
+      table.hidden = !table.hidden;
+      btn.textContent = table.hidden ? 'View as table' : 'Hide table';
+    });
+  }
+
   /* ---------------- QUIZ COUNTDOWN ----------------
      One controller used by every timed quiz (exam, homework, retake). The
      display lives in a fixed bar at the top of the exam screen so it is
@@ -8083,6 +8639,21 @@
   renderLeaderboard();
 
   /* ---------------- LEADERBOARD (Supabase) ---------------- */
+  // Per-topic right/total for one homework or exam, kept on its lightweight
+  // index record so the class topic map never has to download every
+  // student's full answers: { "Algebra": [7, 10], ... }.
+  function topicSummary(results){
+    if(!Array.isArray(results) || results.length === 0) return null;
+    const out = {};
+    results.forEach(r=>{
+      const k = String(r.lesson || 'General').trim() || 'General';
+      if(!out[k]) out[k] = [0, 0];
+      out[k][1]++;
+      if(r.correct) out[k][0]++;
+    });
+    return out;
+  }
+
   async function saveExamAttempt(attempt){
     const id = generateId('attempts');
     const fullData = { id, ...attempt, ts: new Date().toISOString() };
@@ -8096,7 +8667,8 @@
         _index: true, id, username: fullData.username, examTitle: fullData.examTitle,
         correct: fullData.correct, total: fullData.total, pct: fullData.pct,
         retakeRequired: fullData.retakeRequired, retakeDeadline: fullData.retakeDeadline,
-        retakeDayKey: fullData.retakeDayKey || null, ts: fullData.ts
+        retakeDayKey: fullData.retakeDayKey || null, ts: fullData.ts,
+        topics: topicSummary(fullData.results)
       });
     }
     return ok;
@@ -8115,7 +8687,8 @@
       _index: true, id: a.id, username: a.username, examTitle: a.examTitle,
       correct: a.correct, total: a.total, pct: a.pct,
       retakeRequired: a.retakeRequired, retakeDeadline: a.retakeDeadline,
-      retakeDayKey: a.retakeDayKey || null, ts: a.ts
+      retakeDayKey: a.retakeDayKey || null, ts: a.ts,
+      topics: topicSummary(a.results)
     }));
     const rows = await dbGetAllByIdPrefix('attempts', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -8234,56 +8807,261 @@
   }
 
   /* ---------------- Recording watch tracking ----------------
-     Stored on the student record as a map of recordingKey -> stats, so it
+     Stored on the student record as recordingStats[recordingKey], so it
      needs no extra Supabase table.
 
-     IMPORTANT about what this measures: a YouTube/Drive/Bunny player runs in
-     a sandboxed frame the browser won't let this page read, so there is no
-     way to know real playback position. What's recorded is how long the
-     player was OPEN. That's a solid proxy for attention but it is not proof
-     of watching, and the admin view labels it that way rather than claiming
-     more than it knows. */
-  let activeWatch = null; // { username, key, title, startedAt }
+     YouTube recordings report their real playback to this page (whether the
+     video is playing, and where in the video it is), so for those we record:
+       - seconds actually spent PLAYING -- paused time never counts;
+       - which stretches of the video were seen, merged, so rewinding and
+         rewatching the same minute isn't counted twice;
+       - whether each part was played to the end.
+     Anything that can't report playback (a Google Drive link, for example)
+     falls back to counting only the time the player is on screen, and is
+     marked as an estimate so the admin view never claims more than it knows.
+
+     Progress is saved every 15 seconds and whenever the page is hidden, so a
+     locked phone or a closed tab loses at most a few seconds -- the old
+     version only saved on a clean close, which phones rarely allow. */
+  const WATCH_FLUSH_MS = 15000;
+  const WATCH_PLAYER_WAIT_MS = 8000;   // how long to wait for YouTube to start talking
+  let activeWatch = null;
+  let watchFlushChain = Promise.resolve();
 
   function recordingKeyFor(kind, id){ return `${kind}:${id}`; }
 
-  function beginWatchTracking(username, key, title){
-    // Close any previous one first, so a student jumping straight from one
-    // recording to another doesn't leave a session open forever.
-    if(activeWatch) endWatchTracking();
-    activeWatch = { username, key, title, startedAt: Date.now() };
+  function isYouTubeUrl(url){ return /youtube\.com|youtu\.be/.test(url || ''); }
+
+  // The embed URL with YouTube's player messages switched on.
+  function trackableEmbedUrl(url){
+    const embed = toEmbedUrl(url);
+    if(!/youtube\.com\/embed\//.test(embed)) return embed;
+    const params = ['enablejsapi=1', 'playsinline=1', 'rel=0'];
+    if(/^https?:/.test(location.origin)) params.push('origin=' + encodeURIComponent(location.origin));
+    return embed + (embed.includes('?') ? '&' : '?') + params.join('&');
   }
 
-  async function endWatchTracking(){
-    if(!activeWatch) return;
-    const { username, key, title, startedAt } = activeWatch;
-    activeWatch = null;
-    const seconds = Math.round((Date.now() - startedAt) / 1000);
-    if(seconds < 2) return; // opened and immediately closed — not a watch
-    try{
-      const student = await getStudent(username);
-      if(!student) return;
-      const stats = student.recordingStats || {};
-      const entry = stats[key] || { opens: 0, seconds: 0, title: title || '' };
-      entry.opens += 1;
-      entry.seconds += seconds;
-      entry.title = title || entry.title;
-      entry.lastAt = new Date().toISOString();
-      stats[key] = entry;
-      student.recordingStats = stats;
-      await dbSet('students', studentKey(username), student);
-      invalidateDbCache('students');
-    }catch(err){
-      console.error('Could not record watch time:', err);
+  // Merge [start, end] second ranges so overlapping replays count once.
+  function mergeIntervals(list){
+    const sorted = (list || []).filter(r => Array.isArray(r) && r[1] > r[0]).map(r => [r[0], r[1]]).sort((a,b)=> a[0] - b[0]);
+    const out = [];
+    sorted.forEach(r=>{
+      const last = out[out.length - 1];
+      if(last && r[0] <= last[1] + 1) last[1] = Math.max(last[1], r[1]);
+      else out.push(r);
+    });
+    return out.map(r => [Math.round(r[0] * 10) / 10, Math.round(r[1] * 10) / 10]);
+  }
+  function coveredSeconds(intervals){ return (intervals || []).reduce((sum, r) => sum + (r[1] - r[0]), 0); }
+
+  // Summary the admin view reads, for both the new detailed stats and the
+  // older open-time-only ones already saved.
+  function summarizeWatch(stat){
+    if(!stat) return { started:false };
+    const parts = stat.parts || {};
+    const known = Object.values(parts).filter(p => p && p.duration > 0);
+    const total = stat.partsTotal || Math.max(1, Object.keys(parts).length);
+    let coverage = null, finished = false;
+    if(known.length > 0){
+      const covered = known.reduce((sum, p) => sum + Math.min(p.duration, coveredSeconds(p.intervals)), 0);
+      const knownDur = known.reduce((sum, p) => sum + p.duration, 0);
+      // Parts never opened have no known length yet; assume the average so
+      // one watched part out of three doesn't read as 100%.
+      const unknownParts = Math.max(0, total - known.length);
+      const estTotal = knownDur + unknownParts * (knownDur / known.length);
+      coverage = Math.max(0, Math.min(100, Math.round(covered / estTotal * 100)));
+      // Reaching the end isn't enough -- dragging the slider to the last few
+      // seconds would do that. Finished means at least 90% actually seen.
+      const partDone = p => p.duration > 0 && coveredSeconds(p.intervals) >= p.duration * 0.9;
+      finished = known.length >= total && known.every(partDone);
+    }
+    return {
+      started: (stat.opens || 0) > 0,
+      measured: !!stat.measured,
+      seconds: stat.seconds || 0,
+      opens: stat.opens || 0,
+      coverage, finished,
+      partsStarted: Object.keys(parts).length, partsTotal: total,
+      lastAt: stat.lastAt || null
+    };
+  }
+
+  function beginWatchTracking(username, key, title, partsTotal){
+    if(activeWatch) endWatchTracking();
+    activeWatch = {
+      username, key, title, partsTotal: partsTotal || 1,
+      mode: 'waiting',            // 'waiting' -> 'player' (YouTube talking) or 'estimate'
+      partIndex: 0, frame: null, isYouTube: false,
+      playing: false, lastPos: null, rate: 1,
+      lastTick: Date.now(), waitingSince: Date.now(), bufferedEstimate: 0,
+      pending: { opens: 1, seconds: 0, parts: {}, measured: false },
+      tickTimer: null, flushTimer: null, handshakeTimer: null
+    };
+    activeWatch.tickTimer = setInterval(watchTick, 1000);
+    activeWatch.flushTimer = setInterval(()=> flushWatch(), WATCH_FLUSH_MS);
+  }
+
+  // Called whenever a (new) part is loaded into the player frame.
+  function watchSetPart(index, url, frame){
+    const w = activeWatch;
+    if(!w) return;
+    w.partIndex = index;
+    w.frame = frame;
+    w.isYouTube = isYouTubeUrl(url);
+    w.playing = false;
+    w.lastPos = null;
+    if(w.mode !== 'player'){ w.mode = 'waiting'; w.waitingSince = Date.now(); }
+    if(!w.pending.parts[index]) w.pending.parts[index] = { intervals: [], duration: 0, ended: false };
+    clearInterval(w.handshakeTimer);
+    if(w.isYouTube && frame){
+      // YouTube only starts reporting after it hears from the page; say
+      // hello a few times, since its player may still be loading.
+      let tries = 0;
+      const hello = ()=>{
+        if(!activeWatch || activeWatch !== w || !frame.contentWindow) return;
+        try{
+          frame.contentWindow.postMessage(JSON.stringify({ event:'listening', id:1, channel:'widget' }), '*');
+          frame.contentWindow.postMessage(JSON.stringify({ event:'command', func:'addEventListener', args:['onStateChange'], id:1, channel:'widget' }), '*');
+        }catch(err){}
+        if(++tries >= 8) clearInterval(w.handshakeTimer);
+      };
+      frame.addEventListener('load', hello, { once:true });
+      w.handshakeTimer = setInterval(hello, 1000);
     }
   }
 
-  // Catch the cases where the modal isn't closed cleanly — tab closed,
-  // browser backgrounded, navigating away.
-  window.addEventListener('beforeunload', ()=>{ if(activeWatch) endWatchTracking(); });
-  document.addEventListener('visibilitychange', ()=>{
-    if(document.visibilityState === 'hidden' && activeWatch) endWatchTracking();
+  function watchTick(){
+    const w = activeWatch;
+    if(!w) return;
+    const now = Date.now();
+    // A sleeping phone can pause timers for minutes; never credit more than
+    // a couple of seconds for a single tick.
+    const elapsed = Math.min(2, Math.max(0, (now - w.lastTick) / 1000));
+    w.lastTick = now;
+    const visible = document.visibilityState !== 'hidden';
+    if(w.mode === 'player'){
+      if(w.playing && visible) w.pending.seconds += elapsed;
+    } else if(w.mode === 'waiting'){
+      if(visible) w.bufferedEstimate += elapsed;
+      if(!w.isYouTube || now - w.waitingSince > WATCH_PLAYER_WAIT_MS){
+        // Nothing reports playback -- count on-screen time instead.
+        w.mode = 'estimate';
+        w.pending.seconds += w.bufferedEstimate;
+        w.bufferedEstimate = 0;
+      }
+    } else if(visible){
+      w.pending.seconds += elapsed;
+    }
+  }
+
+  window.addEventListener('message', (e)=>{
+    const w = activeWatch;
+    if(!w || !w.frame || e.source !== w.frame.contentWindow) return;
+    let data = e.data;
+    if(typeof data === 'string'){ try{ data = JSON.parse(data); }catch(err){ return; } }
+    if(!data || typeof data !== 'object') return;
+    const info = data.info;
+    let state = null, pos = null, duration = null;
+    if(data.event === 'onStateChange' && typeof info === 'number') state = info;
+    if(info && typeof info === 'object'){
+      if(typeof info.playerState === 'number') state = info.playerState;
+      if(typeof info.currentTime === 'number') pos = info.currentTime;
+      if(typeof info.duration === 'number' && info.duration > 0) duration = info.duration;
+      if(typeof info.playbackRate === 'number' && info.playbackRate > 0) w.rate = info.playbackRate;
+    }
+    if(state === null && pos === null && duration === null) return;
+    if(w.mode !== 'player'){
+      // The player is talking, so real playback is known from here on; the
+      // on-screen estimate gathered while it loaded is dropped.
+      w.mode = 'player';
+      w.bufferedEstimate = 0;
+      w.pending.measured = true;
+    }
+    const part = w.pending.parts[w.partIndex] || (w.pending.parts[w.partIndex] = { intervals: [], duration: 0, ended: false });
+    if(duration) part.duration = Math.max(part.duration, duration);
+    if(pos !== null){
+      if(w.lastPos !== null && w.playing){
+        const step = pos - w.lastPos;
+        // Normal playback moves forward by about the time passed; anything
+        // bigger is a seek, which is not the same as watching that stretch.
+        if(step > 0 && step <= 3 * Math.max(1, w.rate) + 1) part.intervals.push([w.lastPos, pos]);
+      }
+      w.lastPos = pos;
+    }
+    if(state !== null){
+      w.playing = state === 1;
+      if(state === 0){
+        part.ended = true;
+        if(part.duration && w.lastPos !== null && part.duration - w.lastPos <= 3) part.intervals.push([w.lastPos, part.duration]);
+      }
+    }
   });
+
+  // Adds what has been gathered since the last save onto the student's
+  // stored stats. It re-reads the student fresh first, so anything else
+  // saved to their record in the meantime is kept, not overwritten.
+  function flushWatch(w){
+    w = w || activeWatch;
+    if(!w) return watchFlushChain;
+    const p = w.pending;
+    const hasParts = Object.values(p.parts).some(pt => pt.intervals.length || pt.duration || pt.ended);
+    if(p.opens === 0 && p.seconds < 1 && !hasParts) return watchFlushChain;
+    w.pending = { opens: 0, seconds: 0, measured: p.measured,
+                  parts: Object.fromEntries(Object.keys(p.parts).map(k => [k, { intervals: [], duration: p.parts[k].duration, ended: false }])) };
+    watchFlushChain = watchFlushChain.then(async ()=>{
+      try{
+        invalidateDbCache('students');
+        const student = await getStudent(w.username);
+        if(!student) return;
+        const stats = student.recordingStats || {};
+        const entry = stats[w.key] || { opens: 0, seconds: 0, title: w.title || '' };
+        entry.opens = (entry.opens || 0) + p.opens;
+        entry.seconds = Math.round((entry.seconds || 0) + p.seconds);
+        entry.title = w.title || entry.title;
+        entry.partsTotal = w.partsTotal;
+        entry.measured = !!(entry.measured || p.measured);
+        entry.v = 2;
+        entry.parts = entry.parts || {};
+        Object.entries(p.parts).forEach(([k, pt])=>{
+          const prev = entry.parts[k] || { intervals: [], duration: 0, ended: false };
+          entry.parts[k] = {
+            duration: Math.max(prev.duration || 0, pt.duration || 0),
+            intervals: mergeIntervals([...(prev.intervals || []), ...pt.intervals]),
+            ended: !!(prev.ended || pt.ended)
+          };
+        });
+        entry.lastAt = new Date().toISOString();
+        stats[w.key] = entry;
+        student.recordingStats = stats;
+        await dbSet('students', studentKey(w.username), student);
+      }catch(err){
+        console.error('Could not record watch time:', err);
+      }
+    });
+    return watchFlushChain;
+  }
+
+  async function endWatchTracking(){
+    const w = activeWatch;
+    if(!w) return;
+    activeWatch = null;
+    clearInterval(w.tickTimer); clearInterval(w.flushTimer); clearInterval(w.handshakeTimer);
+    // Credit the last partial second, then save.
+    const elapsed = Math.min(2, Math.max(0, (Date.now() - w.lastTick) / 1000));
+    const visible = document.visibilityState !== 'hidden';
+    if((w.mode === 'player' && w.playing && visible) || (w.mode === 'estimate' && visible)) w.pending.seconds += elapsed;
+    if(w.mode === 'waiting' && !w.isYouTube) w.pending.seconds += w.bufferedEstimate;
+    await flushWatch(w);
+  }
+
+  // Hiding the page (switching apps, locking the phone) saves progress but
+  // no longer ends the session: when the student comes back and carries on
+  // watching, that time counts too.
+  document.addEventListener('visibilitychange', ()=>{
+    if(activeWatch && document.visibilityState === 'hidden') flushWatch();
+    if(activeWatch) activeWatch.lastTick = Date.now();
+  });
+  window.addEventListener('pagehide', ()=>{ if(activeWatch) flushWatch(); });
 
   async function spendLessonCredit(username){
     const student = await getStudent(username);
@@ -8530,7 +9308,8 @@
         retakeDeadline: data.retakeDeadline, submittedAt: data.submittedAt, ts: data.ts,
         questionCount: (data.questions || []).length, pdfUrl: data.pdfUrl || null,
         isRetake: data.isRetake || false, publishAt: data.publishAt || null,
-        timeLimit: data.timeLimit || null
+        timeLimit: data.timeLimit || null,
+        topics: data.status === 'completed' ? topicSummary(data.results) : null
       });
       backfillExplanationVideos(data.title, data.questions || []);
     }
@@ -8554,6 +9333,7 @@
       retakeDeadline: hw.retakeDeadline, submittedAt: hw.submittedAt, ts: hw.ts,
       isRetake: hw.isRetake || false, publishAt: hw.publishAt || null,
       timeLimit: hw.timeLimit || null,
+      topics: hw.status === 'completed' ? topicSummary(hw.results) : null,
       questionCount: (hw.questions || []).length, pdfUrl: hw.pdfUrl || null
     }));
     const rows = await dbGetAllByIdPrefix('homework', 'idx-');
@@ -12328,16 +13108,13 @@
         ? approved.filter(s => (s.username||'').trim().toLowerCase() === rec.onlyFor.trim().toLowerCase())
         : approved;
       audience.forEach(stu=>{
-        const stat = (stu.recordingStats || {})[rec.key];
-        const watched = !!(stat && stat.opens > 0);
+        const sum = summarizeWatch((stu.recordingStats || {})[rec.key]);
+        const watched = !!sum.started;
         if(filter === 'watched' && !watched) return;
         if(filter === 'not' && watched) return;
-        rows.push({
-          student: stu.username, label: rec.label, kind: rec.kind, watched,
-          opens: stat ? stat.opens : 0,
-          seconds: stat ? stat.seconds : 0,
-          lastAt: stat ? stat.lastAt : null
-        });
+        if(filter === 'finished' && !sum.finished) return;
+        if(filter === 'unfinished' && (!watched || sum.finished)) return;
+        rows.push({ student: stu.username, label: rec.label, kind: rec.kind, watched, ...sum });
       });
     });
 
@@ -12346,26 +13123,41 @@
       return;
     }
 
-    // Unwatched first — that's the list you'd actually act on.
-    rows.sort((a,b)=>{
-      if(a.watched !== b.watched) return a.watched ? 1 : -1;
-      return b.seconds - a.seconds;
-    });
+    // Not started first, then started-but-unfinished, then finished --
+    // the order you'd actually chase students in.
+    const rankOf = r => !r.watched ? 0 : (r.finished ? 2 : 1);
+    rows.sort((a,b)=> rankOf(a) - rankOf(b) || (a.coverage ?? -1) - (b.coverage ?? -1) || b.seconds - a.seconds);
+
+    const statusPill = r => !r.watched
+      ? '<span class="retake-pill overdue">Not started</span>'
+      : r.finished
+        ? '<span class="retake-pill done">\u2713 Finished</span>'
+        : '<span class="retake-pill waiting">Started</span>';
+    const coverCell = r=>{
+      if(!r.watched) return '\u2014';
+      if(r.coverage === null) return '<span style="color:var(--muted); font-size:0.8rem;">not measurable</span>';
+      const colour = r.finished ? 'var(--success)' : r.coverage >= 50 ? 'var(--amber)' : 'var(--ember)';
+      return `<div class="watch-cover">
+        <div class="watch-cover-bar"><span style="width:${r.coverage}%; background:${colour};"></span></div>
+        <span class="watch-cover-num">${r.coverage}%</span>
+      </div>${r.partsTotal > 1 ? `<div class="watch-cover-parts">${r.partsStarted} of ${r.partsTotal} parts opened</div>` : ''}`;
+    };
+    const timeCell = r => !r.watched ? '\u2014'
+      : `${formatWatchTime(r.seconds)}${r.measured ? '' : ' <span class="watch-est">estimate</span>'}`;
 
     wrap.innerHTML = `
       <table class="admin-table">
-        <thead><tr><th>Student</th><th>Recording</th><th>Type</th><th>Status</th><th>Times opened</th><th>Time spent</th><th>Last watched</th></tr></thead>
+        <thead><tr><th>Student</th><th>Recording</th><th>Type</th><th>Status</th><th>Watched</th><th>Covered</th><th>Opened</th><th>Last watched</th></tr></thead>
         <tbody>${rows.map(r => `
           <tr>
             <td>${esc(r.student)}</td>
             <td>${esc(r.label)}</td>
             <td>${esc(r.kind)}</td>
-            <td>${r.watched
-              ? '<span class="retake-pill done">✓ Watched</span>'
-              : '<span class="retake-pill overdue">Not yet</span>'}</td>
-            <td>${r.opens || '—'}</td>
-            <td>${formatWatchTime(r.seconds)}</td>
-            <td>${r.lastAt ? new Date(r.lastAt).toLocaleDateString() : '—'}</td>
+            <td>${statusPill(r)}</td>
+            <td>${timeCell(r)}</td>
+            <td>${coverCell(r)}</td>
+            <td>${r.opens ? `${r.opens}\u00d7` : '\u2014'}</td>
+            <td>${r.lastAt ? new Date(r.lastAt).toLocaleDateString() : '\u2014'}</td>
           </tr>`).join('')}</tbody>
       </table>
     `;
@@ -12702,14 +13494,16 @@
     // a plain Drive link with restricted sharing). Rather than leaving the
     // student staring at a blank box, always offer the direct link too.
     const fallback = document.getElementById('recordingFallbackLink');
+    const frame = document.getElementById('recordingPlayerFrame');
     const showPart = (i)=>{
-      document.getElementById('recordingPlayerFrame').src = toEmbedUrl(parts[i].url);
+      frame.src = trackableEmbedUrl(parts[i].url);
       fallback.href = parts[i].url;
       fallback.style.display = 'inline-block';
       renderRecordingParts(parts, i, showPart);
+      watchSetPart(i, parts[i].url, frame);
     };
+    beginWatchTracking(currentStudent.username, recordingKeyFor('session', sessionId), record.topic || 'Session recording', parts.length);
     if(parts.length > 0) showPart(0);
-    beginWatchTracking(currentStudent.username, recordingKeyFor('session', sessionId), record.topic || 'Session recording');
     document.getElementById('recordingViewNote').textContent = limit !== null
       ? `View ${used + 1} of ${limit}.${used + 1 >= limit ? ' This is your last one.' : ''}`
       : '';
@@ -12783,14 +13577,16 @@
     if(parts.length === 0) return;
     document.getElementById('recordingModalTitle').textContent = title || 'Lesson recording';
     const fallback = document.getElementById('recordingFallbackLink');
+    const frame = document.getElementById('recordingPlayerFrame');
     const showPart = (i)=>{
-      document.getElementById('recordingPlayerFrame').src = toEmbedUrl(parts[i].url);
+      frame.src = trackableEmbedUrl(parts[i].url);
       fallback.href = parts[i].url;
       fallback.style.display = 'inline-block';
       renderRecordingParts(parts, i, showPart);
+      watchSetPart(i, parts[i].url, frame);
     };
+    beginWatchTracking(currentStudent.username, recordingKeyFor('lesson', title || url), title || 'Lesson', parts.length);
     showPart(0);
-    beginWatchTracking(currentStudent.username, recordingKeyFor('lesson', title || url), title || 'Lesson');
     document.getElementById('recordingViewNote').textContent = result.remaining === null
       ? ''
       : `${result.remaining} lesson view${result.remaining === 1 ? '' : 's'} left.`;
@@ -14787,6 +15583,7 @@
     const xp = totalCompleted * 10 + perfectCount * 15 + streak * 2;
     const level = Math.floor(xp / 100) + 1;
     const xpIntoLevel = xp % 100;
+    maybeCelebrateLevel(level, xp);
 
     // ---- Progress rings ----
     const ringRow = document.getElementById('dashRingRow');
@@ -15029,19 +15826,14 @@
       if(timeline.length === 0){
         chartWrap.innerHTML = '<div class="admin-empty">No graded homework or exams yet — this fills in as you practice.</div>';
       } else {
-        chartWrap.innerHTML = `<div class="progress-chart">${timeline.map(t=>{
-          const barColor = t.pct >= 75 ? 'var(--success)' : (t.pct >= 50 ? 'var(--signal)' : 'var(--ember)');
-          const dateLabel = new Date(t.date).toLocaleDateString(undefined, {month:'short', day:'numeric'});
-          return `
-            <div class="progress-bar-col" title="${esc(t.title)}: ${t.pct}% on ${dateLabel}">
-              <div class="progress-bar-track">
-                <div class="progress-bar-fill" style="height:${Math.max(4, t.pct)}%; background:${barColor};"></div>
-              </div>
-              <span class="progress-bar-pct">${t.pct}%</span>
-              <span class="progress-bar-date">${esc(dateLabel)}</span>
-            </div>
-          `;
-        }).join('')}</div>`;
+        const fcStudent = await getStudent(currentStudent.username);
+        const built = buildForecastHtml(timeline, {
+          width: (chartWrap.clientWidth || Math.min(window.innerWidth, 900)) - 38,
+          est: isEstCourse(currentStudent.course),
+          target: fcStudent && fcStudent.targetScore ? Number(fcStudent.targetScore) : null
+        });
+        chartWrap.innerHTML = built.html;
+        wireForecast(chartWrap, built);
       }
     }
 
