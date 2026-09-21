@@ -2250,6 +2250,15 @@
   .exam-list-item:has(.course-books-picker){ flex-wrap:wrap; align-items:flex-start; }
   .course-books-picker{ flex-basis:100%; width:100%; margin-top:12px; border:1px solid var(--line); border-radius:10px; padding:12px; background:var(--panel-2, var(--panel)); }
   .course-books-options{ max-height:220px; overflow-y:auto; }
+  .picker-search-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .picker-search{
+    flex:1 1 180px; min-width:0;
+    background:var(--panel); border:1px solid var(--line); color:var(--text);
+    padding:8px 12px; border-radius:8px; font-family:'Inter',sans-serif; font-size:0.85rem;
+  }
+  .picker-search:focus{ outline:none; border-color:var(--signal); }
+  .picker-count{ color:var(--muted); font-size:0.78rem; white-space:nowrap; margin-left:auto; }
+  .picker-hidden{ display:none !important; }
   .pm-name{ font-family:'Space Grotesk',sans-serif; font-size:1.5rem; font-weight:700; }
   .pm-sub{ color:var(--muted); font-size:0.84rem; }
   .pm-contact{ text-align:right; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
@@ -10826,6 +10835,10 @@
         box.className = 'course-books-picker';
         box.innerHTML = `
           <div style="color:var(--muted); font-size:0.8rem; margin-bottom:8px;">Tick the books this course gets. Every exam inside a ticked book becomes visible to its students.</div>
+          <div class="picker-search-row">
+            <input type="text" class="picker-search" placeholder="🔍 Search books…" autocomplete="off">
+            <span class="picker-count"></span>
+          </div>
           <div class="course-books-options">${
             names.length
               ? names.map(b => `<label style="display:flex; align-items:center; gap:8px; padding:6px 4px; cursor:pointer;">
@@ -10839,11 +10852,12 @@
             <button class="btn btn-ghost course-books-cancel" style="padding:7px 16px; font-size:0.82rem;">Cancel</button>
           </div>`;
         row.appendChild(box);
+        wirePickerSearch(box);
         box.querySelector('.course-books-cancel').addEventListener('click', ()=> box.remove());
         box.querySelector('.course-books-save').addEventListener('click', async (ev)=>{
           const saveBtn = ev.currentTarget;
           saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
-          const books = Array.from(box.querySelectorAll('input:checked')).map(cb => cb.value);
+          const books = Array.from(box.querySelectorAll('.course-books-options input:checked')).map(cb => cb.value);
           const ok = await saveCourse(course.id, { ...course, books });
           if(!ok){ saveBtn.disabled = false; saveBtn.textContent = 'Save books'; alert('Could not save — please try again.'); return; }
           invalidateDbCache('courses');
@@ -10862,6 +10876,10 @@
         box.className = 'course-books-picker course-skills-picker';
         box.innerHTML = `
           <div style="color:var(--muted); font-size:0.8rem; margin-bottom:8px;">Tick the skills that belong to “${esc(course.name)}”. A skill can sit on more than one course. A skill with no course at all is visible to every student.</div>
+          <div class="picker-search-row">
+            <input type="text" class="picker-search" placeholder="🔍 Search skills…" autocomplete="off">
+            <span class="picker-count"></span>
+          </div>
           <div class="course-books-options">${
             skills.length
               ? skills.map(sk => {
@@ -10882,11 +10900,12 @@
             <button class="btn btn-ghost course-skills-cancel" style="padding:7px 16px; font-size:0.82rem;">Cancel</button>
           </div>`;
         row.appendChild(box);
+        wirePickerSearch(box);
         box.querySelector('.course-skills-cancel').addEventListener('click', ()=> box.remove());
         box.querySelector('.course-skills-save').addEventListener('click', async (e2)=>{
           const saveBtn = e2.currentTarget;
           saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
-          const chosen = new Set(Array.from(box.querySelectorAll('input:checked')).map(cb => cb.value));
+          const chosen = new Set(Array.from(box.querySelectorAll('.course-books-options input:checked')).map(cb => cb.value));
           const res = await applyCourseToSkills(course.name, chosen);
           if(res.orphaned.length){
             alert(`Saved.\n\nHeads up: ${res.orphaned.length} skill${res.orphaned.length === 1 ? ' is' : 's are'} now on no course at all, which means every student can see ${res.orphaned.length === 1 ? 'it' : 'them'}:\n\n${res.orphaned.slice(0, 8).join('\n')}`);
@@ -11622,6 +11641,43 @@
 
     listEl.querySelectorAll('input').forEach(cb => cb.addEventListener('change', updateBookExamCount));
     updateBookExamCount();
+  }
+
+  // Filter box for the inline course pickers. Rows are HIDDEN, never
+  // re-rendered, so a tick made before typing is still there after.
+  function wirePickerSearch(box){
+    const input = box.querySelector('.picker-search');
+    const optionsWrap = box.querySelector('.course-books-options');
+    const countEl = box.querySelector('.picker-count');
+    if(!input || !optionsWrap) return;
+    const rows = Array.from(optionsWrap.querySelectorAll('label'));
+    let noneEl = optionsWrap.querySelector('.picker-no-match');
+    if(!noneEl && rows.length){
+      noneEl = document.createElement('div');
+      noneEl.className = 'admin-empty picker-no-match picker-hidden';
+      noneEl.style.padding = '10px';
+      noneEl.textContent = 'Nothing matches.';
+      optionsWrap.appendChild(noneEl);
+    }
+    const update = ()=>{
+      const term = (input.value || '').trim().toLowerCase();
+      let shown = 0;
+      rows.forEach(r => {
+        const hit = !term || r.textContent.toLowerCase().includes(term);
+        // A class, not style.display — these labels carry an inline
+        // display:flex, and clearing the inline value would strip it.
+        r.classList.toggle('picker-hidden', !hit);
+        if(hit) shown++;
+      });
+      if(noneEl) noneEl.classList.toggle('picker-hidden', shown !== 0);
+      if(countEl){
+        const ticked = rows.filter(r => r.querySelector('input').checked).length;
+        countEl.textContent = `${ticked} ticked${term ? ` · ${shown} of ${rows.length} shown` : ''}`;
+      }
+    };
+    input.addEventListener('input', update);
+    optionsWrap.addEventListener('change', update);
+    update();
   }
 
   // Put a course on exactly the ticked skill sets and take it off the rest.
