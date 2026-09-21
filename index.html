@@ -2224,6 +2224,84 @@
     .fc-stats{ gap:6px; } .fc-stat{ padding:8px; } .fc-stat .v{ font-size:1.15rem; }
   }
 
+  .restored-note{
+    background:var(--brand-soft); border:1px solid var(--accent-edge); color:var(--text);
+    border-radius:10px; padding:9px 14px; margin-bottom:14px; font-size:0.84rem;
+  }
+
+  /* ---------- connection banner ---------- */
+  .conn-banner{
+    position:fixed; left:12px; right:12px; bottom:12px; z-index:680;
+    display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;
+    padding:11px 16px; border-radius:12px; font-size:0.86rem;
+    box-shadow:var(--shadow-md); animation:rbRise .3s ease both;
+  }
+  .conn-banner.is-offline{ background:var(--amber); color:#0B0D12; }
+  .conn-banner.is-pending{ background:var(--panel-2); color:var(--text); border:1px solid var(--line); }
+  .conn-banner button{
+    background:var(--signal); color:var(--on-accent); border:none; border-radius:8px;
+    padding:6px 14px; font-size:0.8rem; cursor:pointer; font-family:inherit;
+  }
+  @media(min-width:760px){ .conn-banner{ left:auto; right:18px; max-width:460px; } }
+
+  /* ---------- parent meeting profile (assistant) ---------- */
+  .pm-head{ display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; align-items:flex-start;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:12px; }
+  .exam-list-item:has(.course-books-picker){ flex-wrap:wrap; align-items:flex-start; }
+  .course-books-picker{ flex-basis:100%; width:100%; margin-top:12px; border:1px solid var(--line); border-radius:10px; padding:12px; background:var(--panel-2, var(--panel)); }
+  .course-books-options{ max-height:220px; overflow-y:auto; }
+  .pm-name{ font-family:'Space Grotesk',sans-serif; font-size:1.5rem; font-weight:700; }
+  .pm-sub{ color:var(--muted); font-size:0.84rem; }
+  .pm-contact{ text-align:right; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+  .pm-points{ background:var(--brand-soft); border:1px solid var(--accent-edge); border-radius:14px; padding:14px 18px; margin-bottom:12px; }
+  .pm-points-title{ font-family:'IBM Plex Mono',monospace; font-size:0.66rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .pm-points ul{ margin:0; padding-left:18px; }
+  .pm-points li{ margin:4px 0; font-size:0.92rem; }
+  .pm-stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
+  .pm-stat{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .pm-stat .k{ font-family:'IBM Plex Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+  .pm-stat .v{ font-family:'IBM Plex Mono',monospace; font-size:1.4rem; font-weight:600; color:var(--text); line-height:1.3; }
+  .pm-stat .d{ font-size:0.76rem; color:var(--muted); }
+  .pm-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(300px,1fr)); gap:12px; }
+  .pm-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+  .pm-card h4{ font-size:0.95rem; margin-bottom:8px; }
+  .pm-row{ display:flex; align-items:baseline; gap:10px; padding:6px 0; border-top:1px solid var(--line-soft); font-size:0.86rem; }
+  .pm-row:first-of-type{ border-top:none; }
+  .pm-row > span:first-child{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pm-when{ color:var(--muted); font-size:0.76rem; white-space:nowrap; }
+  .pm-row strong{ font-family:'IBM Plex Mono',monospace; font-size:0.8rem; min-width:62px; text-align:right; }
+  .pm-row strong.good{ color:var(--success); } .pm-row strong.mid{ color:var(--amber); } .pm-row strong.bad{ color:var(--ember); }
+  .pm-empty{ color:var(--muted); font-size:0.84rem; padding:6px 0; }
+
+  /* Print: just the profile, on white, nothing else. */
+  @media print{
+    body.printing-pm *{ visibility:hidden !important; }
+    body.printing-pm #parentMeetingPanel, body.printing-pm #parentMeetingPanel *{ visibility:visible !important; }
+    body.printing-pm .admin-note, body.printing-pm .admin-actions{ display:none !important; }
+    body.printing-pm #parentMeetingPanel{ position:absolute; inset:0; padding:0; }
+    body.printing-pm .pm-head, body.printing-pm .pm-card, body.printing-pm .pm-stat, body.printing-pm .pm-points{
+      border-color:#bbb !important; background:#fff !important; color:#000 !important; break-inside:avoid;
+    }
+    body.printing-pm .pm-grid{ grid-template-columns:1fr 1fr; }
+  }
+
+  /* ---------- possible account sharing (admin) ---------- */
+  .share-panel{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:18px; }
+  .share-panel.has-flags{ border-color:var(--warn); }
+  .share-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .share-title{ font-family:'Space Grotesk',sans-serif; font-weight:600; }
+  .share-sub{ color:var(--muted); font-size:0.82rem; margin-bottom:10px; }
+  .share-row{ display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-top:1px solid var(--line-soft); flex-wrap:wrap; }
+  .share-who{ min-width:150px; }
+  .share-who strong{ display:block; }
+  .share-who span{ color:var(--muted); font-size:0.78rem; }
+  .share-why{ flex:1; min-width:220px; font-size:0.84rem; }
+  .share-why li{ margin-left:16px; }
+  .share-devs{ color:var(--muted); font-size:0.76rem; margin-top:4px; }
+  .share-lvl{ font-size:0.72rem; font-weight:600; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+  .share-lvl.high{ background:rgba(var(--ember-rgb),0.14); color:var(--ember); }
+  .share-lvl.low{ background:rgba(255,176,32,0.14); color:var(--warn); }
+
   /* ---------- class topic map (admin) ----------
      Diverging scale around the 70-79% bar: red below, blue above, grey at
      the bar. Each arm was checked as its own one-hue ramp in both themes
@@ -4116,6 +4194,7 @@
       <button class="admin-tab" data-tab="competitionsPanel" data-roles="admin,act-admin">🏆 Competition</button>
       <button class="admin-tab" data-tab="mistakesPanel" data-roles="admin,assistant,act-admin">Mistakes</button>
       <button class="admin-tab" data-tab="answerMistakesPanel" data-roles="admin,assistant,act-admin">💬 Answer Mistakes</button>
+      <button class="admin-tab" data-tab="parentMeetingPanel" data-roles="assistant">👨‍👩‍👦 Parent meeting</button>
       <button class="admin-tab" data-tab="assistantAcctsPanel" data-roles="admin">Assistants</button>
       <button class="admin-tab" data-tab="assistantActivityPanel" data-roles="admin">📊 Assistant Activity</button>
       <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant,act-admin">Weekly Updates</button>
@@ -4236,7 +4315,8 @@
     </div>
 
     <div class="admin-panel" id="studentsPanel">
-      <div class="admin-note">Student accounts are stored in your Supabase database. Passwords are hashed, never stored in plain text, and never shown here. New registrations start as "Pending" until you accept or decline them here. The "Access" column shows how many different IP addresses each student has signed in from recently — a rough signal for account sharing, not proof. A student switching between home Wi-Fi and mobile data will naturally show up as more than one IP too, so treat "⚠ 2+ IPs" as something worth a quick check-in, not an accusation.</div>
+      <div class="admin-note">Student accounts are stored in your Supabase database. Passwords are hashed, never stored in plain text, and never shown here. New registrations start as "Pending" until you accept or decline them here. The "Access" column shows how many devices and networks each student has signed in from recently — a signal worth a quick check-in, never proof on its own.</div>
+      <div id="sharingAlertsWrap"></div>
       <div class="admin-stats">
         <div class="admin-stat-card"><div class="num" id="statStudents">0</div><div class="lbl">Registered students</div></div>
         <div class="admin-stat-card"><div class="num" id="statPending">0</div><div class="lbl">Pending requests</div></div>
@@ -4678,7 +4758,7 @@
     </div>
 
     <div class="admin-panel" id="booksPanel">
-      <div class="admin-note">Group exams into books. Put a book on a course (in the Courses tab) and every exam inside it becomes visible to those students — so you organise once instead of tagging exams one by one.</div>
+      <div class="admin-note">Group exams into books, then tick which courses the book goes on — every exam inside it becomes visible to those students. You organise once instead of tagging exams one by one, and the course list stays in step automatically.</div>
 
       <div class="exam-editor" style="margin-top:0;">
         <div class="field-row">
@@ -4693,6 +4773,11 @@
             <span id="bookExamCount" style="color:var(--muted); font-size:0.8rem; margin-left:auto;">0 selected</span>
           </div>
           <div id="bookExamList" style="max-height:280px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:8px;"></div>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Courses this book is on</label>
+          <div id="bookCourseList" style="max-height:200px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:8px;"></div>
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Tick a course and every exam in this book becomes visible to its students — no need to open the Courses tab.</span>
         </div>
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveBookBtn">Save book</button>
@@ -4752,7 +4837,7 @@
     </div>
 
     <div class="admin-panel" id="coursesPanel">
-      <div class="admin-note">Courses you add here appear as options when tagging which course an exam belongs to, and in the course dropdown on the student registration form.</div>
+      <div class="admin-note">Courses you add here appear as options when tagging which course an exam belongs to, and in the course dropdown on the student registration form. Each course also carries its own books and skills — use 📕 Books and 🎯 Skills on a course to say exactly what its students get.</div>
 
       <div class="exam-editor" style="margin-top:0;">
         <div class="field-row">
@@ -4766,7 +4851,7 @@
         <div class="field-row">
           <label class="field-label">Books on this course (one per line)</label>
           <textarea id="courseBooksInput" rows="3" placeholder="Barron's SAT Math&#10;Princeton Review"></textarea>
-          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Exams tagged with one of these books become visible to students on this course.</span>
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Exams tagged with one of these books become visible to students on this course. You can leave this empty and tick books later — from the 📕 Books button below, or from the Books tab itself.</span>
         </div>
         <div class="editor-actions">
           <button class="btn btn-primary" id="saveCourseBtn">Add course</button>
@@ -4873,6 +4958,18 @@
         </table>
         <div class="admin-empty" id="mistakesTableEmpty" style="display:none;">No mistakes recorded yet.</div>
       </div>
+    </div>
+
+    <div class="admin-panel" id="parentMeetingPanel">
+      <div class="admin-note">Everything about one student on a single screen, for revising with a parent. Pick a student, read the talking points, then scroll for the detail behind each one. Nothing here is editable and no money is shown. "Print" gives you a clean page to take into the meeting.</div>
+      <div class="admin-actions" style="margin-bottom:6px;">
+        <input type="text" id="pmSearch" placeholder="🔍 Search students…" autocomplete="off"
+          style="max-width:260px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif;">
+        <select id="pmStudent" class="tm-select" style="max-width:260px;"><option value="">Choose a student…</option></select>
+        <button class="btn btn-ghost" id="pmRefresh">Refresh</button>
+        <button class="btn btn-ghost" id="pmPrint">🖨 Print</button>
+      </div>
+      <div id="pmBody"><div class="admin-empty">Pick a student to see their full profile.</div></div>
     </div>
 
     <div class="admin-panel" id="answerMistakesPanel">
@@ -5927,6 +6024,247 @@
     renderClassTopicMap().catch(err => console.error('Topic map failed:', err));
   }
 
+  /* ---------------- PARENT MEETING PROFILE (assistant) ----------------
+     One student, everything in one place, so whoever sits with the parent
+     can answer any question without hunting through tabs. Read-only, and
+     deliberately no money anywhere -- fees stay in the Payments tab. */
+  function pmDaysAgo(ts){
+    if(!ts) return null;
+    return Math.floor((Date.now() - new Date(ts).getTime()) / 864e5);
+  }
+  function pmWhen(ts){
+    const d = pmDaysAgo(ts);
+    if(d === null) return 'never';
+    if(d === 0) return 'today';
+    if(d === 1) return 'yesterday';
+    if(d < 30) return `${d} days ago`;
+    return new Date(ts).toLocaleDateString();
+  }
+
+  async function renderParentMeeting(){
+    const body = document.getElementById('pmBody');
+    const sel = document.getElementById('pmStudent');
+    if(!body || !sel) return;
+    const search = (document.getElementById('pmSearch').value || '').trim().toLowerCase();
+
+    const students = (await fetchStudentsForCurrentAdmin()).filter(st => st.status === 'approved');
+    const shown = students.filter(st => !search || (st.username || '').toLowerCase().includes(search) || (st.studentNumber || '').toLowerCase().includes(search))
+      .sort((a,b)=> (a.username || '').localeCompare(b.username || ''));
+    const keep = sel.value;
+    sel.innerHTML = '<option value="">Choose a student…</option>' +
+      shown.map(st => `<option value="${esc(st.username)}">${esc(st.username)}${st.course ? ' · ' + esc(st.course) : ''}</option>`).join('');
+    if(shown.some(st => st.username === keep)) sel.value = keep;
+    const username = sel.value;
+    if(!username){ body.innerHTML = '<div class="admin-empty">Pick a student to see their full profile.</div>'; return; }
+
+    body.innerHTML = '<div class="admin-empty">Loading the full picture…</div>';
+    const st = students.find(x => x.username === username);
+    if(!st){ body.innerHTML = '<div class="admin-empty">That student is no longer in your list.</div>'; return; }
+    const uKey = (st.username || '').trim().toLowerCase();
+
+    const [hwIdx, atIdx, mistakes, sessions, asks] = await Promise.all([
+      fetchHomeworkIndex(), fetchAttemptsIndex(), fetchAllMistakes(), fetchAllSessions(), fetchAllAsks()
+    ]);
+    if(sel.value !== username) return;   // they changed student while this loaded
+
+    const mine = hwIdx.filter(h => (h.username || '').trim().toLowerCase() === uKey);
+    const doneHw = mine.filter(h => h.status === 'completed');
+    const openHw = mine.filter(h => h.status !== 'completed' && isHomeworkPublished(h));
+    const overdue = openHw.filter(h => h.dueDate && new Date(h.dueDate + 'T23:59:59') < new Date());
+    const myAttempts = atIdx.filter(a => (a.username || '').trim().toLowerCase() === uKey);
+    const myMistakes = mistakes.filter(m => !m._index && (m.username || '').trim().toLowerCase() === uKey);
+    const mySessions = sessions.filter(x => !x._index && (x.username || '').trim().toLowerCase() === uKey)
+      .sort((a,b)=> new Date(b.date || 0) - new Date(a.date || 0));
+    const myAsks = asks.filter(a => (a.username || '').trim().toLowerCase() === uKey)
+      .sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+
+    // ---- scores ----
+    const timeline = [
+      ...doneHw.map(h => ({ title: h.title, date: h.submittedAt || h.ts, pct: h.score ? h.score.pct : null })),
+      ...myAttempts.map(a => ({ title: a.examTitle, date: a.ts, pct: a.pct }))
+    ].filter(t => t.date && t.pct != null).sort((a,b)=> new Date(a.date) - new Date(b.date));
+    const fc = computeForecast(timeline);
+    const est = isEstCourse(st.course);
+    const asScore = pct => est ? `${pctToEstScore(pct)}` : `${pct}%`;
+
+    // ---- topics ----
+    const topicTot = {};
+    [...doneHw, ...myAttempts].forEach(r=>{
+      if(!r.topics) return;
+      Object.entries(r.topics).forEach(([t, v])=>{
+        if(!Array.isArray(v) || !v[1]) return;
+        topicTot[t] = topicTot[t] || [0, 0];
+        topicTot[t][0] += v[0]; topicTot[t][1] += v[1];
+      });
+    });
+    const topicRows = Object.entries(topicTot).map(([t, v]) => ({ t, pct: Math.round(v[0] / v[1] * 100), n: v[1] }))
+      .sort((a,b)=> a.pct - b.pct);
+    // Split at the pass bar so a topic never appears in both lists -- with
+    // only two or three topics, "weakest 3" and "strongest 3" were the same
+    // three in opposite order.
+    const rated = topicRows.filter(r => r.n >= 3);
+    const topicsUnknown = rated.length === 0;
+    const weakest = rated.filter(r => r.pct < 75).slice(0, 4);
+    const strongest = rated.filter(r => r.pct >= 75).slice(-4).reverse();
+
+    // ---- mistakes ----
+    const fixedMistakes = myMistakes.filter(m => m.masteredByStudent).length;
+    const waiting = myMistakes.filter(m => !m.masteredByStudent && !(m.answer || getQuestionExplanations(m).length));
+    const confused = myMistakes.filter(m => m.stillConfused).length;
+    const oldestWaiting = waiting.slice().sort((a,b)=> new Date(a.ts || 0) - new Date(b.ts || 0))[0];
+
+    // ---- recordings ----
+    const stats = st.recordingStats || {};
+    const recRows = Object.entries(stats).map(([k, v]) => ({ k, title: v.title || k.split(':').slice(1).join(':'), ...summarizeWatch(v) }));
+    const finishedRec = recRows.filter(r => r.finished).length;
+    const startedRec = recRows.filter(r => r.started && !r.finished).length;
+    const watchMinutes = Math.round(recRows.reduce((sum, r) => sum + (r.seconds || 0), 0) / 60);
+
+    // ---- attendance ----
+    const withAttendance = mySessions.filter(x => totalAttendedMinutes(x) !== null);
+    const attendedMin = withAttendance.reduce((sum, x) => sum + totalAttendedMinutes(x), 0);
+    const nextSession = sessions.filter(x => !x._index && (x.username || '').trim().toLowerCase() === uKey && x.date && new Date(x.date + 'T23:59:59') >= new Date())
+      .sort((a,b)=> new Date(a.date) - new Date(b.date))[0];
+
+    // ---- talking points ----
+    const points = [];
+    if(fc && fc.canForecast){
+      const dir = fc.slopePerWeek > 0.25 ? 'improving' : fc.slopePerWeek < -0.25 ? 'slipping' : 'steady';
+      points.push(`Scores are <strong>${dir}</strong> — around ${asScore(fc.current)} now${st.targetScore ? `, target ${asScore(st.targetScore)}` : ''}.`);
+    } else if(timeline.length){
+      points.push(`${timeline.length} graded result${timeline.length === 1 ? '' : 's'} so far — too few to call a trend yet.`);
+    } else {
+      points.push('No graded homework or exams yet.');
+    }
+    if(overdue.length) points.push(`<strong>${overdue.length} homework past its due date</strong>${overdue.length <= 3 ? ` (${overdue.map(h => esc(h.title)).join(', ')})` : ''}.`);
+    else if(openHw.length) points.push(`${openHw.length} homework still to do, none overdue.`);
+    else points.push('All homework handed in — nothing outstanding.');
+    if(weakest.length) points.push(`Weakest topic: <strong>${esc(weakest[0].t)}</strong> at ${weakest[0].pct}%.`);
+    if(strongest.length && strongest[0].pct >= 75) points.push(`Strongest topic: <strong>${esc(strongest[0].t)}</strong> at ${strongest[0].pct}%.`);
+    if(waiting.length) points.push(`${waiting.length} mistake${waiting.length === 1 ? '' : 's'} still unanswered${oldestWaiting ? `, oldest from ${pmWhen(oldestWaiting.ts)}` : ''}.`);
+    if(confused) points.push(`${confused} question${confused === 1 ? '' : 's'} marked "I still don't get it".`);
+    if(myAsks.length) points.push(`${myAsks.length} question${myAsks.length === 1 ? '' : 's'} they sent are still open.`);
+    if(recRows.length) points.push(`Recordings: ${finishedRec} finished, ${startedRec} part-watched, ${watchMinutes} minute${watchMinutes === 1 ? '' : 's'} of viewing.`);
+    const lastActive = (Array.isArray(st.loginHistory) && st.loginHistory.length) ? st.loginHistory[st.loginHistory.length - 1].ts : null;
+    points.push(`Last signed in ${pmWhen(lastActive)}${withAttendance.length ? ` · attended ${withAttendance.length} session${withAttendance.length === 1 ? '' : 's'} (${attendedMin} min)` : ''}.`);
+
+    const waDigits = digitsOnly(formatEgyptNumber(st.parentNumber));
+    const stat = (k, v, d) => `<div class="pm-stat"><div class="k">${k}</div><div class="v">${v}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
+    const completion = mine.length ? Math.round(doneHw.length / mine.length * 100) : 0;
+
+    const listOrEmpty = (rows, empty) => rows.length ? rows.join('') : `<div class="pm-empty">${empty}</div>`;
+
+    body.innerHTML = `
+      <div class="pm-head">
+        <div>
+          <div class="pm-name">${esc(st.username)}</div>
+          <div class="pm-sub">${esc(st.course || 'No course')} · ${esc(st.grade || 'grade ?')} · student no. ${esc(st.studentNumber || '—')} · joined ${st.ts ? new Date(st.ts).toLocaleDateString() : '—'}</div>
+        </div>
+        <div class="pm-contact">
+          <div class="pm-sub">Parent: ${esc(st.parentNumber || 'not on file')}</div>
+          ${waDigits ? `<a class="btn btn-ghost" href="https://wa.me/${waDigits}" target="_blank" rel="noopener" style="padding:7px 14px; font-size:0.82rem; text-decoration:none;">💬 WhatsApp parent</a>` : ''}
+        </div>
+      </div>
+
+      <div class="pm-points">
+        <div class="pm-points-title">Talking points</div>
+        <ul>${points.map(p => `<li>${p}</li>`).join('')}</ul>
+      </div>
+
+      <div class="pm-stats">
+        ${stat('Level now', fc ? asScore(fc.current) : '—', est ? 'expected EST score' : 'recent average')}
+        ${stat('Target', st.targetScore ? asScore(st.targetScore) : '—', st.targetScore && fc ? (fc.current >= st.targetScore ? 'reached' : `${est ? pctToEstScore(st.targetScore) - pctToEstScore(fc.current) : st.targetScore - fc.current} to go`) : 'not set')}
+        ${stat('Homework', `${doneHw.length}/${mine.length}`, `${completion}% handed in${overdue.length ? ` · ${overdue.length} overdue` : ''}`)}
+        ${stat('Exams', String(myAttempts.length), myAttempts.length ? `best ${asScore(Math.max(...myAttempts.map(a => a.pct || 0)))}` : 'none yet')}
+        ${stat('Mistakes', String(myMistakes.length), `${fixedMistakes} fixed · ${waiting.length} waiting`)}
+        ${stat('Streak', String(streakFromHomework(mine.filter(isHomeworkPublished))), 'homework on time in a row')}
+      </div>
+
+      <div class="pm-grid">
+        <div class="pm-card">
+          <h4>Recent results</h4>
+          ${listOrEmpty(timeline.slice(-8).reverse().map(t => `
+            <div class="pm-row"><span>${esc(t.title || '')}</span>
+              <span class="pm-when">${pmWhen(t.date)}</span>
+              <strong class="${t.pct >= 75 ? 'good' : t.pct >= 50 ? 'mid' : 'bad'}">${t.pct}%</strong></div>`), 'No graded work yet.')}
+        </div>
+
+        <div class="pm-card">
+          <h4>Still to do</h4>
+          ${listOrEmpty(openHw.slice(0, 8).map(h => `
+            <div class="pm-row"><span>${esc(h.title || '')}</span>
+              <span class="pm-when">${h.dueDate ? `due ${h.dueDate}` : 'no due date'}</span>
+              <strong class="${overdue.includes(h) ? 'bad' : 'mid'}">${overdue.includes(h) ? 'overdue' : 'open'}</strong></div>`), 'Nothing outstanding.')}
+        </div>
+
+        <div class="pm-card">
+          <h4>Needs work (under 75%)</h4>
+          ${listOrEmpty(weakest.map(r => `
+            <div class="pm-row"><span>${esc(r.t)}</span><span class="pm-when">${r.n} answers</span>
+              <strong class="${r.pct >= 50 ? 'mid' : 'bad'}">${r.pct}%</strong></div>`), topicsUnknown ? 'Not enough answered questions yet to judge topics.' : 'Nothing below 75% \u2014 every topic is solid.')}
+        </div>
+
+        <div class="pm-card">
+          <h4>Solid (75% and above)</h4>
+          ${listOrEmpty(strongest.map(r => `
+            <div class="pm-row"><span>${esc(r.t)}</span><span class="pm-when">${r.n} answers</span>
+              <strong class="good">${r.pct}%</strong></div>`), topicsUnknown ? 'Not enough answered questions yet to judge topics.' : 'No topic is at 75% yet.')}
+        </div>
+
+        <div class="pm-card">
+          <h4>Mistakes waiting for an answer</h4>
+          ${listOrEmpty(waiting.slice(0, 8).map(m => `
+            <div class="pm-row"><span>${esc((m.text || '(question with image)').slice(0, 60))}</span>
+              <span class="pm-when">${pmWhen(m.ts)}</span>
+              <strong class="${pmDaysAgo(m.ts) > 2 ? 'bad' : 'mid'}">${esc(m.lesson || '')}</strong></div>`), 'Every mistake has an answer.')}
+        </div>
+
+        <div class="pm-card">
+          <h4>Recordings</h4>
+          ${listOrEmpty(recRows.slice(0, 8).map(r => `
+            <div class="pm-row"><span>${esc(r.title)}</span>
+              <span class="pm-when">${formatWatchTime(r.seconds)}${r.measured ? '' : ' (est.)'}</span>
+              <strong class="${r.finished ? 'good' : 'mid'}">${r.finished ? 'finished' : (r.coverage === null ? 'opened' : r.coverage + '%')}</strong></div>`), 'No recordings opened yet.')}
+        </div>
+
+        <div class="pm-card">
+          <h4>Sessions</h4>
+          ${nextSession ? `<div class="pm-row"><span>Next: ${esc(nextSession.topic || 'Session')}</span><span class="pm-when">${esc(nextSession.date || '')}</span><strong class="mid">upcoming</strong></div>` : ''}
+          ${listOrEmpty(mySessions.slice(0, 6).map(x => {
+            const min = totalAttendedMinutes(x);
+            return `<div class="pm-row"><span>${esc(x.topic || 'Session')}</span>
+              <span class="pm-when">${esc(x.date || '')}</span>
+              <strong class="${min === null ? 'mid' : min > 0 ? 'good' : 'bad'}">${min === null ? '—' : min + ' min'}</strong></div>`;
+          }), 'No sessions recorded.')}
+        </div>
+
+        <div class="pm-card">
+          <h4>Questions they asked (still open)</h4>
+          ${listOrEmpty(myAsks.slice(0, 8).map(a => `
+            <div class="pm-row"><span>${esc((a.message || '').slice(0, 60))}</span>
+              <span class="pm-when">${esc(a.homeworkTitle || '')}</span>
+              <strong class="${pmDaysAgo(a.ts) > 2 ? 'bad' : 'mid'}">${pmWhen(a.ts)}</strong></div>`), 'Nothing waiting — every question has been dealt with.')}
+        </div>
+      </div>`;
+  }
+
+  (function wireParentMeeting(){
+    const sel = document.getElementById('pmStudent');
+    if(!sel) return;
+    sel.addEventListener('change', renderParentMeeting);
+    document.getElementById('pmSearch').addEventListener('input', renderParentMeeting);
+    document.getElementById('pmRefresh').addEventListener('click', ()=>{
+      ['students','homework','attempts','mistakes','sessions','asks'].forEach(invalidateDbCache);
+      renderParentMeeting();
+    });
+    document.getElementById('pmPrint').addEventListener('click', ()=>{
+      if(!document.getElementById('pmStudent').value){ alert('Pick a student first.'); return; }
+      document.body.classList.add('printing-pm');
+      window.print();
+      setTimeout(()=> document.body.classList.remove('printing-pm'), 500);
+    });
+  })();
+
   /* ---------------- CLASS TOPIC MAP (admin) ---------------- */
   function tmBin(pct){
     if(pct < 40) return { bg:'var(--tm-r3)', dark:true };
@@ -6092,6 +6430,7 @@
       if(tab.dataset.tab === 'adminOverviewPanel'){
         renderAdminOverviewDashboard();
       }
+      if(tab.dataset.tab === 'parentMeetingPanel'){ renderParentMeeting(); }
       if(tab.dataset.tab === 'examsPanel'){
         await refreshCourseNamesCache();
         renderAdminExamList();
@@ -6106,7 +6445,7 @@
       if(tab.dataset.tab === 'paymentsPanel'){ renderAdminPayments(); }
       if(tab.dataset.tab === 'retakesPanel'){ renderAdminRetakes(); }
       if(tab.dataset.tab === 'plansPanel'){ renderAdminPlans(); }
-      if(tab.dataset.tab === 'booksPanel'){ renderAdminBooks(); renderBookExamPicker(null); }
+      if(tab.dataset.tab === 'booksPanel'){ renderAdminBooks(); renderBookExamPicker(null); renderBookCoursePicker(editingBookName); }
       if(tab.dataset.tab === 'reviewsPanel'){ initReviewsPanel(); }
       if(tab.dataset.tab === 'coursesPanel'){ renderAdminCourseList(); }
       if(tab.dataset.tab === 'competitionsPanel'){ showCompView('list'); renderCompetitionList(); }
@@ -8465,22 +8804,26 @@
         // burst itself, and since every one of them then retries on a
         // similar timeline, the retries can keep colliding too.
         isSavingResult = true;
+        const attemptRecord = {
+          username: currentStudent.username, examTitle: exam.title,
+          correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
+          retakeRequired: hasMistakes, retakeDeadline,
+          retakeDayKey: exam.retakeDayKey || null
+        };
         let attemptResult, mistakeResults;
         try{
           await refreshMistakeEntriesFromSource(mistakeEntries);
           [attemptResult, mistakeResults] = await Promise.all([
-            saveExamAttempt({
-              username: currentStudent.username, examTitle: exam.title,
-              correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
-              retakeRequired: hasMistakes, retakeDeadline,
-              retakeDayKey: exam.retakeDayKey || null
-            }),
+            saveExamAttempt(attemptRecord),
             saveMistakesInBatches(mistakeEntries, 4)
           ]);
         } finally {
           isSavingResult = false;
         }
         saveSucceeded = attemptResult !== false;
+        // Couldn't reach the server: hold the result on this device and send
+        // it when the connection is back, rather than losing the attempt.
+        if(!saveSucceeded) queueSubmission({ type:'attempt', id: `${exam.title}|${Date.now()}`, data: attemptRecord });
         const succeededEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] !== false);
         removeFromMistakeQueue(succeededEntries); // only the ones actually confirmed saved — anything that failed (or never got a chance to run) stays queued
         if(hasMistakes && succeededEntries.length > 0){
@@ -8520,7 +8863,7 @@
 
       const savedNoticeHtml = currentStudent
         ? (!saveSucceeded
-            ? `<div class="retake-notice" style="background:var(--ember-soft);border-color:var(--ember);color:var(--ember);">⚠ This result did NOT save — check your connection and tap "Retry save" below, or Mr. Mohamed Ibrahim won't see it.</div>`
+            ? `<div class="retake-notice" style="background:rgba(255,176,32,0.14);border-color:var(--warn);color:var(--warn);">📶 No connection right now — your result is saved on this device and will send itself as soon as you're back online.</div>`
             : failedMistakeEntries.length > 0
               ? `<div class="retake-notice" style="background:var(--ember-soft);border-color:var(--ember);color:var(--ember);">⚠ Your score saved, but ${failedMistakeEntries.length} of your ${totalMistakeCount} wrong answer${totalMistakeCount===1?'':'s'} didn't save properly — tap below to fix that.</div>
                  <button class="btn btn-primary" id="retryMistakesBtn" style="width:100%;margin-bottom:10px;">Retry saving mistakes</button>`
@@ -10437,7 +10780,7 @@
   async function renderAdminCourseList(){
     const wrap = document.getElementById('courseListWrap');
     const emptyState = document.getElementById('courseListEmpty');
-    const courses = await fetchAllCourses();
+    const [courses, skillsIdx] = await Promise.all([fetchAllCourses(), fetchSkillsIndex().catch(()=>[])]);
 
     wrap.querySelectorAll('.exam-list-item').forEach(el => el.remove());
 
@@ -10448,16 +10791,18 @@
     emptyState.style.display = 'none';
 
     courses.forEach(course=>{
+      const skillCount = skillsIdx.filter(sk => getSkillCourses(sk).includes(course.name)).length;
       const row = document.createElement('div');
       row.className = 'exam-list-item';
       row.innerHTML = `
         <div>
           <h4>${esc(course.name)}</h4>
-          <div class="meta">${typeof course.fee === 'number' ? `Fee: ${course.fee}` : 'No fee set'}${Array.isArray(course.books) && course.books.length ? ` · 📕 ${esc(course.books.join(', '))}` : ''}</div>
+          <div class="meta">${typeof course.fee === 'number' ? `Fee: ${course.fee}` : 'No fee set'}${Array.isArray(course.books) && course.books.length ? ` · 📕 ${esc(course.books.join(', '))}` : ''}${skillCount ? ` · 🎯 ${skillCount} skill${skillCount === 1 ? '' : 's'}` : ''}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-course-fee-btn">Set fee</button>
           <button class="edit-course-books-btn">📕 Books</button>
+          <button class="edit-course-skills-btn">🎯 Skills</button>
           <button class="danger delete-course-btn">Delete</button>
         </div>
       `;
@@ -10472,14 +10817,84 @@
         await renderAdminCourseList();
       });
       row.querySelector('.edit-course-books-btn').addEventListener('click', async ()=>{
-        const current = Array.isArray(course.books) ? course.books.join('\n') : '';
-        const entered = prompt(`Books on "${course.name}" — one per line.\nExams tagged with these become visible to this course.`, current);
-        if(entered === null) return;
-        const books = entered.split(/\r?\n/).map(b => b.trim()).filter(Boolean);
-        await saveCourse(course.id, { ...course, books });
-        invalidateDbCache('courses');
-        await renderAdminCourseList();
+        const existing = row.querySelector('.course-books-picker');
+        if(existing){ existing.remove(); return; }
+        const known = await allBookNames();
+        const current = Array.isArray(course.books) ? course.books : [];
+        const names = Array.from(new Set(known.concat(current))).sort();
+        const box = document.createElement('div');
+        box.className = 'course-books-picker';
+        box.innerHTML = `
+          <div style="color:var(--muted); font-size:0.8rem; margin-bottom:8px;">Tick the books this course gets. Every exam inside a ticked book becomes visible to its students.</div>
+          <div class="course-books-options">${
+            names.length
+              ? names.map(b => `<label style="display:flex; align-items:center; gap:8px; padding:6px 4px; cursor:pointer;">
+                  <input type="checkbox" value="${esc(b)}"${current.includes(b) ? ' checked' : ''}>
+                  <span>📕 ${esc(b)}</span>
+                </label>`).join('')
+              : '<div class="admin-empty" style="padding:10px;">No books yet — make one in the Books tab.</div>'
+          }</div>
+          <div class="admin-actions" style="margin-top:10px;">
+            <button class="btn btn-primary course-books-save" style="padding:7px 16px; font-size:0.82rem;">Save books</button>
+            <button class="btn btn-ghost course-books-cancel" style="padding:7px 16px; font-size:0.82rem;">Cancel</button>
+          </div>`;
+        row.appendChild(box);
+        box.querySelector('.course-books-cancel').addEventListener('click', ()=> box.remove());
+        box.querySelector('.course-books-save').addEventListener('click', async (ev)=>{
+          const saveBtn = ev.currentTarget;
+          saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+          const books = Array.from(box.querySelectorAll('input:checked')).map(cb => cb.value);
+          const ok = await saveCourse(course.id, { ...course, books });
+          if(!ok){ saveBtn.disabled = false; saveBtn.textContent = 'Save books'; alert('Could not save — please try again.'); return; }
+          invalidateDbCache('courses');
+          await renderAdminCourseList();
+        });
       });
+      row.querySelector('.edit-course-skills-btn').addEventListener('click', async (ev)=>{
+        const existing = row.querySelector('.course-skills-picker');
+        if(existing){ existing.remove(); return; }
+        const openBtn = ev.currentTarget;
+        openBtn.disabled = true; openBtn.textContent = 'Loading…';
+        const skills = await fetchSkillsIndex();
+        openBtn.disabled = false; openBtn.textContent = '🎯 Skills';
+        skills.sort((a,b)=> (a.skill || '').localeCompare(b.skill || ''));
+        const box = document.createElement('div');
+        box.className = 'course-books-picker course-skills-picker';
+        box.innerHTML = `
+          <div style="color:var(--muted); font-size:0.8rem; margin-bottom:8px;">Tick the skills that belong to “${esc(course.name)}”. A skill can sit on more than one course. A skill with no course at all is visible to every student.</div>
+          <div class="course-books-options">${
+            skills.length
+              ? skills.map(sk => {
+                  const on = getSkillCourses(sk);
+                  const others = on.filter(c => c !== course.name);
+                  return `<label style="display:flex; align-items:center; gap:8px; padding:6px 4px; cursor:pointer;">
+                    <input type="checkbox" value="${esc(sk.id)}"${on.includes(course.name) ? ' checked' : ''}>
+                    <span>🎯 ${esc(sk.skill || 'Untitled skill')}</span>
+                    <span style="color:var(--muted); font-size:0.76rem;">${sk.questionCount || 0} q</span>
+                    ${others.length ? `<span style="color:var(--muted); font-size:0.74rem; margin-left:auto;">${on.includes(course.name) ? 'also on' : 'on'} ${esc(others.join(', '))}</span>`
+                      : on.length === 0 ? `<span style="color:var(--warn); font-size:0.74rem; margin-left:auto;">on no course — everyone sees it</span>` : ''}
+                  </label>`;
+                }).join('')
+              : '<div class="admin-empty" style="padding:10px;">No skills yet — build one in the Skills tab.</div>'
+          }</div>
+          <div class="admin-actions" style="margin-top:10px;">
+            <button class="btn btn-primary course-skills-save" style="padding:7px 16px; font-size:0.82rem;">Save skills</button>
+            <button class="btn btn-ghost course-skills-cancel" style="padding:7px 16px; font-size:0.82rem;">Cancel</button>
+          </div>`;
+        row.appendChild(box);
+        box.querySelector('.course-skills-cancel').addEventListener('click', ()=> box.remove());
+        box.querySelector('.course-skills-save').addEventListener('click', async (e2)=>{
+          const saveBtn = e2.currentTarget;
+          saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+          const chosen = new Set(Array.from(box.querySelectorAll('input:checked')).map(cb => cb.value));
+          const res = await applyCourseToSkills(course.name, chosen);
+          if(res.orphaned.length){
+            alert(`Saved.\n\nHeads up: ${res.orphaned.length} skill${res.orphaned.length === 1 ? ' is' : 's are'} now on no course at all, which means every student can see ${res.orphaned.length === 1 ? 'it' : 'them'}:\n\n${res.orphaned.slice(0, 8).join('\n')}`);
+          }
+          await renderAdminCourseList();
+        });
+      });
+
       row.querySelector('.delete-course-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete the course "${course.name}"?`)) return;
         await deleteCourseRecord(course.id);
@@ -11209,6 +11624,86 @@
     updateBookExamCount();
   }
 
+  // Put a course on exactly the ticked skill sets and take it off the rest.
+  // Skills store their courses by NAME, so this writes the course's name into
+  // each skill's courses array (and keeps the legacy single "course" field in
+  // step so nothing reads a stale value).
+  async function applyCourseToSkills(courseName, chosenSkillIds){
+    const idx = await fetchSkillsIndex();
+    let touched = 0, orphaned = [];
+    for(const row of idx){
+      const has = getSkillCourses(row).includes(courseName);
+      const shouldHave = chosenSkillIds.has(row.id);
+      if(has === shouldHave){
+        if(!shouldHave && getSkillCourses(row).length === 0) orphaned.push(row.skill);
+        continue;
+      }
+      const full = await dbGet('skills', row.id);
+      if(!full) continue;
+      const courses = getSkillCourses(full).filter(c => c !== courseName);
+      if(shouldHave) courses.push(courseName);
+      full.courses = courses;
+      full.course = courses.length ? courses[0] : null;
+      await saveSkillSet(row.id, full);
+      touched++;
+      if(courses.length === 0) orphaned.push(full.skill);
+    }
+    if(touched) invalidateDbCache('skills');
+    return { touched, orphaned };
+  }
+
+  async function allBookNames(){
+    const [exams, courses] = await Promise.all([fetchExamsIndex(), fetchAllCourses()]);
+    const names = new Set();
+    exams.forEach(e => { if(e.book) names.add(e.book); });
+    courses.forEach(c => (c.books || []).forEach(b => names.add(b)));
+    return Array.from(names).sort();
+  }
+
+  async function renderBookCoursePicker(bookName){
+    const listEl = document.getElementById('bookCourseList');
+    if(!listEl) return;
+    const courses = await fetchAllCourses();
+    // Keep whatever is already ticked, so a re-render never loses a choice.
+    const ticked = new Set(Array.from(listEl.querySelectorAll('input:checked')).map(cb => cb.value));
+    if(bookName) courses.forEach(c => { if((c.books || []).includes(bookName)) ticked.add(c.id); });
+
+    listEl.innerHTML = courses.length === 0
+      ? '<div class="admin-empty">No courses yet — add one in the Courses tab first.</div>'
+      : courses.map(c => {
+          const count = (c.books || []).length;
+          return `<label style="display:flex; align-items:center; gap:8px; padding:6px 4px; cursor:pointer;">
+            <input type="checkbox" value="${esc(c.id)}"${ticked.has(c.id) ? ' checked' : ''}>
+            <span>${esc(c.name)}</span>
+            <span style="color:var(--muted); font-size:0.76rem;">${count === 0 ? 'no books yet' : count + ' book' + (count === 1 ? '' : 's')}</span>
+          </label>`;
+        }).join('');
+  }
+
+  // Put a book on exactly the ticked courses and take it off the rest. Used
+  // when a book is saved, and when it is renamed or removed.
+  async function applyBookToCourses(bookName, chosenCourseIds, oldName){
+    const courses = await fetchAllCourses();
+    let touched = 0;
+    for(const c of courses){
+      const books = Array.isArray(c.books) ? c.books.slice() : [];
+      const before = books.join('\u0000');
+      if(oldName && oldName !== bookName){
+        for(let i = books.length - 1; i >= 0; i--){ if(books[i] === oldName) books.splice(i, 1); }
+      }
+      const shouldHave = chosenCourseIds ? chosenCourseIds.has(c.id) : books.includes(bookName);
+      const has = books.includes(bookName);
+      if(shouldHave && !has) books.push(bookName);
+      if(!shouldHave && has){ for(let i = books.length - 1; i >= 0; i--){ if(books[i] === bookName) books.splice(i, 1); } }
+      if(books.join('\u0000') !== before){
+        await saveCourse(c.id, { ...c, books });
+        touched++;
+      }
+    }
+    if(touched) invalidateDbCache('courses');
+    return touched;
+  }
+
   function updateBookExamCount(){
     const n = document.querySelectorAll('#bookExamList input:checked').length;
     document.getElementById('bookExamCount').textContent = `${n} selected`;
@@ -11240,11 +11735,23 @@
       await saveExam(idx.id, full);
       changed++;
     }
+    const chosenCourses = new Set(Array.from(document.querySelectorAll('#bookCourseList input:checked')).map(cb => cb.value));
+    btn.textContent = 'Saving courses…';
+    // Renaming only retires the old name once no exam is left under it —
+    // otherwise a leftover exam would silently drop off the course.
+    let retireName = null;
+    if(editingBookName && editingBookName !== name){
+      invalidateDbCache('exams');
+      const after = await fetchExamsIndex();
+      if(!after.some(e => e.book === editingBookName)) retireName = editingBookName;
+    }
+    await applyBookToCourses(name, chosenCourses, retireName);
     btn.disabled = false; btn.textContent = 'Save book';
     invalidateDbCache('exams');
     resetBookEditor();
     await renderAdminBooks();
     await populateBookSuggestions();
+    await refreshCourseNamesCache();
   });
 
   function resetBookEditor(){
@@ -11254,7 +11761,10 @@
     document.getElementById('bookExamList').innerHTML = '';
     document.getElementById('saveBookBtn').textContent = 'Save book';
     document.getElementById('cancelBookEditBtn').style.display = 'none';
+    const courseList = document.getElementById('bookCourseList');
+    if(courseList) courseList.innerHTML = '';
     renderBookExamPicker(null);
+    renderBookCoursePicker(null);
   }
   document.getElementById('cancelBookEditBtn').addEventListener('click', resetBookEditor);
 
@@ -11305,7 +11815,9 @@
         document.getElementById('bookNameInput').value = name;
         document.getElementById('bookExamSearch').value = '';
         document.getElementById('bookExamList').innerHTML = '';
+        document.getElementById('bookCourseList').innerHTML = '';
         await renderBookExamPicker(name);
+        await renderBookCoursePicker(name);
         document.getElementById('saveBookBtn').textContent = 'Update book';
         document.getElementById('cancelBookEditBtn').style.display = '';
         document.getElementById('bookNameInput').scrollIntoView({ behavior:'smooth', block:'center' });
@@ -11316,8 +11828,10 @@
           const full = await dbGet('exams', e.id);
           if(full){ full.book = null; await saveExam(e.id, full); }
         }
+        await applyBookToCourses(name, new Set(), null);
         invalidateDbCache('exams');
         await renderAdminBooks();
+        await refreshCourseNamesCache();
       });
       wrap.appendChild(row);
     });
@@ -12327,6 +12841,124 @@
       else localStorage.removeItem(PENDING_MISTAKES_KEY);
     }catch(err){ console.error('Could not clean up the pending mistake queue:', err); }
   }
+  /* ---------------- WORKING ON A WEAK CONNECTION ----------------
+     Three separate protections, because they fail at different moments:
+       1. Answers in progress are written to this device as they're picked,
+          so a dropped connection, a locked phone or a closed tab mid-quiz
+          loses nothing -- the quiz picks up where it left off.
+       2. A finished submission that can't reach the server is queued here
+          and sent by itself the moment the connection is back, so the
+          student isn't left tapping "Retry save".
+       3. The questions of an opened homework are kept on the device, so it
+          still opens if the connection drops after the dashboard loaded.
+     The page itself still has to load from the internet once -- this makes
+     a shaky connection survivable, it doesn't make the site work from cold
+     with no connection at all. */
+  const PENDING_SUBMITS_KEY = 'mi-pending-submits';
+  const INPROGRESS_PREFIX = 'mi-inprogress:';
+  const HW_CACHE_PREFIX = 'mi-hwcache:';
+
+  function readJson(key, fallback){
+    try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(err){ return fallback; }
+  }
+  function writeJson(key, value){
+    try{ localStorage.setItem(key, JSON.stringify(value)); return true; }catch(err){ return false; }
+  }
+
+  function pendingSubmits(){ const q = readJson(PENDING_SUBMITS_KEY, []); return Array.isArray(q) ? q : []; }
+  function unqueueSubmission(type, id){
+    const q = pendingSubmits().filter(j => !(j.type === type && j.id === id));
+    if(q.length > 0) writeJson(PENDING_SUBMITS_KEY, q);
+    else { try{ localStorage.removeItem(PENDING_SUBMITS_KEY); }catch(err){} }
+    updateConnectionBanner();
+  }
+  function queueSubmission(job){
+    const q = pendingSubmits();
+    // Re-queueing the same homework replaces the older copy rather than
+    // sending two results for it.
+    const without = q.filter(j => !(j.type === job.type && j.id === job.id));
+    without.push({ ...job, queuedAt: new Date().toISOString() });
+    writeJson(PENDING_SUBMITS_KEY, without);
+    updateConnectionBanner();
+  }
+  let flushingSubmits = false;
+  async function flushPendingSubmits(){
+    if(flushingSubmits) return;
+    const q = pendingSubmits();
+    if(q.length === 0) return;
+    flushingSubmits = true;
+    const left = [];
+    for(const job of q){
+      let ok = false;
+      try{
+        if(job.type === 'homework') ok = await saveHomeworkAssignment(job.id, job.data);
+        else if(job.type === 'attempt') ok = await saveExamAttempt(job.data);
+        else ok = true;    // unknown job from an older version: drop it rather than retry forever
+      }catch(err){ ok = false; }
+      if(!ok) left.push(job);
+    }
+    if(left.length > 0) writeJson(PENDING_SUBMITS_KEY, left);
+    else { try{ localStorage.removeItem(PENDING_SUBMITS_KEY); }catch(err){} }
+    flushingSubmits = false;
+    updateConnectionBanner();
+    if(left.length === 0 && q.length > 0 && currentStudent){
+      invalidateDbCache('homework'); invalidateDbCache('attempts');
+      try{ await renderStudentHomework(); await renderOverview(); }catch(err){}
+    }
+  }
+
+  // Answers as they're being given.
+  function inProgressKey(hwId){ return INPROGRESS_PREFIX + (currentStudent ? currentStudent.username.trim().toLowerCase() : '?') + ':' + hwId; }
+  function saveInProgress(hwId, state){ if(hwId) writeJson(inProgressKey(hwId), { ...state, ts: Date.now() }); }
+  function loadInProgress(hwId){
+    if(!hwId) return null;
+    const v = readJson(inProgressKey(hwId), null);
+    if(!v || !Array.isArray(v.answers)) return null;
+    if(Date.now() - (v.ts || 0) > 7 * 864e5){ clearInProgress(hwId); return null; }  // older than a week: start fresh
+    return v;
+  }
+  function clearInProgress(hwId){ try{ localStorage.removeItem(inProgressKey(hwId)); }catch(err){} }
+
+  // The questions of a homework, kept so it can still be opened later.
+  function cacheHomeworkRecord(rec){
+    if(!rec || !rec.id) return;
+    try{
+      const json = JSON.stringify(rec);
+      if(json.length > 400000) return;             // unusually heavy (old embedded images) -- skip
+      localStorage.setItem(HW_CACHE_PREFIX + rec.id, json);
+      // Keep the ten most recent only, so a term's homework can't fill the phone.
+      const keys = Object.keys(localStorage).filter(k => k.startsWith(HW_CACHE_PREFIX));
+      if(keys.length > 10){
+        keys.map(k => ({ k, t: (readJson(k, {}) || {}).ts || '' })).sort((a,b)=> String(a.t).localeCompare(String(b.t)))
+          .slice(0, keys.length - 10).forEach(x => localStorage.removeItem(x.k));
+      }
+    }catch(err){ /* storage full or blocked -- caching is a bonus, never required */ }
+  }
+  function cachedHomeworkRecord(id){ return readJson(HW_CACHE_PREFIX + id, null); }
+
+  // One small bar that says what's happening, rather than a scary failure.
+  function updateConnectionBanner(){
+    let bar = document.getElementById('connBanner');
+    const offline = navigator.onLine === false;
+    const pending = pendingSubmits().length;
+    if(!offline && pending === 0){ if(bar) bar.remove(); return; }
+    if(!bar){
+      bar = document.createElement('div');
+      bar.id = 'connBanner';
+      bar.className = 'conn-banner';
+      document.body.appendChild(bar);
+    }
+    bar.className = 'conn-banner' + (offline ? ' is-offline' : ' is-pending');
+    bar.innerHTML = offline
+      ? `<span>📶 No connection — keep working. Your answers are saved on this device${pending ? ` (${pending} waiting to send)` : ''}.</span>`
+      : `<span>↻ Sending ${pending} saved result${pending === 1 ? '' : 's'}…</span><button type="button" id="connRetryBtn">Send now</button>`;
+    const btn = document.getElementById('connRetryBtn');
+    if(btn) btn.addEventListener('click', ()=> flushPendingSubmits());
+  }
+  window.addEventListener('online', ()=>{ updateConnectionBanner(); flushPendingSubmits(); });
+  window.addEventListener('offline', updateConnectionBanner);
+  setInterval(()=>{ if(pendingSubmits().length > 0 && navigator.onLine !== false) flushPendingSubmits(); }, 60000);
+
   async function retryQueuedMistakeSaves(){
     let queue;
     try{
@@ -14163,9 +14795,12 @@
           const btn = row.querySelector('.start-hw-btn');
           const originalLabel = btn.textContent;
           btn.disabled = true; btn.textContent = 'Loading…';
-          const full = await dbGet('homework', entry.id);
+          let full = await dbGet('homework', entry.id);
+          // Connection gone? Use the copy kept on this device from last time.
+          if(!full) full = cachedHomeworkRecord(entry.id);
+          else cacheHomeworkRecord(full);
           btn.disabled = false; btn.textContent = originalLabel;
-          if(!full){ alert('Could not load this homework — please try again.'); return; }
+          if(!full){ alert("Couldn't open this homework — you appear to be offline and it hasn't been opened on this device before. Try again when you have a connection."); return; }
           startHomework(full);
         });
       } else if(needsRetake){
@@ -15086,7 +15721,13 @@
     if(!currentStudent) return 0;
     const hw = await fetchHomeworkIndex();
     const uname = currentStudent.username.trim().toLowerCase();
-    const mine = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && isHomeworkPublished(h));
+    return streakFromHomework(hw.filter(h => (h.username||'').trim().toLowerCase() === uname && isHomeworkPublished(h)));
+  }
+
+  // The streak rule, in one place, so anywhere that shows a streak counts it
+  // the same way: handed in on time keeps it, late or missed resets it.
+  function streakFromHomework(rows){
+    const mine = rows.slice();
     mine.sort((a,b)=> new Date(a.ts || 0) - new Date(b.ts || 0));
 
     const now = new Date();
@@ -15108,6 +15749,7 @@
     });
     return streak;
   }
+
 
   /* ---------------- STUDY PLANNER: data-driven schedule + insights ----------------
      Not a real AI model — a static site with no backend can't safely call one
@@ -15966,6 +16608,19 @@
     const hasTimeLimit = !!hw.timeLimit;
     let timeExpired = false;
 
+    // Pick up anything answered before the connection dropped or the phone
+    // locked. Only for homework of the same length, so a changed homework
+    // never gets someone else's old answers.
+    const saved = loadInProgress(hw.id);
+    let restored = false;
+    if(saved && saved.answers.length === hw.questions.length){
+      saved.answers.forEach((v, i)=>{ if(v != null) answers[i] = v; });
+      if(Array.isArray(saved.flagged)) saved.flagged.forEach((v, i)=>{ flagged[i] = !!v; });
+      current = Math.min(hw.questions.length - 1, Math.max(0, saved.current || 0));
+      restored = answers.some(a => a != null);
+    }
+    const rememberProgress = ()=> saveInProgress(hw.id, { answers, flagged, current });
+
     quizLocked = true;
     examModal.classList.add('quiz-locked');
     stopActiveTimer();
@@ -15980,6 +16635,7 @@
       const q = hw.questions[current];
       const progress = Math.round((current / hw.questions.length) * 100);
       examPlayer.innerHTML = `
+        ${restored ? `<div class="restored-note">↺ Picked up where you left off — ${answers.filter(a => a != null).length} answer${answers.filter(a => a != null).length === 1 ? '' : 's'} were saved on this device.</div>` : ''}
         <div class="exam-progress"><div class="exam-progress-fill" style="width:${progress}%"></div></div>
         <div id="qNavWrap"></div>
         <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
@@ -16003,7 +16659,7 @@
         </div>
       `;
       document.getElementById('qNavWrap').appendChild(
-        buildQuestionNav(hw.questions.length, current, answers, flagged, (i)=>{ current = i; renderQuestion(); })
+        buildQuestionNav(hw.questions.length, current, answers, flagged, (i)=>{ current = i; rememberProgress(); renderQuestion(); })
       );
       document.getElementById('flagReviewBtn').addEventListener('click', ()=>{
         flagged[current] = !flagged[current];
@@ -16026,6 +16682,7 @@
         `;
         row.addEventListener('click', ()=>{
           answers[current] = i;
+          rememberProgress();
           optionsWrap.querySelectorAll('.exam-option').forEach(o=>o.classList.remove('selected'));
           row.classList.add('selected');
           const currentNavBtn = document.querySelector('.q-nav-btn.current');
@@ -16068,11 +16725,11 @@
       });
 
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
-        if(current > 0){ current--; renderQuestion(); }
+        if(current > 0){ current--; rememberProgress(); renderQuestion(); }
       });
       document.getElementById('examNextBtn').addEventListener('click', ()=>{
         if(current === hw.questions.length-1){ submitHomework(); }
-        else { current++; renderQuestion(); }
+        else { current++; rememberProgress(); renderQuestion(); }
       });
     }
 
@@ -16147,19 +16804,26 @@
       // burst itself, and since every one of them then retries on a similar
       // timeline, the retries can keep colliding too.
       isSavingResult = true;
+      const submittedRecord = {
+        ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
+        retakeRequired: hasMistakes, retakeDeadline
+      };
       let ok, mistakeResults;
       try{
         await refreshMistakeEntriesFromSource(mistakeEntries);
         [ok, mistakeResults] = await Promise.all([
-          saveHomeworkAssignment(hw.id, {
-            ...hw, status: 'completed', score, results, submittedAt: new Date().toISOString(),
-            retakeRequired: hasMistakes, retakeDeadline
-          }),
+          saveHomeworkAssignment(hw.id, submittedRecord),
           saveMistakesInBatches(mistakeEntries, 4)
         ]);
       } finally {
         isSavingResult = false;
       }
+      // The answers are finished either way: if the connection is down, the
+      // whole result waits on this device and sends itself later rather
+      // than being lost or left to the student to retry by hand.
+      if(!ok) queueSubmission({ type:'homework', id: hw.id, data: submittedRecord });
+      else unqueueSubmission('homework', hw.id);   // a manual retry that worked
+      clearInProgress(hw.id);
       const succeededEntries = mistakeEntries.filter((entry, i) => mistakeResults[i] !== false);
       removeFromMistakeQueue(succeededEntries); // only the ones actually confirmed saved — anything that failed (or never got a chance to run) stays queued
       if(hasMistakes && succeededEntries.length > 0){
@@ -16193,8 +16857,8 @@
         : '';
 
       const savedNoticeHtml = !ok
-        ? `<div class="retake-notice" style="background:var(--ember-soft);border-color:var(--ember);color:var(--ember);">⚠ This result did NOT save — check your connection and tap "Retry save" below, or Mr. Mohamed Ibrahim won't see it.</div>
-           <button class="btn btn-primary" id="retrySaveBtn" style="width:100%;margin-bottom:10px;">Retry save</button>`
+        ? `<div class="retake-notice" style="background:rgba(255,176,32,0.14);border-color:var(--warn);color:var(--warn);">📶 No connection right now — your result is saved on this device and will send itself as soon as you're back online. You can close this safely.</div>
+           <button class="btn btn-primary" id="retrySaveBtn" style="width:100%;margin-bottom:10px;">Try sending now</button>`
         : failedMistakeEntries.length > 0
           ? `<div class="retake-notice" style="background:var(--ember-soft);border-color:var(--ember);color:var(--ember);">⚠ Your score saved, but ${failedMistakeEntries.length} of your ${mistakeEntries.length} wrong answer${mistakeEntries.length===1?'':'s'} didn't save properly — tap below to fix that.</div>
              <button class="btn btn-primary" id="retryMistakesBtn" style="width:100%;margin-bottom:10px;">Retry saving mistakes</button>`
@@ -16924,6 +17588,8 @@
     signinForm.reset();
     logStudentLogin(currentStudent.username); // fire-and-forget, never blocks sign-in
     retryQueuedMistakeSaves(); // fire-and-forget, catches up anything left over from a previous session
+    flushPendingSubmits();     // ...and any whole result that was finished offline
+    updateConnectionBanner();
   });
 
   // Browsers can't report their own public IP directly — this checks in
@@ -16939,17 +17605,95 @@
     }catch(err){ return null; } // offline or the lookup service is down — just skip it
   }
 
-  async function logStudentLogin(username){
+  /* ---------------- Account sharing signals ----------------
+     An IP on its own says very little: a student on mobile data gets a new
+     one every few minutes (which looked like sharing), while a brother and
+     sister at home share one (which hid real sharing). So each browser also
+     gets a random id of its own, kept on that device, and the sign-ins are
+     stamped with it. Two different devices active within a few minutes of
+     each other is the signal that actually means "two people are using this
+     account", and that's what the admin list leads with. */
+  const DEVICE_KEY = 'mi-device';
+  function deviceId(){
     try{
-      const ip = await getClientIp();
-      if(!ip) return;
+      let id = localStorage.getItem(DEVICE_KEY);
+      if(!id){ id = 'd' + Math.random().toString(36).slice(2, 10); localStorage.setItem(DEVICE_KEY, id); }
+      return id;
+    }catch(err){ return 'd-unknown'; }   // private mode: everything looks like one device
+  }
+  // A readable name for the device, so the list says "iPhone · Safari"
+  // rather than an id. Deliberately coarse -- enough to tell two devices
+  // apart in a conversation, nothing more.
+  function deviceLabel(){
+    const ua = navigator.userAgent || '';
+    const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android'
+      : /Windows/.test(ua) ? 'Windows' : /Mac OS X/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'Device';
+    const br = /Edg\//.test(ua) ? 'Edge' : /OPR\//.test(ua) ? 'Opera' : /SamsungBrowser/.test(ua) ? 'Samsung'
+      : /Chrome\//.test(ua) ? 'Chrome' : /Firefox\//.test(ua) ? 'Firefox' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+    return `${os} · ${br}`;
+  }
+
+  async function recordStudentAccess(username, kind){
+    try{
+      const dev = deviceId(), label = deviceLabel();
+      const ip = kind === 'login' ? await getClientIp() : null;
+      invalidateDbCache('students');
       const student = await getStudent(username);
       if(!student) return;
       const history = Array.isArray(student.loginHistory) ? student.loginHistory.slice() : [];
-      history.push({ ip, ts: new Date().toISOString() });
-      while(history.length > 20) history.shift(); // keep only the most recent 20
-      await dbSet('students', studentKey(username), { ...student, loginHistory: history });
-    }catch(err){ console.error('Could not log sign-in IP:', err); }
+      history.push({ ip: ip || null, ts: new Date().toISOString(), dev, label, hb: kind === 'ping' });
+      while(history.length > 40) history.shift();
+      const devices = { ...(student.devices || {}) };
+      const now = new Date().toISOString();
+      const entry = devices[dev] || { label, first: now, count: 0 };
+      entry.label = label; entry.last = now;
+      if(kind === 'login') entry.count = (entry.count || 0) + 1;
+      devices[dev] = entry;
+      // Keep the ten most recently used devices, no more.
+      const keep = Object.entries(devices).sort((a,b)=> new Date(b[1].last || 0) - new Date(a[1].last || 0)).slice(0, 10);
+      await dbSet('students', studentKey(username), { ...student, loginHistory: history, devices: Object.fromEntries(keep) });
+    }catch(err){ console.error('Could not record sign-in:', err); }
+  }
+  async function logStudentLogin(username){ return recordStudentAccess(username, 'login'); }
+
+  // A quiet ping every ten minutes while a student is using the site, so
+  // two people on one account at the same time are visible even when they
+  // signed in hours apart.
+  setInterval(()=>{ if(currentStudent) recordStudentAccess(currentStudent.username, 'ping'); }, 10 * 60 * 1000);
+
+  /* Works out what, if anything, looks wrong with an account. Returns null
+     when nothing does. Deliberately conservative -- it reports a signal to
+     look at, never an accusation. */
+  const SHARING_WINDOW_DAYS = 14;
+  function sharingSignals(student){
+    const since = Date.now() - SHARING_WINDOW_DAYS * 864e5;
+    const history = (Array.isArray(student.loginHistory) ? student.loginHistory : [])
+      .filter(h => h && h.ts && new Date(h.ts).getTime() >= since)
+      .sort((a,b)=> new Date(a.ts) - new Date(b.ts));
+    if(history.length === 0) return null;
+    const devs = [...new Set(history.map(h => h.dev).filter(Boolean))];
+    const ips = [...new Set(history.map(h => h.ip).filter(Boolean))];
+
+    // Strongest signal: two different devices active within ten minutes.
+    let overlap = null;
+    for(let i = 1; i < history.length && !overlap; i++){
+      for(let j = i - 1; j >= 0; j--){
+        const gap = new Date(history[i].ts) - new Date(history[j].ts);
+        if(gap > 10 * 60 * 1000) break;
+        if(history[j].dev && history[i].dev && history[j].dev !== history[i].dev){
+          overlap = { at: history[i].ts, a: history[j].label || history[j].dev, b: history[i].label || history[i].dev };
+          break;
+        }
+      }
+    }
+    const reasons = [];
+    let level = 0;
+    if(overlap){ reasons.push(`Two devices used within ten minutes of each other (${overlap.a} and ${overlap.b})`); level = 2; }
+    if(devs.length >= 3){ reasons.push(`${devs.length} different devices in ${SHARING_WINDOW_DAYS} days`); level = Math.max(level, 2); }
+    else if(devs.length === 2 && !overlap){ reasons.push('2 different devices — normal if they use a phone and a laptop'); level = Math.max(level, 1); }
+    if(ips.length >= 5 && devs.length <= 1) reasons.push(`${ips.length} networks, but all from one device — most likely just mobile data`);
+    if(reasons.length === 0 || level === 0) return level === 1 ? { level, reasons, devs, ips, overlap, logins: history.filter(h => !h.hb).length } : null;
+    return { level, reasons, devs, ips, overlap, logins: history.filter(h => !h.hb).length };
   }
 
   registerForm.addEventListener('submit', async (e)=>{
@@ -19170,9 +19914,67 @@
     }
   }
 
+  // "That's fine" hides an account for a month -- a student who genuinely
+  // uses a phone and a laptop shouldn't be flagged at you forever.
+  async function dismissSharingFlag(username){
+    invalidateDbCache('students');
+    const st = await getStudent(username);
+    if(!st) return false;
+    st.sharingOkUntil = new Date(Date.now() + 30 * 864e5).toISOString();
+    return await dbSet('students', studentKey(username), st);
+  }
+
+  function renderSharingAlerts(students){
+    const wrap = document.getElementById('sharingAlertsWrap');
+    if(!wrap) return;
+    if(currentAdminRole === 'assistant'){ wrap.innerHTML = ''; return; }   // not an assistant's business
+    const now = Date.now();
+    const flagged = students
+      .filter(st => st.status === 'approved')
+      .map(st => ({ st, sig: sharingSignals(st) }))
+      .filter(x => x.sig && x.sig.level >= 1)
+      .filter(x => !(x.st.sharingOkUntil && new Date(x.st.sharingOkUntil).getTime() > now))
+      .sort((a,b)=> b.sig.level - a.sig.level || b.sig.devs.length - a.sig.devs.length);
+
+    if(flagged.length === 0){
+      wrap.innerHTML = `<div class="share-panel"><div class="share-title">🔐 Account sharing</div>
+        <div class="share-sub" style="margin:4px 0 0;">Nothing to look at — no account is showing signs of being used by more than one person.</div></div>`;
+      return;
+    }
+    wrap.innerHTML = `
+      <div class="share-panel has-flags">
+        <div class="share-head">
+          <span class="share-title">🔐 Possible account sharing · ${flagged.length}</span>
+        </div>
+        <div class="share-sub">Based on the devices each account signs in from over the last ${SHARING_WINDOW_DAYS} days. Two devices used within minutes of each other usually means two people; a phone plus a laptop is normal. Worth a friendly question, not an accusation.</div>
+        ${flagged.map(({ st, sig })=>`
+          <div class="share-row" data-user="${esc(st.username)}">
+            <div class="share-who">
+              <strong>${esc(st.username)}</strong>
+              <span>${esc(st.course || '')} · ${sig.logins} sign-in${sig.logins === 1 ? '' : 's'}</span>
+            </div>
+            <div class="share-why">
+              <ul>${sig.reasons.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+              <div class="share-devs">Devices: ${sig.devs.map(d => esc(((st.devices || {})[d] || {}).label || d)).join(' · ')}</div>
+            </div>
+            <span class="share-lvl ${sig.level >= 2 ? 'high' : 'low'}">${sig.level >= 2 ? 'Worth checking' : 'Keep an eye'}</span>
+            <button type="button" class="student-action-btn share-ok-btn">That's fine</button>
+          </div>`).join('')}
+      </div>`;
+    wrap.querySelectorAll('.share-ok-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const user = btn.closest('.share-row').dataset.user;
+        btn.disabled = true; btn.textContent = 'Saving\u2026';
+        await dismissSharingFlag(user);
+        await renderAdminStudents();
+      });
+    });
+  }
+
   async function renderAdminStudents(){
     await refreshCourseNamesCache();
     let students = await fetchStudentsForCurrentAdmin();
+    renderSharingAlerts(students);
 
     // Only the main admin gets to manually pick a course here — act-admin
     // and the shared assistant login are already automatically scoped.
@@ -19218,12 +20020,13 @@
       const waDigits = digitsOnly(formatEgyptNumber(s.parentNumber));
       const waLink = waDigits ? `https://wa.me/${waDigits}` : null;
       const loginHistory = Array.isArray(s.loginHistory) ? s.loginHistory : [];
-      const distinctIps = [...new Set(loginHistory.map(h => h.ip))];
+      const distinctIps = [...new Set(loginHistory.map(h => h.ip).filter(Boolean))];
+      const sig = sharingSignals(s);
+      const devCount = sig ? sig.devs.length : [...new Set(loginHistory.map(h => h.dev).filter(Boolean))].length;
       const accessHtml = loginHistory.length === 0
         ? `<span style="color:var(--muted); font-size:0.78rem;">No logins yet</span>`
-        : distinctIps.length > 1
-          ? `<span class="status-pill status-pending" title="Signed in from ${distinctIps.length} different IP addresses recently — could mean the account is being shared, or just the student using different networks (phone data, home, school Wi-Fi).">⚠ ${distinctIps.length} IPs</span>`
-          : `<span class="status-pill status-approved">1 IP</span>`;
+        : `<span class="status-pill ${sig && sig.level >= 2 ? 'status-pending' : 'status-approved'}" title="${sig ? esc(sig.reasons.join(' · ')) : 'Nothing unusual'}">${sig && sig.level >= 2 ? '⚠ ' : ''}${devCount || 1} device${(devCount || 1) === 1 ? '' : 's'}</span>
+           <span style="display:block; color:var(--muted); font-size:0.72rem; margin-top:2px;">${distinctIps.length || 1} network${(distinctIps.length || 1) === 1 ? '' : 's'}</span>`;
       tr.innerHTML = `
         <td>${esc(s.username)}</td>
         <td>${esc(s.grade)}</td>
@@ -19270,10 +20073,13 @@
       const viewIpBtn = tr.querySelector('.view-ip-history-btn');
       if(viewIpBtn){
         viewIpBtn.addEventListener('click', ()=>{
-          const lines = loginHistory.slice().reverse().map(h =>
-            `${new Date(h.ts).toLocaleString()} — ${h.ip}`
+          const lines = loginHistory.slice().reverse().filter(h => !h.hb).map(h =>
+            `${new Date(h.ts).toLocaleString()} — ${h.label || 'device ?'}${h.ip ? ` — ${h.ip}` : ''}`
           ).join('\n');
-          alert(`Recent sign-ins for ${s.username}:\n\n${lines}\n\n${distinctIps.length > 1 ? `⚠ ${distinctIps.length} different IP addresses seen — worth asking the student about if this seems unusual.` : 'Only 1 IP address seen — no sign of sharing.'}`);
+          const verdict = sig
+            ? `${sig.level >= 2 ? '⚠ Worth checking' : 'Keep an eye on it'}:\n- ${sig.reasons.join('\n- ')}`
+            : 'Nothing unusual — one device, no overlapping use.';
+          alert(`Recent sign-ins for ${s.username}:\n\n${lines}\n\n${verdict}`);
         });
       }
       tr.querySelector('.parent-link-btn').addEventListener('click', async ()=>{
