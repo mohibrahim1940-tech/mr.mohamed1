@@ -2259,6 +2259,19 @@
   .picker-search:focus{ outline:none; border-color:var(--signal); }
   .picker-count{ color:var(--muted); font-size:0.78rem; white-space:nowrap; margin-left:auto; }
   .picker-hidden{ display:none !important; }
+  .skill-progress-bar{ height:6px; border-radius:999px; background:var(--line); overflow:hidden; margin-top:8px; }
+  .skill-progress-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--signal), var(--accent, var(--signal))); }
+  .practice-size-box{ width:100%; margin-top:12px; border-top:1px solid var(--line-soft); padding-top:12px; }
+  .practice-size-title{ font-size:0.86rem; font-weight:600; margin-bottom:10px; }
+  .practice-size-title span{ color:var(--muted); font-weight:400; font-size:0.8rem; display:block; margin-top:2px; }
+  .practice-size-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .practice-size-row .btn{ padding:7px 16px; font-size:0.84rem; }
+  .practice-size-hint{ color:var(--muted); font-size:0.76rem; margin-top:8px; }
+  .practice-stop-hint{ color:var(--muted); font-size:0.78rem; text-align:center; margin-top:10px; }
+  .practice-left-note{
+    background:var(--accent-wash, rgba(56,189,248,0.10)); border:1px solid var(--line);
+    border-radius:12px; padding:14px 16px; margin-bottom:18px; font-size:0.88rem; line-height:1.6; text-align:left;
+  }
   .pm-name{ font-family:'Space Grotesk',sans-serif; font-size:1.5rem; font-weight:700; }
   .pm-sub{ color:var(--muted); font-size:0.84rem; }
   .pm-contact{ text-align:right; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
@@ -8549,7 +8562,8 @@
     if(e.target === examModal){ stopActiveTimer(); examModal.classList.remove('open'); }
   });
 
-  function startExam(exam, matchMode){
+  function startExam(exam, matchMode, opts){
+    const practice = opts && opts.practice ? opts : null;   // skill practice: mark only what they answer
     let current = 0;
     const answers = new Array(exam.questions.length).fill(null);
     const flagged = new Array(exam.questions.length).fill(false);
@@ -8604,8 +8618,10 @@
         </div>
         <div class="exam-nav">
           <button class="btn btn-ghost" id="examPrevBtn" ${current===0 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>Back</button>
+          ${practice && current !== exam.questions.length-1 ? `<button class="btn btn-ghost" id="examStopBtn">Finish here</button>` : ''}
           <button class="btn btn-primary" id="examNextBtn">${current === exam.questions.length-1 ? 'See score' : 'Next'}</button>
         </div>
+        ${practice ? `<p class="practice-stop-hint">You're marked only on the questions you answer — the rest stay here for next time.</p>` : ''}
       `;
       document.getElementById('qNavWrap').appendChild(
         buildQuestionNav(exam.questions.length, current, answers, flagged, (i)=>{ current = i; renderQuestion(); })
@@ -8698,6 +8714,14 @@
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
         if(current > 0){ current--; renderQuestion(); }
       });
+      const stopBtn = document.getElementById('examStopBtn');
+      if(stopBtn) stopBtn.addEventListener('click', async ()=>{
+        const answeredCount = answers.filter(a => a != null).length;
+        if(answeredCount === 0){ alert('Answer at least one question first — then you can finish whenever you like.'); return; }
+        const left = exam.questions.length - answeredCount;
+        if(left > 0 && !confirm(`Finish now and be marked on the ${answeredCount} question${answeredCount === 1 ? '' : 's'} you answered?\n\nThe other ${left} stay here for next time.`)) return;
+        await renderScore();
+      });
       document.getElementById('examNextBtn').addEventListener('click', async ()=>{
         if(current === exam.questions.length-1){ await renderScore(); }
         else if(matchMode && !halfTimeShown && current + 1 === halfwayPoint && exam.questions.length >= 4){
@@ -8743,6 +8767,7 @@
     }
 
     let scoreRendered = false;
+    let practiceLeftBehind = 0;
     async function renderScore(){
       // The student can hit Submit in the same second the clock runs out;
       // without this the result would be saved -- and counted -- twice.
@@ -8750,6 +8775,23 @@
       scoreRendered = true;
       stopActiveTimer();
       unlockQuiz();
+
+      // Practice is marked out of what they actually answered. Dropping the
+      // untouched questions here means every count below -- score, mistakes,
+      // the review board -- is about their real work, and the questions they
+      // skipped are simply left for another day.
+      if(practice){
+        const keptIdx = answers.map((a,i)=> a != null ? i : -1).filter(i => i >= 0);
+        if(keptIdx.length > 0 && keptIdx.length < exam.questions.length){
+          practiceLeftBehind = exam.questions.length - keptIdx.length;
+          const keptQuestions = keptIdx.map(i => exam.questions[i]);
+          const keptAnswers = keptIdx.map(i => answers[i]);
+          exam.questions = keptQuestions;
+          answers.splice(0, answers.length, ...keptAnswers);
+        }
+        const doneKeys = exam.questions.map(q => skillQuestionKey(q));
+        recordSkillProgress(practice.skillId, doneKeys).catch(err => console.error('skill progress:', err));
+      }
       const correctCount = exam.questions.reduce((sum,q,i)=> sum + (answers[i]===q.correct ? 1 : 0), 0);
       const pct = Math.round((correctCount / exam.questions.length) * 100);
       const hasMistakes = correctCount < exam.questions.length;
@@ -8884,6 +8926,16 @@
         ? `<div class="est-score-badge">Expected EST score: <strong>${pctToEstScore(pct)}</strong> / 800</div>`
         : '';
 
+      // Practice: say plainly what this score covers and what's still waiting.
+      let practiceLeftHtml = '';
+      if(practice){
+        const stillLeft = (practice.remainingTotal || 0) - exam.questions.length;
+        practiceLeftHtml = `<div class="practice-left-note">
+          📗 Marked on the ${exam.questions.length} question${exam.questions.length === 1 ? '' : 's'} you answered${practiceLeftBehind ? ` — the ${practiceLeftBehind} you skipped are still waiting` : ''}.
+          ${stillLeft > 0 ? `<br><strong>${stillLeft} more</strong> left in \u201C${esc(practice.skillName || exam.title)}\u201D whenever you want them.` : `<br>That\u2019s the whole set finished. \ud83c\udf89`}
+        </div>`;
+      }
+
       const fullTimeHtml = matchMode ? `
         <div class="fulltime-banner">
           <div class="fulltime-whistle">🏁</div>
@@ -8911,6 +8963,7 @@
           <p style="color:var(--muted);margin-bottom:24px;">${correctCount} of ${exam.questions.length} correct on “${esc(exam.title)}”.</p>
           ${estScoreHtml}
           ${classAverageHtml}
+          ${practiceLeftHtml}
           ${reviewHtml}
           ${savedNoticeHtml}
           ${!saveSucceeded && currentStudent ? `<button class="btn btn-primary" id="retrySaveBtn" style="width:100%;margin-bottom:10px;">Retry save</button>` : ''}
@@ -8974,6 +9027,9 @@
       document.getElementById('examCloseBtn').addEventListener('click', ()=>{
         examModal.classList.remove('open');
         if(currentStudent){ renderWeakPoints(); renderMistakeHistory(); renderOverview(); invalidateDbCache('competitions'); renderStudentCompetitionSection(); }
+        // Practice moved the count on — show the card as it is now, not as
+        // it was when they opened it.
+        if(practice) renderStudentSkills();
       });
     }
 
@@ -12921,6 +12977,75 @@
     try{ localStorage.setItem(key, JSON.stringify(value)); return true; }catch(err){ return false; }
   }
 
+  /* ---------------- SKILL PRACTICE PROGRESS ----------------
+     A skill set can hold far more questions than anyone wants to sit
+     through in one go. A student answers as many as they like, is marked
+     out of THOSE, and the ones they never reached stay waiting for next
+     time. Progress is remembered per question rather than by position, so
+     editing the set later never makes a student redo what they've done.   */
+  const SKILL_PROGRESS_PREFIX = 'mi-skillprog:';
+
+  // Small stable fingerprint of a question — same question, same key, even
+  // if it moves inside the set.
+  function skillQuestionKey(q){
+    if(!q) return '0';
+    const src = [q.text || '', q.image || '', (q.options || []).join('\u0001'), q.correct].join('\u0002');
+    let h1 = 0x811c9dc5, h2 = 0x01000193;
+    for(let i = 0; i < src.length; i++){
+      const c = src.charCodeAt(i);
+      h1 = ((h1 ^ c) * 16777619) >>> 0;
+      h2 = ((h2 + c) * 31 + i) >>> 0;
+    }
+    return h1.toString(36) + h2.toString(36);
+  }
+
+  function skillProgressLocalKey(skillId){
+    return SKILL_PROGRESS_PREFIX + (currentStudent ? currentStudent.username.trim().toLowerCase() : '?') + ':' + skillId;
+  }
+
+  // Reads from the signed-in student record, falling back to whatever this
+  // device remembers — so a practice finished with no connection still
+  // counts the next time they open the app here.
+  function skillProgressDone(skillId){
+    const fromAccount = (currentStudent && currentStudent.skillProgress && currentStudent.skillProgress[skillId] && currentStudent.skillProgress[skillId].done) || [];
+    const fromDevice = readJson(skillProgressLocalKey(skillId), []);
+    const merged = new Set(Array.isArray(fromAccount) ? fromAccount : []);
+    (Array.isArray(fromDevice) ? fromDevice : []).forEach(k => merged.add(k));
+    return merged;
+  }
+
+  async function recordSkillProgress(skillId, newKeys){
+    if(!skillId || !newKeys || newKeys.length === 0) return;
+    const done = skillProgressDone(skillId);
+    newKeys.forEach(k => done.add(k));
+    const list = Array.from(done);
+    writeJson(skillProgressLocalKey(skillId), list);
+    if(!currentStudent) return;
+    if(!currentStudent.skillProgress) currentStudent.skillProgress = {};
+    currentStudent.skillProgress[skillId] = { done: list, updatedAt: new Date().toISOString() };
+    try{
+      const st = await getStudent(currentStudent.username);
+      if(!st) return;
+      st.skillProgress = { ...(st.skillProgress || {}), [skillId]: { done: list, updatedAt: new Date().toISOString() } };
+      await dbSet('students', studentKey(currentStudent.username), st);
+      invalidateDbCache('students');
+    }catch(err){ console.error('Could not save skill progress:', err); }
+  }
+
+  async function clearSkillProgress(skillId){
+    writeJson(skillProgressLocalKey(skillId), []);
+    if(currentStudent && currentStudent.skillProgress) delete currentStudent.skillProgress[skillId];
+    try{
+      const st = await getStudent(currentStudent.username);
+      if(!st) return;
+      const map = { ...(st.skillProgress || {}) };
+      delete map[skillId];
+      st.skillProgress = map;
+      await dbSet('students', studentKey(currentStudent.username), st);
+      invalidateDbCache('students');
+    }catch(err){ console.error('Could not reset skill progress:', err); }
+  }
+
   function pendingSubmits(){ const q = readJson(PENDING_SUBMITS_KEY, []); return Array.isArray(q) ? q : []; }
   function unqueueSubmission(type, id){
     const q = pendingSubmits().filter(j => !(j.type === type && j.id === id));
@@ -14677,6 +14802,32 @@
 
   // Every skill set the admin creates shows up here for every student to
   // practice — unlike homework, these aren't assigned to one specific student.
+  // How many to do right now. With a big pile left, a student who is told
+  // "60 questions" often does none at all — so offer a sitting they can
+  // actually finish. A short pile just starts.
+  function askPracticeSize(card, set, remaining, go){
+    card.querySelectorAll('.practice-size-box').forEach(el => el.remove());
+    if(remaining <= 10){ go(remaining); return; }
+    const options = [10, 20, 30].filter(n => n < remaining);
+    const box = document.createElement('div');
+    box.className = 'practice-size-box';
+    box.innerHTML = `
+      <div class="practice-size-title">How many today? <span>${remaining} waiting in “${esc(set.skill)}”</span></div>
+      <div class="practice-size-row">
+        ${options.map(n => `<button type="button" class="btn btn-ghost practice-size-btn" data-n="${n}">${n}</button>`).join('')}
+        <button type="button" class="btn btn-primary practice-size-btn" data-n="${remaining}">All ${remaining}</button>
+        <button type="button" class="btn btn-ghost practice-size-cancel">Cancel</button>
+      </div>
+      <div class="practice-size-hint">You can stop earlier too — "Finish here" marks only what you've answered.</div>`;
+    card.appendChild(box);
+    box.querySelectorAll('.practice-size-btn').forEach(b => b.addEventListener('click', ()=>{
+      const n = parseInt(b.dataset.n, 10);
+      box.remove();
+      go(Math.max(1, Math.min(n, remaining)));
+    }));
+    box.querySelector('.practice-size-cancel').addEventListener('click', ()=> box.remove());
+  }
+
   async function renderStudentSkills(){
     const grid = document.getElementById('skillsGrid');
     if(!grid) return;
@@ -14701,17 +14852,36 @@
       const needsRetake = latest && latest.retakeRequired;
       const overdue = needsRetake && latest.retakeDeadline && new Date(latest.retakeDeadline) < new Date();
 
+      const doneKeys = skillProgressDone(set.id);
+      const doneCount = Math.min(doneKeys.size, set.questionCount || 0);
+      const leftCount = Math.max((set.questionCount || 0) - doneCount, 0);
+      const started = doneCount > 0;
+      const finished = started && leftCount === 0;
+
       card.innerHTML = `
         <div class="exam-card-main">
           <h3>${esc(set.skill)}</h3>
-          <p class="exam-meta">${set.questionCount} question${set.questionCount === 1 ? '' : 's'} to practice.</p>
+          <p class="exam-meta">${
+            finished ? `All ${set.questionCount} done — practise again any time.`
+            : started ? `${doneCount} done · <strong>${leftCount} left</strong> of ${set.questionCount}.`
+            : `${set.questionCount} question${set.questionCount === 1 ? '' : 's'} to practice.`
+          }</p>
+          ${started && !finished ? `<div class="skill-progress-bar"><div class="skill-progress-fill" style="width:${Math.round((doneCount / (set.questionCount || 1)) * 100)}%"></div></div>` : ''}
           ${needsRetake ? `<span class="retake-badge ${overdue ? 'overdue' : ''}" style="margin-top:6px; display:inline-block;">${overdue ? 'Retake overdue' : 'Retake within 24 hours'}</span>` : ''}
         </div>
         <div class="exam-card-actions">
           ${set.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(set.recordingUrl)}" data-title="${esc(set.skill)}">🎬 Watch the lesson${parseRecordingParts(set.recordingUrl).length > 1 ? ` (${parseRecordingParts(set.recordingUrl).length} parts)` : ''}</button><span class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem;"></span>` : ''}
-          <button class="btn btn-ghost start-skill-btn">${needsRetake ? 'Retake now' : 'Start practice'}</button>
+          <button class="btn btn-ghost start-skill-btn">${needsRetake ? 'Retake now' : started && !finished ? 'Continue practice' : 'Start practice'}</button>
+          ${started ? `<button type="button" class="btn btn-ghost reset-skill-btn" style="font-size:0.8rem;">↺ Start the set over</button>` : ''}
         </div>
       `;
+      const resetBtn = card.querySelector('.reset-skill-btn');
+      if(resetBtn) resetBtn.addEventListener('click', async ()=>{
+        if(!confirm(`Start “${set.skill}” from the beginning? Your past scores stay — this only puts every question back in the pile.`)) return;
+        resetBtn.disabled = true; resetBtn.textContent = 'Resetting…';
+        await clearSkillProgress(set.id);
+        await renderStudentSkills();
+      });
       card.querySelector('.start-skill-btn').addEventListener('click', async ()=>{
         const btn = card.querySelector('.start-skill-btn');
         const originalLabel = btn.textContent;
@@ -14719,7 +14889,18 @@
         const full = await dbGet('skills', set.id);
         btn.disabled = false; btn.textContent = originalLabel;
         if(!full){ alert('Could not load that skill — please try again.'); return; }
-        startExam({ title: full.skill, questions: full.questions || [] });
+        const allQuestions = full.questions || [];
+        const done = skillProgressDone(set.id);
+        let remaining = allQuestions.filter(q => !done.has(skillQuestionKey(q)));
+        // Nothing left (or a retake): the whole set comes back.
+        if(remaining.length === 0 || needsRetake) remaining = allQuestions.slice();
+        askPracticeSize(card, set, remaining.length, (take)=>{
+          startExam(
+            { title: full.skill, questions: remaining.slice(0, take) },
+            false,
+            { practice:true, skillId:set.id, skillName:full.skill, remainingTotal:remaining.length }
+          );
+        });
       });
       grid.appendChild(card);
     });
