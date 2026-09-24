@@ -3246,6 +3246,160 @@
   .planner-day-meta{font-size:0.72rem; color:var(--muted);}
   .planner-actions{display:flex; flex-wrap:wrap; gap:10px;}
   .planner-actions .btn{padding:10px 18px; font-size:0.85rem;}
+
+  /* ---------- AI tutor (student modal) ---------- */
+  #aiHelpModal{ z-index:520; }
+  .ai-help-box{ max-width:560px; padding:28px 26px 22px; }
+  .ai-kicker{ font-family:'IBM Plex Mono',monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--brand-deep); margin-bottom:6px; }
+  :root:not([data-theme="light"]) .ai-kicker{ color:var(--brand); }
+  .ai-orig-wrap{ margin:4px 0 16px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); }
+  .ai-orig-wrap summary{ cursor:pointer; padding:9px 12px; font-size:0.82rem; color:var(--muted); }
+  .ai-orig{ padding:0 12px 12px; }
+  .ai-orig-label{ font-size:0.74rem; color:var(--muted); margin-bottom:6px; }
+  .ai-orig img{ max-width:100%; border-radius:8px; margin-bottom:6px; display:block; }
+  .ai-orig-text{ font-size:0.9rem; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .ai-help-body{ min-height:90px; }
+  .ai-loading{ display:flex; align-items:center; gap:12px; color:var(--muted); font-size:0.9rem; padding:26px 4px; }
+  .ai-dots{ display:inline-flex; gap:5px; }
+  .ai-dots i{ width:8px; height:8px; border-radius:50%; background:var(--signal); animation:aiDot 1.1s infinite ease-in-out; }
+  .ai-dots i:nth-child(2){ animation-delay:.15s; } .ai-dots i:nth-child(3){ animation-delay:.3s; }
+  @keyframes aiDot{ 0%,80%,100%{ opacity:.25; transform:translateY(0); } 40%{ opacity:1; transform:translateY(-4px); } }
+  @media (prefers-reduced-motion: reduce){ .ai-dots i{ animation:none; opacity:.7; } }
+  .ai-answer{ white-space:pre-wrap; overflow-wrap:anywhere; font-size:0.94rem; line-height:1.6; color:var(--text); }
+  .ai-answer strong{ color:var(--text); background:var(--accent-wash); padding:0 4px; border-radius:4px; }
+  .ai-disclaimer{ margin-top:14px; font-size:0.76rem; color:var(--muted); border-top:1px solid var(--line-soft); padding-top:10px; }
+  .ai-error{ background:var(--ember-soft); border:1px solid rgba(255,107,74,0.35); color:var(--text); border-radius:10px; padding:14px 16px; font-size:0.9rem; line-height:1.5; }
+  .ai-q-text{ font-size:1rem; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; margin-bottom:14px; font-weight:500; }
+  .ai-q-options{ display:grid; gap:8px; }
+  .ai-q-opt{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--panel-2); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:11px 14px; font:inherit; font-size:0.93rem; cursor:pointer; transition:border-color .15s, background .15s; min-height:44px; }
+  .ai-q-opt:hover:not(:disabled){ border-color:var(--signal); }
+  .ai-q-opt:focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
+  .ai-q-opt:disabled{ cursor:default; }
+  .ai-q-letter{ flex-shrink:0; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:0.78rem; border:1px solid var(--line-strong); }
+  .ai-q-opt.is-correct{ border-color:var(--success); background:var(--success-soft); }
+  .ai-q-opt.is-correct .ai-q-letter{ background:var(--success); border-color:var(--success); color:var(--tile-ink); }
+  .ai-q-opt.is-wrong{ border-color:var(--ember); background:var(--ember-soft); }
+  .ai-q-opt.is-wrong .ai-q-letter{ background:var(--ember); border-color:var(--ember); color:#fff; }
+  .ai-q-feedback{ margin-top:14px; }
+  .ai-verdict{ font-weight:600; margin-bottom:8px; }
+  .ai-verdict.good{ color:var(--success); } .ai-verdict.bad{ color:var(--ember); }
+  :root[data-theme="light"] .ai-verdict.good{ color:#138a52; }
+  :root[data-theme="light"] .ai-verdict.bad{ color:#c2410c; }
+  .ai-foot{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:18px; padding-top:14px; border-top:1px solid var(--line-soft); }
+  .ai-left{ font-size:0.78rem; color:var(--muted); }
+  .ai-left.is-low{ color:var(--warn); }
+  .ai-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; }
+  .ai-actions .btn{ padding:9px 16px; font-size:0.86rem; }
+  @media (max-width:520px){
+    .ai-help-box{ padding:24px 16px 18px; }
+    .ai-foot{ flex-direction:column; align-items:stretch; }
+    .ai-actions{ margin-left:0; }
+    .ai-actions .btn{ flex:1 1 auto; justify-content:center; }
+  }
+  .mistake-row-actions button.ai-mistake-btn{ border-color:rgba(var(--accent-rgb),0.35); color:var(--text); }
+  .mistake-row-actions button.ai-mistake-btn:hover{ background:var(--accent-wash); border-color:var(--signal); }
+
+  /* ---------- AI question drafting (homework / exam editors) ---------- */
+  .ai-draft-box{ margin-top:24px; border:1px dashed rgba(var(--accent-rgb),0.45); background:var(--accent-wash); border-radius:12px; padding:16px; }
+  .ai-draft-head{ margin-bottom:12px; }
+  .ai-draft-title{ display:block; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:0.98rem; margin-bottom:3px; }
+  .ai-draft-sub{ display:block; font-size:0.78rem; color:var(--muted); line-height:1.45; }
+  .ai-draft-grid{ display:grid; grid-template-columns:2fr 1fr 1fr 0.8fr; gap:10px; }
+  .ai-draft-box label{ display:block; min-width:0; }
+  .ai-draft-box input[type="text"], .ai-draft-box select{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:var(--ink); color:var(--text); font-family:'Inter',sans-serif; font-size:0.9rem; min-width:0; }
+  .ai-draft-notes-wrap{ margin-top:10px; }
+  .ai-draft-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:12px; }
+  .ai-draft-row .btn{ padding:10px 18px; font-size:0.88rem; }
+  .ai-draft-status{ font-size:0.82rem; color:var(--muted); }
+  .ai-draft-status.is-bad{ color:var(--ember); } .ai-draft-status.is-good{ color:var(--success); }
+  :root[data-theme="light"] .ai-draft-status.is-good{ color:#138a52; }
+  .question-block.is-ai-draft{ border-color:rgba(var(--accent-rgb),0.55); }
+  .ai-draft-badge{ display:inline-block; font-size:0.72rem; padding:3px 9px; border-radius:20px; background:var(--accent-wash); color:var(--text); border:1px solid rgba(var(--accent-rgb),0.4); margin:-6px 0 12px; }
+  @media (max-width:720px){ .ai-draft-grid{ grid-template-columns:1fr 1fr; } .ai-draft-grid label:first-child{ grid-column:1 / -1; } }
+
+  /* ---------- admin: AI & parent reports ---------- */
+  .air-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:18px; min-width:0; }
+  .air-card h3{ font-family:'Space Grotesk',sans-serif; font-size:1.02rem; margin:0; }
+  .air-card-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .air-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .air-grid .air-card{ margin-bottom:0; }
+  .air-grid + .air-card{ margin-top:18px; }
+  @media (max-width:900px){ .air-grid{ grid-template-columns:1fr; } }
+  .air-small{ padding:9px 16px; font-size:0.85rem; }
+  .air-inline{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .air-inline input{ flex:1 1 220px; min-width:0; }
+  .air-card input[type="text"], .air-card input[type="password"], .air-card input[type="number"], .air-card input[type="tel"], .air-card select{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:var(--ink); color:var(--text); font-family:'Inter',sans-serif; font-size:0.9rem; min-width:0;
+  }
+  .air-inline input{ width:auto; }
+  .air-key-row{ margin-bottom:14px; }
+  .air-muted{ color:var(--muted); font-size:0.8rem; line-height:1.5; }
+  .air-tight{ margin-top:6px; }
+  .air-msg{ font-size:0.82rem; min-height:1.2em; margin-top:6px; color:var(--muted); }
+  .air-msg:empty{ min-height:0; margin:0; }
+  .air-msg.good{ color:var(--success); } .air-msg.bad{ color:var(--ember); }
+  :root[data-theme="light"] .air-msg.good{ color:#138a52; }
+  .air-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+  .air-chip{ font-size:0.78rem; padding:5px 11px; border-radius:20px; border:1px solid var(--line); background:var(--panel-2); color:var(--text); }
+  .air-chip b{ margin-right:2px; }
+  .air-chip.ok{ border-color:rgba(var(--success-rgb),0.45); background:var(--success-soft); }
+  .air-chip.ok b{ color:var(--success); }
+  .air-chip.bad{ border-color:rgba(255,107,74,0.45); background:var(--ember-soft); }
+  .air-chip.bad b{ color:var(--ember); }
+  .air-chip.wait b{ color:var(--muted); }
+  .air-setup{ margin-top:14px; border-top:1px solid var(--line-soft); padding-top:12px; }
+  .air-setup summary{ cursor:pointer; font-weight:600; font-size:0.9rem; padding:4px 0; }
+  .air-steps{ list-style:none; padding:0; margin:14px 0 0; display:grid; gap:14px; }
+  .air-step{ display:flex; gap:12px; align-items:flex-start; }
+  .air-step-num{ flex-shrink:0; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:0.8rem; border:1px solid var(--line-strong); color:var(--text); }
+  .air-step.is-done .air-step-num{ background:var(--success); border-color:var(--success); color:var(--tile-ink); font-weight:700; }
+  .air-step-body{ min-width:0; flex:1; }
+  .air-step-title{ font-weight:600; font-size:0.92rem; margin-bottom:4px; }
+  .air-step.is-done .air-step-title{ color:var(--muted); }
+  .air-step-body p{ font-size:0.84rem; color:var(--muted); line-height:1.55; margin:0 0 8px; }
+  .air-step-body a{ color:var(--signal); }
+  .air-step-body code, .air-card code{ font-family:'IBM Plex Mono',monospace; font-size:0.8em; background:var(--panel-2); border:1px solid var(--line-soft); padding:1px 5px; border-radius:4px; color:var(--text); }
+  .air-list{ margin:0 0 8px 18px; padding:0; font-size:0.84rem; color:var(--muted); line-height:1.6; }
+  .air-copy{ padding:7px 13px; font-size:0.8rem; }
+  .air-copy.is-copied{ border-color:var(--success); color:var(--success); }
+  .air-template-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .air-toggle{ display:flex; align-items:center; gap:10px; font-size:0.9rem; margin:4px 0 12px; cursor:pointer; }
+  .air-toggle input{ width:18px; height:18px; accent-color:var(--signal); flex-shrink:0; }
+  .air-fields{ display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; margin-bottom:6px; }
+  .air-fields label{ display:block; min-width:0; }
+  .air-span2{ grid-column:1 / -1; }
+  @media (max-width:480px){ .air-fields{ grid-template-columns:1fr; } }
+  .air-save-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px; }
+  .air-save-row .air-msg{ margin-top:0; }
+  .air-stats{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:12px; }
+  @media (max-width:760px){ .air-stats{ grid-template-columns:1fr 1fr; } }
+  .air-stat{ background:var(--panel-2); border:1px solid var(--line-soft); border-radius:10px; padding:12px; min-width:0; }
+  .air-stat .k{ font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; font-family:'IBM Plex Mono',monospace; }
+  .air-stat .v{ font-family:'Space Grotesk',sans-serif; font-size:1.25rem; font-weight:600; margin:4px 0 2px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+  .air-stat .d{ font-size:0.76rem; color:var(--muted); }
+  .air-rate{ font-size:0.76rem; color:var(--muted); line-height:1.6; margin-bottom:12px; }
+  .air-rate input{ width:70px !important; display:inline-block; padding:3px 6px !important; font-size:0.8rem !important; }
+  .air-table-wrap{ overflow-x:auto; }
+  .air-table td{ font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .air-bar{ display:inline-block; width:60px; height:6px; border-radius:6px; background:var(--panel-2); overflow:hidden; vertical-align:middle; margin-right:6px; }
+  .air-bar span{ display:block; height:100%; background:var(--signal); border-radius:6px; }
+  .air-empty{ color:var(--muted); font-size:0.86rem; padding:14px 0; }
+  .air-test-row{ margin-bottom:4px; }
+  .air-actions{ display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 6px; }
+  .air-report{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-top:10px; background:var(--panel-2); }
+  .air-report.is-quiet{ opacity:0.85; }
+  .air-report-head{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .air-report-head > div:first-child{ flex:1 1 140px; min-width:0; }
+  .air-report-name{ font-weight:600; font-size:0.92rem; overflow-wrap:anywhere; }
+  .air-report-phone{ font-size:0.76rem; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+  .air-report-state{ font-size:0.78rem; }
+  .air-report-err{ color:var(--ember); font-size:0.74rem; margin-top:3px; max-width:260px; }
+  .air-report .btn{ padding:7px 13px; font-size:0.8rem; }
+  .air-report-text{ margin:10px 0 0; white-space:pre-wrap; overflow-wrap:anywhere; font-family:'Inter',sans-serif; font-size:0.82rem; line-height:1.55; background:var(--ink); border:1px solid var(--line-soft); border-radius:8px; padding:10px 12px; color:var(--text); }
+  .air-pill{ display:inline-block; padding:3px 9px; border-radius:20px; font-size:0.74rem; border:1px solid var(--line); }
+  .air-pill.ok{ background:var(--success-soft); border-color:rgba(var(--success-rgb),0.45); }
+  .air-pill.bad{ background:var(--ember-soft); border-color:rgba(255,107,74,0.45); }
+  .air-pill.wait{ color:var(--muted); }
 </style>
 </head>
 <body>
@@ -3942,6 +4096,920 @@
   </div>
 </div>
 
+
+<!-- AI TUTOR MODAL (student) -->
+<div class="modal-overlay" id="aiHelpModal">
+  <div class="modal-box ai-help-box" role="dialog" aria-modal="true" aria-labelledby="aiHelpTitle">
+    <button type="button" class="modal-close" id="aiHelpClose" aria-label="Close">✕</button>
+    <div class="ai-kicker">✨ AI tutor</div>
+    <h3 id="aiHelpTitle">Explain this question</h3>
+    <details class="ai-orig-wrap"><summary>The original question</summary><div class="ai-orig" id="aiHelpOrig"></div></details>
+    <div id="aiHelpBody" class="ai-help-body"></div>
+    <div class="ai-foot">
+      <span class="ai-left" id="aiHelpLeft"></span>
+      <div class="ai-actions" id="aiHelpActions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Code the admin copies into Supabase (AI & Parent Reports tab) -->
+<script type="text/plain" id="airSrcSql">
+-- =====================================================================
+--  AI + daily parent reports — run ONCE in Supabase → SQL Editor
+-- =====================================================================
+
+-- Three new tables, same shape as the rest of the site (id + data).
+create table if not exists ai_usage       (id text primary key, data jsonb, created_at timestamptz default now());
+create table if not exists parent_reports (id text primary key, data jsonb, created_at timestamptz default now());
+create table if not exists app_settings   (id text primary key, data jsonb, created_at timestamptz default now());
+
+alter table ai_usage       enable row level security;
+alter table parent_reports enable row level security;
+alter table app_settings   enable row level security;
+
+-- The website may READ these (usage numbers, send log, settings) but can
+-- never write them — only the two server functions can. That's what stops
+-- anyone from resetting their own AI limit or switching reports off.
+drop policy if exists "read ai_usage" on ai_usage;
+drop policy if exists "read parent_reports" on parent_reports;
+drop policy if exists "read app_settings" on app_settings;
+create policy "read ai_usage"       on ai_usage       for select using (true);
+create policy "read parent_reports" on parent_reports for select using (true);
+create policy "read app_settings"   on app_settings   for select using (true);
+</script>
+<script type="text/plain" id="airSrcAiTutor">
+// =====================================================================
+//  ai-tutor — Supabase Edge Function for Mr. Mohamed Ibrahim's site
+//
+//  Talks to Google Gemini on the website's behalf, so the Gemini key
+//  never appears in index.html. Also enforces the daily AI limits:
+//    • per student  (default 20 uses a day)
+//    • whole site   (default 1000 uses a day) — the real bill guard,
+//      because nobody can get around it by inventing usernames.
+//
+//  Secrets to set (Edge Functions → Secrets):
+//    GEMINI_API_KEY   your key from aistudio.google.com   (required)
+//    ADMIN_KEY        any long password you choose         (required)
+//  Optional:
+//    GEMINI_MODEL     default gemini-3.1-flash-lite
+//
+//  Deploy with "Verify JWT" switched OFF (the site uses the new
+//  publishable key, which isn't a JWT).
+// =====================================================================
+
+const env = (k: string, d = ""): string => {
+  try { return (globalThis as any).Deno?.env?.get(k) ?? d; } catch { return d; }
+};
+
+const CORS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-key",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+function reply(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...CORS, "Content-Type": "application/json" },
+  });
+}
+
+// ---------------------------------------------------------------------
+//  Database (plain REST calls — same tables the website uses: id + data)
+// ---------------------------------------------------------------------
+function dbHeaders(): Record<string, string> {
+  const key = env("SERVICE_KEY") || env("SUPABASE_SERVICE_ROLE_KEY");
+  const h: Record<string, string> = { apikey: key, "Content-Type": "application/json" };
+  if (key.startsWith("eyJ")) h.Authorization = `Bearer ${key}`;
+  return h;
+}
+function restUrl(path: string): string {
+  return `${env("SUPABASE_URL").replace(/\/$/, "")}/rest/v1/${path}`;
+}
+async function dbGet(table: string, id: string): Promise<any | null> {
+  const r = await fetch(restUrl(`${table}?select=data&id=eq.${encodeURIComponent(id)}`), { headers: dbHeaders() });
+  if (!r.ok) throw new Error(`db read ${table} failed (${r.status})`);
+  const rows = await r.json();
+  return rows.length ? rows[0].data : null;
+}
+async function dbQuery(table: string, query: string): Promise<any[]> {
+  const r = await fetch(restUrl(`${table}?select=data&${query}`), { headers: dbHeaders() });
+  if (!r.ok) throw new Error(`db query ${table} failed (${r.status})`);
+  return (await r.json()).map((row: any) => row.data);
+}
+async function dbSet(table: string, id: string, data: unknown): Promise<void> {
+  const r = await fetch(restUrl(table), {
+    method: "POST",
+    headers: { ...dbHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ id, data }),
+  });
+  if (!r.ok) throw new Error(`db write ${table} failed (${r.status})`);
+}
+
+// ---------------------------------------------------------------------
+//  Settings (written from the admin panel through parent-reports)
+// ---------------------------------------------------------------------
+export const AI_DEFAULTS = {
+  enabled: false, // off until the admin switches it on
+  studentCap: 20,
+  globalCap: 1000,
+  language: "english", // english | arabic | mixed
+};
+async function aiSettings() {
+  let s: any = null;
+  try { s = await dbGet("app_settings", "ai"); } catch { /* table missing → defaults */ }
+  return { ...AI_DEFAULTS, ...(s || {}) };
+}
+
+// The day in Cairo, so limits reset at local midnight, not UTC midnight.
+export function cairoDay(d = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(d);
+}
+
+const norm = (s: unknown) => String(s ?? "").trim().toLowerCase();
+
+async function findApprovedStudent(username: string): Promise<any | null> {
+  const u = norm(username);
+  if (!u) return null;
+  // ilike without wildcards is a case-insensitive exact match; _ and % are
+  // escaped so a username can't be used as a pattern.
+  const safe = u.replace(/[\\%_]/g, (c) => "\\" + c);
+  const rows = await dbQuery("students", `data->>username=ilike.${encodeURIComponent(safe)}&limit=5`);
+  return rows.find((s) => norm(s.username) === u && (s.status || "approved") === "approved") || null;
+}
+
+// ---------------------------------------------------------------------
+//  Gemini
+// ---------------------------------------------------------------------
+type Usage = { inTok: number; outTok: number };
+
+function languageRule(lang: string): string {
+  if (lang === "arabic") return "Write the explanation in simple Egyptian Arabic. Keep numbers, variables and math symbols in their normal form.";
+  if (lang === "mixed") return "Write in simple English, and add a short Egyptian Arabic summary of the key idea at the end.";
+  return "Write in simple, clear English suitable for a high-school student whose first language is Arabic.";
+}
+
+const STYLE_RULES = [
+  "Never use LaTeX or $ signs. Write math in plain text with symbols like x², √, ×, ÷, ≤, π, and fractions like 3/4.",
+  "Keep it short: numbered steps, one idea per line.",
+].join(" ");
+
+async function callGemini(parts: any[], opts: { json?: boolean; thinking?: string; temperature?: number }, usage: Usage): Promise<string> {
+  const key = env("GEMINI_API_KEY");
+  if (!key) throw new Error("GEMINI_API_KEY is not set");
+  const model = env("GEMINI_MODEL", "gemini-3.1-flash-lite");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+  const generationConfig: any = {};
+  if (opts.json) generationConfig.responseMimeType = "application/json";
+  if (opts.temperature != null) generationConfig.temperature = opts.temperature;
+  if (opts.thinking) generationConfig.thinkingConfig = { thinkingLevel: opts.thinking };
+  const body: any = { contents: [{ role: "user", parts }], generationConfig };
+
+  const send = () => fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+    body: JSON.stringify(body),
+  });
+  let r = await send();
+  if (r.status === 400 && generationConfig.thinkingConfig) {
+    // Older models don't know thinkingLevel — retry once without it.
+    const t = await r.text();
+    if (/thinking/i.test(t)) { delete generationConfig.thinkingConfig; r = await send(); }
+    else throw new Error(`Gemini refused the request: ${t.slice(0, 300)}`);
+  }
+  if (!r.ok) throw new Error(`Gemini error ${r.status}: ${(await r.text()).slice(0, 300)}`);
+  const data = await r.json();
+  const um = data.usageMetadata || {};
+  usage.inTok += um.promptTokenCount || 0;
+  usage.outTok += (um.candidatesTokenCount || 0) + (um.thoughtsTokenCount || 0);
+  const cand = (data.candidates || [])[0];
+  const text = ((cand && cand.content && cand.content.parts) || [])
+    .filter((p: any) => !p.thought && typeof p.text === "string")
+    .map((p: any) => p.text).join("");
+  if (!text) throw new Error("Gemini sent back an empty answer");
+  return text;
+}
+
+export function parseJson(text: string): any {
+  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  try { return JSON.parse(cleaned); } catch { /* fall through */ }
+  const m = cleaned.match(/[\[{][\s\S]*[\]}]/);
+  if (m) return JSON.parse(m[0]);
+  throw new Error("AI answer wasn't valid JSON");
+}
+
+async function imagePart(url: string | null | undefined): Promise<any | null> {
+  if (!url || !/^https?:\/\//.test(url)) return null;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const type = (r.headers.get("content-type") || "image/jpeg").split(";")[0];
+    if (!type.startsWith("image/")) return null;
+    const buf = new Uint8Array(await r.arrayBuffer());
+    if (buf.length > 4_000_000) return null;
+    let bin = "";
+    for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+    return { inlineData: { mimeType: type, data: btoa(bin) } };
+  } catch { return null; }
+}
+
+const LETTERS = ["A", "B", "C", "D"];
+
+export function describeQuestion(q: any): string {
+  const lines: string[] = [];
+  if (q.lesson) lines.push(`Topic: ${q.lesson}`);
+  lines.push(`Question: ${q.text && q.text !== "(question)" && q.text !== "(question with image)" ? q.text : "(see the attached image)"}`);
+  const opts: string[] = Array.isArray(q.options) ? q.options : [];
+  if (opts.length) lines.push("Choices:\n" + opts.map((o, i) => `${LETTERS[i] || i + 1}) ${o || "(image choice)"}`).join("\n"));
+  return lines.join("\n");
+}
+
+export function validQuestion(q: any): boolean {
+  return q && typeof q.text === "string" && q.text.trim().length > 0 &&
+    Array.isArray(q.options) && q.options.length === 4 &&
+    q.options.every((o: any) => String(o ?? "").trim().length > 0) &&
+    new Set(q.options.map((o: any) => String(o).trim())).size === 4 &&
+    Number.isInteger(q.correct) && q.correct >= 0 && q.correct <= 3;
+}
+
+function cleanQuestion(q: any, lesson?: string) {
+  return {
+    lesson: String(q.lesson || lesson || "General").slice(0, 80),
+    text: String(q.text).trim(),
+    options: q.options.map((o: any) => String(o).trim()),
+    correct: Number(q.correct),
+    explanation: String(q.explanation || "").trim(),
+  };
+}
+
+// Solves questions WITHOUT seeing the intended answer. A question survives
+// only if this independent solve lands on the same choice.
+async function solveIndependently(questions: any[], usage: Usage): Promise<number[]> {
+  const prompt = [
+    "Solve each multiple-choice math question below carefully. Work it out yourself.",
+    'Reply with JSON only: {"answers":[...]} — one entry per question, in order, each the index 0-3 of the single correct choice (0=A, 1=B, 2=C, 3=D), or -1 if no choice is correct or more than one is.',
+    "",
+    ...questions.map((q, i) => `#${i + 1}\n${q.text}\n` + q.options.map((o: string, j: number) => `${LETTERS[j]}) ${o}`).join("\n")),
+  ].join("\n");
+  const out = parseJson(await callGemini([{ text: prompt }], { json: true, thinking: "medium", temperature: 0 }, usage));
+  const arr = Array.isArray(out) ? out : out.answers;
+  return Array.isArray(arr) ? arr.map((n: any) => Number(n)) : [];
+}
+
+async function generateQuestions(spec: {
+  count: number; source?: any; image?: any; topic?: string; lesson?: string; difficulty?: string; style?: string; notes?: string; language: string;
+}, usage: Usage): Promise<any[]> {
+  const intro = spec.source
+    ? [
+      "A student got this question wrong:",
+      describeQuestion(spec.source),
+      "",
+      `Write ${spec.count} NEW question${spec.count > 1 ? "s" : ""} that test exactly the same skill, at the same difficulty, with different numbers and wording. Do not copy the original.`,
+    ]
+    : [
+      `Write ${spec.count} multiple-choice math question${spec.count > 1 ? "s" : ""}.`,
+      `Topic / skill: ${spec.topic || spec.lesson || "general math"}`,
+      `Difficulty: ${spec.difficulty || "mixed"}`,
+      `Style: ${spec.style || "SAT / EST math"}`,
+      spec.notes ? `Teacher's notes: ${spec.notes}` : "",
+      "Make the questions different from each other.",
+    ];
+  const prompt = [
+    ...intro,
+    "",
+    "Rules:",
+    "- Exactly 4 choices, exactly ONE correct. Wrong choices should be the answers a student gets from a common mistake.",
+    "- Every question must be fully solvable from its text alone (no pictures, no graphs).",
+    "- Double-check the arithmetic of the correct choice.",
+    `- ${STYLE_RULES}`,
+    `- The explanation: ${languageRule(spec.language)} Show the working in 2-5 short steps.`,
+    "",
+    'Reply with JSON only: {"questions":[{"text":"...","options":["...","...","...","..."],"correct":0,"explanation":"..."}]} where correct is the index 0-3.',
+  ].filter((l) => l !== "").join("\n");
+  const parts: any[] = [{ text: prompt }];
+  if (spec.image) parts.push(spec.image);
+  const out = parseJson(await callGemini(parts, { json: true, thinking: "low", temperature: 0.9 }, usage));
+  const list = Array.isArray(out) ? out : out.questions;
+  return (Array.isArray(list) ? list : []).filter(validQuestion).map((q: any) => cleanQuestion(q, spec.lesson || spec.source?.lesson));
+}
+
+async function generateVerified(spec: Parameters<typeof generateQuestions>[0], usage: Usage, rounds = 2) {
+  const kept: any[] = [];
+  let dropped = 0;
+  for (let round = 0; round < rounds && kept.length < spec.count; round++) {
+    const need = spec.count - kept.length;
+    const fresh = await generateQuestions({ ...spec, count: need }, usage);
+    if (!fresh.length) continue;
+    const answers = await solveIndependently(fresh, usage);
+    fresh.forEach((q, i) => {
+      const seen = new Set(kept.map((k) => k.text.toLowerCase()));
+      if (answers[i] === q.correct && !seen.has(q.text.toLowerCase())) kept.push(q);
+      else dropped++;
+    });
+  }
+  return { questions: kept.slice(0, spec.count), dropped };
+}
+
+// ---------------------------------------------------------------------
+//  Usage counters (ai_usage table: one row per student per day + a
+//  __total row per day, which the admin panel reads for cost)
+// ---------------------------------------------------------------------
+async function readUsage(day: string, username: string) {
+  const [mine, total] = await Promise.all([
+    dbGet("ai_usage", `${day}:${username}`), dbGet("ai_usage", `${day}:__total`),
+  ]);
+  return {
+    mine: mine || { day, username, uses: 0, explain: 0, similar: 0, solved: 0, solvedCorrect: 0, inTok: 0, outTok: 0 },
+    total: total || { day, username: "__total", uses: 0, drafts: 0, draftedQuestions: 0, inTok: 0, outTok: 0 },
+  };
+}
+
+async function recordUsage(day: string, username: string, kind: string, usage: Usage, extra: Record<string, number> = {}) {
+  const { mine, total } = await readUsage(day, username || "__admin");
+  const bump = (o: any, k: string, n = 1) => { o[k] = (o[k] || 0) + n; };
+  if (username) {
+    bump(mine, "uses"); bump(mine, kind); bump(mine, "inTok", usage.inTok); bump(mine, "outTok", usage.outTok);
+    mine.last = new Date().toISOString();
+    await dbSet("ai_usage", `${day}:${username}`, mine);
+  }
+  bump(total, username ? "uses" : "drafts");
+  for (const [k, v] of Object.entries(extra)) bump(total, k, v);
+  bump(total, "inTok", usage.inTok); bump(total, "outTok", usage.outTok);
+  total.last = new Date().toISOString();
+  await dbSet("ai_usage", `${day}:__total`, total);
+  return mine;
+}
+
+// ---------------------------------------------------------------------
+//  Request handler
+// ---------------------------------------------------------------------
+export async function handle(req: Request): Promise<Response> {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return reply({ error: "POST only" }, 405);
+
+  let body: any;
+  try { body = await req.json(); } catch { return reply({ error: "bad request" }, 400); }
+  const action = String(body.action || "");
+  const settings = await aiSettings();
+  const day = cairoDay();
+
+  try {
+    // ---- teacher drafts questions for homework (admin key required) ----
+    if (action === "draft") {
+      const adminKey = env("ADMIN_KEY");
+      if (!adminKey || req.headers.get("x-admin-key") !== adminKey) return reply({ error: "admin-key" }, 401);
+      const { total } = await readUsage(day, "__admin");
+      if ((total.uses || 0) + (total.drafts || 0) >= settings.globalCap) return reply({ error: "global-cap" }, 429);
+      const usage: Usage = { inTok: 0, outTok: 0 };
+      const count = Math.max(1, Math.min(15, Number(body.count) || 5));
+      const result = await generateVerified({
+        count, topic: String(body.topic || "").slice(0, 200), lesson: String(body.lesson || "").slice(0, 80),
+        difficulty: String(body.difficulty || "mixed"), style: String(body.style || "SAT / EST math"),
+        notes: String(body.notes || "").slice(0, 500), language: settings.language,
+      }, usage, 3);
+      await recordUsage(day, "", "draft", usage, { draftedQuestions: result.questions.length });
+      return reply(result);
+    }
+
+    // ---- everything below is a student action ----
+    const username = norm(body.username);
+    if (!username) return reply({ error: "no-user" }, 400);
+    const student = await findApprovedStudent(username);
+    if (!student) return reply({ error: "not-a-student" }, 403);
+
+    const { mine, total } = await readUsage(day, username);
+    const left = Math.max(0, settings.studentCap - (mine.uses || 0));
+
+    if (action === "status") {
+      return reply({ enabled: settings.enabled, left, cap: settings.studentCap });
+    }
+    if (!settings.enabled) return reply({ error: "disabled" }, 403);
+
+    // Logs how the student did on an AI practice question — free, no Gemini call.
+    if (action === "result") {
+      mine.solved = (mine.solved || 0) + 1;
+      if (body.correct === true) mine.solvedCorrect = (mine.solvedCorrect || 0) + 1;
+      await dbSet("ai_usage", `${day}:${username}`, mine);
+      return reply({ ok: true, left });
+    }
+
+    if (action !== "explain" && action !== "similar") return reply({ error: "unknown action" }, 400);
+    if (left <= 0) return reply({ error: "student-cap", left: 0, cap: settings.studentCap }, 429);
+    if ((total.uses || 0) + (total.drafts || 0) >= settings.globalCap) return reply({ error: "global-cap", left }, 429);
+
+    const mistake = await dbGet("mistakes", String(body.mistakeId || ""));
+    if (!mistake || norm(mistake.username) !== username) return reply({ error: "no-mistake" }, 404);
+    const image = await imagePart(mistake.image);
+    const usage: Usage = { inTok: 0, outTok: 0 };
+
+    if (action === "explain") {
+      const opts: string[] = Array.isArray(mistake.options) ? mistake.options : [];
+      const chosen = mistake.chosenAnswer != null && opts[mistake.chosenAnswer] != null ? `${LETTERS[mistake.chosenAnswer]}) ${opts[mistake.chosenAnswer]}` : null;
+      const correct = mistake.correctAnswer != null && opts[mistake.correctAnswer] != null ? `${LETTERS[mistake.correctAnswer]}) ${opts[mistake.correctAnswer]}` : null;
+      const prompt = [
+        "You are a friendly math tutor working for Mr. Mohamed Ibrahim. A student got this question wrong.",
+        describeQuestion(mistake),
+        chosen ? `The student chose: ${chosen}` : "",
+        correct ? `The correct answer is: ${correct}` : "Work out the correct answer yourself.",
+        "",
+        "Explain:",
+        "1. The key idea the question is testing (one line).",
+        "2. How to solve it, step by step.",
+        chosen ? "3. The likely mistake that leads to the student's choice, and how to avoid it next time." : "3. The most common trap in this kind of question.",
+        "",
+        languageRule(settings.language),
+        STYLE_RULES,
+        "You may use **bold** for the final answer. No other markdown, no headings.",
+      ].filter(Boolean).join("\n");
+      const parts: any[] = [{ text: prompt }];
+      if (image) parts.push(image);
+      const text = await callGemini(parts, { thinking: "low", temperature: 0.3 }, usage);
+      const after = await recordUsage(day, username, "explain", usage);
+      return reply({ text: text.trim(), left: Math.max(0, settings.studentCap - after.uses) });
+    }
+
+    // similar
+    const { questions } = await generateVerified({ count: 1, source: mistake, image, language: settings.language }, usage, 2);
+    if (!questions.length) {
+      // Nothing passed the double-check. Still record the tokens against
+      // the site total for cost, but don't take a use away from the student.
+      const t = (await readUsage(day, username)).total;
+      t.inTok = (t.inTok || 0) + usage.inTok; t.outTok = (t.outTok || 0) + usage.outTok;
+      await dbSet("ai_usage", `${day}:__total`, t);
+      return reply({ error: "no-question", left }, 502);
+    }
+    const after = await recordUsage(day, username, "similar", usage);
+    return reply({ question: questions[0], left: Math.max(0, settings.studentCap - after.uses) });
+  } catch (err) {
+    console.error(err);
+    return reply({ error: "server", detail: String((err as Error).message || err).slice(0, 300) }, 500);
+  }
+}
+
+if ((globalThis as any).Deno?.serve && !(globalThis as any).__AI_TUTOR_TEST__) {
+  (globalThis as any).Deno.serve(handle);
+}
+</script>
+<script type="text/plain" id="airSrcParentReports">
+// =====================================================================
+//  parent-reports — Supabase Edge Function for Mr. Mohamed Ibrahim's site
+//
+//  Once a day (at the hour chosen in the admin panel, Cairo time) sends
+//  every parent ONE WhatsApp message summing up their child's day:
+//  homework, quizzes/exams, practice, and days left to the exam.
+//  Also saves the admin panel's AI + report settings.
+//
+//  Secrets to set (Edge Functions → Secrets):
+//    ADMIN_KEY     the same password you gave ai-tutor        (required)
+//    WA_TOKEN      WhatsApp Cloud API permanent access token   (required to send)
+//    WA_PHONE_ID   WhatsApp "Phone number ID" (not the number) (required to send)
+//  Optional:
+//    WA_API_VERSION   default v23.0
+//
+//  Deploy with "Verify JWT" switched OFF. A timer in the database calls
+//  this every hour; it only sends once, at the chosen hour.
+// =====================================================================
+
+const env = (k: string, d = ""): string => {
+  try { return (globalThis as any).Deno?.env?.get(k) ?? d; } catch { return d; }
+};
+
+const CORS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-key",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+function reply(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
+}
+
+// ---------------------------------------------------------------------
+//  Database
+// ---------------------------------------------------------------------
+function dbHeaders(): Record<string, string> {
+  const key = env("SERVICE_KEY") || env("SUPABASE_SERVICE_ROLE_KEY");
+  const h: Record<string, string> = { apikey: key, "Content-Type": "application/json" };
+  if (key.startsWith("eyJ")) h.Authorization = `Bearer ${key}`;
+  return h;
+}
+function restUrl(path: string): string {
+  return `${env("SUPABASE_URL").replace(/\/$/, "")}/rest/v1/${path}`;
+}
+async function dbGet(table: string, id: string): Promise<any | null> {
+  const r = await fetch(restUrl(`${table}?select=data&id=eq.${encodeURIComponent(id)}`), { headers: dbHeaders() });
+  if (!r.ok) throw new Error(`db read ${table} failed (${r.status})`);
+  const rows = await r.json();
+  return rows.length ? rows[0].data : null;
+}
+// Pages through everything a query matches (PostgREST caps each page).
+async function dbAll(table: string, query = "", select = "data"): Promise<any[]> {
+  const out: any[] = [];
+  for (let offset = 0; offset < 100000; offset += 1000) {
+    const r = await fetch(restUrl(`${table}?select=${select}${query ? "&" + query : ""}&order=id&limit=1000&offset=${offset}`), { headers: dbHeaders() });
+    if (!r.ok) throw new Error(`db query ${table} failed (${r.status})`);
+    const rows = await r.json();
+    out.push(...rows);
+    if (rows.length < 1000) break;
+  }
+  return select === "data" ? out.map((r) => r.data) : out;
+}
+async function dbSet(table: string, id: string, data: unknown): Promise<void> {
+  const r = await fetch(restUrl(table), {
+    method: "POST",
+    headers: { ...dbHeaders(), Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ id, data }),
+  });
+  if (!r.ok) throw new Error(`db write ${table} failed (${r.status})`);
+}
+
+// ---------------------------------------------------------------------
+//  Settings
+// ---------------------------------------------------------------------
+export const REPORT_DEFAULTS = {
+  enabled: false,          // off until the admin switches it on
+  hour: 21,                // 9 PM Cairo
+  language: "ar",          // ar | en
+  includeInactive: true,   // also report days with no activity
+  templateName: "daily_report",
+  templateLang: "ar",
+};
+export const AI_DEFAULTS = { enabled: false, studentCap: 20, globalCap: 1000, language: "english" };
+
+async function getSettings() {
+  const [ai, reports, run] = await Promise.all([
+    dbGet("app_settings", "ai").catch(() => null),
+    dbGet("app_settings", "reports").catch(() => null),
+    dbGet("app_settings", "reports-run").catch(() => null),
+  ]);
+  return {
+    ai: { ...AI_DEFAULTS, ...(ai || {}) },
+    reports: { ...REPORT_DEFAULTS, ...(reports || {}) },
+    run: run || {},
+  };
+}
+
+// ---------------------------------------------------------------------
+//  Cairo time helpers (Egypt has summer time, so never hard-code +2/+3)
+// ---------------------------------------------------------------------
+function cairoParts(d: Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",
+  }).formatToParts(d);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)!.value);
+  return { y: get("year"), m: get("month"), d: get("day"), h: get("hour") };
+}
+export function cairoDay(d = new Date()): string {
+  const p = cairoParts(d);
+  return `${p.y}-${String(p.m).padStart(2, "0")}-${String(p.d).padStart(2, "0")}`;
+}
+export function cairoHour(d = new Date()): number { return cairoParts(d).h; }
+// The UTC instant when "today" began in Cairo.
+export function cairoDayStart(d = new Date()): Date {
+  const p = cairoParts(d);
+  const guess = Date.UTC(p.y, p.m - 1, p.d);
+  // Cairo is UTC+2 or UTC+3; find which offset makes local midnight.
+  for (const off of [2, 3]) {
+    const t = new Date(guess - off * 3600_000);
+    const q = cairoParts(t);
+    if (q.h === 0 && q.d === p.d) return t;
+  }
+  return new Date(guess - 2 * 3600_000);
+}
+
+const norm = (s: unknown) => String(s ?? "").trim().toLowerCase();
+
+export function waNumber(raw: unknown): string {
+  let digits = String(raw ?? "").replace(/[^\d]/g, "");
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("0")) digits = digits.slice(1);
+  if (digits.startsWith("20")) digits = digits.slice(2);
+  return digits.length >= 9 ? `20${digits}` : "";
+}
+
+// A WhatsApp template value can't contain new lines, tabs or runs of spaces.
+export function cleanParam(s: string): string {
+  const t = String(s).replace(/[\r\n\t]+/g, " ").replace(/ {2,}/g, " ").trim();
+  return (t || "—").slice(0, 900);
+}
+
+// ---------------------------------------------------------------------
+//  Building each student's day
+// ---------------------------------------------------------------------
+export const TEMPLATES: Record<string, string> = {
+  en: "Daily report for {{1}} – {{2}}\n📚 Homework: {{3}}\n📝 Quizzes & exams: {{4}}\n🎯 Practice: {{5}}\n⏳ {{6}}\n\nMr. Mohamed Ibrahim – Math",
+  ar: "التقرير اليومي لـ {{1}} – {{2}}\n📚 الواجبات: {{3}}\n📝 الاختبارات: {{4}}\n🎯 التدريب: {{5}}\n⏳ {{6}}\n\nأ. محمد إبراهيم – رياضيات",
+};
+
+function parseExamDate(v: unknown): Date | null {
+  if (!v) return null;
+  const s = String(v);
+  const d = new Date(s.length <= 10 ? s + "T00:00:00Z" : s);
+  return isNaN(d.getTime()) ? null : d;
+}
+function daysBetween(todayKey: string, exam: Date): number {
+  const a = Date.UTC(+todayKey.slice(0, 4), +todayKey.slice(5, 7) - 1, +todayKey.slice(8, 10));
+  const ek = cairoDay(new Date(exam.getTime() + 12 * 3600_000)); // date-only values are midnight UTC; nudge to mid-day
+  const b = Date.UTC(+ek.slice(0, 4), +ek.slice(5, 7) - 1, +ek.slice(8, 10));
+  return Math.round((b - a) / 864e5);
+}
+
+export type DayData = {
+  student: any;
+  hwDone: { title: string; pct: number | null }[];
+  hwDue: number;
+  exams: { title: string; pct: number | null }[];
+  newMistakes: number;
+  aiSolved: number;
+  aiCorrect: number;
+  examDays: number | null;
+};
+
+export function buildParams(d: DayData, lang: string, todayKey: string): string[] {
+  const ar = lang === "ar";
+  const name = String(d.student.fullName || d.student.name || d.student.username || "");
+  const dateLabel = new Intl.DateTimeFormat(ar ? "ar-EG" : "en-GB", {
+    timeZone: "UTC", weekday: "short", day: "numeric", month: "short",
+  }).format(new Date(todayKey + "T12:00:00Z"));
+
+  const pcts = d.hwDone.map((h) => h.pct).filter((p): p is number => typeof p === "number");
+  const avg = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
+  let hw: string;
+  if (d.hwDone.length) {
+    hw = ar
+      ? `سلّم ${d.hwDone.length} واجب اليوم${avg != null ? ` (المتوسط ${avg}%)` : ""}`
+      : `${d.hwDone.length} done today${avg != null ? ` (average ${avg}%)` : ""}`;
+    if (d.hwDue) hw += ar ? `، وباقي ${d.hwDue} لم يُسلّم` : `, ${d.hwDue} still not done`;
+  } else {
+    hw = ar ? "لم يسلّم واجبات اليوم" : "none submitted today";
+    if (d.hwDue) hw += ar ? `، وباقي ${d.hwDue} لم يُسلّم` : ` – ${d.hwDue} still not done`;
+  }
+
+  let ex: string;
+  if (d.exams.length) {
+    const shown = d.exams.slice(0, 2).map((e) => `${e.title}${e.pct != null ? ` ${Math.round(e.pct)}%` : ""}`);
+    const more = d.exams.length - shown.length;
+    ex = shown.join(" · ") + (more > 0 ? (ar ? ` و${more} آخرين` : ` +${more} more`) : "");
+  } else {
+    ex = ar ? "لا توجد اختبارات اليوم" : "none today";
+  }
+
+  const bits: string[] = [];
+  if (d.newMistakes) bits.push(ar ? `${d.newMistakes} أخطاء جديدة للمراجعة` : `${d.newMistakes} new mistake${d.newMistakes === 1 ? "" : "s"} to review`);
+  if (d.aiSolved) bits.push(ar ? `حل ${d.aiCorrect} من ${d.aiSolved} أسئلة تدريب صح` : `${d.aiCorrect}/${d.aiSolved} practice questions right`);
+  const practice = bits.length ? bits.join(ar ? "، " : " · ") : (ar ? "لا يوجد تدريب إضافي اليوم" : "no extra practice today");
+
+  let countdown: string;
+  if (d.examDays == null || d.examDays < 0) countdown = ar ? "لم يُحدد موعد الامتحان بعد" : "No exam date set yet";
+  else if (d.examDays === 0) countdown = ar ? "النهارده يوم الامتحان – بالتوفيق!" : "Exam day is today – good luck!";
+  else if (d.examDays === 1) countdown = ar ? "الامتحان بكرة!" : "The exam is tomorrow!";
+  else countdown = ar ? `باقي ${d.examDays} يوم على الامتحان` : `${d.examDays} days to the exam`;
+
+  return [name, dateLabel, hw, ex, practice, countdown].map(cleanParam);
+}
+
+export function fillTemplate(lang: string, params: string[]): string {
+  return (TEMPLATES[lang] || TEMPLATES.en).replace(/\{\{(\d)\}\}/g, (_, n) => params[Number(n) - 1] ?? "");
+}
+
+export function isActive(d: DayData): boolean {
+  return d.hwDone.length > 0 || d.exams.length > 0 || d.newMistakes > 0 || d.aiSolved > 0;
+}
+
+async function gatherDay(now = new Date()) {
+  const todayKey = cairoDay(now);
+  const startIso = cairoDayStart(now).toISOString();
+  const nowIso = now.toISOString();
+
+  const [studentsRaw, courses, homeworkIdx, attemptsToday, mistakesToday, usageToday] = await Promise.all([
+    dbAll("students"),
+    dbAll("courses").catch(() => []),
+    dbAll("homework", "id=like.idx-*"),
+    dbAll("attempts", `id=like.idx-*&data->>ts=gte.${encodeURIComponent(startIso)}`),
+    dbAll("mistakes", `data->>ts=gte.${encodeURIComponent(startIso)}`, "id,username:data->>username"),
+    dbAll("ai_usage", `id=like.${encodeURIComponent(todayKey)}:*`).catch(() => []),
+  ]);
+  const students = studentsRaw.filter((s: any) => s && !s._index && s.username && (s.status || "approved") === "approved");
+
+  const byUser = <T>(rows: T[], key: (r: T) => unknown) => {
+    const m = new Map<string, T[]>();
+    for (const r of rows) {
+      const u = norm(key(r));
+      if (!m.has(u)) m.set(u, []);
+      m.get(u)!.push(r);
+    }
+    return m;
+  };
+  const hwBy = byUser(homeworkIdx, (h: any) => h.username);
+  const atBy = byUser(attemptsToday, (a: any) => a.username);
+  const miBy = byUser(mistakesToday, (m: any) => m.username);
+  const aiBy = new Map<string, any>(usageToday.map((u: any) => [norm(u.username), u]));
+
+  const days: DayData[] = students.map((s: any) => {
+    const u = norm(s.username);
+    const hw = hwBy.get(u) || [];
+    const hwDone = hw
+      .filter((h: any) => h.status === "completed" && h.submittedAt && h.submittedAt >= startIso)
+      .map((h: any) => ({ title: String(h.title || "Homework"), pct: h.score && typeof h.score.pct === "number" ? h.score.pct : null }));
+    const hwDue = hw.filter((h: any) =>
+      h.status !== "completed" &&
+      (!h.publishAt || h.publishAt <= nowIso) &&
+      (!h.dueDate || String(h.dueDate).slice(0, 10) <= todayKey)
+    ).length;
+    const exams = (atBy.get(u) || []).map((a: any) => ({ title: String(a.examTitle || "Exam"), pct: typeof a.pct === "number" ? a.pct : null }));
+    const ai = aiBy.get(u) || {};
+    const course = courses.find((c: any) => c && c.name === s.course);
+    const exam = parseExamDate(s.examDate) || parseExamDate(course && course.examDate);
+    return {
+      student: s, hwDone, hwDue, exams,
+      newMistakes: (miBy.get(u) || []).length,
+      aiSolved: ai.solved || 0, aiCorrect: ai.solvedCorrect || 0,
+      examDays: exam ? daysBetween(todayKey, exam) : null,
+    };
+  });
+  return { todayKey, days };
+}
+
+// ---------------------------------------------------------------------
+//  WhatsApp
+// ---------------------------------------------------------------------
+async function sendWhatsApp(to: string, params: string[], templateName: string, templateLang: string) {
+  const token = env("WA_TOKEN"), phoneId = env("WA_PHONE_ID");
+  if (!token || !phoneId) return { ok: false, error: "WhatsApp isn't set up yet (WA_TOKEN / WA_PHONE_ID missing)" };
+  const r = await fetch(`https://graph.facebook.com/${env("WA_API_VERSION", "v23.0")}/${phoneId}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      messaging_product: "whatsapp",
+      to,
+      type: "template",
+      template: {
+        name: templateName,
+        language: { code: templateLang },
+        components: [{ type: "body", parameters: params.map((text) => ({ type: "text", text })) }],
+      },
+    }),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) return { ok: false, error: (data && data.error && (data.error.error_user_msg || data.error.message)) || `WhatsApp error ${r.status}` };
+  return { ok: true, id: data.messages && data.messages[0] && data.messages[0].id };
+}
+
+async function runSend(opts: { usernames?: string[]; force?: boolean; reason: string }) {
+  const { reports } = await getSettings();
+  const { todayKey, days } = await gatherDay();
+  const only = opts.usernames && opts.usernames.length ? new Set(opts.usernames.map(norm)) : null;
+  const already = new Map<string, any>(
+    (await dbAll("parent_reports", `id=like.${encodeURIComponent(todayKey)}:*`).catch(() => [])).map((r: any) => [norm(r.username), r]),
+  );
+  const results: any[] = [];
+  for (const d of days) {
+    const u = norm(d.student.username);
+    if (only && !only.has(u)) continue;
+    const to = waNumber(d.student.parentNumber);
+    const params = buildParams(d, reports.language, todayKey);
+    const base = { day: todayKey, username: d.student.username, phone: to, text: fillTemplate(reports.language, params), reason: opts.reason };
+    if (!to) { results.push({ ...base, status: "skipped", error: "no parent number" }); continue; }
+    if (!reports.includeInactive && !isActive(d) && !only) { results.push({ ...base, status: "skipped", error: "no activity today" }); continue; }
+    const prev = already.get(u);
+    if (prev && prev.status === "sent" && !opts.force) { results.push({ ...base, status: "skipped", error: "already sent today" }); continue; }
+    const res = await sendWhatsApp(to, params, reports.templateName, reports.templateLang);
+    const row = { ...base, status: res.ok ? "sent" : "failed", error: res.ok ? null : res.error, waId: res.ok ? res.id : null, at: new Date().toISOString() };
+    await dbSet("parent_reports", `${todayKey}:${u}`, row);
+    results.push(row);
+  }
+  return {
+    day: todayKey,
+    sent: results.filter((r) => r.status === "sent").length,
+    failed: results.filter((r) => r.status === "failed").length,
+    skipped: results.filter((r) => r.status === "skipped").length,
+    results,
+  };
+}
+
+// ---------------------------------------------------------------------
+//  Request handler
+// ---------------------------------------------------------------------
+const clampInt = (v: unknown, lo: number, hi: number, d: number) => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : d;
+};
+
+export async function handle(req: Request): Promise<Response> {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  if (req.method !== "POST") return reply({ error: "POST only" }, 405);
+  const adminKey = env("ADMIN_KEY");
+  if (!adminKey) return reply({ error: "ADMIN_KEY secret isn't set on this function" }, 500);
+  if (req.headers.get("x-admin-key") !== adminKey) return reply({ error: "admin-key" }, 401);
+
+  let body: any;
+  try { body = await req.json(); } catch { body = {}; }
+  const action = String(body.action || "");
+
+  try {
+    if (action === "check") {
+      const s = await getSettings();
+      return reply({
+        ok: true,
+        gemini: !!env("GEMINI_API_KEY"), // secrets are shared by every function in the project
+        whatsapp: !!(env("WA_TOKEN") && env("WA_PHONE_ID")),
+        lastCronAt: s.run.lastCronAt || null,
+        lastRunDay: s.run.lastRunDay || null,
+        settings: { ai: s.ai, reports: s.reports },
+        cairoHour: cairoHour(),
+        today: cairoDay(),
+      });
+    }
+
+    if (action === "settings-set") {
+      const cur = await getSettings();
+      const a = body.ai || {}, r = body.reports || {};
+      const ai = {
+        enabled: a.enabled == null ? cur.ai.enabled : !!a.enabled,
+        studentCap: clampInt(a.studentCap, 1, 200, cur.ai.studentCap),
+        globalCap: clampInt(a.globalCap, 10, 20000, cur.ai.globalCap),
+        language: ["english", "arabic", "mixed"].includes(a.language) ? a.language : cur.ai.language,
+      };
+      const reports = {
+        enabled: r.enabled == null ? cur.reports.enabled : !!r.enabled,
+        hour: clampInt(r.hour, 0, 23, cur.reports.hour),
+        language: ["ar", "en"].includes(r.language) ? r.language : cur.reports.language,
+        includeInactive: r.includeInactive == null ? cur.reports.includeInactive : !!r.includeInactive,
+        templateName: /^[a-z0-9_]{1,512}$/.test(String(r.templateName || "")) ? r.templateName : cur.reports.templateName,
+        templateLang: /^[a-z]{2}(_[A-Z]{2})?$/.test(String(r.templateLang || "")) ? r.templateLang : cur.reports.templateLang,
+      };
+      await Promise.all([dbSet("app_settings", "ai", ai), dbSet("app_settings", "reports", reports)]);
+      return reply({ ok: true, ai, reports });
+    }
+
+    if (action === "preview") {
+      const { reports } = await getSettings();
+      const { todayKey, days } = await gatherDay();
+      return reply({
+        day: todayKey,
+        language: reports.language,
+        items: days.map((d) => {
+          const params = buildParams(d, reports.language, todayKey);
+          const phone = waNumber(d.student.parentNumber);
+          return {
+            username: d.student.username, phone, active: isActive(d),
+            willSend: !!phone && (reports.includeInactive || isActive(d)),
+            params, text: fillTemplate(reports.language, params),
+          };
+        }),
+      });
+    }
+
+    if (action === "test") {
+      const to = waNumber(body.phone);
+      if (!to) return reply({ error: "Enter a valid Egyptian mobile number" }, 400);
+      const { reports } = await getSettings();
+      const { todayKey, days } = await gatherDay();
+      const pick = days.find((d) => norm(d.student.username) === norm(body.username)) || days[0];
+      const params = pick
+        ? buildParams(pick, reports.language, todayKey)
+        : buildParams({ student: { username: "Test student" }, hwDone: [{ title: "Algebra", pct: 90 }], hwDue: 0, exams: [], newMistakes: 2, aiSolved: 3, aiCorrect: 2, examDays: 30 }, reports.language, todayKey);
+      const res = await sendWhatsApp(to, params, reports.templateName, reports.templateLang);
+      await dbSet("parent_reports", `${todayKey}:~test-${Date.now()}`, {
+        day: todayKey, username: "(test)", phone: to, text: fillTemplate(reports.language, params),
+        status: res.ok ? "sent" : "failed", error: res.ok ? null : res.error, at: new Date().toISOString(), reason: "test",
+      });
+      return reply(res.ok ? { ok: true, to } : { error: res.error }, res.ok ? 200 : 502);
+    }
+
+    if (action === "send") {
+      const usernames = Array.isArray(body.usernames) ? body.usernames.map(String) : undefined;
+      return reply(await runSend({ usernames, force: !!body.force, reason: "manual" }));
+    }
+
+    if (action === "cron") {
+      const s = await getSettings();
+      const today = cairoDay(), hour = cairoHour();
+      const run = { ...s.run, lastCronAt: new Date().toISOString() };
+      if (!s.reports.enabled || hour < s.reports.hour || s.run.lastRunDay === today) {
+        await dbSet("app_settings", "reports-run", run);
+        return reply({ ok: true, ran: false, reason: !s.reports.enabled ? "reports are switched off" : s.run.lastRunDay === today ? "already sent today" : `waiting for ${s.reports.hour}:00` });
+      }
+      // Mark the day first, so an overlapping timer call can't double-send.
+      await dbSet("app_settings", "reports-run", { ...run, lastRunDay: today });
+      const result = await runSend({ reason: "daily" });
+      await dbSet("app_settings", "reports-run", { ...run, lastRunDay: today, lastResult: { sent: result.sent, failed: result.failed, skipped: result.skipped } });
+      return reply({ ok: true, ran: true, sent: result.sent, failed: result.failed, skipped: result.skipped });
+    }
+
+    return reply({ error: "unknown action" }, 400);
+  } catch (err) {
+    console.error(err);
+    return reply({ error: "server", detail: String((err as Error).message || err).slice(0, 300) }, 500);
+  }
+}
+
+if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TEST__) {
+  (globalThis as any).Deno.serve(handle);
+}
+</script>
+
 <!-- EXAM TAKING MODAL -->
 <div class="modal-overlay" id="examModal">
   <div class="modal-box exam-modal-box">
@@ -4250,6 +5318,7 @@
       <button class="admin-tab" data-tab="assistantAcctsPanel" data-roles="admin">Assistants</button>
       <button class="admin-tab" data-tab="assistantActivityPanel" data-roles="admin">📊 Assistant Activity</button>
       <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant,act-admin">Weekly Updates</button>
+      <button class="admin-tab" data-tab="aiReportsPanel" data-roles="admin">🤖 AI &amp; Parent Reports</button>
     </div>
 
     <div class="admin-panel active" id="adminOverviewPanel">
@@ -5108,6 +6177,91 @@
       <div id="weeklyUpdatesListWrap">
         <div class="admin-empty">Loading…</div>
       </div>
+    </div>
+
+    <div class="admin-panel" id="aiReportsPanel">
+      <div class="admin-note">Two things live here: the <b>AI tutor</b> (students tap "Explain with AI" or "Try a similar one" on their mistakes, and you can draft questions in the Homework and Exams editors) and the <b>daily parent report</b> (one WhatsApp message per parent every evening). Both run on small server functions in Supabase, so your Gemini and WhatsApp keys never appear in the website.</div>
+
+      <section class="air-card">
+        <div class="air-card-head">
+          <h3>Status</h3>
+          <button type="button" class="btn btn-ghost air-small" id="airRefresh">Refresh</button>
+        </div>
+        <div class="air-key-row">
+          <label class="field-label" for="airAdminKey">Admin key (the <code>ADMIN_KEY</code> secret)</label>
+          <div class="air-inline">
+            <input type="password" id="airAdminKey" autocomplete="off" spellcheck="false" placeholder="Same password you saved in Supabase">
+            <button type="button" class="btn btn-ghost air-small" id="airShowKey">Show</button>
+            <button type="button" class="btn btn-primary air-small" id="airSaveKey">Save &amp; check</button>
+          </div>
+          <div class="air-msg" id="airKeyMsg" role="status" aria-live="polite"></div>
+          <div class="air-muted air-tight">Saved only on this device, so you'll type it once per computer or phone.</div>
+        </div>
+        <div class="air-chips" id="airStatusChips"></div>
+        <div class="air-muted" id="airStatusHint"></div>
+        <details class="air-setup" id="airSetupDetails">
+          <summary>Setup guide — 8 steps, about 30 minutes, no terminal needed</summary>
+          <ol class="air-steps" id="airSteps"></ol>
+        </details>
+      </section>
+
+      <div class="air-grid">
+        <section class="air-card">
+          <div class="air-card-head"><h3>✨ AI tutor</h3></div>
+          <label class="air-toggle"><input type="checkbox" id="airAiEnabled"> <span>AI help for students</span></label>
+          <div class="air-fields">
+            <label><span class="field-label">Uses per student per day</span><input type="number" id="airStudentCap" min="1" max="200" value="20"></label>
+            <label><span class="field-label">Uses per day, whole site</span><input type="number" id="airGlobalCap" min="10" max="20000" value="1000"></label>
+            <label class="air-span2"><span class="field-label">Explanation language</span>
+              <select id="airAiLang">
+                <option value="english">English</option>
+                <option value="arabic">Egyptian Arabic</option>
+                <option value="mixed">English + short Arabic summary</option>
+              </select></label>
+          </div>
+          <div class="air-muted air-tight" id="airCapHint"></div>
+          <div class="air-muted air-tight">The whole-site limit is your bill guard: once it's reached, the AI stops until midnight, whatever happens.</div>
+          <div class="air-save-row"><button type="button" class="btn btn-primary air-small" id="airSaveAi">Save AI settings</button><span class="air-msg" id="airSaveAiMsg" role="status" aria-live="polite"></span></div>
+        </section>
+
+        <section class="air-card">
+          <div class="air-card-head"><h3>📲 Daily parent report</h3></div>
+          <label class="air-toggle"><input type="checkbox" id="airRepEnabled"> <span>Send daily reports automatically</span></label>
+          <div class="air-fields">
+            <label><span class="field-label">Send at (Cairo time)</span>
+              <select id="airRepHour">
+                <option value="16">4:00 PM</option><option value="17">5:00 PM</option><option value="18">6:00 PM</option><option value="19">7:00 PM</option>
+                <option value="20">8:00 PM</option><option value="21">9:00 PM</option><option value="22">10:00 PM</option><option value="23">11:00 PM</option>
+              </select></label>
+            <label><span class="field-label">Message language</span>
+              <select id="airRepLang"><option value="ar">Arabic</option><option value="en">English</option></select></label>
+            <label><span class="field-label">WhatsApp template name</span><input type="text" id="airRepTemplate" value="daily_report" spellcheck="false"></label>
+            <label><span class="field-label">Template language code</span><input type="text" id="airRepTemplateLang" value="ar" spellcheck="false"></label>
+          </div>
+          <label class="air-toggle"><input type="checkbox" id="airRepInactive"> <span>Also send on days the student did nothing</span></label>
+          <div class="air-save-row"><button type="button" class="btn btn-primary air-small" id="airSaveRep">Save report settings</button><span class="air-msg" id="airSaveRepMsg" role="status" aria-live="polite"></span></div>
+        </section>
+      </div>
+
+      <section class="air-card">
+        <div class="air-card-head"><h3>Usage &amp; cost</h3></div>
+        <div id="airUsage"><div class="air-empty">Loading…</div></div>
+      </section>
+
+      <section class="air-card">
+        <div class="air-card-head"><h3>Today's parent reports</h3></div>
+        <div class="air-inline air-test-row">
+          <input type="tel" id="airTestPhone" placeholder="Your WhatsApp number, e.g. 010 1234 5678" inputmode="tel">
+          <button type="button" class="btn btn-ghost air-small" id="airTestBtn">Send me a test</button>
+        </div>
+        <div class="air-msg" id="airTestMsg" role="status" aria-live="polite"></div>
+        <div class="air-actions">
+          <button type="button" class="btn btn-ghost air-small" id="airPreviewBtn">👀 Preview today's reports</button>
+          <button type="button" class="btn btn-primary air-small" id="airSendAll">📤 Send all now</button>
+        </div>
+        <div class="air-msg" id="airReportMsg" role="status" aria-live="polite"></div>
+        <div id="airReportList"></div>
+      </section>
     </div>
   </div>
 </div>
@@ -6537,6 +7691,7 @@
       if(tab.dataset.tab === 'assistantAcctsPanel'){ renderAssistantAcctsTable(); }
       if(tab.dataset.tab === 'assistantActivityPanel'){ renderAssistantActivity(); }
       if(tab.dataset.tab === 'weeklyUpdatesPanel'){ renderWeeklyUpdates(); }
+      if(tab.dataset.tab === 'aiReportsPanel' && typeof renderAiReportsPanel === 'function'){ renderAiReportsPanel(); }
     });
   });
 
@@ -15666,6 +16821,7 @@
     if(!currentStudent) return;
     const list = document.getElementById('mistakeHistoryList');
     const rows = await gatherAllMistakeRows(currentStudent.username);
+    if(typeof aiRefreshEnabled === 'function') await aiRefreshEnabled();
 
     await renderDailyMistakeSummary(rows);
 
@@ -15726,9 +16882,11 @@
         <div class="mistake-row-actions">
           <button class="toggle-mastered-btn ${row.masteredByStudent ? 'mastered-on' : ''}">${row.masteredByStudent ? '✓ Mastered' : 'Mark as mastered'}</button>
           ${hasAnswer ? `<button class="still-confused-btn ${row.stillConfused ? 'confused-on' : ''}">${row.stillConfused ? '🙋 Follow-up sent' : "I still don't get it"}</button>` : ''}
+          ${typeof aiMistakeButtonsHtml === 'function' ? aiMistakeButtonsHtml(row) : ''}
         </div>
       `;
       item.querySelector('.view-mistake-btn').addEventListener('click', ()=> openQuestionView(row));
+      if(typeof aiWireMistakeButtons === 'function') aiWireMistakeButtons(item, row);
 
       item.querySelector('.toggle-mastered-btn').addEventListener('click', async (e)=>{
         const btn = e.currentTarget;
@@ -21003,6 +22161,623 @@
 
     plotGraphFromInput(); // draw the default example on load
   }
+</script>
+<script>
+  /* =====================================================================
+     AI TUTOR + DAILY PARENT REPORTS
+     The website never holds the Gemini or WhatsApp keys — it calls two
+     Supabase Edge Functions (ai-tutor, parent-reports) that do. See the
+     "🤖 AI & Parent Reports" admin tab for the step-by-step setup.
+     ===================================================================== */
+  const AI_FN_BASE = `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1`;
+  const AI_ADMIN_KEY_STORE = 'mi-admin-fn-key';
+  const AI_PRICE_IN = 0.25, AI_PRICE_OUT = 1.50;   // Gemini 3.1 Flash-Lite, USD per 1M tokens
+  const WA_PRICE_UTILITY = 0.0036;                 // USD per utility message to Egypt
+  const AI_EGP_STORE = 'mi-usd-egp';
+
+  function aiAdminKey(){ try{ return localStorage.getItem(AI_ADMIN_KEY_STORE) || ''; }catch(e){ return ''; } }
+  function aiSetAdminKey(k){ try{ if(k) localStorage.setItem(AI_ADMIN_KEY_STORE, k); else localStorage.removeItem(AI_ADMIN_KEY_STORE); }catch(e){} }
+  function aiUsdEgp(){ try{ const v = Number(localStorage.getItem(AI_EGP_STORE)); return v > 0 ? v : 50; }catch(e){ return 50; } }
+
+  // One place that talks to the server functions and turns every failure
+  // into something the page can explain in plain words.
+  async function callAiFunction(name, body, withAdminKey){
+    const headers = { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY };
+    if(withAdminKey) headers['x-admin-key'] = aiAdminKey();
+    let res;
+    try{
+      res = await fetch(`${AI_FN_BASE}/${name}`, { method: 'POST', headers, body: JSON.stringify(body || {}) });
+    }catch(err){
+      return { ok: false, status: 0, body: { error: 'network' } };
+    }
+    let data = {};
+    try{ data = await res.json(); }catch(e){}
+    if(!data || typeof data !== 'object') data = {};
+    // Supabase's own gateway answers (function missing / JWT check still on)
+    // don't use our error codes — translate them.
+    if(res.status === 404 && !data.error) data.error = 'not-deployed';
+    if(res.status === 401 && !data.error && /jwt|authorization/i.test(JSON.stringify(data))) data.error = 'jwt-on';
+    return { ok: res.ok, status: res.status, body: data };
+  }
+
+  function aiErrorText(error, extra){
+    const cap = extra && extra.cap;
+    switch(error){
+      case 'student-cap': return `You've used all ${cap || 'your'} AI helps for today. They come back at midnight 🌙`;
+      case 'global-cap': return 'The AI tutor has reached today\'s limit for the whole class. Try again tomorrow, or tap "I still don\'t get it" so your coach explains it.';
+      case 'disabled': return 'AI help is switched off right now.';
+      case 'no-question': return 'I couldn\'t make a new question I was 100% sure was correct. Please try again.';
+      case 'no-mistake': return 'This question couldn\'t be found any more.';
+      case 'not-a-student': return 'Your account isn\'t approved for AI help yet.';
+      case 'network': return 'No internet connection. Check your connection and try again.';
+      case 'not-deployed': return 'AI help isn\'t set up yet.';
+      default: return 'The AI tutor had a problem. Please try again in a minute.';
+    }
+  }
+
+  // Tiny formatter: escaped text, **bold**, and line breaks kept.
+  function aiFormat(text){
+    return esc(String(text || '').trim()).replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  }
+
+  /* ---------------- student side ---------------- */
+  let aiEnabledCache = { value: false, ts: 0 };
+  async function aiRefreshEnabled(){
+    if(Date.now() - aiEnabledCache.ts < 60000) return aiEnabledCache.value;
+    const s = await dbGet('app_settings', 'ai');
+    aiEnabledCache = { value: !!(s && s.enabled), ts: Date.now() };
+    return aiEnabledCache.value;
+  }
+  function aiIsEnabledNow(){ return aiEnabledCache.value; }
+
+  const aiModal = document.getElementById('aiHelpModal');
+  const aiBody = document.getElementById('aiHelpBody');
+  const aiTitle = document.getElementById('aiHelpTitle');
+  const aiLeft = document.getElementById('aiHelpLeft');
+  const aiActions = document.getElementById('aiHelpActions');
+  const aiOrig = document.getElementById('aiHelpOrig');
+  let aiCurrentRow = null;
+  let aiBusy = false;
+
+  function aiShowLeft(left, cap){
+    if(typeof left !== 'number'){ aiLeft.textContent = ''; return; }
+    aiLeft.textContent = `${left}${cap ? ' of ' + cap : ''} AI help${left === 1 ? '' : 's'} left today`;
+    aiLeft.classList.toggle('is-low', left <= 3);
+  }
+  function aiLoading(msg){
+    aiBody.innerHTML = `<div class="ai-loading" role="status"><span class="ai-dots" aria-hidden="true"><i></i><i></i><i></i></span>${esc(msg)}</div>`;
+    aiActions.innerHTML = '';
+  }
+  function aiShowError(error, extra){
+    aiBody.innerHTML = `<div class="ai-error">${esc(aiErrorText(error, extra))}</div>`;
+    aiActions.innerHTML = `<button type="button" class="btn btn-ghost ai-act" data-ai="close">Close</button>`;
+  }
+  function aiSetActions(list){
+    aiActions.innerHTML = list.map(a => `<button type="button" class="btn ${a.primary ? 'btn-primary' : 'btn-ghost'} ai-act" data-ai="${a.id}">${esc(a.label)}</button>`).join('');
+  }
+  aiActions.addEventListener('click', (e)=>{
+    const b = e.target.closest('[data-ai]'); if(!b) return;
+    const id = b.dataset.ai;
+    if(id === 'close') closeAiHelp();
+    else if(id === 'similar') aiRunSimilar();
+    else if(id === 'explain') aiRunExplain();
+  });
+  document.getElementById('aiHelpClose').addEventListener('click', closeAiHelp);
+  aiModal.addEventListener('click', (e)=>{ if(e.target === aiModal && !aiBusy) closeAiHelp(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && aiModal.classList.contains('open')) closeAiHelp(); });
+
+  function closeAiHelp(){ aiModal.classList.remove('open'); aiCurrentRow = null; }
+
+  function openAiHelp(row, mode){
+    aiCurrentRow = row;
+    const hasText = row.text && row.text !== '(question)' && row.text !== '(question with image)';
+    aiOrig.innerHTML = `
+      <div class="ai-orig-label">${esc(row.lesson || 'General')}${row.source ? ' · ' + esc(row.source) : ''}</div>
+      ${row.image ? `<img src="${esc(row.image)}" alt="The original question" onerror="this.style.display='none'">` : ''}
+      ${hasText ? `<div class="ai-orig-text" dir="auto">${esc(row.text)}</div>` : ''}`;
+    aiShowLeft(null);
+    aiModal.classList.add('open');
+    if(mode === 'similar') aiRunSimilar(); else aiRunExplain();
+  }
+
+  async function aiRunExplain(){
+    const row = aiCurrentRow; if(!row || aiBusy) return;
+    aiBusy = true;
+    aiTitle.textContent = 'Explain this question';
+    aiLoading('Reading the question…');
+    const r = await callAiFunction('ai-tutor', { action: 'explain', username: currentStudent && currentStudent.username, mistakeId: row.id });
+    aiBusy = false;
+    if(aiCurrentRow !== row) return;
+    if(!r.ok || !r.body.text){ aiShowError(r.body.error, r.body); if(typeof r.body.left === 'number') aiShowLeft(r.body.left, r.body.cap); return; }
+    aiShowLeft(r.body.left, null);
+    aiBody.innerHTML = `
+      <div class="ai-answer" dir="auto">${aiFormat(r.body.text)}</div>
+      <div class="ai-disclaimer">AI can make mistakes. If something doesn't look right, tap "I still don't get it" on the question and your coach will explain it.</div>`;
+    aiSetActions([{ id: 'similar', label: '🔁 Try a similar one', primary: true }, { id: 'close', label: 'Done' }]);
+  }
+
+  async function aiRunSimilar(){
+    const row = aiCurrentRow; if(!row || aiBusy) return;
+    aiBusy = true;
+    aiTitle.textContent = 'Try a similar one';
+    aiLoading('Writing a new question and double-checking the answer…');
+    const r = await callAiFunction('ai-tutor', { action: 'similar', username: currentStudent && currentStudent.username, mistakeId: row.id });
+    aiBusy = false;
+    if(aiCurrentRow !== row) return;
+    const q = r.body && r.body.question;
+    if(!r.ok || !q || !Array.isArray(q.options) || q.options.length !== 4){ aiShowError(r.body.error, r.body); if(typeof r.body.left === 'number') aiShowLeft(r.body.left, r.body.cap); return; }
+    aiShowLeft(r.body.left, null);
+    const L = ['A','B','C','D'];
+    aiBody.innerHTML = `
+      <div class="ai-q-text" dir="auto">${esc(q.text)}</div>
+      <div class="ai-q-options" role="group" aria-label="Choices">
+        ${q.options.map((o, i) => `<button type="button" class="ai-q-opt" data-i="${i}"><span class="ai-q-letter">${L[i]}</span><span dir="auto">${esc(o)}</span></button>`).join('')}
+      </div>
+      <div class="ai-q-feedback" aria-live="polite"></div>`;
+    aiSetActions([{ id: 'close', label: 'Close' }]);
+    aiBody.querySelectorAll('.ai-q-opt').forEach(btn => btn.addEventListener('click', ()=> aiPickOption(q, Number(btn.dataset.i))));
+  }
+
+  function aiPickOption(q, picked){
+    const opts = aiBody.querySelectorAll('.ai-q-opt');
+    if(!opts.length || opts[0].disabled) return;
+    const right = picked === q.correct;
+    opts.forEach((b, i)=>{
+      b.disabled = true;
+      if(i === q.correct) b.classList.add('is-correct');
+      else if(i === picked) b.classList.add('is-wrong');
+    });
+    const fb = aiBody.querySelector('.ai-q-feedback');
+    fb.innerHTML = `
+      <div class="ai-verdict ${right ? 'good' : 'bad'}">${right ? '✅ Correct — nice work!' : `❌ Not quite. The answer is ${['A','B','C','D'][q.correct]}.`}</div>
+      ${q.explanation ? `<div class="ai-answer" dir="auto">${aiFormat(q.explanation)}</div>` : ''}`;
+    aiSetActions([{ id: 'similar', label: '🔁 Another one', primary: true }, { id: 'explain', label: 'Explain the original' }, { id: 'close', label: 'Done' }]);
+    // Logged for the parent report ("3/4 practice questions right"). Free — no AI call.
+    callAiFunction('ai-tutor', { action: 'result', username: currentStudent && currentStudent.username, correct: right });
+  }
+
+  // Called from each mistake card in "Mistake History".
+  function aiMistakeButtonsHtml(row){
+    if(!aiIsEnabledNow()) return '';
+    return `<button type="button" class="ai-mistake-btn" data-ai-mode="explain">✨ Explain with AI</button>
+            <button type="button" class="ai-mistake-btn" data-ai-mode="similar">🔁 Try a similar one</button>`;
+  }
+  function aiWireMistakeButtons(item, row){
+    item.querySelectorAll('.ai-mistake-btn').forEach(b => b.addEventListener('click', ()=> openAiHelp(row, b.dataset.aiMode)));
+  }
+
+  /* ---------------- teacher: draft questions into an editor ---------------- */
+  function mountAiDraftBox(anchor, container, idPrefix){
+    if(!anchor || !container) return;
+    const box = document.createElement('div');
+    box.className = 'ai-draft-box';
+    box.innerHTML = `
+      <div class="ai-draft-head">
+        <span class="ai-draft-title">✨ Draft questions with AI</span>
+        <span class="ai-draft-sub">Each question is solved a second time by the AI and thrown away if the answers disagree. They're added below for you to check and edit before saving.</span>
+      </div>
+      <div class="ai-draft-grid">
+        <label><span class="field-label">Topic or skill</span><input type="text" class="ai-draft-topic" id="${idPrefix}AiTopic" placeholder="e.g. Systems of linear equations"></label>
+        <label><span class="field-label">Difficulty</span>
+          <select class="ai-draft-difficulty"><option value="mixed">Mixed</option><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select></label>
+        <label><span class="field-label">Style</span>
+          <select class="ai-draft-style"><option>EST</option><option>SAT</option><option>ACT</option><option value="Thanaweya Amma (Egyptian secondary)">Thanaweya Amma</option><option value="general school math">General</option></select></label>
+        <label><span class="field-label">How many</span>
+          <select class="ai-draft-count"><option>3</option><option selected>5</option><option>8</option><option>10</option><option>15</option></select></label>
+      </div>
+      <label class="ai-draft-notes-wrap"><span class="field-label">Notes for the AI (optional)</span>
+        <input type="text" class="ai-draft-notes" placeholder="e.g. word problems, no calculator, include negative numbers"></label>
+      <div class="ai-draft-row">
+        <button type="button" class="btn btn-ghost ai-draft-go">✨ Draft questions</button>
+        <span class="ai-draft-status" role="status" aria-live="polite"></span>
+      </div>`;
+    anchor.parentNode.insertBefore(box, anchor);
+
+    const go = box.querySelector('.ai-draft-go');
+    const status = box.querySelector('.ai-draft-status');
+    go.addEventListener('click', async ()=>{
+      const topic = box.querySelector('.ai-draft-topic').value.trim();
+      if(!topic){ status.textContent = 'Type a topic first.'; status.className = 'ai-draft-status is-bad'; box.querySelector('.ai-draft-topic').focus(); return; }
+      if(!aiAdminKey()){ status.textContent = 'Add your admin key in the 🤖 AI & Parent Reports tab first.'; status.className = 'ai-draft-status is-bad'; return; }
+      const count = Number(box.querySelector('.ai-draft-count').value) || 5;
+      go.disabled = true;
+      status.className = 'ai-draft-status';
+      status.textContent = `Writing ${count} questions and double-checking each one… (about 20–40 seconds)`;
+      const r = await callAiFunction('ai-tutor', {
+        action: 'draft', topic, lesson: topic, count,
+        difficulty: box.querySelector('.ai-draft-difficulty').value,
+        style: box.querySelector('.ai-draft-style').value,
+        notes: box.querySelector('.ai-draft-notes').value.trim(),
+      }, true);
+      go.disabled = false;
+      if(!r.ok){
+        const msg = r.body.error === 'admin-key' ? 'Your admin key doesn\'t match the one saved in Supabase. Fix it in the 🤖 AI & Parent Reports tab.'
+          : r.body.error === 'global-cap' ? 'Today\'s AI limit for the whole site is used up. Raise it in the 🤖 AI & Parent Reports tab, or try tomorrow.'
+          : r.body.error === 'not-deployed' ? 'The ai-tutor function isn\'t set up yet. See the 🤖 AI & Parent Reports tab.'
+          : r.body.error === 'jwt-on' ? 'Turn OFF "Verify JWT" on the ai-tutor function in Supabase, then try again.'
+          : r.body.error === 'network' ? 'No internet connection.'
+          : 'The AI had a problem' + (r.body.detail ? ': ' + r.body.detail : '.') ;
+        status.textContent = msg; status.className = 'ai-draft-status is-bad';
+        return;
+      }
+      const qs = Array.isArray(r.body.questions) ? r.body.questions : [];
+      if(!qs.length){ status.textContent = 'None of the drafted questions passed the double-check. Try again, or make the topic more specific.'; status.className = 'ai-draft-status is-bad'; return; }
+      const who = getCurrentAnswererIdentity();
+      let first = null;
+      qs.forEach(q=>{
+        const before = container.children.length;
+        addQuestionBlock({ lesson: q.lesson, text: q.text, options: q.options, correct: q.correct, explanations: q.explanation ? [{ text: q.explanation, by: who }] : [] }, container);
+        const block = container.children[before];
+        if(block){
+          block.classList.add('is-ai-draft');
+          const badge = document.createElement('span');
+          badge.className = 'ai-draft-badge';
+          badge.textContent = '✨ AI draft — check before saving';
+          const num = block.querySelector('.q-num');
+          if(num) num.insertAdjacentElement('afterend', badge); else block.prepend(badge);
+          // The topic typed here may not be one of the site's skills; if the
+          // lesson dropdown didn't have it, leave the teacher's pick alone.
+          if(!first) first = block;
+        }
+      });
+      if(typeof renumberQuestions === 'function') renumberQuestions(container);
+      status.className = 'ai-draft-status is-good';
+      status.textContent = `Added ${qs.length} question${qs.length === 1 ? '' : 's'} below${r.body.dropped ? ` (${r.body.dropped} thrown away for failing the double-check)` : ''}. Check them, then save.`;
+      if(first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+  mountAiDraftBox(document.getElementById('hwImportInput') && document.getElementById('hwImportInput').closest('.field-row'), document.getElementById('hwQuestionsContainer'), 'hw');
+  mountAiDraftBox(document.getElementById('examImportInput') && document.getElementById('examImportInput').closest('.field-row'), document.getElementById('questionsContainer'), 'exam');
+
+  /* ---------------- admin: 🤖 AI & Parent Reports tab ---------------- */
+  function airTodayCairo(){
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  }
+  function airCopy(text, btn){
+    const done = ()=>{ const old = btn.textContent; btn.textContent = '✓ Copied'; btn.classList.add('is-copied'); setTimeout(()=>{ btn.textContent = old; btn.classList.remove('is-copied'); }, 1600); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, ()=> airCopyFallback(text, done));
+    } else airCopyFallback(text, done);
+  }
+  function airCopyFallback(text, done){
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); done(); }catch(e){ alert('Copy failed — select the text and copy it by hand.'); }
+    ta.remove();
+  }
+  function airSource(id){ const el = document.getElementById(id); return el ? el.textContent.replace(/^\n/, '') : ''; }
+  function airCronSql(){
+    const key = aiAdminKey() || 'PASTE-YOUR-ADMIN-KEY-HERE';
+    return `create extension if not exists pg_cron;
+create extension if not exists pg_net;
+
+-- Replaces the timer if you run this again (e.g. after changing the admin key).
+select cron.unschedule('parent-reports') where exists (select 1 from cron.job where jobname = 'parent-reports');
+
+-- Every hour at :01. The function itself only sends once a day, at the
+-- hour chosen in the admin panel (Cairo time, summer time handled).
+select cron.schedule('parent-reports', '1 * * * *', $$
+  select net.http_post(
+    url := '${AI_FN_BASE}/parent-reports',
+    headers := '{"Content-Type":"application/json","x-admin-key":"${key}"}'::jsonb,
+    body := '{"action":"cron"}'::jsonb
+  );
+$$);`;
+  }
+  const AIR_TEMPLATES = {
+    ar: 'التقرير اليومي لـ {{1}} – {{2}}\n📚 الواجبات: {{3}}\n📝 الاختبارات: {{4}}\n🎯 التدريب: {{5}}\n⏳ {{6}}\n\nأ. محمد إبراهيم – رياضيات',
+    en: 'Daily report for {{1}} – {{2}}\n📚 Homework: {{3}}\n📝 Quizzes & exams: {{4}}\n🎯 Practice: {{5}}\n⏳ {{6}}\n\nMr. Mohamed Ibrahim – Math',
+  };
+
+  let airLastCheck = null;
+  let airTablesOk = null;
+  async function airCheckTables(){
+    if(!supabaseClient){ airTablesOk = null; return; }
+    try{
+      const results = await Promise.all(['ai_usage', 'parent_reports', 'app_settings'].map(t => supabaseClient.from(t).select('id').limit(1)));
+      airTablesOk = results.every(r => !r.error);
+    }catch(e){ airTablesOk = false; }
+  }
+
+  function airStep(n, title, bodyHtml, done){
+    return `<li class="air-step ${done === true ? 'is-done' : ''}">
+      <div class="air-step-num" aria-hidden="true">${done === true ? '✓' : n}</div>
+      <div class="air-step-body"><div class="air-step-title">${title}</div>${bodyHtml}</div>
+    </li>`;
+  }
+  function airCopyBtn(what, label){ return `<button type="button" class="btn btn-ghost air-copy" data-copy="${what}">📋 ${label}</button>`; }
+
+  function renderAirSetup(){
+    const c = airLastCheck;
+    const fnOk = !!(c && c.ok);
+    const tutorOk = !!(c && c.aiTutor);
+    const steps = [
+      airStep(1, 'Get a Gemini API key', `<p>Open <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>, sign in with Google, click <b>Create API key</b> and copy it. To keep students' questions out of Google's training data, turn on billing for the key's project (the paid tier). You only pay for what's used.</p>`, c && c.gemini),
+      airStep(2, 'Create the database tables', `<p>Supabase → <b>SQL Editor</b> → <b>New query</b> → paste → <b>Run</b>.</p>${airCopyBtn('sql', 'Copy SQL')}`, airTablesOk),
+      airStep(3, 'Add the <code>ai-tutor</code> function', `<p>Supabase → <b>Edge Functions</b> → <b>Deploy a new function</b> → <b>Via Editor</b>. Name it exactly <code>ai-tutor</code>, delete the sample code, paste this, and click <b>Deploy</b>. Then open the function's <b>Details</b> and switch <b>Verify JWT</b> OFF → Save.</p>${airCopyBtn('ai', 'Copy ai-tutor code')}`, tutorOk),
+      airStep(4, 'Add the <code>parent-reports</code> function', `<p>Same again, named exactly <code>parent-reports</code>, with this code. Switch <b>Verify JWT</b> OFF too.</p>${airCopyBtn('reports', 'Copy parent-reports code')}`, fnOk),
+      airStep(5, 'Save your secrets', `<p>Edge Functions → <b>Secrets</b> → add:</p>
+        <ul class="air-list"><li><code>GEMINI_API_KEY</code> — the key from step 1</li>
+        <li><code>ADMIN_KEY</code> — make up a long password (letters and numbers only, 16+). Type the same one in the box above and click <b>Save &amp; check</b>.</li></ul>`, fnOk),
+      airStep(6, 'Set up WhatsApp (for parent reports)', `<p>In <a href="https://business.facebook.com/wa/manage/" target="_blank" rel="noopener">Meta WhatsApp Manager</a>: add a phone number that isn't already on the WhatsApp app, then <b>Message templates → Create</b>: category <b>Utility</b>, name <code>daily_report</code>, language <b>Arabic</b> (or English), and this body:</p>
+        <div class="air-template-tabs">${airCopyBtn('tpl-ar', 'Copy Arabic template')} ${airCopyBtn('tpl-en', 'Copy English template')}</div>
+        <p>When it's approved, create a permanent token (Business settings → System users → Generate token with <i>whatsapp_business_messaging</i>) and add two more secrets: <code>WA_TOKEN</code> (the token) and <code>WA_PHONE_ID</code> (the <b>Phone number ID</b> from WhatsApp Manager → API setup — not the phone number itself).</p>`, c && c.whatsapp),
+      airStep(7, 'Switch on the daily timer', `<p>SQL Editor → New query → paste → Run. It already contains your admin key${aiAdminKey() ? '' : ' — <b>save your admin key above first</b>'}. If you ever change the admin key, run it again.</p>${airCopyBtn('cron', 'Copy timer SQL')}`, !!(c && c.lastCronAt)),
+      airStep(8, 'Test, then turn things on', `<p>Send a test report to your own WhatsApp below. When it looks right, tick <b>Send daily reports</b> and <b>AI help for students</b> and save.</p>`, !!(c && c.settings && c.settings.reports.enabled && c.settings.ai.enabled && c.whatsapp)),
+    ];
+    document.getElementById('airSteps').innerHTML = steps.join('');
+  }
+
+  function airChip(state, label){
+    const cls = state === true ? 'ok' : state === false ? 'bad' : 'wait';
+    const icon = state === true ? '✓' : state === false ? '✕' : '…';
+    return `<span class="air-chip ${cls}"><b>${icon}</b> ${label}</span>`;
+  }
+  function airAgo(iso){
+    if(!iso) return 'never';
+    const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+    if(m < 1) return 'just now';
+    if(m < 60) return `${m} min ago`;
+    const h = Math.round(m / 60);
+    return h < 48 ? `${h} h ago` : new Date(iso).toLocaleDateString();
+  }
+
+  async function airCheck(){
+    const statusEl = document.getElementById('airStatusChips');
+    const hint = document.getElementById('airStatusHint');
+    if(!aiAdminKey()){
+      airLastCheck = null;
+      statusEl.innerHTML = airChip(null, 'ai-tutor function') + airChip(null, 'parent-reports function') + airChip(null, 'Gemini') + airChip(null, 'WhatsApp') + airChip(null, 'Daily timer');
+      hint.textContent = 'Type your admin key (the ADMIN_KEY secret) above and click Save & check.';
+      renderAirSetup();
+      return null;
+    }
+    statusEl.innerHTML = '<span class="air-muted">Checking…</span>';
+    const [r, ping] = await Promise.all([
+      callAiFunction('parent-reports', { action: 'check' }, true),
+      // An unknown username is refused with "not-a-student" — which proves
+      // ai-tutor is deployed, reachable and can read the database.
+      callAiFunction('ai-tutor', { action: 'status', username: '__setup_check__' }),
+    ]);
+    const tutorOk = ping.status === 403 && ping.body.error === 'not-a-student';
+    const tutorWhy = tutorOk ? '' : ping.body.error === 'not-deployed' ? 'The ai-tutor function isn\'t deployed yet (step 3).'
+      : ping.body.error === 'jwt-on' ? 'Switch OFF "Verify JWT" on the ai-tutor function (step 3).'
+      : ping.body.detail ? 'ai-tutor: ' + ping.body.detail : '';
+    if(!r.ok){
+      airLastCheck = null;
+      const why = r.body.error === 'admin-key' ? 'The admin key here doesn\'t match the ADMIN_KEY secret in Supabase.'
+        : r.body.error === 'not-deployed' ? 'The parent-reports function isn\'t deployed yet — follow steps 2–5 below.'
+        : r.body.error === 'jwt-on' ? 'Switch OFF "Verify JWT" on both functions (step 3).'
+        : r.body.error === 'network' ? 'No internet connection.'
+        : (r.body.error || 'Something went wrong') + (r.body.detail ? ': ' + r.body.detail : '');
+      statusEl.innerHTML = airChip(tutorOk, 'ai-tutor function') + airChip(false, 'parent-reports function');
+      hint.textContent = why;
+      airLastCheck = { aiTutor: tutorOk };
+      renderAirSetup();
+      return null;
+    }
+    airLastCheck = { ...r.body, aiTutor: tutorOk };
+    const cronFresh = r.body.lastCronAt && (Date.now() - new Date(r.body.lastCronAt).getTime()) < 2 * 3600e3;
+    statusEl.innerHTML = airChip(tutorOk, 'ai-tutor function') + airChip(true, 'parent-reports function') + airChip(r.body.gemini, 'Gemini key') + airChip(r.body.whatsapp, 'WhatsApp') +
+      airChip(r.body.lastCronAt ? (cronFresh ? true : false) : false, `Daily timer (${airAgo(r.body.lastCronAt)})`);
+    if(tutorWhy){ hint.textContent = tutorWhy; } else hint.textContent = r.body.lastRunDay ? `Last automatic daily send: ${r.body.lastRunDay}. It's ${r.body.cairoHour}:00 in Cairo now.` : `It's ${r.body.cairoHour}:00 in Cairo now.`;
+    airFillSettings(r.body.settings);
+    renderAirSetup();
+    return r.body;
+  }
+
+  function airFillSettings(s){
+    if(!s) return;
+    const f = (id, v) => { const el = document.getElementById(id); if(!el) return; if(el.type === 'checkbox') el.checked = !!v; else el.value = v; };
+    f('airAiEnabled', s.ai.enabled); f('airStudentCap', s.ai.studentCap); f('airGlobalCap', s.ai.globalCap); f('airAiLang', s.ai.language);
+    f('airRepEnabled', s.reports.enabled); f('airRepHour', s.reports.hour); f('airRepLang', s.reports.language);
+    f('airRepInactive', s.reports.includeInactive); f('airRepTemplate', s.reports.templateName); f('airRepTemplateLang', s.reports.templateLang);
+    airCostHint();
+  }
+
+  function airCostHint(){
+    const cap = Number(document.getElementById('airStudentCap').value) || 0;
+    const el = document.getElementById('airCapHint');
+    // ~1,500 tokens in / ~800 out (incl. double-check) per use, all students using the full cap every day
+    const perUseUsd = (1500 * AI_PRICE_IN + 800 * AI_PRICE_OUT) / 1e6;
+    el.textContent = `Worst case (every student uses all ${cap} every day for 30 days) ≈ ${Math.round(perUseUsd * cap * 30 * aiUsdEgp())} EGP per student per month. Real use is usually far lower.`;
+  }
+
+  async function airSaveSettings(which){
+    const btn = document.getElementById(which === 'ai' ? 'airSaveAi' : 'airSaveRep');
+    const out = document.getElementById(which === 'ai' ? 'airSaveAiMsg' : 'airSaveRepMsg');
+    if(!aiAdminKey()){ out.textContent = 'Save your admin key first.'; out.className = 'air-msg bad'; return; }
+    const v = id => document.getElementById(id);
+    const body = { action: 'settings-set' };
+    if(which === 'ai') body.ai = { enabled: v('airAiEnabled').checked, studentCap: Number(v('airStudentCap').value), globalCap: Number(v('airGlobalCap').value), language: v('airAiLang').value };
+    else body.reports = { enabled: v('airRepEnabled').checked, hour: Number(v('airRepHour').value), language: v('airRepLang').value, includeInactive: v('airRepInactive').checked, templateName: v('airRepTemplate').value.trim(), templateLang: v('airRepTemplateLang').value.trim() };
+    btn.disabled = true; out.textContent = 'Saving…'; out.className = 'air-msg';
+    const r = await callAiFunction('parent-reports', body, true);
+    btn.disabled = false;
+    if(!r.ok){ out.textContent = r.body.error === 'admin-key' ? 'Admin key doesn\'t match.' : 'Couldn\'t save — ' + (r.body.detail || r.body.error || 'try again'); out.className = 'air-msg bad'; return; }
+    invalidateDbCache('app_settings');
+    aiEnabledCache.ts = 0;
+    airFillSettings({ ai: r.body.ai, reports: r.body.reports });
+    out.textContent = '✓ Saved'; out.className = 'air-msg good';
+    if(airLastCheck) airLastCheck.settings = { ai: r.body.ai, reports: r.body.reports };
+    renderAirSetup();
+  }
+
+  async function airRenderUsage(){
+    const wrap = document.getElementById('airUsage');
+    const today = airTodayCairo();
+    const month = today.slice(0, 7);
+    const [todayRows, monthRows, reportRows, settings] = await Promise.all([
+      dbGetAllByIdPrefix('ai_usage', today + ':'),
+      dbGetAllByIdPrefix('ai_usage', month + '-'),
+      dbGetAllByIdPrefix('parent_reports', month + '-'),
+      dbGet('app_settings', 'ai'),
+    ]);
+    const cap = (settings && settings.studentCap) || 20;
+    const gcap = (settings && settings.globalCap) || 1000;
+    const rate = aiUsdEgp();
+    const cost = r => ((r.inTok || 0) * AI_PRICE_IN + (r.outTok || 0) * AI_PRICE_OUT) / 1e6;
+    const totalToday = todayRows.find(r => r.username === '__total') || {};
+    const monthTotals = monthRows.filter(r => r.username === '__total');
+    const monthUsd = monthTotals.reduce((s, r) => s + cost(r), 0);
+    const waSent = reportRows.filter(r => r.status === 'sent').length;
+    const waUsd = waSent * WA_PRICE_UTILITY;
+    const egp = usd => usd * rate < 10 ? (usd * rate).toFixed(1) : Math.round(usd * rate).toLocaleString();
+    const students = todayRows.filter(r => r.username && r.username !== '__total' && r.username !== '__admin')
+      .sort((a, b) => (b.uses || 0) - (a.uses || 0));
+    const usedToday = (totalToday.uses || 0) + (totalToday.drafts || 0);
+    wrap.innerHTML = `
+      <div class="air-stats">
+        <div class="air-stat"><div class="k">AI uses today</div><div class="v">${usedToday}</div><div class="d">of ${gcap} for the whole site</div></div>
+        <div class="air-stat"><div class="k">AI cost today</div><div class="v">≈ ${egp(cost(totalToday))} EGP</div><div class="d">$${cost(totalToday).toFixed(3)}</div></div>
+        <div class="air-stat"><div class="k">AI cost this month</div><div class="v">≈ ${egp(monthUsd)} EGP</div><div class="d">${monthTotals.reduce((s, r) => s + (r.draftedQuestions || 0), 0)} questions drafted</div></div>
+        <div class="air-stat"><div class="k">WhatsApp this month</div><div class="v">≈ ${egp(waUsd)} EGP</div><div class="d">${waSent} report${waSent === 1 ? '' : 's'} sent</div></div>
+      </div>
+      <div class="air-rate">Estimates use Gemini 3.1 Flash-Lite prices ($${AI_PRICE_IN} / $${AI_PRICE_OUT} per million tokens) and $${WA_PRICE_UTILITY} per WhatsApp utility message, at 1 USD = <input type="number" id="airRate" min="1" step="0.5" value="${rate}" aria-label="EGP per US dollar"> EGP. Your real bills are on Google AI Studio and Meta.</div>
+      ${students.length ? `
+      <div class="air-table-wrap"><table class="admin-table air-table">
+        <thead><tr><th>Student</th><th>Used today</th><th>Explain</th><th>Similar</th><th>Practice right</th></tr></thead>
+        <tbody>${students.map(s => `<tr>
+          <td>${esc(s.username)}</td>
+          <td><span class="air-bar"><span style="width:${Math.min(100, Math.round((s.uses || 0) / cap * 100))}%"></span></span> ${s.uses || 0}/${cap}</td>
+          <td>${s.explain || 0}</td><td>${s.similar || 0}</td>
+          <td>${s.solved ? `${s.solvedCorrect || 0}/${s.solved}` : '—'}</td></tr>`).join('')}</tbody>
+      </table></div>` : '<div class="air-empty">No student has used the AI today yet.</div>'}`;
+    const rateInput = document.getElementById('airRate');
+    rateInput.addEventListener('change', ()=>{
+      const v = Number(rateInput.value);
+      if(v > 0){ try{ localStorage.setItem(AI_EGP_STORE, String(v)); }catch(e){} airRenderUsage(); airCostHint(); }
+    });
+  }
+
+  let airPreviewItems = [];
+  async function airPreview(keepMsg){
+    const list = document.getElementById('airReportList');
+    const msg = document.getElementById('airReportMsg');
+    if(!aiAdminKey()){ msg.textContent = 'Save your admin key first.'; msg.className = 'air-msg bad'; return; }
+    if(keepMsg !== true) msg.textContent = '';
+    list.innerHTML = '<div class="air-empty">Building today\'s reports…</div>';
+    const [r, log] = await Promise.all([
+      callAiFunction('parent-reports', { action: 'preview' }, true),
+      dbGetAllByIdPrefix('parent_reports', airTodayCairo() + ':'),
+    ]);
+    if(!r.ok){ list.innerHTML = ''; msg.textContent = r.body.error === 'admin-key' ? 'Admin key doesn\'t match.' : 'Couldn\'t build the reports — ' + (r.body.detail || r.body.error); msg.className = 'air-msg bad'; return; }
+    airPreviewItems = r.body.items || [];
+    const logBy = new Map(log.map(l => [String(l.username || '').toLowerCase(), l]));
+    if(!airPreviewItems.length){ list.innerHTML = '<div class="air-empty">No approved students yet.</div>'; return; }
+    const rtl = r.body.language === 'ar';
+    list.innerHTML = airPreviewItems.map((it, i) => {
+      const l = logBy.get(String(it.username).toLowerCase());
+      const state = l ? (l.status === 'sent' ? `<span class="air-pill ok">Sent ${l.at ? new Date(l.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}</span>`
+        : l.status === 'failed' ? `<span class="air-pill bad" title="${esc(l.error || '')}">Failed</span>` : '')
+        : !it.phone ? '<span class="air-pill wait">No parent number</span>'
+        : !it.willSend ? '<span class="air-pill wait">Skipped (no activity)</span>'
+        : '<span class="air-pill wait">Not sent yet</span>';
+      return `<div class="air-report ${it.active ? '' : 'is-quiet'}">
+        <div class="air-report-head">
+          <div><div class="air-report-name">${esc(it.username)}</div><div class="air-report-phone">${it.phone ? '+' + esc(it.phone) : '—'}</div></div>
+          <div class="air-report-state">${state}${l && l.status === 'failed' && l.error ? `<div class="air-report-err">${esc(l.error)}</div>` : ''}</div>
+          ${it.phone ? `<button type="button" class="btn btn-ghost air-send-one" data-i="${i}">${l && l.status === 'sent' ? 'Send again' : 'Send now'}</button>` : ''}
+        </div>
+        <pre class="air-report-text" dir="${rtl ? 'rtl' : 'ltr'}">${esc(it.text)}</pre>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('.air-send-one').forEach(b => b.addEventListener('click', async ()=>{
+      const it = airPreviewItems[Number(b.dataset.i)];
+      const again = b.textContent.startsWith('Send again');
+      if(again && !confirm(`${it.username}'s parent already got today's report. Send it again?`)) return;
+      b.disabled = true; b.textContent = 'Sending…';
+      const s = await callAiFunction('parent-reports', { action: 'send', usernames: [it.username], force: true }, true);
+      invalidateDbCache('parent_reports');
+      const res = s.ok && s.body.results && s.body.results[0];
+      msg.textContent = res && res.status === 'sent' ? `✓ Sent to ${it.username}'s parent.` : `Couldn't send to ${it.username}'s parent — ${(res && res.error) || s.body.detail || s.body.error || 'unknown error'}`;
+      msg.className = 'air-msg ' + (res && res.status === 'sent' ? 'good' : 'bad');
+      airPreview(true); airRenderUsage();
+    }));
+  }
+
+  async function airSendAll(){
+    const msg = document.getElementById('airReportMsg');
+    if(!aiAdminKey()){ msg.textContent = 'Save your admin key first.'; msg.className = 'air-msg bad'; return; }
+    if(!confirm('Send today\'s report to every parent now? Parents who already got today\'s report are skipped.')) return;
+    const btn = document.getElementById('airSendAll');
+    btn.disabled = true; msg.textContent = 'Sending… this can take a minute.'; msg.className = 'air-msg';
+    const r = await callAiFunction('parent-reports', { action: 'send' }, true);
+    btn.disabled = false;
+    invalidateDbCache('parent_reports');
+    if(!r.ok){ msg.textContent = 'Couldn\'t send — ' + (r.body.detail || r.body.error); msg.className = 'air-msg bad'; return; }
+    msg.textContent = `✓ ${r.body.sent} sent · ${r.body.failed} failed · ${r.body.skipped} skipped`;
+    msg.className = 'air-msg ' + (r.body.failed ? 'bad' : 'good');
+    airPreview(true); airRenderUsage();
+  }
+
+  async function airSendTest(){
+    const msg = document.getElementById('airTestMsg');
+    const phone = document.getElementById('airTestPhone').value.trim();
+    if(!aiAdminKey()){ msg.textContent = 'Save your admin key first.'; msg.className = 'air-msg bad'; return; }
+    if(phone.replace(/\D/g, '').length < 10){ msg.textContent = 'Type your WhatsApp number, e.g. 010 1234 5678'; msg.className = 'air-msg bad'; return; }
+    const btn = document.getElementById('airTestBtn');
+    btn.disabled = true; msg.textContent = 'Sending…'; msg.className = 'air-msg';
+    const r = await callAiFunction('parent-reports', { action: 'test', phone }, true);
+    btn.disabled = false;
+    msg.textContent = r.ok ? `✓ Sent to +${r.body.to}. Check your WhatsApp.` : 'Not sent — ' + (r.body.error === 'admin-key' ? 'admin key doesn\'t match' : (r.body.error || r.body.detail || 'unknown error'));
+    msg.className = 'air-msg ' + (r.ok ? 'good' : 'bad');
+    airRenderUsage();
+  }
+
+  async function renderAiReportsPanel(){
+    document.getElementById('airAdminKey').value = aiAdminKey();
+    const [ai, reports] = await Promise.all([dbGet('app_settings', 'ai'), dbGet('app_settings', 'reports')]);
+    airFillSettings({
+      ai: { enabled: false, studentCap: 20, globalCap: 1000, language: 'english', ...(ai || {}) },
+      reports: { enabled: false, hour: 21, language: 'ar', includeInactive: true, templateName: 'daily_report', templateLang: 'ar', ...(reports || {}) },
+    });
+    await airCheckTables();
+    renderAirSetup();
+    airRenderUsage();
+    const c = await airCheck();
+    document.getElementById('airSetupDetails').open = !(c && c.whatsapp && c.lastCronAt);
+  }
+
+  // Wiring (once)
+  document.getElementById('airSaveKey').addEventListener('click', async ()=>{
+    const k = document.getElementById('airAdminKey').value.trim();
+    const out = document.getElementById('airKeyMsg');
+    if(k && !/^[A-Za-z0-9_-]{8,}$/.test(k)){ out.textContent = 'Use at least 8 letters, numbers, - or _ (no spaces or quotes).'; out.className = 'air-msg bad'; return; }
+    aiSetAdminKey(k);
+    out.textContent = k ? 'Saved on this device.' : 'Removed from this device.'; out.className = 'air-msg good';
+    renderAirSetup();
+    await airCheck();
+  });
+  document.getElementById('airShowKey').addEventListener('click', (e)=>{
+    const i = document.getElementById('airAdminKey');
+    i.type = i.type === 'password' ? 'text' : 'password';
+    e.currentTarget.textContent = i.type === 'password' ? 'Show' : 'Hide';
+  });
+  document.getElementById('airSaveAi').addEventListener('click', ()=> airSaveSettings('ai'));
+  document.getElementById('airSaveRep').addEventListener('click', ()=> airSaveSettings('reports'));
+  document.getElementById('airStudentCap').addEventListener('input', airCostHint);
+  document.getElementById('airPreviewBtn').addEventListener('click', ()=> airPreview());
+  document.getElementById('airSendAll').addEventListener('click', airSendAll);
+  document.getElementById('airTestBtn').addEventListener('click', airSendTest);
+  document.getElementById('airRefresh').addEventListener('click', renderAiReportsPanel);
+  document.getElementById('airRepLang').addEventListener('change', (e)=>{
+    // Keep the template language in step unless the admin typed something custom.
+    const t = document.getElementById('airRepTemplateLang');
+    if(t.value === 'ar' || t.value === 'en' || !t.value) t.value = e.target.value;
+  });
+  document.getElementById('airSteps').addEventListener('click', (e)=>{
+    const b = e.target.closest('.air-copy'); if(!b) return;
+    const what = b.dataset.copy;
+    const text = what === 'sql' ? airSource('airSrcSql')
+      : what === 'ai' ? airSource('airSrcAiTutor')
+      : what === 'reports' ? airSource('airSrcParentReports')
+      : what === 'cron' ? airCronSql()
+      : what === 'tpl-ar' ? AIR_TEMPLATES.ar
+      : what === 'tpl-en' ? AIR_TEMPLATES.en : '';
+    airCopy(text, b);
+  });
 </script>
 
 </div>
