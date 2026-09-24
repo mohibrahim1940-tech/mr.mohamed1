@@ -2259,6 +2259,34 @@
   .picker-search:focus{ outline:none; border-color:var(--signal); }
   .picker-count{ color:var(--muted); font-size:0.78rem; white-space:nowrap; margin-left:auto; }
   .picker-hidden{ display:none !important; }
+  .course-copy-options{ margin-top:12px; border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .cc-head{ font-size:0.86rem; font-weight:600; margin-bottom:10px; }
+  .course-copy-item{ display:flex; align-items:center; gap:10px; padding:7px 4px; cursor:pointer; flex-wrap:wrap; }
+  .course-copy-item.is-empty{ opacity:0.45; cursor:default; }
+  .course-copy-item .cc-label{ font-size:0.88rem; }
+  .course-copy-item .cc-count{ color:var(--muted); font-size:0.76rem; }
+  .course-copy-item .cc-note{ color:var(--muted); font-size:0.74rem; flex-basis:100%; padding-left:26px; }
+  .cc-hint{ color:var(--muted); font-size:0.76rem; margin-top:10px; border-top:1px solid var(--line-soft); padding-top:10px; }
+  .exam-countdown-card{
+    border:1px solid var(--line); border-radius:16px; padding:18px 20px; margin-bottom:18px;
+    background:var(--panel); position:relative; overflow:hidden;
+  }
+  .exam-countdown-card::before{ content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--signal); }
+  .exam-countdown-card.tone-close::before{ background:var(--warn); }
+  .exam-countdown-card.tone-now::before{ background:var(--ember); }
+  .exam-countdown-card.tone-past::before{ background:var(--line-strong, var(--line)); }
+  .ec-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .ec-days{ font-family:'Space Grotesk',sans-serif; font-size:1.6rem; font-weight:700; line-height:1.1; }
+  .ec-date{ color:var(--muted); font-size:0.82rem; margin-top:4px; }
+  .ec-numbers{ display:flex; gap:18px; flex-wrap:wrap; }
+  .ec-num{ display:flex; flex-direction:column; gap:2px; }
+  .ec-num .k{ color:var(--muted); font-size:0.7rem; letter-spacing:0.06em; text-transform:uppercase; }
+  .ec-num .v{ font-family:'Space Grotesk',sans-serif; font-size:1.15rem; font-weight:700; }
+  .ec-verdict{ margin-top:12px; font-size:0.9rem; line-height:1.6; }
+  @media (max-width: 520px){
+    .ec-numbers{ gap:14px; width:100%; }
+    .ec-days{ font-size:1.4rem; }
+  }
   .skill-progress-bar{ height:6px; border-radius:999px; background:var(--line); overflow:hidden; margin-top:8px; }
   .skill-progress-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--signal), var(--accent, var(--signal))); }
   .practice-size-box{ width:100%; margin-top:12px; border-top:1px solid var(--line-soft); padding-top:12px; }
@@ -3499,6 +3527,8 @@
               <div class="dash-value"><span class="status-pill status-approved">approved</span></div>
             </div>
           </div>
+
+          <div class="exam-countdown-card" id="examCountdownCard" style="display:none;"></div>
 
           <div class="target-score-card" id="targetScoreCard">
             <div class="target-score-header">
@@ -4867,8 +4897,20 @@
           <input type="text" id="courseNameInput" placeholder="e.g. SAT Math Prep">
         </div>
         <div class="field-row">
+          <label class="field-label">Start from an existing course (optional)</label>
+          <select id="courseCopyFrom" class="tm-select" style="max-width:280px;">
+            <option value="">Build it from scratch</option>
+          </select>
+          <div id="courseCopyOptions" class="course-copy-options" style="display:none;"></div>
+        </div>
+        <div class="field-row">
           <label class="field-label">Course fee (optional — used to track who has paid in full)</label>
           <input type="number" id="courseFeeInput" min="0" step="0.01" placeholder="e.g. 1500">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Exam date (optional — the day these students sit the real exam)</label>
+          <input type="date" id="courseExamDateInput">
+          <span style="color:var(--muted); font-size:0.8rem; margin-top:6px; display:block;">Every student on this course sees a countdown to it, and where their current pace lands them on the day. A student sitting a different date can be given their own.</span>
         </div>
         <div class="field-row">
           <label class="field-label">Books on this course (one per line)</label>
@@ -6170,6 +6212,24 @@
     const lastActive = (Array.isArray(st.loginHistory) && st.loginHistory.length) ? st.loginHistory[st.loginHistory.length - 1].ts : null;
     points.push(`Last signed in ${pmWhen(lastActive)}${withAttendance.length ? ` · attended ${withAttendance.length} session${withAttendance.length === 1 ? '' : 's'} (${attendedMin} min)` : ''}.`);
 
+    // ---- exam day ----
+    const pmCourses = await fetchAllCourses();
+    const examInfo = examDateFor(st, pmCourses);
+    const examDays = examInfo ? daysUntilExam(examInfo.date) : null;
+    const pmFc = computeForecast(timeline);
+    const pmOnDay = examInfo && examDays >= 0 ? projectToExam(pmFc, examDays) : null;
+    if(examInfo && examDays >= 0){
+      const bits = [`<strong>${examDays === 0 ? 'The exam is today' : examDays === 1 ? 'The exam is tomorrow' : `${examDays} days to the exam`}</strong> (${examDateLabel(examInfo.date)}).`];
+      if(pmOnDay != null){
+        bits.push(st.targetScore
+          ? (pmOnDay >= st.targetScore
+              ? `At this pace ${asScore(pmOnDay)} on the day — at or past the ${asScore(st.targetScore)} target.`
+              : `At this pace ${asScore(pmOnDay)} on the day, against a target of ${asScore(st.targetScore)}.`)
+          : `At this pace around ${asScore(pmOnDay)} on the day.`);
+      }
+      points.unshift(bits.join(' '));
+    }
+
     const waDigits = digitsOnly(formatEgyptNumber(st.parentNumber));
     const stat = (k, v, d) => `<div class="pm-stat"><div class="k">${k}</div><div class="v">${v}</div>${d ? `<div class="d">${d}</div>` : ''}</div>`;
     const completion = mine.length ? Math.round(doneHw.length / mine.length * 100) : 0;
@@ -6196,6 +6256,7 @@
       <div class="pm-stats">
         ${stat('Level now', fc ? asScore(fc.current) : '—', est ? 'expected EST score' : 'recent average')}
         ${stat('Target', st.targetScore ? asScore(st.targetScore) : '—', st.targetScore && fc ? (fc.current >= st.targetScore ? 'reached' : `${est ? pctToEstScore(st.targetScore) - pctToEstScore(fc.current) : st.targetScore - fc.current} to go`) : 'not set')}
+        ${stat('Exam day', examInfo ? (examDays >= 0 ? `${examDays}` : 'passed') : '—', examInfo ? (examDays >= 0 ? `days left · ${examInfo.date.toLocaleDateString(undefined,{day:'numeric',month:'short'})}` : examInfo.date.toLocaleDateString(undefined,{day:'numeric',month:'short'})) : 'no date set')}
         ${stat('Homework', `${doneHw.length}/${mine.length}`, `${completion}% handed in${overdue.length ? ` · ${overdue.length} overdue` : ''}`)}
         ${stat('Exams', String(myAttempts.length), myAttempts.length ? `best ${asScore(Math.max(...myAttempts.map(a => a.pct || 0)))}` : 'none yet')}
         ${stat('Mistakes', String(myMistakes.length), `${fixedMistakes} fixed · ${waiting.length} waiting`)}
@@ -6469,7 +6530,7 @@
       if(tab.dataset.tab === 'plansPanel'){ renderAdminPlans(); }
       if(tab.dataset.tab === 'booksPanel'){ renderAdminBooks(); renderBookExamPicker(null); renderBookCoursePicker(editingBookName); }
       if(tab.dataset.tab === 'reviewsPanel'){ initReviewsPanel(); }
-      if(tab.dataset.tab === 'coursesPanel'){ renderAdminCourseList(); }
+      if(tab.dataset.tab === 'coursesPanel'){ renderAdminCourseList(); populateCourseCopyFrom(); }
       if(tab.dataset.tab === 'competitionsPanel'){ showCompView('list'); renderCompetitionList(); }
       if(tab.dataset.tab === 'mistakesPanel'){ initMistakesPanel(true); }
       if(tab.dataset.tab === 'answerMistakesPanel'){ amShowView('list'); renderAnswerMistakesList(); }
@@ -8323,6 +8384,42 @@
      at 20 points over the four weeks, so one great or awful day can't
      promise a jump that won't happen. */
   const FORECAST_DAYS = 28;
+  /* ---------------- EXAM DATE ----------------
+     Most of what a student sees looks backwards. Their real exam day turns
+     the same numbers forwards: how long is left, where this pace lands them
+     on the day, and how far that is from what they're aiming for. The date
+     is set once on the course and overridden per student when someone sits
+     a different sitting.                                                   */
+  function parseExamDate(value){
+    if(!value) return null;
+    const d = new Date(String(value).length <= 10 ? value + 'T00:00:00' : value);
+    return isNaN(d) ? null : d;
+  }
+  function examDateFor(student, courses){
+    const own = parseExamDate(student && student.examDate);
+    if(own) return { date: own, from: 'student' };
+    const course = (courses || []).find(c => c.name === (student && student.course));
+    const fromCourse = parseExamDate(course && course.examDate);
+    if(fromCourse) return { date: fromCourse, from: 'course' };
+    return null;
+  }
+  function daysUntilExam(date){
+    const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    return Math.round((startOfDay(date) - startOfDay(new Date())) / 864e5);
+  }
+  function examDateLabel(date){
+    return date.toLocaleDateString(undefined, { weekday:'short', day:'numeric', month:'long', year:'numeric' });
+  }
+  // Where this pace lands them ON the exam day, rather than at a fixed
+  // four weeks out. Improvement is capped so a hot fortnight can't promise
+  // a score nobody could reach.
+  function projectToExam(fc, daysLeft){
+    if(!fc) return null;
+    if(!fc.canForecast || daysLeft <= 0) return fc.current;
+    const change = Math.max(-25, Math.min(25, (fc.slopePerWeek || 0) / 7 * daysLeft));
+    return Math.max(0, Math.min(100, Math.round(fc.current + change)));
+  }
+
   function computeForecast(timeline){
     const pts = timeline.map(t => ({ ...t, time: new Date(t.date).getTime() }))
       .filter(t => isFinite(t.time)).sort((a,b)=> a.time - b.time);
@@ -9491,6 +9588,74 @@
     if(!student) return false;
     student.targetScore = targetPct;
     return await dbSet('students', studentKey(username), student);
+  }
+
+  // The countdown only appears once a date is actually set — a student with
+  // no exam booked is shown nothing rather than an empty card.
+  async function renderExamCountdown(timeline){
+    const card = document.getElementById('examCountdownCard');
+    if(!card || !currentStudent) return;
+    const [student, courses] = await Promise.all([getStudent(currentStudent.username), fetchAllCourses()]);
+    const info = examDateFor(student || currentStudent, courses);
+    if(!info){ card.style.display = 'none'; card.innerHTML = ''; return; }
+
+    const days = daysUntilExam(info.date);
+    const est = isEstCourse(currentStudent.course);
+    const target = student && student.targetScore ? Number(student.targetScore) : null;
+    const asScore = pct => est ? `${pctToEstScore(pct)}` : `${pct}%`;
+    const fc = computeForecast(timeline || []);
+    const onTheDay = projectToExam(fc, days);
+
+    // The one topic costing them the most marks, so the gap comes with
+    // something to do about it rather than just a number.
+    let weakestLine = '';
+    try{
+      const mine = (await fetchAllMistakes()).filter(m => !m._index &&
+        (m.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase() && !m.masteredByStudent);
+      const tally = {};
+      mine.forEach(m => { const l = (m.lesson || 'General').trim(); tally[l] = (tally[l] || 0) + 1; });
+      const worst = Object.entries(tally).sort((a,b)=> b[1] - a[1])[0];
+      if(worst && worst[1] >= 2) weakestLine = `Most of your lost marks are in <strong>${esc(worst[0])}</strong> — start there.`;
+    }catch(err){ console.error('weakest topic:', err); }
+
+    let headline, tone;
+    if(days < 0){ headline = `Exam day has passed`; tone = 'past'; }
+    else if(days === 0){ headline = `Today is the day`; tone = 'now'; }
+    else if(days === 1){ headline = `Tomorrow`; tone = 'now'; }
+    else { headline = `${days} days`; tone = days <= 30 ? 'close' : 'far'; }
+
+    let verdict;
+    if(days < 0){
+      verdict = `Hope it went well. Ask your teacher to set the next date when you have one.`;
+    } else if(!fc){
+      verdict = `Finish a homework or an exam and this will show where your pace puts you on the day.`;
+    } else if(!fc.canForecast){
+      verdict = `You're at <strong>${asScore(fc.current)}</strong> now. After four results spread over a week, this will show where your pace puts you on the day.`;
+    } else if(target && onTheDay >= target){
+      verdict = `At this pace you'd be around <strong>${asScore(onTheDay)}</strong> on the day — at or past your target of ${asScore(target)}. Hold it there.`;
+    } else if(target){
+      const gapUnits = est ? pctToEstScore(target) - pctToEstScore(onTheDay) : target - onTheDay;
+      verdict = `At this pace you'd be around <strong>${asScore(onTheDay)}</strong> on the day. Your target is ${asScore(target)} — <strong>${gapUnits}</strong> short. ${weakestLine}`;
+    } else {
+      verdict = `At this pace you'd be around <strong>${asScore(onTheDay)}</strong> on the day. Set a target above to see the gap.`;
+    }
+
+    card.style.display = '';
+    card.className = `exam-countdown-card tone-${tone}`;
+    card.innerHTML = `
+      <div class="ec-top">
+        <div>
+          <div class="ec-days">${headline}</div>
+          <div class="ec-date">${esc(currentStudent.course || 'Your exam')} · ${examDateLabel(info.date)}${info.from === 'student' ? ' · your own sitting' : ''}</div>
+        </div>
+        ${fc ? `<div class="ec-numbers">
+          <div class="ec-num"><span class="k">Now</span><span class="v">${asScore(fc.current)}</span></div>
+          <div class="ec-num"><span class="k">On the day</span><span class="v">${days >= 0 ? asScore(onTheDay) : '—'}</span></div>
+          <div class="ec-num"><span class="k">Target</span><span class="v">${target ? asScore(target) : '—'}</span></div>
+        </div>` : ''}
+      </div>
+      <div class="ec-verdict">${verdict}</div>
+    `;
   }
 
   async function renderTargetScoreCard(recentAvgPct){
@@ -10842,6 +11007,111 @@
   }
   populateRegisterCourseOptions();
 
+  /* ---------------- STARTING A COURSE FROM ANOTHER ----------------
+     A new year usually teaches the same material to a new group. Books and
+     skills can simply be shared -- they already belong to as many courses as
+     you like, and sharing keeps one copy of each question, so every
+     explanation written on it still applies. An exam belongs to exactly one
+     course, so those are genuinely copied, and the copy carries the new
+     course's name to keep the two apart.                                   */
+  async function populateCourseCopyFrom(){
+    const sel = document.getElementById('courseCopyFrom');
+    if(!sel) return;
+    const keep = sel.value;
+    const courses = await fetchAllCourses();
+    sel.innerHTML = '<option value="">Build it from scratch</option>' +
+      courses.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+    if(courses.some(c => c.id === keep)) sel.value = keep;
+    else renderCourseCopyOptions();
+  }
+
+  async function renderCourseCopyOptions(){
+    const sel = document.getElementById('courseCopyFrom');
+    const wrap = document.getElementById('courseCopyOptions');
+    if(!sel || !wrap) return;
+    if(!sel.value){ wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+
+    wrap.style.display = '';
+    wrap.innerHTML = '<div class="admin-empty" style="padding:10px;">Looking at that course…</div>';
+    const [courses, skillsIdx, examsIdx] = await Promise.all([fetchAllCourses(), fetchSkillsIndex().catch(()=>[]), fetchExamsIndex().catch(()=>[])]);
+    const src = courses.find(c => c.id === sel.value);
+    if(!src){ wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+
+    const books = Array.isArray(src.books) ? src.books : [];
+    const skills = skillsIdx.filter(sk => getSkillCourses(sk).includes(src.name));
+    // Exams inside a book already travel with the book, so only the ones
+    // tagged straight onto the course need copying.
+    const loose = examsIdx.filter(e => e.course === src.name && !e.book);
+    const line = (key, label, count, note, on, countLabel) => `
+      <label class="course-copy-item${count ? '' : ' is-empty'}">
+        <input type="checkbox" data-copy="${key}"${count && on ? ' checked' : ''}${count ? '' : ' disabled'}>
+        <span class="cc-label">${label}</span>
+        <span class="cc-count">${count ? (countLabel || count) : 'none'}</span>
+        ${note ? `<span class="cc-note">${note}</span>` : ''}
+      </label>`;
+
+    wrap.innerHTML = `
+      <div class="cc-head">What should “${esc(src.name)}” pass on?</div>
+      ${line('books', '📕 Books', books.length, 'shared — the same exams, with every explanation already on them', true)}
+      ${line('skills', '🎯 Skills', skills.length, 'shared — one copy of each question, answers and all', true)}
+      ${line('exams', '📝 Exams tagged straight to the course', loose.length, 'copied, named “… (new course)” — a copy is separate from then on, so prefer a book where you can', false)}
+      ${line('fee', '💰 Fee', typeof src.fee === 'number' ? 1 : 0, '', false, typeof src.fee === 'number' ? String(src.fee) : '')}
+      ${line('examDate', '📅 Exam date', src.examDate ? 1 : 0, '', false, src.examDate || '')}
+      <div class="cc-hint">Books, the fee and the date fill the boxes below so you can change them before saving. Skills and exams are applied when you click “Add course”.</div>
+    `;
+
+    // Books, fee and date are visible fields — fill them in rather than
+    // applying them invisibly, so nothing is saved he hasn't seen.
+    const apply = ()=>{
+      const on = k => { const cb = wrap.querySelector(`[data-copy="${k}"]`); return cb && cb.checked; };
+      const booksInput = document.getElementById('courseBooksInput');
+      const feeInput = document.getElementById('courseFeeInput');
+      const dateInput = document.getElementById('courseExamDateInput');
+      if(booksInput) booksInput.value = on('books') ? books.join('\n') : '';
+      if(feeInput) feeInput.value = on('fee') && typeof src.fee === 'number' ? src.fee : '';
+      if(dateInput) dateInput.value = on('examDate') && src.examDate ? src.examDate : '';
+    };
+    wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('change', apply));
+    apply();
+  }
+
+  // Runs after the new course exists, for the parts that live on other
+  // records: skills point at course names, and exams are duplicated.
+  async function applyCourseCopy(sourceCourseId, newCourseName, want){
+    const courses = await fetchAllCourses();
+    const src = courses.find(c => c.id === sourceCourseId);
+    if(!src) return { skills: 0, exams: 0 };
+    let skillCount = 0, examCount = 0;
+
+    if(want.skills){
+      const skillsIdx = await fetchSkillsIndex();
+      for(const row of skillsIdx.filter(sk => getSkillCourses(sk).includes(src.name))){
+        const full = await dbGet('skills', row.id);
+        if(!full) continue;
+        const list = getSkillCourses(full);
+        if(list.includes(newCourseName)) continue;
+        full.courses = list.concat(newCourseName);
+        full.course = full.courses[0];
+        if(await saveSkillSet(row.id, full)) skillCount++;
+      }
+      invalidateDbCache('skills');
+    }
+
+    if(want.exams){
+      const examsIdx = await fetchExamsIndex();
+      for(const row of examsIdx.filter(e => e.course === src.name && !e.book)){
+        const full = await dbGet('exams', row.id);
+        if(!full) continue;
+        const newId = generateId('exam');
+        const copy = { ...full, id: newId, course: newCourseName,
+          title: `${full.title} (${newCourseName})`, ts: new Date().toISOString() };
+        if(await saveExam(newId, copy)) examCount++;
+      }
+      invalidateDbCache('exams');
+    }
+    return { skills: skillCount, exams: examCount };
+  }
+
   async function renderAdminCourseList(){
     const wrap = document.getElementById('courseListWrap');
     const emptyState = document.getElementById('courseListEmpty');
@@ -10857,17 +11127,23 @@
 
     courses.forEach(course=>{
       const skillCount = skillsIdx.filter(sk => getSkillCourses(sk).includes(course.name)).length;
+      const examOn = parseExamDate(course.examDate);
+      const examDays = examOn ? daysUntilExam(examOn) : null;
+      const examMeta = examOn
+        ? ` · 📅 ${examOn.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}${examDays >= 0 ? ` (${examDays} day${examDays === 1 ? '' : 's'})` : ' (passed)'}`
+        : '';
       const row = document.createElement('div');
       row.className = 'exam-list-item';
       row.innerHTML = `
         <div>
           <h4>${esc(course.name)}</h4>
-          <div class="meta">${typeof course.fee === 'number' ? `Fee: ${course.fee}` : 'No fee set'}${Array.isArray(course.books) && course.books.length ? ` · 📕 ${esc(course.books.join(', '))}` : ''}${skillCount ? ` · 🎯 ${skillCount} skill${skillCount === 1 ? '' : 's'}` : ''}</div>
+          <div class="meta">${typeof course.fee === 'number' ? `Fee: ${course.fee}` : 'No fee set'}${Array.isArray(course.books) && course.books.length ? ` · 📕 ${esc(course.books.join(', '))}` : ''}${skillCount ? ` · 🎯 ${skillCount} skill${skillCount === 1 ? '' : 's'}` : ''}${examMeta}</div>
         </div>
         <div class="exam-list-actions">
           <button class="edit-course-fee-btn">Set fee</button>
           <button class="edit-course-books-btn">📕 Books</button>
           <button class="edit-course-skills-btn">🎯 Skills</button>
+          <button class="edit-course-exam-btn">📅 Exam date</button>
           <button class="danger delete-course-btn">Delete</button>
         </div>
       `;
@@ -10920,6 +11196,18 @@
           await renderAdminCourseList();
         });
       });
+      row.querySelector('.edit-course-exam-btn').addEventListener('click', async ()=>{
+        const current = course.examDate || '';
+        const entered = prompt(`Exam date for “${course.name}” — the day these students sit the real exam.\n\nWrite it as YYYY-MM-DD (e.g. 2027-05-24). Leave blank to clear it.`, current);
+        if(entered === null) return;
+        const trimmed = entered.trim();
+        if(trimmed && !parseExamDate(trimmed)){ alert('That date could not be read. Use YYYY-MM-DD, e.g. 2027-05-24.'); return; }
+        const ok = await saveCourse(course.id, { ...course, examDate: trimmed || null });
+        if(!ok){ alert('Could not save — please try again.'); return; }
+        invalidateDbCache('courses');
+        await renderAdminCourseList();
+      });
+
       row.querySelector('.edit-course-skills-btn').addEventListener('click', async (ev)=>{
         const existing = row.querySelector('.course-skills-picker');
         if(existing){ existing.remove(); return; }
@@ -10999,22 +11287,45 @@
     const id = generateId('course');
     const books = document.getElementById('courseBooksInput').value
       .split(/\r?\n/).map(b => b.trim()).filter(Boolean);
-    const ok = await saveCourse(id, { name, fee, books, ts: new Date().toISOString() });
+    const examDate = document.getElementById('courseExamDateInput').value || null;
+    const copyFrom = document.getElementById('courseCopyFrom').value;
+    const copyWant = {
+      skills: !!document.querySelector('#courseCopyOptions [data-copy="skills"]:checked'),
+      exams: !!document.querySelector('#courseCopyOptions [data-copy="exams"]:checked')
+    };
+    const ok = await saveCourse(id, { name, fee, books, examDate, ts: new Date().toISOString() });
     btn.disabled = false; btn.textContent = 'Add course';
 
     if(ok){
+      let copied = null;
+      if(copyFrom && (copyWant.skills || copyWant.exams)){
+        btn.disabled = true; btn.textContent = 'Bringing things over…';
+        copied = await applyCourseCopy(copyFrom, name, copyWant);
+        btn.disabled = false; btn.textContent = 'Add course';
+      }
       document.getElementById('courseNameInput').value = '';
       document.getElementById('courseFeeInput').value = '';
       document.getElementById('courseBooksInput').value = '';
+      document.getElementById('courseExamDateInput').value = '';
+      document.getElementById('courseCopyFrom').value = '';
+      await renderCourseCopyOptions();
       await renderAdminCourseList();
       await refreshCourseNamesCache();
       await populateRegisterCourseOptions();
+      await populateCourseCopyFrom();
+      if(copied && (copied.skills || copied.exams)){
+        const bits = [];
+        if(copied.skills) bits.push(`${copied.skills} skill${copied.skills === 1 ? '' : 's'} now on both courses`);
+        if(copied.exams) bits.push(`${copied.exams} exam${copied.exams === 1 ? '' : 's'} copied across`);
+        alert(`“${name}” is ready — ${bits.join(', ')}.`);
+      }
     } else {
       alert('Could not add the course — please try again.');
     }
   });
 
-  document.getElementById('refreshCourses').addEventListener('click', ()=>{ invalidateDbCache('courses'); renderAdminCourseList(); });
+  document.getElementById('refreshCourses').addEventListener('click', ()=>{ invalidateDbCache('courses'); renderAdminCourseList(); populateCourseCopyFrom(); });
+  document.getElementById('courseCopyFrom').addEventListener('change', renderCourseCopyOptions);
 
   /* ---------------- ADMIN: Payments ---------------- */
   let paymentPendingImageUrl = null;
@@ -16700,6 +17011,8 @@
       `).join('');
     }
 
+    renderExamCountdown(timeline);
+
     const chartWrap = document.getElementById('myProgressChartWrap');
     if(chartWrap){
       if(timeline.length === 0){
@@ -20279,6 +20592,7 @@
           <button class="student-action-btn analysis-btn">Analysis</button>
           ${!isAssistant ? `<button class="student-action-btn lesson-credits-btn" title="Give this student lesson-recording views">🎬 ${typeof s.lessonViewCredits === 'number' ? `${Math.max(0, s.lessonViewCredits - (s.lessonViewsUsed || 0))}/${s.lessonViewCredits} views` : 'Views: ∞'}</button>` : ''}
           ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="student-action-btn" style="color:var(--success);border-color:var(--success);text-decoration:none;display:inline-block;">WhatsApp</a>` : ''}
+          ${!isAssistant ? `<button class="student-action-btn exam-date-btn" title="Only if this student sits a different date from the rest of their course">📅 ${s.examDate ? new Date(s.examDate + 'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short'}) : 'Exam date'}</button>` : ''}
           <button class="student-action-btn parent-link-btn" title="Get a shareable, read-only link for this student's parent — no login needed">👨‍👩‍👧 Parent link</button>
           ${!isAssistant ? `<button class="student-action-btn reset-pass-btn" title="Passwords are stored securely and can't be viewed — set a new one instead">Reset password</button>` : ''}
           ${!isAssistant ? `<button class="student-action-btn delete-student-btn">Delete</button>` : ''}
@@ -20317,6 +20631,28 @@
             ? `${sig.level >= 2 ? '⚠ Worth checking' : 'Keep an eye on it'}:\n- ${sig.reasons.join('\n- ')}`
             : 'Nothing unusual — one device, no overlapping use.';
           alert(`Recent sign-ins for ${s.username}:\n\n${lines}\n\n${verdict}`);
+        });
+      }
+      const examBtn = tr.querySelector('.exam-date-btn');
+      if(examBtn){
+        examBtn.addEventListener('click', async ()=>{
+          const courses = await fetchAllCourses();
+          const courseDate = (courses.find(c => c.name === s.course) || {}).examDate;
+          const entered = prompt(
+            `Exam date for ${s.username} — only needed if they sit a different date from the rest of ${s.course || 'their course'}.\n` +
+            (courseDate ? `The course date is ${courseDate}.\n` : `No date is set on the course yet.\n`) +
+            `\nWrite it as YYYY-MM-DD. Leave blank to follow the course.`,
+            s.examDate || '');
+          if(entered === null) return;
+          const trimmed = entered.trim();
+          if(trimmed && !parseExamDate(trimmed)){ alert('That date could not be read. Use YYYY-MM-DD, e.g. 2027-05-24.'); return; }
+          const student = await getStudent(s.username);
+          if(!student) return;
+          if(trimmed) student.examDate = trimmed; else delete student.examDate;
+          await dbSet('students', studentKey(s.username), student);
+          invalidateDbCache('students');
+          await renderAdminStudents();
+          await refreshDashboardIfSignedInAs(s.username);
         });
       }
       tr.querySelector('.parent-link-btn').addEventListener('click', async ()=>{
