@@ -9038,10 +9038,17 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 
     const examId = editingExamId || (slugify(title) + '-' + Date.now());
     const examPublishRaw = document.getElementById('examPublishDateInput').value;
+    // A book typed with different capitals or spacing joins the book that
+    // already exists, instead of quietly starting a second one.
+    let typedBook = document.getElementById('examBookInput').value.trim().replace(/\s+/g, ' ');
+    if(typedBook){
+      const existingBook = (await allBookNames()).find(b => b.trim().toLowerCase() === typedBook.toLowerCase());
+      if(existingBook) typedBook = existingBook;
+    }
     const examData = { title, course: examCourseInput.value.trim(), description: examDescInput.value.trim(), timeLimit, pdfUrl: examPendingPdfUrl || null,
       publishAt: examPublishRaw ? new Date(examPublishRaw + 'T00:00:00').toISOString() : null,
       recordingUrl: document.getElementById('examRecordingInput').value.trim() || null,
-      book: document.getElementById('examBookInput').value.trim() || null, questions };
+      book: typedBook || null, questions };
 
     const saveBtn = document.getElementById('saveExamBtn');
     saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
@@ -9049,13 +9056,43 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     saveBtn.disabled = false; saveBtn.textContent = 'Save exam';
 
     if(ok){
+      // Students only see a book's exams when the book is on their course,
+      // so a book typed here has to land on this exam's course too —
+      // otherwise the exam silently disappears for everyone on it.
+      const bookNote = await ensureBookOnCourse(examData.book, examData.course);
       examEditor.style.display = 'none';
       await renderAdminExamList();
       await renderPublicExams();
+      if(bookNote) alert(bookNote);
     } else {
       alert('Could not save the exam — please try again.');
     }
   });
+
+  // Adds a book to a course (by course name) if it isn't there yet.
+  // Returns a short message when it changed something, or when the book
+  // can't reach any student, so the admin knows what happened.
+  async function ensureBookOnCourse(book, courseName){
+    if(!book) return null;
+    invalidateDbCache('courses');
+    const courses = await fetchAllCourses();
+    const lower = book.trim().toLowerCase();
+    if(!courseName){
+      const onAny = courses.some(c => (c.books || []).some(b => String(b).trim().toLowerCase() === lower));
+      return onAny ? null : `Saved. Note: the book “${book}” isn't on any course yet, so no student can see this exam. Add it to a course from the 📕 Books tab.`;
+    }
+    const course = courses.find(c => c.name === courseName);
+    if(!course) return null;
+    const books = Array.isArray(course.books) ? course.books.slice() : [];
+    if(books.some(b => String(b).trim().toLowerCase() === lower)) return null;
+    books.push(book);
+    const saved = await saveCourse(course.id, { ...course, books });
+    invalidateDbCache('courses');
+    if(typeof refreshCourseNamesCache === 'function') await refreshCourseNamesCache();
+    return saved
+      ? `Saved — and the book “${book}” was added to the course “${courseName}”, so its students can see this exam.`
+      : `The exam was saved, but the book “${book}” couldn't be added to “${courseName}”. Add it from the 📕 Books tab so students can see this exam.`;
+  }
 
   async function editExam(examId){
     const exam = await dbGet('exams', examId);
@@ -13261,8 +13298,9 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   // Put a book on exactly the ticked courses and take it off the rest. Used
   // when a book is saved, and when it is renamed or removed.
   async function applyBookToCourses(bookName, chosenCourseIds, oldName){
+    invalidateDbCache('courses');
     const courses = await fetchAllCourses();
-    let touched = 0;
+    let touched = 0, failed = [];
     for(const c of courses){
       const books = Array.isArray(c.books) ? c.books.slice() : [];
       const before = books.join('\u0000');
@@ -13274,11 +13312,12 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       if(shouldHave && !has) books.push(bookName);
       if(!shouldHave && has){ for(let i = books.length - 1; i >= 0; i--){ if(books[i] === bookName) books.splice(i, 1); } }
       if(books.join('\u0000') !== before){
-        await saveCourse(c.id, { ...c, books });
-        touched++;
+        if(await saveCourse(c.id, { ...c, books })) touched++;
+        else failed.push(c.name);
       }
     }
-    if(touched) invalidateDbCache('courses');
+    invalidateDbCache('courses');
+    if(failed.length) alert(`Couldn't update ${failed.join(', ')} — please save the book again.`);
     return touched;
   }
 
@@ -13293,6 +13332,11 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const name = document.getElementById('bookNameInput').value.trim();
     if(!name){ alert('Give the book a name.'); return; }
     const chosen = new Set(Array.from(document.querySelectorAll('#bookExamList input:checked')).map(cb => cb.value));
+    // Ask before touching anything: a book on no course is invisible to students.
+    const tickedCourses = document.querySelectorAll('#bookCourseList input:checked').length;
+    const hasCourses = document.querySelectorAll('#bookCourseList input[type="checkbox"]').length > 0;
+    if(hasCourses && tickedCourses === 0 &&
+       !confirm(`“${name}” isn't ticked on any course, so no student will see its exams.\n\nOK = save it anyway, Cancel = go back and tick a course.`)) return;
 
     const btn = document.getElementById('saveBookBtn');
     btn.disabled = true;
