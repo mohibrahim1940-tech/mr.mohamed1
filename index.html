@@ -3400,6 +3400,128 @@
   .air-pill.ok{ background:var(--success-soft); border-color:rgba(var(--success-rgb),0.45); }
   .air-pill.bad{ background:var(--ember-soft); border-color:rgba(255,107,74,0.45); }
   .air-pill.wait{ color:var(--muted); }
+
+  /* ---------- per-student plan ---------- */
+  .sp-box{ max-width:560px; }
+  .sp-sub{ color:var(--muted); font-size:0.84rem; margin-bottom:14px !important; }
+  .sp-section-title{ font-family:'IBM Plex Mono',monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin:16px 0 8px; }
+  .sp-plan{ border:1px solid var(--line); background:var(--panel-2); border-radius:12px; padding:14px; margin-bottom:10px; }
+  .sp-plan-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .sp-plan-name{ font-weight:600; font-size:0.96rem; overflow-wrap:anywhere; }
+  .sp-plan-meta{ color:var(--muted); font-size:0.78rem; margin-top:3px; line-height:1.5; }
+  .sp-bar{ height:7px; border-radius:7px; background:var(--ink); overflow:hidden; margin:10px 0 6px; border:1px solid var(--line-soft); }
+  .sp-bar span{ display:block; height:100%; background:var(--success); border-radius:7px; }
+  .sp-next{ font-size:0.82rem; color:var(--text); }
+  .sp-next b{ font-weight:600; }
+  .sp-remove{ padding:6px 12px !important; font-size:0.78rem !important; width:auto !important; flex:0 0 auto; }
+  .sp-fields{ display:grid; grid-template-columns:1.4fr 1fr; gap:10px; }
+  .sp-fields label{ display:block; min-width:0; }
+  .sp-fields select, .sp-fields input{ width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--line); background:var(--ink); color:var(--text); font-family:'Inter',sans-serif; font-size:0.9rem; min-width:0; margin:0; }
+  .sp-preview{ color:var(--muted); font-size:0.82rem; margin:10px 0 12px; line-height:1.5; min-height:1.2em; }
+  .sp-hint{ color:var(--muted); font-size:0.78rem; margin-top:8px; text-align:center; }
+  .sp-hint.good{ color:var(--success); }
+  :root[data-theme="light"] .sp-hint.good{ color:#138a52; }
+  @media (max-width:480px){ .sp-fields{ grid-template-columns:1fr; } }
+
+  /* ---------- recording player: full screen on every device ---------- */
+  .rec-toolbar{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:-4px 0 12px; }
+  .rec-fs-btn{ padding:8px 16px; font-size:0.85rem; }
+  .rec-rotate-hint{ display:none; color:var(--muted); font-size:0.78rem; }
+  @media (hover:none) and (pointer:coarse) and (orientation:portrait){ .rec-rotate-hint{ display:inline; } }
+  /* Real fullscreen (Android, iPad, computers) */
+  /* the page keeps a 15px scrollbar gutter; drop it while the video is full screen */
+  html:has(#recordingPlayerWrap:fullscreen), html:has(#recordingPlayerWrap:-webkit-full-screen){ overflow:hidden; scrollbar-gutter:auto; }
+  #recordingPlayerWrap:fullscreen{ padding-top:0 !important; width:100vw !important; height:100vh !important; margin:0 !important; border-radius:0 !important; background:#000 !important; }
+  #recordingPlayerWrap:-webkit-full-screen{ padding-top:0 !important; width:100vw !important; height:100vh !important; margin:0 !important; border-radius:0 !important; background:#000 !important; }
+  @media (max-width:600px){
+    #recordingModal{ padding:10px; }
+    #recordingModal .modal-box{ padding:20px 12px 14px; max-height:96vh; max-height:96dvh; }
+    #recordingModal .rec-fs-btn{ flex:1 1 auto; justify-content:center; padding:11px 16px; font-size:0.92rem; }
+  }
+  /* iPhone can't make the player itself full screen, so the popup becomes the full screen */
+  #recordingModal.rec-cinema{ padding:0 !important; background:#000 !important; }
+  #recordingModal.rec-cinema .modal-box{ max-width:none !important; width:100vw; height:100vh; height:100dvh; max-height:none !important; border:0; border-radius:0; padding:0 !important; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden; transform:none !important; }
+  #recordingModal.rec-cinema .modal-box > h3, #recordingModal.rec-cinema #recordingPartTabs, #recordingModal.rec-cinema #recordingViewNote, #recordingModal.rec-cinema #recordingFallbackLink, #recordingModal.rec-cinema .modal-box > div:last-child:not(.rec-toolbar):not(#recordingPlayerWrap){ display:none !important; }
+  #recordingModal.rec-cinema #recordingPlayerWrap{ padding-top:0 !important; margin:0 !important; border-radius:0 !important; width:min(100vw, calc(100dvh * 16 / 9)) !important; aspect-ratio:16 / 9; height:auto; max-height:100dvh; }
+  #recordingModal.rec-cinema .rec-toolbar{ position:absolute; z-index:3; margin:0; top:max(10px, env(safe-area-inset-top)); left:max(10px, env(safe-area-inset-left)); }
+  #recordingModal.rec-cinema .rec-rotate-hint{ display:none !important; }
+  #recordingModal.rec-cinema .rec-fs-btn{ background:rgba(0,0,0,0.55); color:#fff; border-color:rgba(255,255,255,0.35); padding:8px 14px !important; font-size:0.82rem !important; flex:0 0 auto !important; }
+  #recordingModal.rec-cinema .modal-close{ z-index:3; color:#fff; background:rgba(0,0,0,0.55); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; top:max(10px, env(safe-area-inset-top)); right:max(10px, env(safe-area-inset-right)); }
+  /* A phone turned sideways fills the screen automatically */
+  @media (hover:none) and (pointer:coarse) and (orientation:landscape) and (max-height:540px){
+  #recordingModal.open:not(.rec-no-auto){ padding:0 !important; background:#000 !important; }
+  #recordingModal.open:not(.rec-no-auto) .modal-box{ max-width:none !important; width:100vw; height:100vh; height:100dvh; max-height:none !important; border:0; border-radius:0; padding:0 !important; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden; transform:none !important; }
+  #recordingModal.open:not(.rec-no-auto) .modal-box > h3, #recordingModal.open:not(.rec-no-auto) #recordingPartTabs, #recordingModal.open:not(.rec-no-auto) #recordingViewNote, #recordingModal.open:not(.rec-no-auto) #recordingFallbackLink, #recordingModal.open:not(.rec-no-auto) .modal-box > div:last-child:not(.rec-toolbar):not(#recordingPlayerWrap){ display:none !important; }
+  #recordingModal.open:not(.rec-no-auto) #recordingPlayerWrap{ padding-top:0 !important; margin:0 !important; border-radius:0 !important; width:min(100vw, calc(100dvh * 16 / 9)) !important; aspect-ratio:16 / 9; height:auto; max-height:100dvh; }
+  #recordingModal.open:not(.rec-no-auto) .rec-toolbar{ position:absolute; z-index:3; margin:0; top:max(10px, env(safe-area-inset-top)); left:max(10px, env(safe-area-inset-left)); }
+  #recordingModal.open:not(.rec-no-auto) .rec-rotate-hint{ display:none !important; }
+  #recordingModal.open:not(.rec-no-auto) .rec-fs-btn{ background:rgba(0,0,0,0.55); color:#fff; border-color:rgba(255,255,255,0.35); padding:8px 14px !important; font-size:0.82rem !important; flex:0 0 auto !important; }
+  #recordingModal.open:not(.rec-no-auto) .modal-close{ z-index:3; color:#fff; background:rgba(0,0,0,0.55); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; top:max(10px, env(safe-area-inset-top)); right:max(10px, env(safe-area-inset-right)); }
+  }
+
+  /* ---------- My attempts (skills + exams) ---------- */
+  .at-box{ max-width:640px; }
+  .at-kicker{ font-family:'IBM Plex Mono',monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; overflow-wrap:anywhere; }
+  .at-box h3{ overflow-wrap:anywhere; }
+  .at-summary{ color:var(--muted); font-size:0.86rem; margin:2px 0 16px; }
+  .at-list{ display:grid; gap:8px; }
+  .at-row{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--panel-2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; color:var(--text); font:inherit; cursor:pointer; transition:border-color .15s; min-height:56px; }
+  .at-row:hover{ border-color:var(--signal); }
+  .at-row:focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
+  .at-row-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .at-row-name{ font-weight:600; font-size:0.95rem; }
+  .at-best{ font-size:0.72rem; font-weight:500; color:var(--gold); margin-left:4px; }
+  :root[data-theme="light"] .at-best{ color:#a16207; }
+  .at-row-date{ color:var(--muted); font-size:0.78rem; }
+  .at-row-score{ display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+  .at-pct{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.1rem; font-variant-numeric:tabular-nums; }
+  .at-pct.good{ color:var(--success); } .at-pct.ok{ color:var(--warn); } .at-pct.low{ color:var(--ember); }
+  :root[data-theme="light"] .at-pct.good{ color:#138a52; } :root[data-theme="light"] .at-pct.ok{ color:#b45309; } :root[data-theme="light"] .at-pct.low{ color:#c2410c; }
+  .at-frac{ color:var(--muted); font-size:0.76rem; white-space:nowrap; }
+  .at-delta.up{ color:var(--success); } .at-delta.down{ color:var(--ember); }
+  :root[data-theme="light"] .at-delta.up{ color:#138a52; } :root[data-theme="light"] .at-delta.down{ color:#c2410c; }
+  .at-row-go{ color:var(--signal); font-size:0.8rem; white-space:nowrap; }
+  .at-back{ padding:6px 12px !important; font-size:0.82rem !important; margin-bottom:12px; width:auto !important; }
+  .at-filters{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .at-filter{ background:var(--panel-2); border:1px solid var(--line); color:var(--muted); border-radius:18px; padding:6px 13px; font:inherit; font-size:0.8rem; cursor:pointer; min-height:34px; }
+  .at-filter.active{ background:var(--accent-wash); border-color:var(--signal); color:var(--text); }
+  .at-qs{ display:grid; gap:12px; }
+  .at-q{ border:1px solid var(--line); border-left:4px solid var(--success); border-radius:12px; padding:14px; background:var(--panel-2); min-width:0; }
+  .at-q.bad{ border-left-color:var(--ember); }
+  .at-q[hidden]{ display:none; }
+  .at-q-head{ display:flex; justify-content:space-between; gap:10px; margin-bottom:8px; font-size:0.78rem; }
+  .at-q-num{ color:var(--muted); font-family:'IBM Plex Mono',monospace; overflow-wrap:anywhere; }
+  .at-q-verdict{ font-weight:600; white-space:nowrap; color:var(--success); }
+  .at-q.bad .at-q-verdict{ color:var(--ember); }
+  :root[data-theme="light"] .at-q-verdict{ color:#138a52; } :root[data-theme="light"] .at-q.bad .at-q-verdict{ color:#c2410c; }
+  .at-q-img{ max-width:100%; max-height:280px; border-radius:8px; display:block; margin-bottom:8px; background:#fff; }
+  .at-q-text{ font-size:0.95rem; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; margin-bottom:10px; }
+  .at-opts{ display:grid; gap:6px; }
+  .at-opt{ display:flex; align-items:center; gap:10px; border:1px solid var(--line-soft); border-radius:9px; padding:8px 10px; background:var(--panel); font-size:0.9rem; flex-wrap:wrap; }
+  .at-opt.is-right{ border-color:var(--success); background:var(--success-soft); }
+  .at-opt.is-wrong{ border-color:var(--ember); background:var(--ember-soft); }
+  .at-letter{ flex-shrink:0; width:24px; height:24px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:0.74rem; border:1px solid var(--line-strong); }
+  .at-opt.is-right .at-letter{ background:var(--success); border-color:var(--success); color:var(--tile-ink); }
+  .at-opt.is-wrong .at-letter{ background:var(--ember); border-color:var(--ember); color:#fff; }
+  .at-opt-text{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .at-opt-text img{ max-width:160px; max-height:110px; display:block; border-radius:6px; background:#fff; }
+  .at-tag{ font-size:0.74rem; font-weight:600; white-space:nowrap; margin-left:auto; }
+  .at-opt.is-right .at-tag{ color:var(--success); } .at-opt.is-wrong .at-tag{ color:var(--ember); }
+  :root[data-theme="light"] .at-opt.is-right .at-tag{ color:#138a52; } :root[data-theme="light"] .at-opt.is-wrong .at-tag{ color:#c2410c; }
+  .at-note{ color:var(--warn); font-size:0.8rem; margin-top:8px; }
+  .at-expl-btn{ margin-top:10px; padding:7px 13px !important; font-size:0.82rem !important; }
+  .at-expl{ margin-top:10px; display:grid; gap:10px; }
+  .at-expl-item{ border-top:1px solid var(--line-soft); padding-top:10px; }
+  .at-expl-by{ font-size:0.74rem; color:var(--muted); margin-bottom:4px; }
+  .at-expl-text{ white-space:pre-wrap; overflow-wrap:anywhere; font-size:0.9rem; line-height:1.55; }
+  .at-expl-item img, .at-expl-item video{ max-width:100%; border-radius:8px; margin-top:6px; display:block; }
+  .at-expl-item audio{ width:100%; margin-top:6px; }
+  .attempts-btn{ font-size:0.84rem; }
+  @media (max-width:520px){
+    .at-box{ padding:24px 14px 18px; }
+    .at-row{ padding:11px 12px; gap:10px; }
+    .at-row-go{ display:none; }
+  }
 </style>
 </head>
 <body>
@@ -5188,8 +5310,12 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     <button class="modal-close" id="closeRecordingModal">&times;</button>
     <h3 id="recordingModalTitle">Session recording</h3>
     <div id="recordingPlayerWrap" style="position:relative; width:100%; padding-top:56.25%; background:#000; border-radius:12px; overflow:hidden; margin:14px 0;">
-      <iframe id="recordingPlayerFrame" src="" allow="fullscreen" allowfullscreen
+      <iframe id="recordingPlayerFrame" title="Video player" allowfullscreen webkitallowfullscreen mozallowfullscreen
         style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"></iframe>
+    </div>
+    <div class="rec-toolbar">
+      <button type="button" class="btn btn-ghost rec-fs-btn" id="recordingFullscreenBtn">⛶ Full screen</button>
+      <span class="rec-rotate-hint">📱 Tip: turn your phone sideways for a bigger picture</span>
     </div>
     <div id="recordingPartTabs" style="display:none; gap:8px; flex-wrap:wrap; margin-bottom:12px;"></div>
     <div id="recordingViewNote" style="color:var(--muted); font-size:0.84rem;"></div>
@@ -5224,6 +5350,33 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     </div>
     <div id="applyPlanPreview" style="color:var(--muted); font-size:0.82rem; margin:12px 0;"></div>
     <button class="btn btn-primary" id="applyPlanConfirmBtn" style="width:100%;">Apply plan</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="attemptsModal" style="z-index:520;">
+  <div class="modal-box at-box" role="dialog" aria-modal="true" aria-labelledby="attemptsTitle">
+    <button class="modal-close" id="closeAttemptsModal" aria-label="Close">&times;</button>
+    <div id="attemptsBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="studentPlanModal" style="z-index:500;">
+  <div class="modal-box sp-box" role="dialog" aria-modal="true" aria-labelledby="studentPlanTitle">
+    <button class="modal-close" id="closeStudentPlanModal" aria-label="Close">&times;</button>
+    <h3 id="studentPlanTitle">Plan</h3>
+    <p class="sp-sub" id="studentPlanSub"></p>
+    <div class="sp-section-title">Current plan</div>
+    <div id="studentPlanCurrent"><div class="admin-empty">Loading…</div></div>
+    <div class="sp-section-title">Give a plan</div>
+    <div id="studentPlanAdd">
+      <div class="sp-fields">
+        <label><span class="field-label">Plan</span><select id="studentPlanSelect"></select></label>
+        <label><span class="field-label">Start date (Day 1)</span><input type="date" id="studentPlanStart"></label>
+      </div>
+      <div class="sp-preview" id="studentPlanPreview" aria-live="polite"></div>
+      <button type="button" class="btn btn-primary" id="studentPlanApplyBtn" style="width:100%;">Add this plan</button>
+      <div class="sp-hint" id="studentPlanHint"></div>
+    </div>
   </div>
 </div>
 
@@ -5307,7 +5460,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="admin-tab" data-tab="questionAnalyticsPanel" data-roles="admin,act-admin">📉 Question Analytics</button>
       <button class="admin-tab" data-tab="paymentsPanel" data-roles="admin,act-admin">💳 Payments</button>
       <button class="admin-tab" data-tab="retakesPanel" data-roles="admin,act-admin">🔁 Retakes</button>
-      <button class="admin-tab" data-tab="plansPanel" data-roles="admin,act-admin">📋 Course Plans</button>
+      <button class="admin-tab" data-tab="plansPanel" data-roles="admin,assistant,act-admin">📋 Course Plans</button>
       <button class="admin-tab" data-tab="booksPanel" data-roles="admin,act-admin">📕 Books</button>
       <button class="admin-tab" data-tab="reviewsPanel" data-roles="admin,assistant,act-admin">Reviews</button>
       <button class="admin-tab" data-tab="coursesPanel" data-roles="admin">Courses</button>
@@ -7998,7 +8151,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
                 <div class="explanation-video-label">📝 ${exp.by ? esc(exp.by) : 'Unknown'}</div>
                 ${exp.text ? `<div class="explanation-text-body">${esc(exp.text)}</div>` : ''}
                 ${exp.photo ? `<img src="${exp.photo}" alt="Explanation photo" style="max-width:200px;border-radius:6px;display:block;margin-top:6px;">` : ''}
-                ${exp.video ? `<video controls preload="metadata" src="${exp.video}" style="max-width:280px;border-radius:6px;display:block;margin-top:6px;"></video>` : ''}
+                ${exp.video ? `<video controls playsinline preload="metadata" src="${exp.video}" style="max-width:280px;border-radius:6px;display:block;margin-top:6px;"></video>` : ''}
                 ${exp.voice ? `<audio controls src="${exp.voice}" style="width:100%;margin-top:6px;"></audio>` : ''}
               </div>
             `).join('')}
@@ -9358,6 +9511,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     }
 
     const latestByTitle = await getLatestAttemptsByTitle();
+    const myAttempts = await fetchMyAttempts();
 
     grid.innerHTML = '';
     exams.forEach(exam=>{
@@ -9379,7 +9533,9 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         ${exam.pdfUrl ? `<a href="${esc(exam.pdfUrl)}" target="_blank" rel="noopener" class="btn btn-ghost" style="display:block;text-align:center;text-decoration:none;margin-bottom:8px;">📄 Download printable PDF</a>` : ''}
         ${exam.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(exam.recordingUrl)}" data-title="${esc(exam.title)}" style="display:block;width:100%;margin-bottom:8px;">🎬 Watch the lesson${parseRecordingParts(exam.recordingUrl).length > 1 ? ` (${parseRecordingParts(exam.recordingUrl).length} parts)` : ''}</button><div class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem; text-align:center; margin-bottom:8px;"></div>` : ''}
         <button class="btn btn-ghost start-exam-btn">${buttonLabel}</button>
+        ${currentStudent ? attemptsButtonHtml(attemptsFor(myAttempts, 'exam', exam.id, exam.title), true) : ''}
       `;
+      wireAttemptsButton(card, 'exam', exam.id, exam.title);
       card.querySelector('.start-exam-btn').addEventListener('click', async ()=>{
         if(!currentStudent){
           openAuthModal('signinForm');
@@ -9398,6 +9554,169 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     applyDashSearchFilter('examsSearchInput', 'examsGrid');
     refreshLessonCreditDisplays();
   }
+
+
+  /* ---------------- My attempts (skills + exams) ----------------
+     Every time a student finishes a skill practice or an exam it is saved
+     as an attempt with each question, their answer and the right answer.
+     This lists them as Attempt 1, 2, 3… and opens any one for a full
+     question-by-question review. */
+  async function fetchMyAttempts(){
+    if(!currentStudent) return [];
+    const u = currentStudent.username.trim().toLowerCase();
+    return (await fetchAttemptsIndex()).filter(a => String(a.username || '').trim().toLowerCase() === u);
+  }
+  // Newer attempts know exactly which skill/exam they came from; older ones
+  // are matched by title.
+  function attemptsFor(all, kind, id, title){
+    return (all || []).filter(a => a.sourceId ? (a.sourceId === id && (a.source || kind) === kind) : a.examTitle === title)
+      .sort((x, y) => new Date(x.ts || 0) - new Date(y.ts || 0));
+  }
+  function attemptsButtonHtml(list, block){
+    if(!list || list.length === 0) return '';
+    const last = list[list.length - 1];
+    const best = Math.max(...list.map(a => a.pct || 0));
+    return `<button type="button" class="btn btn-ghost attempts-btn"${block ? ' style="display:block;width:100%;margin-top:8px;"' : ''}>📊 My attempts (${list.length}) · last ${last.pct ?? 0}%${list.length > 1 ? ` · best ${best}%` : ''}</button>`;
+  }
+  function wireAttemptsButton(card, kind, id, title){
+    const b = card.querySelector('.attempts-btn');
+    if(b) b.addEventListener('click', (e)=>{ e.stopPropagation(); openAttemptsModal(kind, id, title); });
+  }
+
+  let atState = null;
+  const atDate = ts => new Date(ts).toLocaleString(undefined, { weekday:'short', day:'numeric', month:'short', hour:'numeric', minute:'2-digit' });
+
+  async function openAttemptsModal(kind, id, title){
+    atState = { kind, id, title, list: [] };
+    const body = document.getElementById('attemptsBody');
+    body.innerHTML = '<div class="admin-empty">Loading…</div>';
+    document.getElementById('attemptsModal').classList.add('open');
+    atState.list = attemptsFor(await fetchMyAttempts(), kind, id, title);
+    renderAttemptsList();
+  }
+
+  function renderAttemptsList(){
+    const body = document.getElementById('attemptsBody');
+    const list = atState.list;
+    if(list.length === 0){
+      body.innerHTML = `<h3 id="attemptsTitle">📊 ${esc(atState.title)}</h3><div class="admin-empty">No attempts yet — finish it once and it shows up here.</div>`;
+      return;
+    }
+    const best = Math.max(...list.map(a => a.pct || 0));
+    const rows = list.map((a, i) => ({ a, n: i + 1, prev: i > 0 ? list[i - 1] : null })).reverse();
+    body.innerHTML = `
+      <div class="at-kicker">${atState.kind === 'skill' ? '🎯 Skill' : '📝 Exam'}</div>
+      <h3 id="attemptsTitle">${esc(atState.title)}</h3>
+      <div class="at-summary">${list.length} attempt${list.length === 1 ? '' : 's'} · best ${best}% · latest ${list[list.length - 1].pct ?? 0}%</div>
+      <div class="at-list">${rows.map(({ a, n, prev }) => {
+        const pct = a.pct ?? 0;
+        const delta = prev ? pct - (prev.pct ?? 0) : null;
+        const tone = pct >= 85 ? 'good' : pct >= 60 ? 'ok' : 'low';
+        return `<button type="button" class="at-row" data-id="${esc(a.id)}" data-n="${n}">
+          <span class="at-row-main">
+            <span class="at-row-name">Attempt ${n}${pct === best && list.length > 1 ? ' <span class="at-best">⭐ best</span>' : ''}</span>
+            <span class="at-row-date">${a.ts ? esc(atDate(a.ts)) : ''}</span>
+          </span>
+          <span class="at-row-score">
+            <span class="at-pct ${tone}">${pct}%</span>
+            <span class="at-frac">${a.correct ?? 0}/${a.total ?? 0} right${delta !== null && delta !== 0 ? ` <span class="at-delta ${delta > 0 ? 'up' : 'down'}">${delta > 0 ? '▲' : '▼'} ${Math.abs(delta)}</span>` : ''}</span>
+          </span>
+          <span class="at-row-go" aria-hidden="true">Review ›</span>
+        </button>`;
+      }).join('')}</div>`;
+    body.querySelectorAll('.at-row').forEach(r => r.addEventListener('click', ()=> openAttemptReview(r.dataset.id, Number(r.dataset.n))));
+  }
+
+  async function openAttemptReview(attemptId, n){
+    const body = document.getElementById('attemptsBody');
+    body.innerHTML = '<div class="admin-empty">Loading…</div>';
+    const rec = await dbGet('attempts', attemptId);
+    const results = rec && Array.isArray(rec.results) ? rec.results : null;
+    const head = `
+      <button type="button" class="btn btn-ghost at-back">‹ All attempts</button>
+      <div class="at-kicker">${esc(atState.title)}</div>
+      <h3 id="attemptsTitle">Attempt ${n}</h3>
+      <div class="at-summary">${rec && rec.ts ? esc(atDate(rec.ts)) + ' · ' : ''}${rec ? `${rec.correct ?? 0} of ${rec.total ?? 0} right (${rec.pct ?? 0}%)` : ''}</div>`;
+    if(!results){
+      body.innerHTML = head + '<div class="admin-empty">The question-by-question details of this attempt weren\'t saved.</div>';
+      body.querySelector('.at-back').addEventListener('click', renderAttemptsList);
+      return;
+    }
+    const wrongN = results.filter(r => !r.correct).length;
+    const rightN = results.length - wrongN;
+    body.innerHTML = head + `
+      <div class="at-filters" role="group" aria-label="Show">
+        <button type="button" class="at-filter active" data-f="all">All ${results.length}</button>
+        <button type="button" class="at-filter" data-f="wrong">✗ Wrong ${wrongN}</button>
+        <button type="button" class="at-filter" data-f="right">✓ Right ${rightN}</button>
+      </div>
+      <div class="at-qs">${results.map((r, i) => attemptQuestionHtml(r, i)).join('')}</div>`;
+    body.querySelector('.at-back').addEventListener('click', renderAttemptsList);
+    body.querySelectorAll('.at-filter').forEach(b => b.addEventListener('click', ()=>{
+      body.querySelectorAll('.at-filter').forEach(x => x.classList.toggle('active', x === b));
+      body.querySelectorAll('.at-q').forEach(q => {
+        q.hidden = b.dataset.f === 'wrong' ? q.dataset.ok === '1' : b.dataset.f === 'right' ? q.dataset.ok !== '1' : false;
+      });
+    }));
+    body.querySelectorAll('.at-expl-btn').forEach(b => b.addEventListener('click', ()=>{
+      const box = b.nextElementSibling; box.hidden = !box.hidden;
+      b.textContent = box.hidden ? '💡 See the explanation' : '💡 Hide the explanation';
+    }));
+    body.scrollTop = 0;
+    document.querySelector('#attemptsModal .modal-box').scrollTop = 0;
+  }
+
+  function attemptQuestionHtml(r, i){
+    const opts = Array.isArray(r.options) ? r.options : [];
+    const chosen = r.chosenAnswer, right = r.correctAnswer;
+    const unanswered = chosen === null || chosen === undefined;
+    const ok = !!r.correct;
+    const text = r.text && r.text !== '(question with image)' ? r.text : '';
+    const exps = getQuestionExplanations(r);
+    const optionsHtml = opts.map((o, k) => {
+      const img = r.optionImages && r.optionImages[k];
+      const isRight = k === right, isMine = k === chosen;
+      const cls = isRight ? 'is-right' : (isMine ? 'is-wrong' : '');
+      const tag = isRight && isMine ? '✓ Your answer' : isRight ? '✓ Correct answer' : isMine ? '✗ Your answer' : '';
+      return `<div class="at-opt ${cls}">
+        <span class="at-letter">${String.fromCharCode(65 + k)}</span>
+        <span class="at-opt-text" dir="auto">${o !== null && o !== undefined && String(o).trim() ? esc(o) : ''}${img ? `<img src="${esc(img)}" alt="Choice ${String.fromCharCode(65 + k)}">` : ''}</span>
+        ${tag ? `<span class="at-tag">${tag}</span>` : ''}
+      </div>`;
+    }).join('');
+    const explHtml = exps.length ? `
+      <button type="button" class="btn btn-ghost at-expl-btn">💡 See the explanation</button>
+      <div class="at-expl" hidden>${exps.map(e => `
+        <div class="at-expl-item">
+          ${e.by ? `<div class="at-expl-by">${esc(e.by)}</div>` : ''}
+          ${e.text ? `<div class="at-expl-text" dir="auto">${esc(e.text)}</div>` : ''}
+          ${e.photo ? `<img src="${esc(e.photo)}" alt="Explanation">` : ''}
+          ${e.video ? explanationVideoPlayerHtml(e.video, esc(e.by || 'your coach')) : ''}
+          ${e.voice ? `<audio controls src="${esc(e.voice)}"></audio>` : ''}
+        </div>`).join('')}</div>` : '';
+    return `<div class="at-q ${ok ? 'ok' : 'bad'}" data-ok="${ok ? 1 : 0}">
+      <div class="at-q-head">
+        <span class="at-q-num">Q${i + 1}${r.lesson ? ` · ${esc(r.lesson)}` : ''}</span>
+        <span class="at-q-verdict">${ok ? '✓ Right' : unanswered ? '— Not answered' : '✗ Wrong'}</span>
+      </div>
+      ${r.image ? `<img class="at-q-img" src="${esc(r.image)}" alt="Question ${i + 1}">` : ''}
+      ${text ? `<div class="at-q-text" dir="auto">${esc(text)}</div>` : ''}
+      <div class="at-opts">${optionsHtml}</div>
+      ${unanswered ? '<div class="at-note">You didn\'t answer this one.</div>' : ''}
+      ${explHtml}
+    </div>`;
+  }
+
+  function closeAttemptsModal(){
+    const m = document.getElementById('attemptsModal');
+    m.classList.remove('open');
+    m.querySelectorAll('video').forEach(v => { try{ v.pause(); }catch(e){} });
+    document.getElementById('attemptsBody').innerHTML = '';
+    atState = null;
+  }
+  document.getElementById('closeAttemptsModal').addEventListener('click', closeAttemptsModal);
+  document.getElementById('attemptsModal').addEventListener('click', e => { if(e.target.id === 'attemptsModal') closeAttemptsModal(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.getElementById('attemptsModal').classList.contains('open')) closeAttemptsModal(); });
 
   // Builds a lookup of the current student's most recent attempt per exam/skill
   // title, so exam and skill cards can show a "Retake now" badge when needed.
@@ -10148,7 +10467,11 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           username: currentStudent.username, examTitle: exam.title,
           correct: correctCount, total: exam.questions.length, pct, results: reviewResults,
           retakeRequired: hasMistakes, retakeDeadline,
-          retakeDayKey: exam.retakeDayKey || null
+          retakeDayKey: exam.retakeDayKey || null,
+          // What this attempt belongs to, so a skill or exam card can list
+          // exactly its own attempts (titles alone can clash).
+          source: (practice || exam.skillId) ? 'skill' : (exam.id ? 'exam' : 'other'),
+          sourceId: practice ? practice.skillId : (exam.skillId || exam.id || null)
         };
         let attemptResult, mistakeResults;
         try{
@@ -10318,7 +10641,9 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         if(currentStudent){ renderWeakPoints(); renderMistakeHistory(); renderOverview(); invalidateDbCache('competitions'); renderStudentCompetitionSection(); }
         // Practice moved the count on — show the card as it is now, not as
         // it was when they opened it.
-        if(practice) renderStudentSkills();
+        if(practice || exam.skillId) renderStudentSkills();
+        // …and the exam card's "My attempts" count picks up this one.
+        else if(exam.id && currentStudent) renderPublicExams();
       });
     }
 
@@ -10365,7 +10690,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         correct: fullData.correct, total: fullData.total, pct: fullData.pct,
         retakeRequired: fullData.retakeRequired, retakeDeadline: fullData.retakeDeadline,
         retakeDayKey: fullData.retakeDayKey || null, ts: fullData.ts,
-        topics: topicSummary(fullData.results)
+        topics: topicSummary(fullData.results),
+        source: fullData.source || null, sourceId: fullData.sourceId || null
       });
     }
     return ok;
@@ -10385,7 +10711,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       correct: a.correct, total: a.total, pct: a.pct,
       retakeRequired: a.retakeRequired, retakeDeadline: a.retakeDeadline,
       retakeDayKey: a.retakeDayKey || null, ts: a.ts,
-      topics: topicSummary(a.results)
+      topics: topicSummary(a.results),
+      source: a.source || null, sourceId: a.sourceId || null
     }));
     const rows = await dbGetAllByIdPrefix('attempts', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -11074,7 +11401,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         questionCount: (data.questions || []).length, pdfUrl: data.pdfUrl || null,
         isRetake: data.isRetake || false, publishAt: data.publishAt || null,
         timeLimit: data.timeLimit || null,
-        topics: data.status === 'completed' ? topicSummary(data.results) : null
+        topics: data.status === 'completed' ? topicSummary(data.results) : null,
+        fromPlan: data.fromPlan || null, planBy: data.planBy || null
       });
       backfillExplanationVideos(data.title, data.questions || []);
     }
@@ -11099,7 +11427,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       isRetake: hw.isRetake || false, publishAt: hw.publishAt || null,
       timeLimit: hw.timeLimit || null,
       topics: hw.status === 'completed' ? topicSummary(hw.results) : null,
-      questionCount: (hw.questions || []).length, pdfUrl: hw.pdfUrl || null
+      questionCount: (hw.questions || []).length, pdfUrl: hw.pdfUrl || null,
+      fromPlan: hw.fromPlan || null, planBy: hw.planBy || null
     }));
     const rows = await dbGetAllByIdPrefix('homework', 'idx-');
     rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
@@ -13089,7 +13418,10 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const btn = document.getElementById('savePlanBtn');
     btn.disabled = true; btn.textContent = 'Saving…';
     const id = editingPlanId || generateId('plan');
-    const ok = await savePlanRecord(id, { name, entries, ts: new Date().toISOString() });
+    const prevPlan = editingPlanId ? (await fetchAllPlans()).find(pl => pl.id === editingPlanId) : null;
+    const who = getCurrentAnswererIdentity();
+    const ok = await savePlanRecord(id, { name, entries, ts: new Date().toISOString(),
+      createdBy: (prevPlan && prevPlan.createdBy) || who, updatedBy: who });
     btn.disabled = false; btn.textContent = 'Save plan';
     if(ok){
       resetPlanEditor();
@@ -13126,7 +13458,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       row.innerHTML = `
         <div>
           <h4>${esc(plan.name)}</h4>
-          <div class="meta">${plan.entries.length} homework${plan.entries.length===1?'':'s'} · runs ${lastDay} day${lastDay===1?'':'s'} · ${totalSets} set${totalSets===1?'':'s'} picked</div>
+          <div class="meta">${plan.entries.length} homework${plan.entries.length===1?'':'s'} · runs ${lastDay} day${lastDay===1?'':'s'} · ${totalSets} set${totalSets===1?'':'s'} picked${plan.updatedBy ? ` · last edited by ${esc(plan.updatedBy)}` : ''}</div>
           <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
             ${plan.entries.slice(0, 12).map(e => {
               const n = planEntrySources(e).length;
@@ -13138,7 +13470,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <div class="exam-list-actions">
           <button class="apply-plan-btn">Apply to students</button>
           <button class="edit-plan-btn">Edit</button>
-          <button class="danger delete-plan-btn">Delete</button>
+          ${currentAdminRole === 'assistant' ? '' : '<button class="danger delete-plan-btn">Delete</button>'}
         </div>
       `;
       row.querySelector('.apply-plan-btn').addEventListener('click', ()=> openApplyPlanModal(plan));
@@ -13151,7 +13483,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         document.getElementById('cancelPlanEditBtn').style.display = '';
         document.getElementById('planNameInput').scrollIntoView({behavior:'smooth', block:'center'});
       });
-      row.querySelector('.delete-plan-btn').addEventListener('click', async ()=>{
+      const delPlanBtn = row.querySelector('.delete-plan-btn');
+      if(delPlanBtn) delPlanBtn.addEventListener('click', async ()=>{
         if(!confirm(`Delete the plan "${plan.name}"? Homework already assigned from it is not affected.`)) return;
         await deletePlanRecord(plan.id);
         invalidateDbCache('plans');
@@ -13538,24 +13871,16 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     document.querySelectorAll('#applyPlanStudentList input').forEach(cb => cb.checked = false);
   });
 
-  document.getElementById('applyPlanConfirmBtn').addEventListener('click', async ()=>{
-    if(!applyingPlan) return;
-    const startRaw = document.getElementById('applyPlanStartDate').value;
-    if(!startRaw){ alert('Pick a start date.'); return; }
-    const usernames = Array.from(document.querySelectorAll('#applyPlanStudentList input:checked')).map(cb => cb.value);
-    if(usernames.length === 0){ alert('Pick at least one student.'); return; }
-
-    const btn = document.getElementById('applyPlanConfirmBtn');
-    btn.disabled = true;
-    const start = new Date(startRaw + 'T00:00:00');
-
+  // Turns a plan into scheduled homework for the given students, Day 1 on
+  // startDate. Shared by "Apply to students" and each student's 📋 Plan button.
+  async function applyPlanToStudents(plan, usernames, start, onProgress){
     // A day can now hold several skills and exams at once: those are merged
     // into a single homework for that day. A book still means "one exam per
     // day from here", so it expands into its own run of days exactly as
     // before, and is kept separate from the merged picks.
     const examsIdx = await fetchExamsIndex();
     const expanded = [];
-    for(const entry of applyingPlan.entries){
+    for(const entry of plan.entries){
       const sources = planEntrySources(entry);
       const books = sources.filter(v => v.startsWith('book:'));
       const direct = sources.filter(v => !v.startsWith('book:'));
@@ -13609,7 +13934,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const total = usernames.length * expanded.length;
     for(const username of usernames){
       for(const entry of expanded){
-        btn.textContent = `Assigning… (${created + skipped + 1}/${total})`;
+        if(onProgress) onProgress(created + skipped + 1, total);
         const built = buildDay(entry);
         if(built.questions.length === 0){ skipped++; continue; }
         const publishDate = new Date(start);
@@ -13624,18 +13949,191 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           publishAt: publishDate.toISOString(),
           questions: built.questions,
           status: 'assigned', score: null, submittedAt: null,
-          fromPlan: applyingPlan.name,
+          fromPlan: plan.name, planBy: getCurrentAnswererIdentity(),
           ...(entry._fromBook ? { fromBook: entry._fromBook } : {}),
           ts: new Date().toISOString()
         });
         if(ok) created++; else skipped++;
       }
     }
+    invalidateDbCache('homework');
+    return { created, skipped, perStudent: total / Math.max(1, usernames.length) };
+  }
+
+  document.getElementById('applyPlanConfirmBtn').addEventListener('click', async ()=>{
+    if(!applyingPlan) return;
+    const startRaw = document.getElementById('applyPlanStartDate').value;
+    if(!startRaw){ alert('Pick a start date.'); return; }
+    const usernames = Array.from(document.querySelectorAll('#applyPlanStudentList input:checked')).map(cb => cb.value);
+    if(usernames.length === 0){ alert('Pick at least one student.'); return; }
+    const btn = document.getElementById('applyPlanConfirmBtn');
+    btn.disabled = true;
+    const { created, skipped } = await applyPlanToStudents(applyingPlan, usernames, new Date(startRaw + 'T00:00:00'),
+      (n, total) => { btn.textContent = `Assigning… (${n}/${total})`; });
     btn.disabled = false; btn.textContent = 'Apply plan';
     document.getElementById('applyPlanModal').classList.remove('open');
-    invalidateDbCache('homework');
     alert(`Done — ${created} homework${created===1?'':'s'} scheduled${skipped > 0 ? `, ${skipped} skipped (empty or missing source)` : ''}.`);
     for(const u of usernames) await refreshDashboardIfSignedInAs(u);
+  });
+
+  /* ---------------- Per-student plan (📋 Plan on the Students tab) ----------------
+     Lets the admin or an assistant see which plan a student is on, how far
+     they've got, and give them a plan with their own start date — the same
+     scheduling as "Apply to students", one student at a time. */
+  let planStudent = null;
+  const spDate = d => new Date(d).toLocaleDateString(undefined, { weekday:'short', day:'numeric', month:'short' });
+
+  // Homework saved before plans were tracked on the index row gets its plan
+  // read from the full record once, and the index repaired for next time.
+  async function studentPlanHomework(username){
+    const u = String(username || '').trim().toLowerCase();
+    const idx = (await fetchHomeworkIndex()).filter(h => String(h.username || '').trim().toLowerCase() === u);
+    let repaired = 0;
+    for(const h of idx){
+      if(!('fromPlan' in h)){
+        const full = await dbGet('homework', h.id);
+        h.fromPlan = (full && full.fromPlan) || null;
+        h.planBy = (full && full.planBy) || null;
+        if(full && await dbSet('homework', `idx-${h.id}`, { ...h })) repaired++;
+      }
+    }
+    if(repaired) invalidateDbCache('homework');
+    return idx;
+  }
+
+  // How many homeworks a plan makes and on which days (books expand into
+  // one exam per day), so the preview can show real dates.
+  function expandPlanDays(plan, examsIdx){
+    const days = [];
+    (plan.entries || []).forEach(entry=>{
+      const sources = planEntrySources(entry);
+      if(sources.some(v => !v.startsWith('book:'))) days.push(entry.day);
+      sources.filter(v => v.startsWith('book:')).forEach(bv=>{
+        examsIdx.filter(e => e.book === bv.slice(5)).forEach((e, i) => days.push(entry.day + i));
+      });
+    });
+    return days.sort((a,b)=> a - b);
+  }
+
+  async function renderStudentPlanCurrent(){
+    const wrap = document.getElementById('studentPlanCurrent');
+    if(!planStudent) return;
+    wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
+    const rows = (await studentPlanHomework(planStudent.username)).filter(h => h.fromPlan);
+    if(rows.length === 0){
+      wrap.innerHTML = `<div class="admin-empty" style="padding:14px;">${esc(planStudent.username)} isn't on a plan yet. Give them one below.</div>`;
+      return;
+    }
+    const byPlan = new Map();
+    rows.forEach(h => { if(!byPlan.has(h.fromPlan)) byPlan.set(h.fromPlan, []); byPlan.get(h.fromPlan).push(h); });
+    const now = Date.now();
+    const cards = [...byPlan.entries()].map(([name, list])=>{
+      const sorted = list.slice().sort((a,b)=> new Date(a.publishAt || a.ts || 0) - new Date(b.publishAt || b.ts || 0));
+      const done = sorted.filter(h => h.status === 'completed').length;
+      const released = sorted.filter(h => !h.publishAt || new Date(h.publishAt).getTime() <= now);
+      const behind = released.filter(h => h.status !== 'completed').length;
+      const upcoming = sorted.filter(h => h.status !== 'completed' && h.publishAt && new Date(h.publishAt).getTime() > now);
+      const next = sorted.find(h => h.status !== 'completed');
+      const first = sorted[0], last = sorted[sorted.length - 1];
+      const by = [...new Set(sorted.map(h => h.planBy).filter(Boolean))];
+      const pct = Math.round(done / sorted.length * 100);
+      const nextLine = !next ? '🎉 Every homework in this plan is done.'
+        : (next.publishAt && new Date(next.publishAt).getTime() > now)
+          ? `Next: <b>${esc(next.title || 'Homework')}</b> appears ${esc(spDate(next.publishAt))}`
+          : `Now: <b>${esc(next.title || 'Homework')}</b> is waiting to be done`;
+      return `<div class="sp-plan" data-plan="${esc(name)}">
+        <div class="sp-plan-head">
+          <div>
+            <div class="sp-plan-name">📋 ${esc(name)}</div>
+            <div class="sp-plan-meta">${done} of ${sorted.length} done · ${first.publishAt ? esc(spDate(first.publishAt)) : '—'} → ${last.publishAt ? esc(spDate(last.publishAt)) : '—'}${by.length ? ` · added by ${esc(by.join(', '))}` : ''}</div>
+          </div>
+          ${upcoming.length ? `<button type="button" class="btn btn-ghost sp-remove" data-plan="${esc(name)}">Remove ${upcoming.length} not released yet</button>` : ''}
+        </div>
+        <div class="sp-bar" role="img" aria-label="${pct}% done"><span style="width:${pct}%"></span></div>
+        <div class="sp-next">${nextLine}${behind > 1 ? ` <span style="color:var(--warn);">· ${behind} released and not done</span>` : ''}</div>
+      </div>`;
+    });
+    wrap.innerHTML = cards.join('');
+    wrap.querySelectorAll('.sp-remove').forEach(btn => btn.addEventListener('click', async ()=>{
+      const name = btn.dataset.plan;
+      const list = rows.filter(h => h.fromPlan === name && h.status !== 'completed' && h.publishAt && new Date(h.publishAt).getTime() > Date.now());
+      if(!confirm(`Remove the ${list.length} homework${list.length === 1 ? '' : 's'} from “${name}” that ${planStudent.username} hasn't been given yet?\n\nAnything already released or finished stays.`)) return;
+      btn.disabled = true; btn.textContent = 'Removing…';
+      for(const h of list) await deleteHomeworkEntry(h.id);
+      invalidateDbCache('homework');
+      await renderStudentPlanCurrent();
+      await refreshDashboardIfSignedInAs(planStudent.username);
+    }));
+  }
+
+  async function updateStudentPlanPreview(){
+    const el = document.getElementById('studentPlanPreview');
+    const plans = window.__spPlans || [];
+    const plan = plans.find(p => p.id === document.getElementById('studentPlanSelect').value);
+    const startRaw = document.getElementById('studentPlanStart').value;
+    if(!plan){ el.textContent = ''; return; }
+    if(!startRaw){ el.textContent = 'Pick a start date.'; return; }
+    const days = expandPlanDays(plan, await fetchExamsIndex());
+    if(days.length === 0){ el.textContent = 'This plan has nothing in it yet.'; return; }
+    const start = new Date(startRaw + 'T00:00:00');
+    const at = d => { const x = new Date(start); x.setDate(x.getDate() + d - 1); return spDate(x); };
+    el.textContent = `${days.length} homework${days.length === 1 ? '' : 's'}, one each morning they're due: first ${at(days[0])}, last ${at(days[days.length - 1])}.`;
+  }
+
+  async function openStudentPlanModal(student){
+    planStudent = student;
+    document.getElementById('studentPlanTitle').textContent = `📋 Plan for ${student.username}`;
+    document.getElementById('studentPlanSub').textContent = `${student.course ? student.course + ' · ' : ''}Each day of a plan becomes a homework that appears on its own morning.`;
+    document.getElementById('studentPlanStart').value = toDateInputValue(new Date());
+    const hint = document.getElementById('studentPlanHint'); hint.textContent = ''; hint.className = 'sp-hint';
+    const sel = document.getElementById('studentPlanSelect');
+    sel.innerHTML = '<option value="">Loading…</option>';
+    document.getElementById('studentPlanModal').classList.add('open');
+    const plans = await fetchAllPlans();
+    window.__spPlans = plans;
+    const applyBtn = document.getElementById('studentPlanApplyBtn');
+    if(plans.length === 0){
+      sel.innerHTML = '<option value="">No plans yet</option>';
+      applyBtn.disabled = true;
+      hint.textContent = 'Build a plan first in the 📋 Course Plans tab.';
+    } else {
+      sel.innerHTML = plans.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+      applyBtn.disabled = false;
+    }
+    updateStudentPlanPreview();
+    await renderStudentPlanCurrent();
+  }
+
+  function closeStudentPlanModal(){ document.getElementById('studentPlanModal').classList.remove('open'); planStudent = null; }
+  document.getElementById('closeStudentPlanModal').addEventListener('click', closeStudentPlanModal);
+  document.getElementById('studentPlanModal').addEventListener('click', e => { if(e.target.id === 'studentPlanModal') closeStudentPlanModal(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.getElementById('studentPlanModal').classList.contains('open')) closeStudentPlanModal(); });
+  document.getElementById('studentPlanSelect').addEventListener('change', updateStudentPlanPreview);
+  document.getElementById('studentPlanStart').addEventListener('change', updateStudentPlanPreview);
+
+  document.getElementById('studentPlanApplyBtn').addEventListener('click', async ()=>{
+    if(!planStudent) return;
+    const plan = (window.__spPlans || []).find(p => p.id === document.getElementById('studentPlanSelect').value);
+    const startRaw = document.getElementById('studentPlanStart').value;
+    const hint = document.getElementById('studentPlanHint');
+    if(!plan){ hint.textContent = 'Choose a plan.'; hint.className = 'sp-hint'; return; }
+    if(!startRaw){ hint.textContent = 'Pick a start date.'; hint.className = 'sp-hint'; return; }
+    const student = planStudent;
+    const existing = (await studentPlanHomework(student.username)).filter(h => h.fromPlan === plan.name && h.status !== 'completed');
+    if(existing.length && !confirm(`${student.username} is already on “${plan.name}” with ${existing.length} homework${existing.length === 1 ? '' : 's'} not done yet.\n\nAdd the whole plan again anyway?`)) return;
+    const btn = document.getElementById('studentPlanApplyBtn');
+    btn.disabled = true;
+    const start = new Date(startRaw + 'T00:00:00');
+    const { created, skipped } = await applyPlanToStudents(plan, [student.username], start,
+      (n, total) => { btn.textContent = `Scheduling… (${n}/${total})`; });
+    btn.disabled = false; btn.textContent = 'Add this plan';
+    if(planStudent !== student) return;
+    hint.className = 'sp-hint' + (created ? ' good' : '');
+    hint.textContent = created
+      ? `✓ ${created} homework${created === 1 ? '' : 's'} scheduled for ${student.username}${skipped ? ` (${skipped} skipped — empty or missing)` : ''}.`
+      : 'Nothing was scheduled — the plan\'s skills or exams may have been deleted.';
+    await renderStudentPlanCurrent();
+    await refreshDashboardIfSignedInAs(student.username);
   });
 
   /* ---------------- MATH CHAMPIONS LEAGUE (admin: create/edit) ---------------- */
@@ -15819,6 +16317,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const fallback = document.getElementById('recordingFallbackLink');
     const frame = document.getElementById('recordingPlayerFrame');
     const showPart = (i)=>{
+      frame.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
       frame.src = trackableEmbedUrl(parts[i].url);
       fallback.href = parts[i].url;
       fallback.style.display = 'inline-block';
@@ -15902,6 +16401,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const fallback = document.getElementById('recordingFallbackLink');
     const frame = document.getElementById('recordingPlayerFrame');
     const showPart = (i)=>{
+      frame.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
       frame.src = trackableEmbedUrl(parts[i].url);
       fallback.href = parts[i].url;
       fallback.style.display = 'inline-block';
@@ -16072,11 +16572,73 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     // Clearing the src actually stops playback — just hiding the modal
     // leaves the video running in the background.
     endWatchTracking();
+    document.getElementById('recordingPlayerFrame').removeAttribute('allow');
     document.getElementById('recordingPlayerFrame').src = '';
     document.getElementById('recordingPartTabs').innerHTML = '';
     document.getElementById('recordingPartTabs').style.display = 'none';
     document.getElementById('recordingModal').classList.remove('open');
   });
+
+
+  /* ---------------- Recording player: full screen on phones ----------------
+     Android, iPad and computers get real fullscreen (and Android also turns
+     to landscape). iPhone doesn't allow it for an embedded player, so there
+     the popup itself becomes a black full-screen stage instead. Turning a
+     phone sideways does the same automatically. */
+  (function(){
+    const modal = document.getElementById('recordingModal');
+    const wrap = document.getElementById('recordingPlayerWrap');
+    const btn = document.getElementById('recordingFullscreenBtn');
+    if(!modal || !wrap || !btn) return;
+    const autoLandscape = window.matchMedia('(hover:none) and (pointer:coarse) and (orientation:landscape) and (max-height:540px)');
+    const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+    const fsEnabled = () => !!(document.fullscreenEnabled || document.webkitFullscreenEnabled) && !!(wrap.requestFullscreen || wrap.webkitRequestFullscreen);
+    const isFull = () => !!fsElement() || modal.classList.contains('rec-cinema') || (autoLandscape.matches && !modal.classList.contains('rec-no-auto'));
+    function label(){ btn.textContent = isFull() ? '✕ Exit full screen' : '⛶ Full screen'; }
+
+    async function enter(){
+      modal.classList.remove('rec-no-auto');
+      if(fsEnabled()){
+        try{
+          if(wrap.requestFullscreen) await wrap.requestFullscreen({ navigationUI: 'hide' });
+          else wrap.webkitRequestFullscreen();
+          try{ if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); }catch(e){}
+          label(); return;
+        }catch(e){ /* fall through to the in-page version */ }
+      }
+      modal.classList.add('rec-cinema');
+      label();
+    }
+    async function exit(){
+      if(fsElement()){
+        try{ if(document.exitFullscreen) await document.exitFullscreen(); else if(document.webkitExitFullscreen) document.webkitExitFullscreen(); }catch(e){}
+      }
+      modal.classList.remove('rec-cinema');
+      if(autoLandscape.matches) modal.classList.add('rec-no-auto');
+      label();
+    }
+    btn.addEventListener('click', ()=> isFull() ? exit() : enter());
+    const onFsChange = ()=>{
+      if(!fsElement()){ try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){} }
+      label();
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    const onRotate = ()=>{ if(!autoLandscape.matches) modal.classList.remove('rec-no-auto'); label(); };
+    if(autoLandscape.addEventListener) autoLandscape.addEventListener('change', onRotate); else if(autoLandscape.addListener) autoLandscape.addListener(onRotate);
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape' && modal.classList.contains('rec-cinema')){ e.stopPropagation(); exit(); }
+    }, true);
+    // Closing the player always leaves full screen too.
+    document.getElementById('closeRecordingModal').addEventListener('click', ()=>{
+      if(fsElement()) exit();
+      modal.classList.remove('rec-cinema', 'rec-no-auto');
+      label();
+    });
+    // Reset each time the player opens.
+    new MutationObserver(()=>{ if(modal.classList.contains('open')) label(); }).observe(modal, { attributes:true, attributeFilter:['class'] });
+    label();
+  })();
 
   // Sums every completed join→leave segment for a session, in minutes.
   // Returns null (not 0) when the student never joined at all, so "0 min
@@ -16352,6 +16914,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     }
 
     const latestByTitle = await getLatestAttemptsByTitle();
+    const myAttempts = await fetchMyAttempts();
 
     grid.innerHTML = '';
     // Alphabetical so a student can find a named skill quickly.
@@ -16382,9 +16945,11 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <div class="exam-card-actions">
           ${set.recordingUrl ? `<button type="button" class="btn btn-ghost lesson-rec-btn" data-rec="${esc(set.recordingUrl)}" data-title="${esc(set.skill)}">🎬 Watch the lesson${parseRecordingParts(set.recordingUrl).length > 1 ? ` (${parseRecordingParts(set.recordingUrl).length} parts)` : ''}</button><span class="lesson-credit-badge" style="display:none; color:var(--muted); font-size:0.76rem;"></span>` : ''}
           <button class="btn btn-ghost start-skill-btn">${needsRetake ? 'Retake now' : started && !finished ? 'Continue practice' : 'Start practice'}</button>
+          ${attemptsButtonHtml(attemptsFor(myAttempts, 'skill', set.id, set.skill))}
           ${started ? `<button type="button" class="btn btn-ghost reset-skill-btn" style="font-size:0.8rem;">↺ Start the set over</button>` : ''}
         </div>
       `;
+      wireAttemptsButton(card, 'skill', set.id, set.skill);
       const resetBtn = card.querySelector('.reset-skill-btn');
       if(resetBtn) resetBtn.addEventListener('click', async ()=>{
         if(!confirm(`Start “${set.skill}” from the beginning? Your past scores stay — this only puts every question back in the pile.`)) return;
@@ -16844,7 +17409,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           const full = await dbGet('skills', matchingSet.id);
           btn.disabled = false; btn.textContent = originalLabel;
           if(!full){ alert('Could not load that skill — please try again.'); return; }
-          startExam({ title: full.skill, questions: full.questions || [] });
+          startExam({ title: full.skill, skillId: matchingSet.id, questions: full.questions || [] });
         });
       }
       wpList.appendChild(row);
@@ -16920,7 +17485,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         ${row.explanationVideo ? `
           <div class="explanation-video-wrap" style="margin-top:10px;">
             <div class="explanation-video-label">🎬 Watch the explanation</div>
-            <video controls preload="none" src="${row.explanationVideo}"></video>
+            <video controls playsinline preload="none" src="${row.explanationVideo}"></video>
           </div>
         ` : ''}
         <div class="mistake-row-actions">
@@ -17055,7 +17620,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           <div class="bubble-label">You asked${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
           ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
           ${row.studentFollowUp.photoUrl ? `<img src="${esc(row.studentFollowUp.photoUrl)}" alt="Your photo">` : ''}
-          ${row.studentFollowUp.videoUrl ? `<video controls preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
+          ${row.studentFollowUp.videoUrl ? `<video controls playsinline preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
           ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
         </div>
       ` : '';
@@ -20626,7 +21191,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         </div>
         ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
         ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
-        ${row.answer.videoUrl ? `<video controls preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
+        ${row.answer.videoUrl ? `<video controls playsinline preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
         ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
         ${row.studentRating ? `<div style="margin-top:10px;color:var(--muted);font-size:0.85rem;">Student rated this: ${'⭐'.repeat(row.studentRating)}</div>` : `<div style="margin-top:10px;color:var(--muted);font-size:0.82rem;font-style:italic;">Not rated by the student yet.</div>`}
       </div>
@@ -20637,7 +21202,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <div class="bubble-label">${esc(row.username)} followed up${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
         ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
         ${row.studentFollowUp.photoUrl ? `<img src="${esc(row.studentFollowUp.photoUrl)}" alt="Student's photo">` : ''}
-        ${row.studentFollowUp.videoUrl ? `<video controls preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
+        ${row.studentFollowUp.videoUrl ? `<video controls playsinline preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
         ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
       </div>
     ` : '';
@@ -21795,6 +22360,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           ${!isAssistant ? `<button class="student-action-btn lesson-credits-btn" title="Give this student lesson-recording views">🎬 ${typeof s.lessonViewCredits === 'number' ? `${Math.max(0, s.lessonViewCredits - (s.lessonViewsUsed || 0))}/${s.lessonViewCredits} views` : 'Views: ∞'}</button>` : ''}
           ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" class="student-action-btn" style="color:var(--success);border-color:var(--success);text-decoration:none;display:inline-block;">WhatsApp</a>` : ''}
           ${!isAssistant ? `<button class="student-action-btn exam-date-btn" title="Only if this student sits a different date from the rest of their course">📅 ${s.examDate ? new Date(s.examDate + 'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short'}) : 'Exam date'}</button>` : ''}
+          ${s.status === 'approved' ? `<button class="student-action-btn student-plan-btn" title="See this student's plan, or give them one">📋 Plan</button>` : ''}
           <button class="student-action-btn parent-link-btn" title="Get a shareable, read-only link for this student's parent — no login needed">👨‍👩‍👧 Parent link</button>
           ${!isAssistant ? `<button class="student-action-btn reset-pass-btn" title="Passwords are stored securely and can't be viewed — set a new one instead">Reset password</button>` : ''}
           ${!isAssistant ? `<button class="student-action-btn delete-student-btn">Delete</button>` : ''}
@@ -21857,6 +22423,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           await refreshDashboardIfSignedInAs(s.username);
         });
       }
+      const planBtn = tr.querySelector('.student-plan-btn');
+      if(planBtn) planBtn.addEventListener('click', ()=> openStudentPlanModal(s));
       tr.querySelector('.parent-link-btn').addEventListener('click', async ()=>{
         const btn = tr.querySelector('.parent-link-btn');
         btn.disabled = true; btn.textContent = 'Getting link…';
