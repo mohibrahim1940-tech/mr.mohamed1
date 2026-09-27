@@ -3522,6 +3522,15 @@
     .at-row{ padding:11px 12px; gap:10px; }
     .at-row-go{ display:none; }
   }
+
+  .sp-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .sp-confirm{ margin-top:12px; border-top:1px solid var(--line-soft); padding-top:12px; display:grid; gap:8px; }
+  .sp-confirm[hidden]{ display:none; }
+  .sp-confirm-q{ font-weight:600; font-size:0.9rem; overflow-wrap:anywhere; }
+  .sp-confirm .btn{ width:100%; justify-content:center; padding:10px 14px; font-size:0.85rem; white-space:normal; text-align:center; }
+  .sp-confirm .sp-danger{ border-color:var(--ember); color:var(--ember); }
+  :root[data-theme="light"] .sp-confirm .sp-danger{ color:#c2410c; border-color:#c2410c; }
+  .sp-confirm-note{ color:var(--muted); font-size:0.78rem; }
 </style>
 </head>
 <body>
@@ -6003,7 +6012,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     </div>
 
     <div class="admin-panel" id="plansPanel">
-      <div class="admin-note">Lay out a whole course once — "Day 1: these two skills and an exam, Day 3: that skill" — then apply it to any student with a start date. Tick as many skills and exams as you like for a day and they become one homework together, with any repeated question asked only once. A book instead spreads one exam per day from where you put it. Each homework is scheduled to appear automatically on its own morning, so you set the course up once and it runs itself.</div>
+      <div class="admin-note">Lay out a whole course once — "Day 1: these two skills and an exam, Day 3: that skill" — then apply it to any student with a start date. Tick as many skills and exams as you like for a day — each one becomes its own homework, all appearing that same morning. A book instead spreads one exam per day from where you put it. Each homework is scheduled to appear automatically on its own morning, so you set the course up once and it runs itself.</div>
 
       <div class="hw-section-title" style="margin-top:0;">Build a plan</div>
       <div class="exam-editor" style="margin-top:0;">
@@ -13455,10 +13464,12 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       row.className = 'exam-list-item';
       const lastDay = Math.max(...plan.entries.map(e => e.day));
       const totalSets = plan.entries.reduce((sum, e) => sum + planEntrySources(e).length, 0);
+      const hwCount = plan.entries.reduce((sum, e) => sum + planEntrySources(e).filter(v => !v.startsWith('book:')).length, 0);
+      const bookCount = plan.entries.reduce((sum, e) => sum + planEntrySources(e).filter(v => v.startsWith('book:')).length, 0);
       row.innerHTML = `
         <div>
           <h4>${esc(plan.name)}</h4>
-          <div class="meta">${plan.entries.length} homework${plan.entries.length===1?'':'s'} · runs ${lastDay} day${lastDay===1?'':'s'} · ${totalSets} set${totalSets===1?'':'s'} picked${plan.updatedBy ? ` · last edited by ${esc(plan.updatedBy)}` : ''}</div>
+          <div class="meta">${hwCount} homework${hwCount===1?'':'s'}${bookCount ? ` + ${bookCount} book${bookCount===1?'':'s'}` : ''} · runs ${lastDay} day${lastDay===1?'':'s'} · ${totalSets} set${totalSets===1?'':'s'} picked${plan.updatedBy ? ` · last edited by ${esc(plan.updatedBy)}` : ''}</div>
           <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
             ${plan.entries.slice(0, 12).map(e => {
               const n = planEntrySources(e).length;
@@ -13842,9 +13853,9 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       applyingPlan.entries.forEach(e=>{
         const sources = planEntrySources(e);
         const books = sources.filter(v => v.startsWith('book:'));
-        // Everything picked for one day is merged into a single homework;
-        // a book still becomes one homework per exam in it.
-        if(sources.some(v => !v.startsWith('book:'))) totalItems += 1;
+        // Every skill or exam picked is its own homework; a book becomes
+        // one homework per exam in it.
+        totalItems += sources.filter(v => !v.startsWith('book:')).length;
         books.forEach(bv=>{
           totalItems += examsIdx.filter(x => x.book === bv.slice(5)).length;
           bookNote = ' (books expanded)';
@@ -13857,7 +13868,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       const sources = planEntrySources(e);
       const book = sources.find(v => v.startsWith('book:'));
       const label = (book && sources.length === 1) ? `\ud83d\udcd5 ${book.slice(5)}` : `Day ${e.day}`;
-      const extra = sources.length > 1 ? ` (${sources.length} sets)` : '';
+      const directN = sources.filter(v => !v.startsWith('book:')).length;
+      const extra = directN > 1 ? ` (${directN} homeworks)` : '';
       return `${label}${extra} \u2192 ${d.toLocaleDateString()}`;
     });
     el.textContent = `${totalItems} homework${totalItems === 1 ? '' : 's'} per student${bookNote} \u00b7 ` + lines.join('  \u00b7  ');
@@ -13874,19 +13886,22 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   // Turns a plan into scheduled homework for the given students, Day 1 on
   // startDate. Shared by "Apply to students" and each student's 📋 Plan button.
   async function applyPlanToStudents(plan, usernames, start, onProgress){
-    // A day can now hold several skills and exams at once: those are merged
-    // into a single homework for that day. A book still means "one exam per
-    // day from here", so it expands into its own run of days exactly as
-    // before, and is kept separate from the merged picks.
+    // A day can hold several skills and exams: each one becomes its OWN
+    // homework, all released that same morning. A book still means "one
+    // exam per day from here", so it expands into its own run of days.
     const examsIdx = await fetchExamsIndex();
     const expanded = [];
     for(const entry of plan.entries){
       const sources = planEntrySources(entry);
       const books = sources.filter(v => v.startsWith('book:'));
       const direct = sources.filter(v => !v.startsWith('book:'));
-      if(direct.length > 0){
-        expanded.push({ day: entry.day, sources: direct, title: entry.title || null });
-      }
+      direct.forEach(v=>{
+        // A day title shared by several homeworks gets each one's own name
+        // after it, so they can still be told apart in the list.
+        expanded.push({ day: entry.day, sources: [v],
+          title: direct.length > 1 ? null : (entry.title || null),
+          _groupTitle: direct.length > 1 ? (entry.title || null) : null });
+      });
       books.forEach(bv=>{
         const bookName = bv.slice(5);
         examsIdx.filter(e => e.book === bookName).forEach((e, i)=>{
@@ -13944,7 +13959,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           : (built.names[0] || `Day ${entry.day}`);
         const ok = await saveHomeworkAssignment(generateId('hw'), {
           username,
-          title: entry.title || autoTitle,
+          title: entry._groupTitle ? `${entry._groupTitle} — ${autoTitle}` : (entry.title || autoTitle),
           dueDate: null, timeLimit: null, pdfUrl: built.pdfUrl || null,
           publishAt: publishDate.toISOString(),
           questions: built.questions,
@@ -14007,7 +14022,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const days = [];
     (plan.entries || []).forEach(entry=>{
       const sources = planEntrySources(entry);
-      if(sources.some(v => !v.startsWith('book:'))) days.push(entry.day);
+      sources.filter(v => !v.startsWith('book:')).forEach(() => days.push(entry.day));
       sources.filter(v => v.startsWith('book:')).forEach(bv=>{
         examsIdx.filter(e => e.book === bv.slice(5)).forEach((e, i) => days.push(entry.day + i));
       });
@@ -14047,14 +14062,68 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
             <div class="sp-plan-name">📋 ${esc(name)}</div>
             <div class="sp-plan-meta">${done} of ${sorted.length} done · ${first.publishAt ? esc(spDate(first.publishAt)) : '—'} → ${last.publishAt ? esc(spDate(last.publishAt)) : '—'}${by.length ? ` · added by ${esc(by.join(', '))}` : ''}</div>
           </div>
-          ${upcoming.length ? `<button type="button" class="btn btn-ghost sp-remove" data-plan="${esc(name)}">Remove ${upcoming.length} not released yet</button>` : ''}
+          <div class="sp-actions">
+            ${upcoming.length ? `<button type="button" class="btn btn-ghost sp-remove" data-plan="${esc(name)}">Remove ${upcoming.length} not released yet</button>` : ''}
+            <button type="button" class="btn btn-ghost sp-remove sp-delete" data-plan="${esc(name)}">🗑 Remove plan</button>
+          </div>
         </div>
         <div class="sp-bar" role="img" aria-label="${pct}% done"><span style="width:${pct}%"></span></div>
         <div class="sp-next">${nextLine}${behind > 1 ? ` <span style="color:var(--warn);">· ${behind} released and not done</span>` : ''}</div>
+        <div class="sp-confirm" hidden></div>
       </div>`;
     });
     wrap.innerHTML = cards.join('');
-    wrap.querySelectorAll('.sp-remove').forEach(btn => btn.addEventListener('click', async ()=>{
+    // 🗑 Remove plan — takes the whole plan off this student. Finished
+    // homeworks can be kept (their scores stay in the student's history) or
+    // deleted too.
+    wrap.querySelectorAll('.sp-delete').forEach(btn => btn.addEventListener('click', ()=>{
+      const name = btn.dataset.plan;
+      const card = btn.closest('.sp-plan');
+      const box = card.querySelector('.sp-confirm');
+      if(!box.hidden){ box.hidden = true; return; }
+      const list = rows.filter(h => h.fromPlan === name);
+      const finished = list.filter(h => h.status === 'completed');
+      const unfinished = list.filter(h => h.status !== 'completed');
+      const who = esc(planStudent.username);
+      box.innerHTML = `
+        <div class="sp-confirm-q">Remove “${esc(name)}” from ${who}?</div>
+        ${finished.length ? `
+          <button type="button" class="btn btn-primary sp-go" data-mode="keep">Remove it, keep the ${finished.length} finished homework${finished.length === 1 ? '' : 's'} and their scores</button>
+          <button type="button" class="btn btn-ghost sp-go sp-danger" data-mode="all">Remove everything, including finished (their scores are deleted)</button>`
+        : `<button type="button" class="btn btn-primary sp-go" data-mode="all">Remove all ${list.length} homework${list.length === 1 ? '' : 's'} of this plan</button>`}
+        <button type="button" class="btn btn-ghost sp-cancel">Cancel</button>
+        <div class="sp-confirm-note">This plan has ${unfinished.length} unfinished${finished.length ? ` and ${finished.length} finished` : ''} homework${list.length === 1 ? '' : 's'} for ${who}.</div>`;
+      box.hidden = false;
+      box.querySelector('.sp-cancel').addEventListener('click', ()=>{ box.hidden = true; });
+      box.querySelectorAll('.sp-go').forEach(go => go.addEventListener('click', async ()=>{
+        const keep = go.dataset.mode === 'keep';
+        box.querySelectorAll('button').forEach(b => b.disabled = true);
+        go.textContent = 'Removing…';
+        const student = planStudent;
+        let failed = 0;
+        for(const h of (keep ? unfinished : list)){
+          if(!(await deleteHomeworkEntry(h.id))) failed++;
+        }
+        if(keep){
+          // Finished work stays as ordinary homework, no longer tied to the plan.
+          for(const h of finished){
+            const full = await dbGet('homework', h.id);
+            if(!full) continue;
+            if(!(await saveHomeworkAssignment(h.id, { ...full, fromPlan: null, planBy: null, removedFromPlan: name }))) failed++;
+          }
+        }
+        invalidateDbCache('homework');
+        if(failed) alert(`${failed} homework${failed === 1 ? '' : 's'} couldn't be changed — check your connection and try again.`);
+        if(planStudent !== student) return;
+        const hint = document.getElementById('studentPlanHint');
+        hint.className = 'sp-hint' + (failed ? '' : ' good');
+        hint.textContent = failed ? '' : `✓ “${name}” removed from ${student.username}.`;
+        await renderStudentPlanCurrent();
+        await refreshDashboardIfSignedInAs(student.username);
+      }));
+    }));
+
+    wrap.querySelectorAll('.sp-remove:not(.sp-delete)').forEach(btn => btn.addEventListener('click', async ()=>{
       const name = btn.dataset.plan;
       const list = rows.filter(h => h.fromPlan === name && h.status !== 'completed' && h.publishAt && new Date(h.publishAt).getTime() > Date.now());
       if(!confirm(`Remove the ${list.length} homework${list.length === 1 ? '' : 's'} from “${name}” that ${planStudent.username} hasn't been given yet?\n\nAnything already released or finished stays.`)) return;
