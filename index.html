@@ -3531,6 +3531,176 @@
   .sp-confirm .sp-danger{ border-color:var(--ember); color:var(--ember); }
   :root[data-theme="light"] .sp-confirm .sp-danger{ color:#c2410c; border-color:#c2410c; }
   .sp-confirm-note{ color:var(--muted); font-size:0.78rem; }
+
+  /* ---------- Student Coordinator Desk ---------- */
+  #coordDesk{ z-index:410; }
+  .cd-role-label{ font-size:0.7rem; color:var(--muted); margin-left:6px; }
+  @media (max-width:860px){ .cd-role-label{ display:none; } }
+  .cd-wrap{ padding-top:24px; padding-bottom:60px; }
+  .cd-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+  .cd-hello{ font-family:'Space Grotesk',sans-serif; font-size:1.55rem; font-weight:700; line-height:1.2; }
+  .cd-date{ color:var(--muted); font-size:0.88rem; margin-top:4px; }
+  .cd-head-actions{ display:flex; gap:8px; flex-wrap:wrap; flex:1 1 280px; justify-content:flex-end; }
+  .cd-search{ flex:1 1 200px; max-width:320px; min-width:0; padding:10px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); font:inherit; font-size:0.9rem; }
+  .cd-small{ padding:8px 14px !important; font-size:0.84rem !important; }
+  .cd-tabs{ display:flex; gap:8px; overflow-x:auto; padding-bottom:6px; margin-bottom:22px; scrollbar-width:thin; }
+  .cd-tab{ flex-shrink:0; white-space:nowrap; background:var(--panel); border:1px solid var(--line); color:var(--muted); padding:10px 16px; border-radius:999px; font:inherit; font-size:0.88rem; cursor:pointer; display:inline-flex; align-items:center; gap:6px; min-height:42px; }
+  .cd-tab.active{ background:var(--accent-wash); color:var(--text); border-color:var(--signal); }
+  .cd-tab:focus-visible, .cd-chip:focus-visible, .cd-act:focus-visible, .cd-seg-btn:focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
+  .cd-badge{ background:var(--ember); color:#fff; border-radius:999px; font-size:0.7rem; padding:1px 7px; font-weight:700; }
+  .cd-panel{ display:none; }
+  .cd-panel.active{ display:block; }
+  .cd-muted{ color:var(--muted); font-size:0.8rem; }
+  .cd-empty{ color:var(--muted); font-size:0.88rem; padding:10px 0; }
+  .cd-ok{ color:var(--success); }
+  :root[data-theme="light"] .cd-ok{ color:#138a52; }
+  .cd-section-title{ font-family:'IBM Plex Mono',monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin:18px 0 8px; }
+
+  .cd-rings{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; margin-bottom:20px; }
+  .cd-rings-sm{ grid-template-columns:repeat(auto-fit, minmax(170px, 220px)); }
+  .cd-ring-card{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 12px 14px; display:flex; flex-direction:column; align-items:center; gap:10px; min-width:0; }
+  .cd-ring-label{ font-size:0.86rem; font-weight:600; text-align:center; }
+  @media (max-width:760px){ .cd-rings{ grid-template-columns:1fr 1fr; } }
+
+  .cd-grid2{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; align-items:start; }
+  .cd-col{ display:grid; gap:16px; }
+  @media (max-width:900px){ .cd-grid2{ grid-template-columns:1fr; } }
+  .cd-card{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px; min-width:0; }
+  .cd-grid2 .cd-card, .cd-col .cd-card{ margin-bottom:0; }
+  .cd-card h3{ font-family:'Space Grotesk',sans-serif; font-size:1rem; margin:0; overflow-wrap:anywhere; }
+  .cd-card-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+  .cd-count{ background:var(--panel-2); border:1px solid var(--line); border-radius:999px; font-size:0.78rem; padding:2px 10px; }
+
+  .cd-att-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--line-soft); flex-wrap:wrap; }
+  .cd-att-row:first-of-type{ border-top:0; }
+  .cd-att-main{ min-width:0; flex:1 1 180px; }
+  .cd-name-btn{ background:none; border:0; padding:0; color:var(--text); font:inherit; font-weight:600; cursor:pointer; text-align:left; }
+  .cd-name-btn:hover{ color:var(--signal); }
+  .cd-flags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:5px; }
+  .cd-flag{ font-size:0.72rem; padding:2px 9px; border-radius:999px; border:1px solid var(--line); background:var(--panel-2); }
+  .cd-flag-absent, .cd-flag-low{ border-color:rgba(255,107,74,0.45); background:var(--ember-soft); }
+  .cd-flag-hw, .cd-flag-drop{ border-color:rgba(255,176,32,0.45); background:rgba(255,176,32,0.12); }
+  .cd-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+  .cd-act{ background:var(--panel-2); border:1px solid var(--line); color:var(--text); border-radius:999px; padding:6px 11px; font:inherit; font-size:0.78rem; cursor:pointer; min-height:34px; }
+  .cd-act:hover{ border-color:var(--signal); }
+  .cd-actions.compact .cd-act{ padding:5px 9px; }
+
+  .cd-sess-row{ display:flex; align-items:center; gap:12px; padding:8px 0; border-top:1px solid var(--line-soft); flex-wrap:wrap; }
+  .cd-sess-row:first-of-type{ border-top:0; }
+  .cd-sess-main{ flex:1 1 120px; min-width:0; }
+  .cd-sess-topic{ font-weight:600; overflow-wrap:anywhere; }
+  .cd-task-mini{ font-size:0.88rem; padding:5px 0; overflow-wrap:anywhere; }
+
+  .cd-filters{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .cd-filters select, .cd-call-pick select{ padding:8px 12px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); font:inherit; font-size:0.86rem; max-width:100%; }
+  .cd-chip{ background:var(--panel); border:1px solid var(--line); color:var(--muted); border-radius:999px; padding:7px 13px; font:inherit; font-size:0.82rem; cursor:pointer; min-height:36px; }
+  .cd-chip.active{ background:var(--accent-wash); border-color:var(--signal); color:var(--text); }
+
+  .cd-cards{ display:grid; grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)); gap:14px; }
+  .cd-student{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px; min-width:0; }
+  .cd-student-head{ display:flex; gap:12px; align-items:center; }
+  .cd-avatar{ width:42px; height:42px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; background:linear-gradient(135deg, var(--grad-a), var(--grad-b)); }
+  .cd-student-id{ min-width:0; }
+  .cd-student-name{ font-weight:600; font-size:0.96rem; overflow-wrap:anywhere; }
+  .cd-mini-rings{ display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; }
+  .cd-mini-rings > div{ display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0; }
+  .cd-mini-rings span{ font-size:0.72rem; color:var(--muted); }
+  .cd-plan{ font-size:0.82rem; }
+  .cd-plan-top{ display:flex; justify-content:space-between; gap:8px; margin-bottom:5px; overflow-wrap:anywhere; }
+  .cd-plan-none{ color:var(--muted); }
+  .cd-bar{ height:7px; border-radius:7px; background:var(--panel-2); overflow:hidden; border:1px solid var(--line-soft); }
+  .cd-bar span{ display:block; height:100%; border-radius:7px; background:linear-gradient(90deg, var(--grad-a), var(--brand)); }
+
+  .cd-att-nav{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px; }
+  .cd-att-nav input{ padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); font:inherit; }
+  .cd-att-title{ display:flex; align-items:center; gap:12px; min-width:0; }
+  .cd-att-list{ display:grid; gap:8px; }
+  .cd-att-student{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:10px 12px; border:1px solid var(--line); border-left-width:4px; border-radius:12px; background:var(--panel-2); }
+  .cd-att-student.is-present{ border-left-color:var(--success); }
+  .cd-att-student.is-late{ border-left-color:var(--amber); }
+  .cd-att-student.is-absent{ border-left-color:var(--ember); }
+  .cd-att-student.is-excused{ border-left-color:var(--signal); }
+  .cd-att-who{ flex:1 1 150px; min-width:0; }
+  .cd-seg{ display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); }
+  .cd-seg-btn{ background:none; border:0; border-left:1px solid var(--line); color:var(--muted); padding:8px 12px; font:inherit; font-size:0.8rem; cursor:pointer; min-height:40px; min-width:44px; }
+  .cd-seg-btn:first-child{ border-left:0; }
+  .cd-seg-short{ display:none; font-weight:700; }
+  .cd-seg-btn.on.s-present{ background:var(--success); color:var(--tile-ink); font-weight:700; }
+  .cd-seg-btn.on.s-late{ background:var(--amber); color:var(--tile-ink); font-weight:700; }
+  .cd-seg-btn.on.s-absent{ background:var(--ember); color:#fff; font-weight:700; }
+  .cd-seg-btn.on.s-excused{ background:var(--signal); color:#fff; font-weight:700; }
+  .cd-tell-parent{ font-size:0.8rem; color:var(--success); text-decoration:none; border:1px solid rgba(var(--success-rgb),0.45); border-radius:999px; padding:5px 10px; }
+  :root[data-theme="light"] .cd-tell-parent{ color:#138a52; }
+  @media (max-width:560px){
+    .cd-seg-full{ display:none; } .cd-seg-short{ display:inline; }
+    .cd-seg{ width:100%; } .cd-seg-btn{ flex:1; }
+  }
+
+  .cd-marks{ display:grid; gap:8px; }
+  .cd-mark-row{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px 12px; color:var(--text); font:inherit; cursor:pointer; }
+  .cd-mark-row:hover{ border-color:var(--signal); }
+  .cd-mark-ring{ flex-shrink:0; }
+  .cd-mark-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+  .cd-pills{ display:flex; gap:4px; flex-wrap:wrap; }
+  .cd-pill{ font-size:0.72rem; font-weight:700; padding:2px 7px; border-radius:6px; font-variant-numeric:tabular-nums; }
+  .cd-pill.good{ background:var(--success-soft); color:var(--success); }
+  .cd-pill.mid{ background:rgba(255,176,32,0.14); color:var(--warn); }
+  .cd-pill.bad{ background:var(--ember-soft); color:var(--ember); }
+  :root[data-theme="light"] .cd-pill.good{ color:#138a52; } :root[data-theme="light"] .cd-pill.mid{ color:#b45309; } :root[data-theme="light"] .cd-pill.bad{ color:#c2410c; }
+  .cd-trend{ font-weight:700; font-size:0.86rem; white-space:nowrap; }
+  .cd-trend.up{ color:var(--success); } .cd-trend.down{ color:var(--ember); }
+  :root[data-theme="light"] .cd-trend.up{ color:#138a52; } :root[data-theme="light"] .cd-trend.down{ color:#c2410c; }
+
+  .cd-hw-list{ list-style:none; margin:0 0 12px; padding:0; display:grid; gap:4px; }
+  .cd-hw-list li{ display:flex; justify-content:space-between; gap:10px; font-size:0.86rem; padding:5px 0; border-bottom:1px dashed var(--line-soft); }
+  .cd-hw-list li span:first-child{ overflow-wrap:anywhere; min-width:0; }
+  .cd-hw-age{ color:var(--muted); white-space:nowrap; }
+  .cd-hw-age.late{ color:var(--ember); font-weight:600; }
+
+  .cd-call-pick{ display:flex; gap:8px; flex-wrap:wrap; }
+  .cd-call-pick select{ flex:1 1 200px; }
+  .cd-notes{ display:grid; gap:8px; }
+  .cd-note{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+  .cd-note-head{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; font-size:0.84rem; }
+  .cd-note-text{ margin-top:6px; font-size:0.9rem; white-space:pre-wrap; overflow-wrap:anywhere; }
+
+  .cd-task{ display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px; cursor:pointer; }
+  .cd-task input{ width:20px; height:20px; accent-color:var(--success); margin-top:2px; flex-shrink:0; }
+  .cd-task-text{ flex:1 1 200px; font-size:0.92rem; overflow-wrap:anywhere; }
+  .cd-task .cd-muted{ flex-basis:100%; padding-left:30px; }
+  .cd-task.done .cd-task-text{ text-decoration:line-through; color:var(--muted); }
+  .cd-task.late{ border-color:rgba(255,107,74,0.55); }
+  .cd-task-add{ display:flex; gap:8px; flex-wrap:wrap; }
+  .cd-task-add input{ flex:1 1 200px; min-width:0; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.9rem; }
+  .cd-task-add input[type="date"]{ flex:0 1 160px; }
+  .cd-task-admin{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line-soft); font-size:0.88rem; }
+  .cd-task-admin.done{ color:var(--muted); }
+
+  .cd-modal{ max-width:520px; }
+  .cd-modal-sub{ color:var(--muted); font-size:0.84rem; margin-bottom:14px !important; }
+  .cd-modal-sub a{ color:var(--signal); }
+  .cd-textarea{ width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.9rem; resize:vertical; margin-bottom:12px; }
+  .cd-checks{ display:grid; gap:8px; margin-bottom:14px; font-size:0.88rem; }
+  .cd-checks label{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .cd-checks input{ width:18px; height:18px; accent-color:var(--signal); }
+  .cd-wa-links{ display:grid; gap:8px; margin-top:10px; }
+  .cd-wa-links .btn{ width:100%; justify-content:center; text-decoration:none; }
+  .cd-hint{ font-size:0.84rem; color:var(--muted); margin-top:10px; text-align:center; min-height:1em; }
+  .cd-hint.good{ color:var(--success); }
+  :root[data-theme="light"] .cd-hint.good{ color:#138a52; }
+  .cd-outcomes{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .cd-outcome{ flex:1 1 auto; background:var(--panel-2); border:1px solid var(--line); color:var(--text); border-radius:10px; padding:9px 10px; font:inherit; font-size:0.84rem; cursor:pointer; min-height:40px; }
+  .cd-outcome.active{ border-color:var(--signal); background:var(--accent-wash); font-weight:600; }
+
+  .cd-activity{ display:grid; gap:12px; margin-bottom:10px; }
+  .cd-act-stats{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; }
+  @media (max-width:640px){ .cd-act-stats{ grid-template-columns:1fr 1fr; } }
+  .cd-act-stat{ background:var(--panel-2); border:1px solid var(--line-soft); border-radius:10px; padding:10px; }
+  .cd-act-stat .k{ font-size:0.72rem; color:var(--muted); }
+  .cd-act-stat .v{ font-family:'Space Grotesk',sans-serif; font-size:1.3rem; font-weight:700; }
+  .cd-act-stat .d{ font-size:0.74rem; color:var(--muted); }
+  #assistantRegRole{ width:100%; margin-bottom:12px; }
+  .assistant-role-select{ background:var(--panel); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:5px 8px; font:inherit; font-size:0.82rem; }
 </style>
 </head>
 <body>
@@ -3603,12 +3773,12 @@
         <a href="#courses">Courses</a>
         <button class="open-auth-btn" data-tab="signinForm" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Sign in</button>
         <button class="open-auth-btn" data-tab="registerForm" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Register</button>
-        <button class="open-assistant-auth-btn" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Academic Assistant</button>
+        <button class="open-assistant-auth-btn" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Staff login</button>
         <button class="open-admin-btn" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Admin</button>
       </div>
       <div class="nav-cta" id="navCta">
         <a href="#courses" style="font-size:0.92rem;color:var(--muted);text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Courses</a>
-        <button class="btn btn-ghost open-assistant-auth-btn" style="padding:10px 18px;">Academic Assistant</button>
+        <button class="btn btn-ghost open-assistant-auth-btn" style="padding:10px 18px;">Staff login</button>
         <button class="btn btn-ghost open-admin-btn" style="padding:10px 18px;">Admin</button>
         <button class="btn btn-ghost open-auth-btn" data-tab="signinForm" style="padding:10px 20px;">Sign in</button>
         <button class="btn btn-primary open-auth-btn" data-tab="registerForm" style="padding:10px 20px;">Register</button>
@@ -4204,7 +4374,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 28 Sep 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 28 Sep 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -5217,8 +5387,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 <div class="modal-overlay" id="assistantAuthModal">
   <div class="modal-box auth-modal-box">
     <button class="modal-close" id="closeAssistantAuthModal" aria-label="Close">×</button>
-    <h3 style="margin-bottom:6px;">Academic assistant account</h3>
-    <p style="color:var(--muted); font-size:0.84rem; margin-bottom:18px;">Your own account, scoped to just the students Mr. Mohamed Ibrahim assigns you.</p>
+    <h3 style="margin-bottom:6px;">Staff account</h3>
+    <p style="color:var(--muted); font-size:0.84rem; margin-bottom:18px;">For academic assistants and student coordinators. Mr. Mohamed Ibrahim approves every account.</p>
 
     <div class="auth-tabs">
       <button class="auth-tab active" data-form="assistantSigninForm">Sign in</button>
@@ -5236,11 +5406,111 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     <form class="auth-form" id="assistantRegisterForm">
       <input type="text" id="assistantRegUsername" placeholder="Choose a username" required autocomplete="username">
       <input type="password" id="assistantRegPassword" placeholder="Choose a password" required autocomplete="new-password">
+      <select id="assistantRegRole" aria-label="Your job">
+        <option value="academic">Academic assistant — I answer students' questions</option>
+        <option value="coordinator">Student coordinator — attendance, marks, parents</option>
+      </select>
       <div class="auth-error" id="assistantRegisterError">Something's not right — check the fields above.</div>
       <div class="auth-success" id="assistantRegisterSuccess">Request received! Mr. Mohamed Ibrahim will approve your account and assign you students soon.</div>
       <button type="submit" class="btn btn-primary" id="assistantRegisterSubmitBtn">Request account</button>
       <p class="auth-note">You won't see anything until Mr. Mohamed Ibrahim approves your account and assigns you students.</p>
     </form>
+  </div>
+</div>
+
+
+<!-- STUDENT COORDINATOR DESK (staff accounts with the Coordinator role) -->
+<div class="admin-overlay" id="coordDesk" aria-label="Coordinator desk">
+  <div class="admin-bar">
+    <div class="wrap">
+      <a href="#top" class="logo"><img class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim <span class="mono cd-role-label">/ COORDINATOR</span></a>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark"><span class="theme-toggle-icon"></span></button>
+        <button class="btn btn-ghost" id="cdSignOut" style="padding:9px 16px;">Sign out</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap cd-wrap">
+    <div class="cd-head">
+      <div>
+        <div class="cd-hello" id="cdHello">Hello</div>
+        <div class="cd-date" id="cdDate"></div>
+      </div>
+      <div class="cd-head-actions">
+        <input type="search" id="cdSearch" class="cd-search" placeholder="🔍 Find a student…" autocomplete="off" aria-label="Find a student">
+        <button type="button" class="btn btn-ghost cd-small" id="cdRefresh">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="cd-tabs" role="tablist">
+      <button class="cd-tab active" data-cd="today" role="tab">🏠 Today</button>
+      <button class="cd-tab" data-cd="students" role="tab">👥 Students</button>
+      <button class="cd-tab" data-cd="attendance" role="tab">✅ Attendance</button>
+      <button class="cd-tab" data-cd="marks" role="tab">📊 Marks</button>
+      <button class="cd-tab" data-cd="homework" role="tab">📚 Homework follow-up</button>
+      <button class="cd-tab" data-cd="calls" role="tab">📞 Parent calls</button>
+      <button class="cd-tab" data-cd="tasks" role="tab">🗒️ Tasks <span class="cd-badge" id="cdTaskBadge" hidden></span></button>
+    </div>
+    <div class="cd-panel active" id="cdToday"></div>
+    <div class="cd-panel" id="cdStudents"></div>
+    <div class="cd-panel" id="cdAttendance"></div>
+    <div class="cd-panel" id="cdMarks"></div>
+    <div class="cd-panel" id="cdHomework"></div>
+    <div class="cd-panel" id="cdCalls"></div>
+    <div class="cd-panel" id="cdTasks"></div>
+  </div>
+</div>
+
+<!-- Coordinator: remind a student -->
+<div class="modal-overlay" id="cdRemindModal" style="z-index:520;">
+  <div class="modal-box cd-modal" role="dialog" aria-modal="true" aria-labelledby="cdRemindTitle">
+    <button class="modal-close" id="cdRemindClose" aria-label="Close">&times;</button>
+    <h3 id="cdRemindTitle">🔔 Remind</h3>
+    <p class="cd-modal-sub" id="cdRemindSub"></p>
+    <label class="field-label" for="cdRemindText">Message</label>
+    <textarea id="cdRemindText" rows="4" class="cd-textarea"></textarea>
+    <div class="cd-checks">
+      <label><input type="checkbox" id="cdRemindSite" checked> Show it on their dashboard</label>
+      <label><input type="checkbox" id="cdRemindWaStudent"> WhatsApp the student <span class="cd-muted" id="cdRemindStudentNo"></span></label>
+      <label><input type="checkbox" id="cdRemindWaParent"> WhatsApp the parent <span class="cd-muted" id="cdRemindParentNo"></span></label>
+    </div>
+    <button type="button" class="btn btn-primary" id="cdRemindSend" style="width:100%;">Send reminder</button>
+    <div class="cd-wa-links" id="cdRemindLinks"></div>
+    <div class="cd-hint" id="cdRemindHint" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- Coordinator: log a parent call -->
+<div class="modal-overlay" id="cdCallModal" style="z-index:520;">
+  <div class="modal-box cd-modal" role="dialog" aria-modal="true" aria-labelledby="cdCallTitle">
+    <button class="modal-close" id="cdCallClose" aria-label="Close">&times;</button>
+    <h3 id="cdCallTitle">📞 Parent call</h3>
+    <p class="cd-modal-sub" id="cdCallSub"></p>
+    <div class="cd-outcomes" role="group" aria-label="How did it go?">
+      <button type="button" class="cd-outcome active" data-outcome="talked">📞 Talked</button>
+      <button type="button" class="cd-outcome" data-outcome="noanswer">📵 No answer</button>
+      <button type="button" class="cd-outcome" data-outcome="message">💬 Sent a message</button>
+    </div>
+    <label class="field-label" for="cdCallText">Note</label>
+    <textarea id="cdCallText" rows="4" class="cd-textarea" placeholder="e.g. Talked to mom — she'll check homework every evening."></textarea>
+    <button type="button" class="btn btn-primary" id="cdCallSave" style="width:100%;">Save note</button>
+    <div class="cd-hint" id="cdCallHint" role="status" aria-live="polite"></div>
+    <div class="cd-section-title" style="margin-top:18px;">Earlier notes</div>
+    <div id="cdCallHistory"></div>
+  </div>
+</div>
+
+<!-- Admin: tasks for a coordinator -->
+<div class="modal-overlay" id="cdTasksAdminModal" style="z-index:520;">
+  <div class="modal-box cd-modal" role="dialog" aria-modal="true" aria-labelledby="cdTasksAdminTitle">
+    <button class="modal-close" id="cdTasksAdminClose" aria-label="Close">&times;</button>
+    <h3 id="cdTasksAdminTitle">Tasks</h3>
+    <p class="cd-modal-sub">They see these in their 🗒️ Tasks tab and tick them off when done.</p>
+    <div class="cd-task-add">
+      <input type="text" id="cdTaskAdminText" placeholder="e.g. Call every parent whose child was absent this week">
+      <input type="date" id="cdTaskAdminDue" aria-label="Due date (optional)">
+      <button type="button" class="btn btn-primary cd-small" id="cdTaskAdminAdd">Add task</button>
+    </div>
+    <div id="cdTaskAdminList"></div>
   </div>
 </div>
 
@@ -6291,13 +6561,13 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     </div>
 
     <div class="admin-panel" id="assistantAcctsPanel">
-      <div class="admin-note">Academic assistants with their own individual accounts — each one only sees the students you assign them, not the whole roster. (Separate from the shared assistant2026 passcode, which still grants full access to everything.)</div>
+      <div class="admin-note">Staff with their own accounts. <b>🎓 Academic</b> assistants answer students' mistakes and only see the students you assign them. <b>🗂️ Coordinators</b> get the Coordinator Desk: every student, attendance, marks, homework follow-up, parent calls and the tasks you give them. Change someone's role with the Role menu. They sign in from "Staff login" at the top of the site.</div>
       <div class="admin-actions">
         <button class="btn btn-ghost" id="refreshAssistantAccts">Refresh</button>
       </div>
       <div class="admin-table-wrap">
         <table class="admin-table" id="assistantAcctsTable">
-          <thead><tr><th>Username</th><th>Status</th><th>Assigned students</th><th>Assigned skills</th><th></th></tr></thead>
+          <thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Assigned students</th><th>Assigned skills</th><th></th></tr></thead>
           <tbody id="assistantAcctsBody"></tbody>
         </table>
         <div class="admin-empty" id="assistantAcctsEmpty" style="display:none;">No assistant accounts registered yet.</div>
@@ -6309,6 +6579,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <div class="admin-actions">
         <button class="btn btn-ghost" id="refreshAssistantActivity">Refresh</button>
       </div>
+      <div class="hw-section-title" style="margin-top:20px;">🗂️ Coordinators</div>
+      <div id="cdActivityWrap" class="cd-activity"><div class="admin-empty">Loading…</div></div>
       <div class="hw-section-title" style="margin-top:20px;">Today</div>
       <div id="aaTodaySummary" style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;">
         <div class="admin-empty">Loading…</div>
@@ -7619,6 +7891,14 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         </div>
 
         <div class="pm-card">
+          <h4>Parent calls</h4>
+          ${listOrEmpty((st.coordNotes || []).slice().sort((a, b) => new Date(b.at) - new Date(a.at)).slice(0, 6).map(n => `
+            <div class="pm-row"><span>${esc((n.text || '').slice(0, 70) || '—')}</span>
+              <span class="pm-when">${pmWhen(n.at)} · ${esc(n.by || '')}</span>
+              <strong class="${n.outcome === 'talked' ? 'good' : 'mid'}">${n.outcome === 'talked' ? 'talked' : n.outcome === 'noanswer' ? 'no answer' : 'message'}</strong></div>`), 'No calls logged yet.')}
+        </div>
+
+        <div class="pm-card">
           <h4>Recordings</h4>
           ${listOrEmpty(recRows.slice(0, 8).map(r => `
             <div class="pm-row"><span>${esc(r.title)}</span>
@@ -7631,9 +7911,11 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           ${nextSession ? `<div class="pm-row"><span>Next: ${esc(nextSession.topic || 'Session')}</span><span class="pm-when">${esc(nextSession.date || '')}</span><strong class="mid">upcoming</strong></div>` : ''}
           ${listOrEmpty(mySessions.slice(0, 6).map(x => {
             const min = totalAttendedMinutes(x);
+            const ca = x.coordAttendance && x.coordAttendance.status;
             return `<div class="pm-row"><span>${esc(x.topic || 'Session')}</span>
               <span class="pm-when">${esc(x.date || '')}</span>
-              <strong class="${min === null ? 'mid' : min > 0 ? 'good' : 'bad'}">${min === null ? '—' : min + ' min'}</strong></div>`;
+              ${ca ? `<strong class="${ca === 'present' ? 'good' : ca === 'absent' ? 'bad' : 'mid'}">${esc(ca)}</strong>`
+                   : `<strong class="${min === null ? 'mid' : min > 0 ? 'good' : 'bad'}">${min === null ? '—' : min + ' min'}</strong>`}</div>`;
           }), 'No sessions recorded.')}
         </div>
 
@@ -7851,7 +8133,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       if(tab.dataset.tab === 'mistakesPanel'){ initMistakesPanel(true); }
       if(tab.dataset.tab === 'answerMistakesPanel'){ amShowView('list'); renderAnswerMistakesList(); }
       if(tab.dataset.tab === 'assistantAcctsPanel'){ renderAssistantAcctsTable(); }
-      if(tab.dataset.tab === 'assistantActivityPanel'){ renderAssistantActivity(); }
+      if(tab.dataset.tab === 'assistantActivityPanel'){ renderAssistantActivity(); if(typeof cdRenderCoordinatorActivity === 'function') cdRenderCoordinatorActivity(); }
       if(tab.dataset.tab === 'weeklyUpdatesPanel'){ renderWeeklyUpdates(); }
       if(tab.dataset.tab === 'aiReportsPanel' && typeof renderAiReportsPanel === 'function'){ renderAiReportsPanel(); }
     });
@@ -11302,6 +11584,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       username: data.username.trim(),
       passwordHash,
       status: 'pending',
+      role: data.role === 'coordinator' ? 'coordinator' : 'academic',
       assignedStudents: [],
       ts: new Date().toISOString()
     };
@@ -19393,7 +19676,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     }
     const btn = document.getElementById('assistantRegisterSubmitBtn');
     btn.disabled = true;
-    const result = await registerAssistantAccount({ username, password });
+    const result = await registerAssistantAccount({ username, password, role: (document.getElementById('assistantRegRole') || {}).value });
     btn.disabled = false;
 
     if(!result.ok){
@@ -19429,7 +19712,9 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     currentAssistantAccount = result.assistant;
     closeAssistantAuthModal();
     assistantSigninForm.reset();
-    await openAssistantDashboard();
+    // Coordinators get their own desk; academic assistants keep theirs.
+    if(typeof cdIsCoordinator === 'function' && cdIsCoordinator(currentAssistantAccount)) await openCoordDesk();
+    else await openAssistantDashboard();
   });
 
   document.getElementById('closeAssistantDashModal').addEventListener('click', ()=>{
@@ -21664,14 +21949,18 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${esc(a.username)}</td>
+        <td><select class="assistant-role-select" aria-label="Role of ${esc(a.username)}">
+          <option value="academic"${a.role === 'coordinator' ? '' : ' selected'}>🎓 Academic</option>
+          <option value="coordinator"${a.role === 'coordinator' ? ' selected' : ''}>🗂️ Coordinator</option>
+        </select></td>
         <td><span class="status-pill ${a.status === 'approved' ? 'status-approved' : a.status === 'declined' ? 'status-declined' : 'status-pending'}">${esc(a.status)}</span></td>
-        <td>${assignedCount === 0 ? 'None yet' : `${assignedCount} student${assignedCount===1?'':'s'}`}</td>
-        <td>${assignedSkillCount === 0 ? 'None yet' : `${assignedSkillCount} skill${assignedSkillCount===1?'':'s'}`}</td>
+        <td>${a.role === 'coordinator' ? 'All students' : assignedCount === 0 ? 'None yet' : `${assignedCount} student${assignedCount===1?'':'s'}`}</td>
+        <td>${a.role === 'coordinator' ? '—' : assignedSkillCount === 0 ? 'None yet' : `${assignedSkillCount} skill${assignedSkillCount===1?'':'s'}`}</td>
         <td style="white-space:nowrap;">
           ${a.status !== 'approved' ? `<button class="student-action-btn approve-assistant-btn">Approve</button>` : ''}
           ${a.status !== 'declined' ? `<button class="student-action-btn decline-assistant-btn">Decline</button>` : ''}
-          <button class="student-action-btn manage-students-btn">Manage students</button>
-          <button class="student-action-btn manage-skills-btn">Manage skills</button>
+          ${a.role === 'coordinator' ? `<button class="student-action-btn coord-tasks-btn">🗒️ Tasks${(a.tasks || []).filter(t => !t.done).length ? ` (${(a.tasks || []).filter(t => !t.done).length})` : ''}</button>` : `<button class="student-action-btn manage-students-btn">Manage students</button>
+          <button class="student-action-btn manage-skills-btn">Manage skills</button>`}
           <button class="student-action-btn delete-assistant-btn">Delete</button>
         </td>
       `;
@@ -21683,8 +21972,19 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         await setAssistantAccountStatus(a.username, 'declined');
         await renderAssistantAcctsTable();
       });
-      tr.querySelector('.manage-students-btn').addEventListener('click', ()=> openAssignStudentsModal(a.username));
-      tr.querySelector('.manage-skills-btn').addEventListener('click', ()=> openAssignSkillsModal(a.username));
+      tr.querySelector('.manage-students-btn')?.addEventListener('click', ()=> openAssignStudentsModal(a.username));
+      tr.querySelector('.manage-skills-btn')?.addEventListener('click', ()=> openAssignSkillsModal(a.username));
+      tr.querySelector('.coord-tasks-btn')?.addEventListener('click', ()=> cdOpenTasksAdmin(a.username));
+      tr.querySelector('.assistant-role-select').addEventListener('change', async (e)=>{
+        const acct = await getAssistantAccount(a.username);
+        if(!acct) return;
+        acct.role = e.target.value;
+        e.target.disabled = true;
+        const ok = await dbSet('assistants', assistantAcctKey(a.username), acct);
+        invalidateDbCache('assistants');
+        if(!ok) alert('Could not save — check your connection and try again.');
+        await renderAssistantAcctsTable();
+      });
       tr.querySelector('.delete-assistant-btn').addEventListener('click', async ()=>{
         if(!confirm(`Delete the assistant account "${a.username}"? This can't be undone.`)) return;
         await deleteAssistantAccount(a.username);
@@ -21781,7 +22081,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     }).join('');
   }
 
-  document.getElementById('refreshAssistantActivity').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); invalidateDbCache('assistants'); renderAssistantActivity(); });
+  document.getElementById('refreshAssistantActivity').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); invalidateDbCache('assistants'); renderAssistantActivity(); if(typeof cdRenderCoordinatorActivity === 'function') cdRenderCoordinatorActivity(); });
 
   // Monday 00:00:00 of the current week — the goal resets every week, so
   // "this week" needs a stable, predictable start point rather than a
@@ -23471,6 +23771,711 @@ $$);`;
       : what === 'tpl-en' ? AIR_TEMPLATES.en : '';
     airCopy(text, b);
   });
+</script>
+<script>
+  /* =====================================================================
+     STUDENT COORDINATOR DESK
+     Staff accounts (the same accounts as academic assistants) can be given
+     the Coordinator role. A coordinator signs in from "Staff login" and
+     gets this desk instead: every approved student, attendance they tick
+     for each online session, marks, homework follow-up with reminders,
+     parent-call notes, plans, and tasks from Mr. Mohamed Ibrahim.
+     Everything is stored on records the site already has, so no new
+     Supabase tables are needed:
+       • attendance  → sessions[*].coordAttendance {status, by, at}
+       • call notes  → students[*].coordNotes [{id, at, by, outcome, text}]
+       • reminders   → announcements (targetUsername, kind:'coord-reminder')
+       • tasks       → assistants[*].tasks [{id, text, due, done, …}]
+     ===================================================================== */
+  const CD_STATUSES = [
+    { key: 'present', label: 'Present', short: 'P', icon: '✓' },
+    { key: 'late', label: 'Late', short: 'L', icon: '⏱' },
+    { key: 'absent', label: 'Absent', short: 'A', icon: '✕' },
+    { key: 'excused', label: 'Excused', short: 'E', icon: '•' },
+  ];
+  const CD_OUTCOMES = { talked: '📞 Talked', noanswer: '📵 No answer', message: '💬 Sent a message' };
+
+  let cdData = null;           // everything the desk shows, loaded together
+  let cdTab = 'today';
+  let cdAttDate = null;        // YYYY-MM-DD shown on the Attendance tab
+  let cdStudentFilter = 'all';
+  let cdMarksSort = 'low';
+  let cdCallsFilter = '';
+
+  const cdNorm = v => String(v == null ? '' : v).trim().toLowerCase();
+  const cdDay = d => toDateInputValue(d instanceof Date ? d : new Date(d));
+  const cdToday = () => cdDay(new Date());
+  const cdDaysAgo = iso => iso ? Math.floor((Date.now() - new Date(iso).getTime()) / 864e5) : null;
+  const cdFmtDay = key => new Date(key + 'T00:00:00').toLocaleDateString(undefined, { weekday:'short', day:'numeric', month:'short' });
+  const cdWho = () => currentAssistantAccount ? currentAssistantAccount.username : getCurrentAnswererIdentity();
+  function cdIsCoordinator(acct){ return !!acct && acct.role === 'coordinator'; }
+  function cdMobile(raw){
+    const d = digitsOnly(raw || '');
+    const local = d.startsWith('20') ? d.slice(2) : d.startsWith('0') ? d.slice(1) : d;
+    return /^1[0-25]\d{8}$/.test(local) ? '20' + local : '';
+  }
+  function cdWaLink(raw, text){
+    const n = cdMobile(raw);
+    return n ? `https://wa.me/${n}?text=${encodeURIComponent(text)}` : null;
+  }
+  function cdRing(value, size, opts){
+    opts = opts || {};
+    if(value === null || value === undefined) return progressRing(0, { size, stroke: opts.stroke || Math.max(5, Math.round(size / 11)), centre: '—', sub: opts.sub, colour: 'var(--line-strong)' });
+    return progressRing(value, { size, stroke: opts.stroke || Math.max(5, Math.round(size / 11)), tone: opts.tone || 'score', sub: opts.sub, colour: opts.colour });
+  }
+
+  /* ---------------- data ---------------- */
+  async function cdLoad(){
+    invalidateDbCache('students'); invalidateDbCache('homework'); invalidateDbCache('attempts');
+    invalidateDbCache('sessions'); invalidateDbCache('announcements'); invalidateDbCache('assistants');
+    const [students, hw, attempts, sessions, courses, announcements, me] = await Promise.all([
+      fetchAllStudents(), fetchHomeworkIndex(), fetchAttemptsIndex(), fetchAllSessions(), fetchAllCourses(),
+      fetchAllAnnouncements().catch(() => []),
+      currentAssistantAccount ? getAssistantAccount(currentAssistantAccount.username) : null,
+    ]);
+    if(me) currentAssistantAccount = me;
+    const approved = students.filter(s => s && !s._index && s.username && s.status === 'approved')
+      .sort((a, b) => a.username.localeCompare(b.username));
+    const by = (rows, key) => { const m = new Map(); rows.forEach(r => { const u = cdNorm(r[key]); if(!m.has(u)) m.set(u, []); m.get(u).push(r); }); return m; };
+    cdData = {
+      students: approved, courses,
+      hwBy: by(hw, 'username'), atBy: by(attempts, 'username'),
+      sessions: sessions.filter(s => !s._index), sessBy: by(sessions.filter(s => !s._index), 'username'),
+      announcements,
+    };
+    cdData.metrics = new Map(approved.map(s => [cdNorm(s.username), cdMetrics(s)]));
+  }
+
+  function cdMetrics(st){
+    const u = cdNorm(st.username);
+    const now = Date.now();
+    const sess = cdData.sessBy.get(u) || [];
+    const marked = sess.filter(x => x.coordAttendance && x.coordAttendance.status);
+    const attended = marked.filter(x => x.coordAttendance.status === 'present' || x.coordAttendance.status === 'late');
+    const counted = marked.filter(x => x.coordAttendance.status !== 'excused');
+    const attendancePct = counted.length ? Math.round(attended.length / counted.length * 100) : null;
+    const recentAbsent = marked.filter(x => x.coordAttendance.status === 'absent' && x.date && (now - new Date(x.date + 'T00:00:00').getTime()) <= 14 * 864e5).length;
+
+    const hw = (cdData.hwBy.get(u) || []).filter(h => isHomeworkPublished(h));
+    const done = hw.filter(h => h.status === 'completed');
+    const waiting = hw.filter(h => h.status !== 'completed').sort((a, b) => new Date(a.publishAt || a.ts || 0) - new Date(b.publishAt || b.ts || 0));
+    const hwPct = hw.length ? Math.round(done.length / hw.length * 100) : null;
+
+    const scores = [
+      ...done.filter(h => h.score && typeof h.score.pct === 'number').map(h => ({ pct: h.score.pct, at: h.submittedAt || h.ts, title: h.title, kind: 'hw' })),
+      ...(cdData.atBy.get(u) || []).filter(a => typeof a.pct === 'number').map(a => ({ pct: a.pct, at: a.ts, title: a.examTitle, kind: 'exam' })),
+    ].sort((a, b) => new Date(a.at || 0) - new Date(b.at || 0));
+    const avg = list => list.length ? Math.round(list.reduce((s, x) => s + x.pct, 0) / list.length) : null;
+    const last30 = scores.filter(x => x.at && now - new Date(x.at).getTime() <= 30 * 864e5);
+    const avgPct = avg(last30.length ? last30 : scores.slice(-10));
+    const hwAvg = avg(scores.filter(x => x.kind === 'hw'));
+    const examAvg = avg(scores.filter(x => x.kind === 'exam'));
+    const lastFive = scores.slice(-5), prevFive = scores.slice(-10, -5);
+    const trend = lastFive.length >= 2 && prevFive.length >= 2 ? avg(lastFive) - avg(prevFive) : null;
+
+    const planRows = hw.concat((cdData.hwBy.get(u) || []).filter(h => !isHomeworkPublished(h))).filter(h => h.fromPlan);
+    const plans = {};
+    planRows.forEach(h => { (plans[h.fromPlan] ||= []).push(h); });
+    const planNames = Object.keys(plans);
+    const currentPlan = planNames.sort((a, b) => Math.max(...plans[b].map(h => new Date(h.publishAt || 0).getTime())) - Math.max(...plans[a].map(h => new Date(h.publishAt || 0).getTime())))[0] || null;
+    const plan = currentPlan ? { name: currentPlan, total: plans[currentPlan].length, done: plans[currentPlan].filter(h => h.status === 'completed').length } : null;
+
+    const flags = [];
+    if(recentAbsent >= 2) flags.push({ key: 'absent', text: `${recentAbsent} absences in 2 weeks` });
+    if(waiting.length >= 3) flags.push({ key: 'hw', text: `${waiting.length} homeworks waiting` });
+    if(avgPct !== null && avgPct < 60) flags.push({ key: 'low', text: `average ${avgPct}%` });
+    if(trend !== null && trend <= -15) flags.push({ key: 'drop', text: `dropped ${Math.abs(trend)} points` });
+    if(!plan) flags.push({ key: 'noplan', text: 'no plan', soft: true });
+
+    const exam = examDateFor(st, cdData.courses);
+    return { st, sess, marked, attendancePct, recentAbsent, hw, done, waiting, hwPct, scores, avgPct, hwAvg, examAvg, trend, plan,
+      flags, urgent: flags.filter(f => !f.soft), examDays: exam ? daysUntilExam(exam.date) : null };
+  }
+
+  function cdMatchesSearch(st){
+    const q = cdNorm(document.getElementById('cdSearch').value);
+    return !q || cdNorm(st.username).includes(q) || cdNorm(st.course).includes(q);
+  }
+
+  /* ---------------- open / close ---------------- */
+  async function openCoordDesk(){
+    const desk = document.getElementById('coordDesk');
+    desk.classList.add('open');
+    const name = currentAssistantAccount ? currentAssistantAccount.username : 'Coordinator';
+    const h = new Date().getHours();
+    document.getElementById('cdHello').textContent = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${name} 👋`;
+    document.getElementById('cdDate').textContent = new Date().toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    cdAttDate = cdAttDate || cdToday();
+    document.getElementById('cdToday').innerHTML = '<div class="admin-empty">Loading your students…</div>';
+    await cdLoad();
+    cdShow(cdTab);
+  }
+  function closeCoordDesk(){
+    document.getElementById('coordDesk').classList.remove('open');
+    currentAssistantAccount = null;
+    cdData = null;
+  }
+  document.getElementById('cdSignOut').addEventListener('click', closeCoordDesk);
+  document.getElementById('cdRefresh').addEventListener('click', async (e)=>{
+    const b = e.currentTarget; b.disabled = true; b.textContent = '↻ Loading…';
+    await cdLoad(); cdShow(cdTab);
+    b.disabled = false; b.textContent = '↻ Refresh';
+  });
+  document.getElementById('cdSearch').addEventListener('input', ()=>{
+    if(cdTab === 'today' || cdTab === 'tasks' || cdTab === 'calls') cdShow('students'); else cdShow(cdTab);
+  });
+  document.querySelectorAll('#coordDesk .cd-tab').forEach(t => t.addEventListener('click', ()=> cdShow(t.dataset.cd)));
+
+  function cdShow(tab){
+    cdTab = tab;
+    document.querySelectorAll('#coordDesk .cd-tab').forEach(t => { const on = t.dataset.cd === tab; t.classList.toggle('active', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    const ids = { today: 'cdToday', students: 'cdStudents', attendance: 'cdAttendance', marks: 'cdMarks', homework: 'cdHomework', calls: 'cdCalls', tasks: 'cdTasks' };
+    Object.entries(ids).forEach(([k, id]) => document.getElementById(id).classList.toggle('active', k === tab));
+    cdUpdateTaskBadge();
+    if(!cdData) return;
+    ({ today: cdRenderToday, students: cdRenderStudents, attendance: cdRenderAttendance, marks: cdRenderMarks,
+       homework: cdRenderHomework, calls: cdRenderCalls, tasks: cdRenderTasks })[tab]();
+  }
+
+  function cdUpdateTaskBadge(){
+    const badge = document.getElementById('cdTaskBadge');
+    const open = ((currentAssistantAccount && currentAssistantAccount.tasks) || []).filter(t => !t.done).length;
+    badge.hidden = open === 0; badge.textContent = open;
+  }
+
+  /* ---------------- shared bits ---------------- */
+  function cdStudentActions(u, compact){
+    return `<div class="cd-actions${compact ? ' compact' : ''}">
+      <button type="button" class="cd-act" data-act="plan" data-u="${esc(u)}" title="See or give a plan">📋 Plan</button>
+      <button type="button" class="cd-act" data-act="remind" data-u="${esc(u)}" title="Send a reminder">🔔 Remind</button>
+      <button type="button" class="cd-act" data-act="call" data-u="${esc(u)}" title="Log a parent call">📞 Call</button>
+      <button type="button" class="cd-act" data-act="details" data-u="${esc(u)}" title="Full progress">📈 Details</button>
+    </div>`;
+  }
+  function cdWireActions(root){
+    root.querySelectorAll('.cd-act').forEach(b => b.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const m = cdData.metrics.get(cdNorm(b.dataset.u)); if(!m) return;
+      if(b.dataset.act === 'plan') cdOpenPlan(m.st);
+      else if(b.dataset.act === 'remind') cdOpenRemind(m);
+      else if(b.dataset.act === 'call') cdOpenCall(m.st);
+      else if(b.dataset.act === 'details') openStudentAnalysis(m.st.username);
+    }));
+  }
+  function cdOpenPlan(st){
+    openStudentPlanModal(st);
+    // When the plan window closes, refresh this desk so rings and plan bars move.
+    const modal = document.getElementById('studentPlanModal');
+    const obs = new MutationObserver(async ()=>{
+      if(!modal.classList.contains('open')){ obs.disconnect(); await cdLoad(); cdShow(cdTab); }
+    });
+    obs.observe(modal, { attributes:true, attributeFilter:['class'] });
+  }
+  function cdFlagChips(m){
+    return m.urgent.map(f => `<span class="cd-flag cd-flag-${f.key}">${esc(f.text)}</span>`).join('');
+  }
+
+  /* ---------------- 🏠 Today ---------------- */
+  function cdRenderToday(){
+    const el = document.getElementById('cdToday');
+    const all = [...cdData.metrics.values()];
+    if(all.length === 0){ el.innerHTML = '<div class="admin-empty">No approved students yet.</div>'; return; }
+    const weekAgo = Date.now() - 7 * 864e5;
+    const weekMarks = cdData.sessions.filter(x => x.coordAttendance && x.coordAttendance.status && x.coordAttendance.status !== 'excused' && x.date && new Date(x.date + 'T00:00:00').getTime() >= weekAgo);
+    const weekAtt = weekMarks.length ? Math.round(weekMarks.filter(x => ['present', 'late'].includes(x.coordAttendance.status)).length / weekMarks.length * 100) : null;
+    const hwAll = all.reduce((s, m) => s + m.hw.length, 0), hwDone = all.reduce((s, m) => s + m.done.length, 0);
+    const hwPct = hwAll ? Math.round(hwDone / hwAll * 100) : null;
+    const avgs = all.map(m => m.avgPct).filter(v => v !== null);
+    const avgPct = avgs.length ? Math.round(avgs.reduce((a, b) => a + b, 0) / avgs.length) : null;
+    const onTrack = Math.round(all.filter(m => m.urgent.length === 0).length / all.length * 100);
+    const attention = all.filter(m => m.urgent.length).sort((a, b) => b.urgent.length - a.urgent.length);
+
+    const today = cdToday();
+    const groups = cdGroupsFor(today);
+    const tasks = ((currentAssistantAccount && currentAssistantAccount.tasks) || []).filter(t => !t.done);
+
+    el.innerHTML = `
+      <div class="cd-rings">
+        <div class="cd-ring-card">${cdRing(weekAtt, 112, { sub: 'this week' })}<div class="cd-ring-label">Attendance</div></div>
+        <div class="cd-ring-card">${cdRing(hwPct, 112, { sub: `${hwDone}/${hwAll}` })}<div class="cd-ring-label">Homework done</div></div>
+        <div class="cd-ring-card">${cdRing(avgPct, 112, { sub: 'last 30 days' })}<div class="cd-ring-label">Average score</div></div>
+        <div class="cd-ring-card">${cdRing(onTrack, 112, { tone: 'signal', sub: `${all.length - attention.length} of ${all.length}` })}<div class="cd-ring-label">On track</div></div>
+      </div>
+      <div class="cd-grid2">
+        <section class="cd-card">
+          <div class="cd-card-head"><h3>⚠️ Needs attention</h3><span class="cd-count">${attention.length}</span></div>
+          ${attention.length ? attention.slice(0, 12).map(m => `
+            <div class="cd-att-row">
+              <div class="cd-att-main">
+                <button type="button" class="cd-name-btn" data-act="details" data-u="${esc(m.st.username)}">${esc(m.st.username)}</button>
+                <div class="cd-flags">${cdFlagChips(m)}</div>
+              </div>
+              ${cdStudentActions(m.st.username, true)}
+            </div>`).join('') : '<div class="cd-empty">🎉 Everyone is on track.</div>'}
+        </section>
+        <div class="cd-col">
+          <section class="cd-card">
+            <div class="cd-card-head"><h3>📅 Today's sessions</h3></div>
+            ${groups.length ? groups.map(g => {
+              const m = g.rows.filter(r => r.coordAttendance && r.coordAttendance.status).length;
+              return `<div class="cd-sess-row">
+                <div>${cdRing(Math.round(m / g.rows.length * 100), 48, { tone: 'signal', stroke: 5, sub: '' })}</div>
+                <div class="cd-sess-main"><div class="cd-sess-topic">${esc(g.topic || 'Session')}</div><div class="cd-muted">${g.time ? esc(g.time) + ' · ' : ''}${m} of ${g.rows.length} marked</div></div>
+                <button type="button" class="btn btn-ghost cd-small cd-go-att">Take attendance</button>
+              </div>`;
+            }).join('') : '<div class="cd-empty">No sessions today.</div>'}
+          </section>
+          <section class="cd-card">
+            <div class="cd-card-head"><h3>🗒️ Tasks</h3><span class="cd-count">${tasks.length}</span></div>
+            ${tasks.length ? tasks.slice(0, 4).map(t => `<div class="cd-task-mini">${t.due && t.due < today ? '🔴' : '⬜'} ${esc(t.text)}${t.due ? ` <span class="cd-muted">· ${esc(cdFmtDay(t.due))}</span>` : ''}</div>`).join('') + `<button type="button" class="btn btn-ghost cd-small cd-go-tasks" style="margin-top:8px;">Open tasks</button>` : '<div class="cd-empty">No open tasks.</div>'}
+          </section>
+        </div>
+      </div>`;
+    cdWireActions(el);
+    el.querySelectorAll('.cd-name-btn').forEach(b => b.addEventListener('click', ()=> openStudentAnalysis(b.dataset.u)));
+    el.querySelectorAll('.cd-go-att').forEach(b => b.addEventListener('click', ()=>{ cdAttDate = today; cdShow('attendance'); }));
+    el.querySelectorAll('.cd-go-tasks').forEach(b => b.addEventListener('click', ()=> cdShow('tasks')));
+  }
+
+  /* ---------------- 👥 Students ---------------- */
+  function cdRenderStudents(){
+    const el = document.getElementById('cdStudents');
+    const all = [...cdData.metrics.values()];
+    const courses = [...new Set(all.map(m => m.st.course).filter(Boolean))].sort();
+    const filtered = all.filter(m => cdMatchesSearch(m.st) &&
+      (cdStudentFilter === 'all' || (cdStudentFilter === 'attention' && m.urgent.length) || (cdStudentFilter === 'noplan' && !m.plan) || cdStudentFilter === 'course:' + m.st.course));
+    el.innerHTML = `
+      <div class="cd-filters">
+        ${[['all', `All ${all.length}`], ['attention', `⚠️ Needs attention ${all.filter(m => m.urgent.length).length}`], ['noplan', `No plan ${all.filter(m => !m.plan).length}`]]
+          .map(([k, l]) => `<button type="button" class="cd-chip${cdStudentFilter === k ? ' active' : ''}" data-f="${k}">${l}</button>`).join('')}
+        ${courses.map(c => `<button type="button" class="cd-chip${cdStudentFilter === 'course:' + c ? ' active' : ''}" data-f="course:${esc(c)}">${esc(c)}</button>`).join('')}
+      </div>
+      ${filtered.length ? `<div class="cd-cards">${filtered.map(m => `
+        <article class="cd-student">
+          <div class="cd-student-head">
+            <div class="cd-avatar" aria-hidden="true">${esc(m.st.username.slice(0, 1).toUpperCase())}</div>
+            <div class="cd-student-id">
+              <div class="cd-student-name">${esc(m.st.username)}</div>
+              <div class="cd-muted">${esc(m.st.course || 'No course')}${m.examDays !== null && m.examDays >= 0 ? ` · ⏳ ${m.examDays} days to exam` : ''}</div>
+            </div>
+          </div>
+          <div class="cd-mini-rings">
+            <div>${cdRing(m.attendancePct, 70)}<span>Attendance</span></div>
+            <div>${cdRing(m.hwPct, 70)}<span>Homework</span></div>
+            <div>${cdRing(m.avgPct, 70)}<span>Score</span></div>
+          </div>
+          ${m.plan ? `<div class="cd-plan"><div class="cd-plan-top"><span>📋 ${esc(m.plan.name)}</span><span>${m.plan.done}/${m.plan.total}</span></div><div class="cd-bar"><span style="width:${Math.round(m.plan.done / m.plan.total * 100)}%"></span></div></div>`
+            : '<div class="cd-plan cd-plan-none">No plan yet — tap 📋 Plan to give one.</div>'}
+          ${m.urgent.length ? `<div class="cd-flags">${cdFlagChips(m)}</div>` : ''}
+          ${cdStudentActions(m.st.username)}
+        </article>`).join('')}</div>` : '<div class="admin-empty">No students match.</div>'}`;
+    el.querySelectorAll('.cd-chip').forEach(c => c.addEventListener('click', ()=>{ cdStudentFilter = c.dataset.f; cdRenderStudents(); }));
+    cdWireActions(el);
+  }
+
+  /* ---------------- ✅ Attendance ---------------- */
+  function cdGroupsFor(dayKey){
+    const map = new Map();
+    cdData.sessions.filter(x => x.date === dayKey).forEach(x => {
+      const k = `${x.time || ''}|${cdNorm(x.topic)}`;
+      if(!map.has(k)) map.set(k, { time: x.time || '', topic: x.topic || '', rows: [] });
+      map.get(k).rows.push(x);
+    });
+    return [...map.values()].sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+      .map(g => ({ ...g, rows: g.rows.sort((a, b) => cdNorm(a.username).localeCompare(cdNorm(b.username))) }));
+  }
+  function cdRenderAttendance(){
+    const el = document.getElementById('cdAttendance');
+    const day = cdAttDate || cdToday();
+    const groups = cdGroupsFor(day);
+    const allDays = [...new Set(cdData.sessions.map(x => x.date).filter(Boolean))].sort();
+    const prevDay = [...allDays].reverse().find(d => d < day), nextDay = allDays.find(d => d > day);
+    const q = cdNorm(document.getElementById('cdSearch').value);
+    el.innerHTML = `
+      <div class="cd-att-nav">
+        <button type="button" class="btn btn-ghost cd-small" data-go="${prevDay || ''}" ${prevDay ? '' : 'disabled'} aria-label="Previous session day">‹ ${prevDay ? esc(cdFmtDay(prevDay)) : ''}</button>
+        <input type="date" id="cdAttDateInput" value="${day}" aria-label="Session day">
+        <button type="button" class="btn btn-ghost cd-small" data-go="${cdToday()}">Today</button>
+        <button type="button" class="btn btn-ghost cd-small" data-go="${nextDay || ''}" ${nextDay ? '' : 'disabled'} aria-label="Next session day">${nextDay ? esc(cdFmtDay(nextDay)) : ''} ›</button>
+      </div>
+      ${groups.length ? groups.map((g, gi) => {
+        const rows = g.rows.filter(r => !q || cdNorm(r.username).includes(q));
+        const marked = g.rows.filter(r => r.coordAttendance && r.coordAttendance.status).length;
+        const present = g.rows.filter(r => r.coordAttendance && ['present', 'late'].includes(r.coordAttendance.status)).length;
+        return `<section class="cd-card cd-att-group" data-g="${gi}">
+          <div class="cd-card-head">
+            <div class="cd-att-title">${cdRing(Math.round(marked / g.rows.length * 100), 56, { tone: 'signal', stroke: 6 })}
+              <div><h3>${esc(g.topic || 'Session')}</h3><div class="cd-muted">${esc(cdFmtDay(day))}${g.time ? ' · ' + esc(g.time) : ''} · ${marked}/${g.rows.length} marked · ${present} attended</div></div></div>
+            <button type="button" class="btn btn-ghost cd-small cd-all-present" data-g="${gi}">✓ Everyone not marked → Present</button>
+          </div>
+          <div class="cd-att-list">${rows.map(r => {
+            const st = r.coordAttendance && r.coordAttendance.status;
+            const auto = totalAttendedMinutes(r);
+            const m = cdData.metrics.get(cdNorm(r.username));
+            const parentWa = m && st === 'absent' ? cdWaLink(m.st.parentNumber, `Hello, this is ${cdWho()} from Mr. Mohamed Ibrahim's math class. ${r.username} was absent from today's session (${g.topic || 'math session'}, ${cdFmtDay(day)}). The recording is on the website. Please make sure they watch it. Thank you!`) : null;
+            return `<div class="cd-att-student${st ? ' is-' + st : ''}" data-id="${esc(r.id)}">
+              <div class="cd-att-who"><div class="cd-student-name">${esc(r.username)}</div>
+                <div class="cd-muted">${auto ? `joined online ${auto} min` : 'no online join recorded'}${r.coordAttendance && r.coordAttendance.by ? ` · marked by ${esc(r.coordAttendance.by)}` : ''}</div></div>
+              <div class="cd-seg" role="group" aria-label="Attendance for ${esc(r.username)}">
+                ${CD_STATUSES.map(s => `<button type="button" class="cd-seg-btn s-${s.key}${st === s.key ? ' on' : ''}" data-status="${s.key}" aria-pressed="${st === s.key}" title="${s.label}"><span class="cd-seg-full">${s.label}</span><span class="cd-seg-short">${s.short}</span></button>`).join('')}
+              </div>
+              ${parentWa ? `<a class="cd-tell-parent" href="${parentWa}" target="_blank" rel="noopener">💬 Tell parent</a>` : ''}
+            </div>`;
+          }).join('') || '<div class="cd-empty">No student matches the search.</div>'}</div>
+        </section>`;
+      }).join('') : `<div class="admin-empty">No sessions on ${esc(cdFmtDay(day))}.${nextDay || prevDay ? ' Use the arrows to jump to a day with sessions.' : ' Sessions are added by Mr. Mohamed Ibrahim in the Sessions tab.'}</div>`}`;
+    el.querySelector('#cdAttDateInput').addEventListener('change', e => { if(e.target.value){ cdAttDate = e.target.value; cdRenderAttendance(); } });
+    el.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', ()=>{ if(b.dataset.go){ cdAttDate = b.dataset.go; cdRenderAttendance(); } }));
+    el.querySelectorAll('.cd-seg-btn').forEach(b => b.addEventListener('click', async ()=>{
+      const row = b.closest('.cd-att-student');
+      const on = b.classList.contains('on');
+      await cdSetAttendance(row.dataset.id, on ? null : b.dataset.status);
+      cdRenderAttendance();
+    }));
+    el.querySelectorAll('.cd-all-present').forEach(b => b.addEventListener('click', async ()=>{
+      const g = groups[Number(b.dataset.g)];
+      const todo = g.rows.filter(r => !(r.coordAttendance && r.coordAttendance.status));
+      if(!todo.length) return;
+      b.disabled = true; b.textContent = 'Saving…';
+      for(const r of todo) await cdSetAttendance(r.id, 'present');
+      cdRenderAttendance();
+    }));
+  }
+  async function cdSetAttendance(sessionId, status){
+    const rec = await dbGet('sessions', sessionId);
+    if(!rec) return false;
+    const next = { ...rec };
+    if(status) next.coordAttendance = { status, by: cdWho(), at: new Date().toISOString() };
+    else delete next.coordAttendance;
+    const ok = await dbSet('sessions', sessionId, next);
+    if(ok){
+      invalidateDbCache('sessions');
+      const i = cdData.sessions.findIndex(x => x.id === sessionId);
+      if(i >= 0) cdData.sessions[i] = next;
+      const list = cdData.sessBy.get(cdNorm(next.username)) || [];
+      const j = list.findIndex(x => x.id === sessionId); if(j >= 0) list[j] = next;
+      const m = cdData.metrics.get(cdNorm(next.username));
+      if(m) cdData.metrics.set(cdNorm(next.username), cdMetrics(m.st));
+    } else alert('Could not save — check your connection and try again.');
+    return ok;
+  }
+
+  /* ---------------- 📊 Marks ---------------- */
+  function cdRenderMarks(){
+    const el = document.getElementById('cdMarks');
+    let rows = [...cdData.metrics.values()].filter(m => cdMatchesSearch(m.st));
+    const val = v => v === null ? 999 : v;
+    if(cdMarksSort === 'low') rows.sort((a, b) => val(a.avgPct) - val(b.avgPct));
+    else if(cdMarksSort === 'drop') rows.sort((a, b) => (a.trend ?? 999) - (b.trend ?? 999));
+    else if(cdMarksSort === 'high') rows.sort((a, b) => (b.avgPct ?? -1) - (a.avgPct ?? -1));
+    else rows.sort((a, b) => a.st.username.localeCompare(b.st.username));
+    const pill = p => `<span class="cd-pill ${p >= 75 ? 'good' : p >= 50 ? 'mid' : 'bad'}">${Math.round(p)}</span>`;
+    el.innerHTML = `
+      <div class="cd-filters">
+        <span class="cd-muted">Sort:</span>
+        ${[['low', 'Lowest first'], ['drop', 'Biggest drop'], ['high', 'Highest first'], ['name', 'Name']].map(([k, l]) => `<button type="button" class="cd-chip${cdMarksSort === k ? ' active' : ''}" data-s="${k}">${l}</button>`).join('')}
+      </div>
+      <div class="cd-marks">${rows.map(m => `
+        <button type="button" class="cd-mark-row" data-u="${esc(m.st.username)}">
+          <span class="cd-mark-ring">${cdRing(m.avgPct, 54, { stroke: 6 })}</span>
+          <span class="cd-mark-main">
+            <span class="cd-student-name">${esc(m.st.username)}</span>
+            <span class="cd-muted">HW avg ${m.hwAvg ?? '—'}${m.hwAvg !== null ? '%' : ''} · Exams avg ${m.examAvg ?? '—'}${m.examAvg !== null ? '%' : ''} · ${m.scores.length} results</span>
+            <span class="cd-pills">${m.scores.slice(-6).map(s => pill(s.pct)).join('') || '<span class="cd-muted">no results yet</span>'}</span>
+          </span>
+          <span class="cd-trend ${m.trend === null ? '' : m.trend >= 0 ? 'up' : 'down'}">${m.trend === null ? '' : (m.trend >= 0 ? '▲ ' : '▼ ') + Math.abs(m.trend)}</span>
+        </button>`).join('') || '<div class="admin-empty">No students match.</div>'}</div>`;
+    el.querySelectorAll('.cd-chip').forEach(c => c.addEventListener('click', ()=>{ cdMarksSort = c.dataset.s; cdRenderMarks(); }));
+    el.querySelectorAll('.cd-mark-row').forEach(r => r.addEventListener('click', ()=> openStudentAnalysis(r.dataset.u)));
+  }
+
+  /* ---------------- 📚 Homework follow-up ---------------- */
+  function cdRemindedToday(u){
+    const today = cdToday();
+    return (cdData.announcements || []).some(a => a.kind === 'coord-reminder' && cdNorm(a.targetUsername) === cdNorm(u) && a.ts && cdDay(a.ts) === today);
+  }
+  function cdRenderHomework(){
+    const el = document.getElementById('cdHomework');
+    const all = [...cdData.metrics.values()];
+    const rows = all.filter(m => m.waiting.length && cdMatchesSearch(m.st)).sort((a, b) => b.waiting.length - a.waiting.length);
+    const hwAll = all.reduce((s, m) => s + m.hw.length, 0), hwDone = all.reduce((s, m) => s + m.done.length, 0);
+    const clear = all.filter(m => !m.waiting.length).length;
+    el.innerHTML = `
+      <div class="cd-rings cd-rings-sm">
+        <div class="cd-ring-card">${cdRing(hwAll ? Math.round(hwDone / hwAll * 100) : null, 96, { sub: `${hwDone}/${hwAll}` })}<div class="cd-ring-label">Released homework done</div></div>
+        <div class="cd-ring-card">${cdRing(all.length ? Math.round(clear / all.length * 100) : null, 96, { tone: 'signal', sub: `${clear} of ${all.length}` })}<div class="cd-ring-label">Students all caught up</div></div>
+      </div>
+      <div class="cd-filters">
+        <button type="button" class="btn btn-primary cd-small" id="cdRemindAll" ${rows.length ? '' : 'disabled'}>🔔 Remind all ${rows.length} on the site</button>
+      </div>
+      ${rows.length ? rows.map(m => `
+        <section class="cd-card cd-hw-card">
+          <div class="cd-card-head">
+            <div><h3>${esc(m.st.username)}</h3><div class="cd-muted">${m.waiting.length} waiting · ${m.done.length}/${m.hw.length} done${cdRemindedToday(m.st.username) ? ' · <span class="cd-ok">🔔 reminded today</span>' : ''}</div></div>
+            ${cdRing(m.hwPct, 54, { stroke: 6 })}
+          </div>
+          <ul class="cd-hw-list">${m.waiting.slice(0, 5).map(h => {
+            const d = cdDaysAgo(h.publishAt || h.ts);
+            return `<li><span>${esc(h.title || 'Homework')}</span><span class="cd-hw-age ${d >= 3 ? 'late' : ''}">${d === 0 ? 'today' : d === 1 ? '1 day' : d + ' days'}</span></li>`;
+          }).join('')}${m.waiting.length > 5 ? `<li class="cd-muted">+${m.waiting.length - 5} more</li>` : ''}</ul>
+          ${cdStudentActions(m.st.username, true)}
+        </section>`).join('') : '<div class="admin-empty">🎉 Nobody has homework waiting.</div>'}`;
+    cdWireActions(el);
+    const all_ = el.querySelector('#cdRemindAll');
+    if(all_) all_.addEventListener('click', async ()=>{
+      const todo = rows.filter(m => !cdRemindedToday(m.st.username));
+      if(!todo.length){ alert('Everyone on this list was already reminded today.'); return; }
+      if(!confirm(`Put a homework reminder on the dashboard of ${todo.length} student${todo.length === 1 ? '' : 's'}?${todo.length < rows.length ? ` (${rows.length - todo.length} already reminded today are skipped.)` : ''}`)) return;
+      all_.disabled = true;
+      let n = 0;
+      for(const m of todo){ all_.textContent = `Sending… ${++n}/${todo.length}`; await cdPostReminder(m.st.username, cdDefaultReminder(m)); }
+      await cdLoad(); cdRenderHomework();
+    });
+  }
+
+  /* ---------------- 🔔 Remind ---------------- */
+  function cdDefaultReminder(m){
+    const titles = m.waiting.slice(0, 3).map(h => `"${h.title || 'Homework'}"`).join(', ');
+    return m.waiting.length
+      ? `Hi ${m.st.username}! You have ${m.waiting.length} homework${m.waiting.length === 1 ? '' : 's'} waiting: ${titles}${m.waiting.length > 3 ? ' and more' : ''}. Please finish ${m.waiting.length === 1 ? 'it' : 'them'} today 💪`
+      : `Hi ${m.st.username}! Keep going — check your homework tab today 💪`;
+  }
+  async function cdPostReminder(username, text){
+    const ok = await saveAnnouncement(generateId('announce'), {
+      text, course: null, targetUsername: username, kind: 'coord-reminder',
+      postedBy: cdWho(), ts: new Date().toISOString(),
+    });
+    if(ok) invalidateDbCache('announcements');
+    return ok;
+  }
+  let cdRemindFor = null;
+  function cdOpenRemind(m){
+    cdRemindFor = m;
+    document.getElementById('cdRemindTitle').textContent = `🔔 Remind ${m.st.username}`;
+    document.getElementById('cdRemindSub').textContent = m.waiting.length ? `${m.waiting.length} homework${m.waiting.length === 1 ? '' : 's'} waiting.` : 'No homework waiting right now.';
+    document.getElementById('cdRemindText').value = cdDefaultReminder(m);
+    const sNo = cdMobile(m.st.studentNumber), pNo = cdMobile(m.st.parentNumber);
+    const ws = document.getElementById('cdRemindWaStudent'), wp = document.getElementById('cdRemindWaParent');
+    ws.checked = false; ws.disabled = !sNo; document.getElementById('cdRemindStudentNo').textContent = sNo ? `(+${sNo})` : '(no mobile number on file)';
+    wp.checked = false; wp.disabled = !pNo; document.getElementById('cdRemindParentNo').textContent = pNo ? `(+${pNo})` : '(no number on file)';
+    document.getElementById('cdRemindSite').checked = true;
+    document.getElementById('cdRemindLinks').innerHTML = '';
+    document.getElementById('cdRemindHint').textContent = '';
+    document.getElementById('cdRemindSend').disabled = false;
+    document.getElementById('cdRemindModal').classList.add('open');
+  }
+  document.getElementById('cdRemindClose').addEventListener('click', ()=> document.getElementById('cdRemindModal').classList.remove('open'));
+  document.getElementById('cdRemindSend').addEventListener('click', async (e)=>{
+    const m = cdRemindFor; if(!m) return;
+    const text = document.getElementById('cdRemindText').value.trim();
+    const hint = document.getElementById('cdRemindHint');
+    if(!text){ hint.textContent = 'Write a message first.'; return; }
+    const site = document.getElementById('cdRemindSite').checked;
+    const waS = document.getElementById('cdRemindWaStudent').checked, waP = document.getElementById('cdRemindWaParent').checked;
+    if(!site && !waS && !waP){ hint.textContent = 'Tick at least one way to send it.'; return; }
+    e.currentTarget.disabled = true;
+    let done = [];
+    if(site){ if(await cdPostReminder(m.st.username, text)) done.push('on their dashboard'); else hint.textContent = 'Could not post it on the site — check your connection.'; }
+    const links = [];
+    if(waS){ const l = cdWaLink(m.st.studentNumber, text); if(l) links.push(`<a class="btn btn-ghost cd-small" href="${l}" target="_blank" rel="noopener">💬 Open WhatsApp to ${esc(m.st.username)}</a>`); }
+    if(waP){ const l = cdWaLink(m.st.parentNumber, `Hello! A note from ${cdWho()} (Mr. Mohamed Ibrahim's math class) about ${m.st.username}: ${text}`); if(l) links.push(`<a class="btn btn-ghost cd-small" href="${l}" target="_blank" rel="noopener">💬 Open WhatsApp to the parent</a>`); }
+    document.getElementById('cdRemindLinks').innerHTML = links.join('');
+    hint.className = 'cd-hint good';
+    hint.textContent = (done.length ? `✓ Posted ${done.join(', ')}.` : '') + (links.length ? ' Tap the WhatsApp button' + (links.length > 1 ? 's' : '') + ' below to send.' : '');
+    await cdLoad();
+    if(cdTab === 'homework' || cdTab === 'today' || cdTab === 'students') cdShow(cdTab);
+  });
+
+  /* ---------------- 📞 Parent calls ---------------- */
+  let cdCallFor = null, cdCallOutcome = 'talked';
+  function cdNotesHtml(notes, withName){
+    if(!notes.length) return '<div class="cd-empty">No notes yet.</div>';
+    return notes.map(n => `<div class="cd-note">
+      <div class="cd-note-head"><span>${withName ? `<b>${esc(n.username)}</b> · ` : ''}${esc(CD_OUTCOMES[n.outcome] || '📝 Note')}</span>
+        <span class="cd-muted">${esc(new Date(n.at).toLocaleString(undefined, { day:'numeric', month:'short', hour:'numeric', minute:'2-digit' }))} · ${esc(n.by || '')}</span></div>
+      ${n.text ? `<div class="cd-note-text" dir="auto">${esc(n.text)}</div>` : ''}
+    </div>`).join('');
+  }
+  function cdOpenCall(st){
+    cdCallFor = st; cdCallOutcome = 'talked';
+    document.getElementById('cdCallTitle').textContent = `📞 Parent call — ${st.username}`;
+    const pNo = cdMobile(st.parentNumber);
+    document.getElementById('cdCallSub').innerHTML = pNo ? `Parent: <a href="tel:+${pNo}">+${pNo}</a> · <a href="https://wa.me/${pNo}" target="_blank" rel="noopener">WhatsApp</a>` : 'No parent number on file.';
+    document.querySelectorAll('#cdCallModal .cd-outcome').forEach(b => b.classList.toggle('active', b.dataset.outcome === 'talked'));
+    document.getElementById('cdCallText').value = '';
+    document.getElementById('cdCallHint').textContent = '';
+    const notes = ((st.coordNotes) || []).slice().sort((a, b) => new Date(b.at) - new Date(a.at));
+    document.getElementById('cdCallHistory').innerHTML = cdNotesHtml(notes, false);
+    document.getElementById('cdCallModal').classList.add('open');
+  }
+  document.querySelectorAll('#cdCallModal .cd-outcome').forEach(b => b.addEventListener('click', ()=>{
+    cdCallOutcome = b.dataset.outcome;
+    document.querySelectorAll('#cdCallModal .cd-outcome').forEach(x => x.classList.toggle('active', x === b));
+  }));
+  document.getElementById('cdCallClose').addEventListener('click', ()=> document.getElementById('cdCallModal').classList.remove('open'));
+  document.getElementById('cdCallSave').addEventListener('click', async (e)=>{
+    const st = cdCallFor; if(!st) return;
+    const text = document.getElementById('cdCallText').value.trim();
+    const hint = document.getElementById('cdCallHint');
+    if(!text && cdCallOutcome === 'talked'){ hint.className = 'cd-hint'; hint.textContent = 'Write what you talked about.'; return; }
+    e.currentTarget.disabled = true;
+    const fresh = await getStudent(st.username);
+    if(!fresh){ e.currentTarget.disabled = false; hint.textContent = 'Could not load the student.'; return; }
+    const note = { id: generateId('note'), at: new Date().toISOString(), by: cdWho(), outcome: cdCallOutcome, text };
+    fresh.coordNotes = (fresh.coordNotes || []).concat(note);
+    const ok = await dbSet('students', studentKey(st.username), fresh);
+    e.currentTarget.disabled = false;
+    if(!ok){ hint.className = 'cd-hint'; hint.textContent = 'Could not save — check your connection and try again.'; return; }
+    invalidateDbCache('students');
+    cdCallFor = fresh;
+    document.getElementById('cdCallText').value = '';
+    hint.className = 'cd-hint good'; hint.textContent = '✓ Saved.';
+    document.getElementById('cdCallHistory').innerHTML = cdNotesHtml(fresh.coordNotes.slice().sort((a, b) => new Date(b.at) - new Date(a.at)), false);
+    await cdLoad();
+    if(cdTab === 'calls') cdRenderCalls();
+  });
+  function cdRenderCalls(){
+    const el = document.getElementById('cdCalls');
+    const notes = [];
+    cdData.students.forEach(s => (s.coordNotes || []).forEach(n => notes.push({ ...n, username: s.username })));
+    notes.sort((a, b) => new Date(b.at) - new Date(a.at));
+    const shown = cdCallsFilter ? notes.filter(n => cdNorm(n.username) === cdNorm(cdCallsFilter)) : notes;
+    const week = notes.filter(n => Date.now() - new Date(n.at).getTime() <= 7 * 864e5);
+    const reached = week.filter(n => n.outcome === 'talked').length;
+    el.innerHTML = `
+      <div class="cd-rings cd-rings-sm">
+        <div class="cd-ring-card">${cdRing(week.length ? Math.round(reached / week.length * 100) : null, 96, { tone: 'signal', sub: `${reached} of ${week.length}` })}<div class="cd-ring-label">Parents reached this week</div></div>
+      </div>
+      <section class="cd-card">
+        <div class="cd-card-head"><h3>Log a call</h3></div>
+        <div class="cd-call-pick">
+          <select id="cdCallsStudent" aria-label="Student"><option value="">Choose a student…</option>${cdData.students.map(s => `<option value="${esc(s.username)}">${esc(s.username)}</option>`).join('')}</select>
+          <button type="button" class="btn btn-primary cd-small" id="cdCallsOpen">📞 Log a call</button>
+        </div>
+      </section>
+      <div class="cd-filters">
+        <span class="cd-muted">Show:</span>
+        <select id="cdCallsFilter" aria-label="Filter notes by student"><option value="">Everyone</option>${cdData.students.filter(s => (s.coordNotes || []).length).map(s => `<option value="${esc(s.username)}"${cdNorm(cdCallsFilter) === cdNorm(s.username) ? ' selected' : ''}>${esc(s.username)}</option>`).join('')}</select>
+      </div>
+      <div class="cd-notes">${cdNotesHtml(shown.slice(0, 80), true)}</div>`;
+    el.querySelector('#cdCallsOpen').addEventListener('click', ()=>{
+      const u = el.querySelector('#cdCallsStudent').value;
+      const m = u && cdData.metrics.get(cdNorm(u));
+      if(m) cdOpenCall(m.st);
+    });
+    el.querySelector('#cdCallsFilter').addEventListener('change', e => { cdCallsFilter = e.target.value; cdRenderCalls(); });
+  }
+
+  /* ---------------- 🗒️ Tasks ---------------- */
+  async function cdSaveMyTasks(tasks){
+    const me = await getAssistantAccount(currentAssistantAccount.username);
+    if(!me) return false;
+    me.tasks = tasks;
+    const ok = await dbSet('assistants', assistantAcctKey(me.username), me);
+    if(ok){ currentAssistantAccount = me; invalidateDbCache('assistants'); }
+    return ok;
+  }
+  function cdRenderTasks(){
+    const el = document.getElementById('cdTasks');
+    const tasks = ((currentAssistantAccount && currentAssistantAccount.tasks) || []).slice();
+    const open = tasks.filter(t => !t.done).sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999'));
+    const done = tasks.filter(t => t.done).sort((a, b) => new Date(b.doneAt || 0) - new Date(a.doneAt || 0));
+    const today = cdToday();
+    const pct = tasks.length ? Math.round(done.length / tasks.length * 100) : null;
+    const row = t => `<label class="cd-task${t.done ? ' done' : ''}${!t.done && t.due && t.due < today ? ' late' : ''}">
+        <input type="checkbox" data-id="${esc(t.id)}"${t.done ? ' checked' : ''}>
+        <span class="cd-task-text" dir="auto">${esc(t.text)}</span>
+        <span class="cd-muted">${t.from === 'self' ? 'my task' : 'from ' + esc(t.from || 'Mr. Mohamed Ibrahim')}${t.due ? ' · due ' + esc(cdFmtDay(t.due)) : ''}${t.done && t.doneAt ? ' · done ' + esc(new Date(t.doneAt).toLocaleDateString(undefined, { day:'numeric', month:'short' })) : ''}</span>
+      </label>`;
+    el.innerHTML = `
+      <div class="cd-rings cd-rings-sm"><div class="cd-ring-card">${cdRing(pct, 96, { tone: 'signal', sub: `${done.length} of ${tasks.length}` })}<div class="cd-ring-label">Tasks done</div></div></div>
+      <section class="cd-card">
+        <div class="cd-task-add">
+          <input type="text" id="cdMyTaskText" placeholder="Add your own to-do…" aria-label="New task">
+          <button type="button" class="btn btn-primary cd-small" id="cdMyTaskAdd">Add</button>
+        </div>
+      </section>
+      <div class="cd-section-title">To do (${open.length})</div>
+      ${open.length ? open.map(row).join('') : '<div class="cd-empty">Nothing to do 🎉</div>'}
+      ${done.length ? `<div class="cd-section-title">Done (${done.length})</div>${done.slice(0, 30).map(row).join('')}` : ''}`;
+    el.querySelectorAll('.cd-task input').forEach(cb => cb.addEventListener('change', async ()=>{
+      const list = ((currentAssistantAccount && currentAssistantAccount.tasks) || []).map(t => t.id === cb.dataset.id ? { ...t, done: cb.checked, doneAt: cb.checked ? new Date().toISOString() : null } : t);
+      cb.disabled = true;
+      if(!(await cdSaveMyTasks(list))) alert('Could not save — check your connection.');
+      cdRenderTasks(); cdUpdateTaskBadge();
+    }));
+    el.querySelector('#cdMyTaskAdd').addEventListener('click', async ()=>{
+      const input = el.querySelector('#cdMyTaskText');
+      const text = input.value.trim(); if(!text) return;
+      const list = ((currentAssistantAccount && currentAssistantAccount.tasks) || []).concat({ id: generateId('task'), text, due: null, from: 'self', createdAt: new Date().toISOString(), done: false });
+      if(await cdSaveMyTasks(list)){ cdRenderTasks(); cdUpdateTaskBadge(); } else alert('Could not save — check your connection.');
+    });
+    el.querySelector('#cdMyTaskText').addEventListener('keydown', e => { if(e.key === 'Enter') el.querySelector('#cdMyTaskAdd').click(); });
+  }
+
+  /* ---------------- admin: tasks for a coordinator ---------------- */
+  let cdTasksAdminFor = null;
+  async function cdOpenTasksAdmin(username){
+    cdTasksAdminFor = username;
+    document.getElementById('cdTasksAdminTitle').textContent = `🗒️ Tasks for ${username}`;
+    document.getElementById('cdTaskAdminText').value = '';
+    document.getElementById('cdTaskAdminDue').value = '';
+    document.getElementById('cdTasksAdminModal').classList.add('open');
+    await cdRenderTasksAdmin();
+  }
+  async function cdRenderTasksAdmin(){
+    const a = await getAssistantAccount(cdTasksAdminFor);
+    const list = ((a && a.tasks) || []).slice().sort((x, y) => (x.done - y.done) || new Date(y.createdAt || 0) - new Date(x.createdAt || 0));
+    const wrap = document.getElementById('cdTaskAdminList');
+    wrap.innerHTML = list.length ? list.map(t => `<div class="cd-task-admin${t.done ? ' done' : ''}">
+        <span>${t.done ? '✅' : '⬜'} <span dir="auto">${esc(t.text)}</span> <span class="cd-muted">${t.from === 'self' ? '(their own)' : ''}${t.due ? ' · due ' + esc(cdFmtDay(t.due)) : ''}${t.done && t.doneAt ? ' · done ' + esc(new Date(t.doneAt).toLocaleDateString()) : ''}</span></span>
+        <button type="button" class="student-action-btn" data-del="${esc(t.id)}" aria-label="Delete task">✕</button>
+      </div>`).join('') : '<div class="cd-empty">No tasks yet.</div>';
+    wrap.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async ()=>{
+      const acct = await getAssistantAccount(cdTasksAdminFor); if(!acct) return;
+      acct.tasks = (acct.tasks || []).filter(t => t.id !== b.dataset.del);
+      await dbSet('assistants', assistantAcctKey(acct.username), acct); invalidateDbCache('assistants');
+      cdRenderTasksAdmin();
+    }));
+  }
+  document.getElementById('cdTasksAdminClose').addEventListener('click', ()=>{ document.getElementById('cdTasksAdminModal').classList.remove('open'); renderAssistantAcctsTable(); });
+  document.getElementById('cdTaskAdminAdd').addEventListener('click', async ()=>{
+    const text = document.getElementById('cdTaskAdminText').value.trim();
+    if(!text) return;
+    const acct = await getAssistantAccount(cdTasksAdminFor); if(!acct) return;
+    acct.tasks = (acct.tasks || []).concat({ id: generateId('task'), text, due: document.getElementById('cdTaskAdminDue').value || null, from: getCurrentAnswererIdentity(), createdAt: new Date().toISOString(), done: false });
+    if(await dbSet('assistants', assistantAcctKey(acct.username), acct)){
+      invalidateDbCache('assistants');
+      document.getElementById('cdTaskAdminText').value = ''; document.getElementById('cdTaskAdminDue').value = '';
+      cdRenderTasksAdmin();
+    } else alert('Could not save — check your connection.');
+  });
+
+  /* ---------------- admin: coordinator activity ---------------- */
+  async function cdRenderCoordinatorActivity(){
+    const el = document.getElementById('cdActivityWrap');
+    if(!el) return;
+    const accounts = (await fetchAllAssistantAccounts()).filter(a => a.role === 'coordinator' && a.status === 'approved');
+    if(!accounts.length){ el.innerHTML = '<div class="admin-empty">No coordinators yet. In the Assistants tab, set someone\'s role to Coordinator.</div>'; return; }
+    const [sessions, students, anns] = await Promise.all([fetchAllSessions(), fetchAllStudents(), fetchAllAnnouncements().catch(() => [])]);
+    const today = cdToday(), weekAgo = Date.now() - 7 * 864e5;
+    const isToday = iso => iso && cdDay(iso) === today, inWeek = iso => iso && new Date(iso).getTime() >= weekAgo;
+    el.innerHTML = accounts.map(a => {
+      const me = cdNorm(a.username);
+      const marks = sessions.filter(x => x.coordAttendance && cdNorm(x.coordAttendance.by) === me);
+      const notes = []; students.forEach(s => (s.coordNotes || []).forEach(n => { if(cdNorm(n.by) === me) notes.push(n); }));
+      const rem = anns.filter(x => x.kind === 'coord-reminder' && cdNorm(x.postedBy) === me);
+      const tasks = a.tasks || [], tasksDone = tasks.filter(t => t.done);
+      const stat = (label, list, key) => `<div class="cd-act-stat"><div class="k">${label}</div><div class="v">${list.filter(x => isToday(x[key])).length}</div><div class="d">${list.filter(x => inWeek(x[key])).length} this week</div></div>`;
+      return `<div class="cd-card"><div class="cd-card-head"><h3>🗂️ ${esc(a.username)}</h3>${cdRing(tasks.length ? Math.round(tasksDone.length / tasks.length * 100) : null, 48, { tone: 'signal', stroke: 5 })}</div>
+        <div class="cd-act-stats">
+          ${stat('Attendance marked today', marks.map(x => x.coordAttendance), 'at')}
+          ${stat('Parent calls today', notes, 'at')}
+          ${stat('Reminders today', rem, 'ts')}
+          <div class="cd-act-stat"><div class="k">Tasks</div><div class="v">${tasksDone.length}/${tasks.length}</div><div class="d">${tasks.filter(t => !t.done).length} open</div></div>
+        </div></div>`;
+    }).join('');
+  }
 </script>
 
 </div>
