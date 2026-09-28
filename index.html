@@ -4204,7 +4204,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 27 Sep 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 28 Sep 2026</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -9489,6 +9489,25 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   document.getElementById('optimizeImagesBtn').addEventListener('click', optimizeExistingImages);
 
   /* ---------------- PUBLIC: practice exams list ---------------- */
+  // Which exams a student can see. A book on the student's course brings
+  // EVERY exam inside it, whatever course the exam itself was saved under —
+  // that's what ticking a course on a book means. Exams without a book
+  // follow the exam's own course (none = everyone). Course names are
+  // compared ignoring capitals and stray spaces.
+  const normName = v => String(v == null ? '' : v).trim().replace(/\s+/g, ' ').toLowerCase();
+  function sameCourseName(a, b){ return normName(a) === normName(b); }
+  async function studentBookSet(student){
+    try{
+      const courses = await fetchAllCourses();
+      const mine = courses.find(c => sameCourseName(c.name, student && student.course));
+      return new Set(((mine && Array.isArray(mine.books)) ? mine.books : []).map(normName));
+    }catch(err){ return new Set(); }
+  }
+  function examVisibleToStudent(e, student, bookSet){
+    if(e.book) return bookSet.has(normName(e.book));
+    return !e.course || sameCourseName(e.course, student && student.course);
+  }
+
   async function renderPublicExams(){
     const grid = document.getElementById('examsGrid');
     if(!grid) return; // Practice Exams section removed from the homepage
@@ -9499,19 +9518,9 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     // Book gating: an exam tagged with a book is only visible to students
     // whose course carries that book. Untagged exams behave exactly as
     // before, so nothing existing changes.
-    let myBooks = [];
-    if(currentStudent){
-      try{
-        const courses = await fetchAllCourses();
-        const mine = courses.find(c => c.name === currentStudent.course);
-        myBooks = (mine && Array.isArray(mine.books)) ? mine.books.map(b => b.trim().toLowerCase()) : [];
-      }catch(err){ myBooks = []; }
-    }
+    const myBooks = currentStudent ? await studentBookSet(currentStudent) : new Set();
     const exams = currentStudent
-      ? allExams.filter(e =>
-          (!e.course || e.course === currentStudent.course) &&
-          isHomeworkPublished(e) &&
-          (!e.book || myBooks.includes(String(e.book).trim().toLowerCase())))
+      ? allExams.filter(e => isHomeworkPublished(e) && examVisibleToStudent(e, currentStudent, myBooks))
       : allExams.filter(isHomeworkPublished);
 
     if(exams.length === 0){
@@ -13737,7 +13746,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   async function renderAdminBooks(){
     const wrap = document.getElementById('booksListWrap');
     wrap.innerHTML = '<div class="admin-empty">Loading…</div>';
-    const [exams, courses] = await Promise.all([fetchExamsIndex(), fetchAllCourses()]);
+    const [exams, courses, allStudents] = await Promise.all([fetchExamsIndex(), fetchAllCourses(), fetchStudentsForCurrentAdmin().catch(()=>[])]);
+    const approvedStudents = (allStudents || []).filter(st => st.status === 'approved');
 
     const byBook = {};
     exams.forEach(e => {
@@ -13758,14 +13768,15 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     wrap.innerHTML = '';
     names.forEach(name=>{
       const list = byBook[name];
-      const usedBy = courses.filter(c => (c.books || []).includes(name)).map(c => c.name);
+      const usedBy = courses.filter(c => (c.books || []).some(b => normName(b) === normName(name))).map(c => c.name);
+      const seeCount = approvedStudents.filter(st => usedBy.some(cn => sameCourseName(cn, st.course))).length;
       const row = document.createElement('div');
       row.className = 'exam-list-item';
       row.innerHTML = `
         <div>
           <h4>📕 ${esc(name)}</h4>
           <div class="meta">${list.length} exam${list.length === 1 ? '' : 's'} · ${
-            usedBy.length ? 'on ' + esc(usedBy.join(', ')) : '<span style="color:var(--warn);">not on any course yet</span>'}</div>
+            usedBy.length ? 'on ' + esc(usedBy.join(', ')) + ` · 👀 ${seeCount} student${seeCount === 1 ? '' : 's'} can see it` : '<span style="color:var(--warn);">not on any course yet — no student can see it</span>'}</div>
           ${list.length ? `<div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
             ${list.slice(0, 8).map(e => `<span class="plan-day-badge">${esc(e.title)}</span>`).join('')}
             ${list.length > 8 ? `<span class="plan-day-badge">+${list.length - 8}</span>` : ''}
@@ -17283,7 +17294,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     let [skillsIdx, examsIdx] = await Promise.all([fetchSkillsIndex(), fetchExamsIndex()]);
     if(currentStudent){
       skillsIdx = skillsIdx.filter(s => { const c = getSkillCourses(s); return c.length === 0 || c.includes(currentStudent.course); });
-      examsIdx = examsIdx.filter(e => !e.course || e.course === currentStudent.course);
+      const myBooks = await studentBookSet(currentStudent);
+      examsIdx = examsIdx.filter(e => examVisibleToStudent(e, currentStudent, myBooks));
     }
 
     const pool = [];
