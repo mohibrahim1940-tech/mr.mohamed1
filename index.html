@@ -3788,6 +3788,66 @@
   .cd-day.on{ background:var(--signal); border-color:var(--signal); color:#fff; font-weight:700; }
   .cd-admin-due{ border-color:rgba(255,107,74,0.55); background:var(--ember-soft); }
   @media (max-width:480px){ .cd-sched-edit, .cd-sched-fields{ grid-template-columns:1fr; } }
+
+  /* ---------- Session Assistant Desk + student booking ---------- */
+  #tutorDesk{ z-index:410; }
+  .cd-sched-fields select, .td-link input, #bkTutor{ width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.88rem; min-width:0; }
+  .td-3{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .td-kind{ flex-wrap:wrap; gap:10px; }
+  .td-kind label{ border:1px solid var(--line); background:var(--panel-2); border-radius:10px; padding:9px 12px; }
+  .td-kind label:has(input:checked){ border-color:var(--signal); background:var(--accent-wash); }
+  .td-link{ display:block; margin-top:10px; }
+  .cd-badge.cd-badge-soft{ background:var(--signal); }
+
+  .td-slots{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:8px; }
+  .td-slot{ display:flex; align-items:center; gap:10px; border:1px dashed var(--line-strong); border-radius:12px; padding:8px 10px; min-width:0; background:var(--panel-2); }
+  .td-slot.booked{ border-style:solid; border-color:var(--signal); background:var(--accent-wash); }
+  .td-slot-time{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:0.92rem; display:flex; flex-direction:column; line-height:1.1; }
+  .td-slot-time small{ font-weight:400; font-size:0.7rem; color:var(--muted); }
+  .td-slot-label{ flex:1; min-width:0; font-size:0.84rem; overflow-wrap:anywhere; }
+  .td-slot-del{ border:none; background:none; color:var(--muted); cursor:pointer; font-size:0.95rem; min-width:32px; min-height:32px; border-radius:8px; }
+  .td-slot-del:hover{ background:var(--panel); color:var(--ember); }
+
+  .td-bookings{ display:grid; gap:10px; }
+  .td-booking{ border:1px solid var(--line); border-radius:14px; padding:12px 14px; background:var(--panel); display:grid; gap:8px; min-width:0; }
+  .cd-card .td-booking{ background:var(--panel-2); }
+  .td-booking.is-due{ border-color:var(--ember); box-shadow:inset 3px 0 0 var(--ember); }
+  .td-bk-head{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:baseline; }
+  .td-bk-when{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .td-bk-who{ font-weight:600; overflow-wrap:anywhere; }
+  .td-bk-note{ background:var(--panel-2); border-left:3px solid var(--signal); border-radius:8px; padding:8px 10px; font-size:0.88rem; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .cd-card .td-bk-note{ background:var(--panel); }
+  .td-bk-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .td-bk-link{ flex:1 1 200px; min-width:0; padding:8px 10px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.84rem; }
+  .td-bk-after{ margin:0; }
+  .td-kind-pill{ font-size:0.72rem; border-radius:999px; padding:2px 9px; border:1px solid var(--line); background:var(--panel-2); white-space:nowrap; }
+  .td-kind-pill.g{ border-color:var(--signal); }
+
+  /* student side */
+  .bk-rings{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+  @media (max-width:560px){ .bk-rings{ gap:8px; } .bk-rings .cd-ring-card{ padding:12px 6px 10px; } .bk-rings .cd-ring-label{ font-size:0.78rem; } }
+  .bk-mine{ display:grid; gap:10px; margin-bottom:18px; }
+  .bk-booking{ border:1px solid var(--signal); background:var(--accent-wash); border-radius:14px; padding:12px 14px; display:grid; gap:6px; min-width:0; }
+  .bk-booking.past{ border-color:var(--line); background:var(--panel); }
+  .bk-booking-acts{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:4px; }
+  .bk-day{ margin-bottom:16px; }
+  .bk-day-title{ font-weight:700; font-family:'Space Grotesk',sans-serif; margin-bottom:8px; }
+  .bk-slots{ display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:8px; }
+  .bk-slot{ text-align:left; display:grid; gap:3px; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:12px; padding:10px 12px; font:inherit; cursor:pointer; min-width:0; transition:border-color .15s, transform .15s; }
+  .bk-slot:hover:not([disabled]){ border-color:var(--signal); transform:translateY(-1px); }
+  .bk-slot:focus-visible{ outline:2px solid var(--signal); outline-offset:2px; }
+  .bk-slot-time{ font-family:'IBM Plex Mono',monospace; font-weight:700; }
+  .bk-slot-time small{ font-weight:400; color:var(--muted); font-size:0.72rem; }
+  .bk-slot-what{ font-size:0.88rem; overflow-wrap:anywhere; }
+  .bk-slot-who{ font-size:0.78rem; color:var(--muted); overflow-wrap:anywhere; }
+  .bk-slot-state{ font-size:0.78rem; font-weight:700; color:var(--signal); margin-top:2px; }
+  .bk-slot.mine{ border-color:var(--signal); background:var(--accent-wash); cursor:default; }
+  .bk-slot.full{ opacity:0.55; cursor:not-allowed; }
+  .bk-slot.full .bk-slot-state{ color:var(--muted); }
+  .bk-reserve-info{ background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:6px 0 14px; display:grid; gap:2px; }
+  #bkReserveNote{ margin-bottom:12px; }
+  @media (max-width:560px){ .td-3{ grid-template-columns:1fr 1fr; } .td-3 label:last-child{ grid-column:1 / -1; } .bk-slots, .td-slots{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:380px){ .bk-slots, .td-slots{ grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -4023,6 +4083,7 @@
           <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
           <button class="dash-tab-btn" data-dashtab="tabPlanner">🧠 Study Planner</button>
           <button class="dash-tab-btn" data-dashtab="tabRecordings">🎬 Recordings</button>
+          <button class="dash-tab-btn" data-dashtab="tabBooking">📅 Book a session</button>
           <button class="dash-tab-btn" data-dashtab="tabWeakPoints">🎯 Weak Points</button>
           <button class="dash-tab-btn" data-dashtab="tabPayments">💳 My Payments</button>
           <button class="dash-tab-btn" data-dashtab="tabCompetition" id="competitionTabBtn" style="display:none;">⭐ Champions League</button>
@@ -4257,6 +4318,12 @@
           </div>
         </div>
 
+        <div class="dash-tab-panel" id="tabBooking">
+          <div class="hw-section-title" style="margin-top:0;">📅 Book a session</div>
+          <div class="admin-note" style="margin-bottom:20px;">Pick a free time with one of our session assistants. Private sessions are just you — write what you want to work on so they can prepare. Group sessions have a topic and a few seats.</div>
+          <div id="bookingWrap"><div class="admin-empty">Loading…</div></div>
+        </div>
+
         <div class="dash-tab-panel" id="tabPayments">
           <div id="paymentBalanceCard"></div>
 
@@ -4461,7 +4528,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 28 Sep 2026 · D</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 29 Sep 2026</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -5475,7 +5542,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   <div class="modal-box auth-modal-box">
     <button class="modal-close" id="closeAssistantAuthModal" aria-label="Close">×</button>
     <h3 style="margin-bottom:6px;">Staff account</h3>
-    <p style="color:var(--muted); font-size:0.84rem; margin-bottom:18px;">For academic assistants and student coordinators. Mr. Mohamed Ibrahim approves every account.</p>
+    <p style="color:var(--muted); font-size:0.84rem; margin-bottom:18px;">For academic assistants, student coordinators and session assistants. Mr. Mohamed Ibrahim approves every account.</p>
 
     <div class="auth-tabs">
       <button class="auth-tab active" data-form="assistantSigninForm">Sign in</button>
@@ -5496,6 +5563,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <select id="assistantRegRole" aria-label="Your job">
         <option value="academic">Academic assistant — I answer students' questions</option>
         <option value="coordinator">Student coordinator — attendance, marks, parents</option>
+        <option value="tutor">Session assistant — I give group and private sessions</option>
       </select>
       <div class="auth-error" id="assistantRegisterError">Something's not right — check the fields above.</div>
       <div class="auth-success" id="assistantRegisterSuccess">Request received! Mr. Mohamed Ibrahim will approve your account and assign you students soon.</div>
@@ -5603,6 +5671,54 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button type="button" class="btn btn-primary cd-small" id="cdTaskAdminAdd">Add task</button>
     </div>
     <div id="cdTaskAdminList"></div>
+  </div>
+</div>
+
+<!-- SESSION ASSISTANT DESK (staff accounts with the Session assistant role) -->
+<div class="admin-overlay" id="tutorDesk" aria-label="Session assistant desk">
+  <div class="admin-bar">
+    <div class="wrap">
+      <a href="#top" class="logo"><img class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim <span class="mono cd-role-label">/ SESSION ASSISTANT</span></a>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark"><span class="theme-toggle-icon"></span></button>
+        <button class="btn btn-ghost" id="tdSignOut" style="padding:9px 16px;">Sign out</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap cd-wrap">
+    <div class="cd-head">
+      <div>
+        <div class="cd-hello" id="tdHello">Hello</div>
+        <div class="cd-date" id="tdDate"></div>
+      </div>
+      <div class="cd-head-actions">
+        <button type="button" class="btn btn-ghost cd-small" id="tdRefresh">↻ Refresh</button>
+      </div>
+    </div>
+    <div class="cd-due" id="tdDueBanner" hidden role="alert"></div>
+    <div class="cd-tabs" role="tablist">
+      <button class="cd-tab td-tab active" data-td="today" role="tab">🏠 Today</button>
+      <button class="cd-tab td-tab" data-td="schedule" role="tab">🗓️ My schedule</button>
+      <button class="cd-tab td-tab" data-td="bookings" role="tab">📥 Bookings <span class="cd-badge" id="tdBookBadge" hidden></span></button>
+      <button class="cd-tab td-tab" data-td="history" role="tab">📜 History</button>
+    </div>
+    <div class="cd-panel active" id="tdToday"></div>
+    <div class="cd-panel" id="tdSchedule"></div>
+    <div class="cd-panel" id="tdBookings"></div>
+    <div class="cd-panel" id="tdHistory"></div>
+  </div>
+</div>
+
+<!-- Student: reserve a session -->
+<div class="modal-overlay" id="bkReserveModal" style="z-index:520;">
+  <div class="modal-box cd-modal" role="dialog" aria-modal="true" aria-labelledby="bkReserveTitle">
+    <button class="modal-close" id="bkReserveClose" aria-label="Close">&times;</button>
+    <h3 id="bkReserveTitle">Reserve</h3>
+    <div class="bk-reserve-info" id="bkReserveInfo"></div>
+    <label class="field-label" for="bkReserveNote" id="bkReserveNoteLabel">What do you want to work on?</label>
+    <textarea id="bkReserveNote" rows="4" class="cd-textarea" placeholder="e.g. I keep getting quadratic word problems wrong — can we go through Barron's test 3, questions 12–18?"></textarea>
+    <button type="button" class="btn btn-primary" id="bkReserveConfirm" style="width:100%;">Reserve</button>
+    <div class="cd-hint" id="bkReserveHint" role="status" aria-live="polite"></div>
   </div>
 </div>
 
@@ -6653,7 +6769,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     </div>
 
     <div class="admin-panel" id="assistantAcctsPanel">
-      <div class="admin-note">Staff with their own accounts. <b>🎓 Academic</b> assistants answer students' mistakes and only see the students you assign them. <b>🗂️ Coordinators</b> get the Coordinator Desk: every student, attendance, marks, homework follow-up, parent calls and the tasks you give them. Change someone's role with the Role menu. They sign in from "Staff login" at the top of the site.</div>
+      <div class="admin-note">Staff with their own accounts. <b>🎓 Academic</b> assistants answer students' mistakes and only see the students you assign them. <b>🗂️ Coordinators</b> get the Coordinator Desk: every student, attendance, marks, homework follow-up, parent calls and the tasks you give them. <b>🧑‍🏫 Session assistants</b> publish free times for private and group sessions, and students book them from 📅 Book a session. Change someone's role with the Role menu. They sign in from "Staff login" at the top of the site.</div>
       <div class="admin-actions">
         <button class="btn btn-ghost" id="refreshAssistantAccts">Refresh</button>
       </div>
@@ -6673,6 +6789,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       </div>
       <div class="hw-section-title" style="margin-top:20px;">🗂️ Coordinators</div>
       <div id="cdActivityWrap" class="cd-activity"><div class="admin-empty">Loading…</div></div>
+      <div class="hw-section-title" style="margin-top:20px;">🧑‍🏫 Session assistants</div>
+      <div id="tdActivityWrap" class="cd-activity"><div class="admin-empty">Loading…</div></div>
       <div class="hw-section-title" style="margin-top:20px;">Today</div>
       <div id="aaTodaySummary" style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;">
         <div class="admin-empty">Loading…</div>
@@ -8225,7 +8343,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       if(tab.dataset.tab === 'mistakesPanel'){ initMistakesPanel(true); }
       if(tab.dataset.tab === 'answerMistakesPanel'){ amShowView('list'); renderAnswerMistakesList(); }
       if(tab.dataset.tab === 'assistantAcctsPanel'){ renderAssistantAcctsTable(); }
-      if(tab.dataset.tab === 'assistantActivityPanel'){ renderAssistantActivity(); if(typeof cdRenderCoordinatorActivity === 'function') cdRenderCoordinatorActivity(); }
+      if(tab.dataset.tab === 'assistantActivityPanel'){ renderAssistantActivity(); if(typeof cdRenderCoordinatorActivity === 'function') cdRenderCoordinatorActivity(); if(typeof tdRenderAdminActivity === 'function') tdRenderAdminActivity(); }
       if(tab.dataset.tab === 'weeklyUpdatesPanel'){ renderWeeklyUpdates(); }
       if(tab.dataset.tab === 'aiReportsPanel' && typeof renderAiReportsPanel === 'function'){ renderAiReportsPanel(); }
     });
@@ -11676,7 +11794,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       username: data.username.trim(),
       passwordHash,
       status: 'pending',
-      role: data.role === 'coordinator' ? 'coordinator' : 'academic',
+      role: ['coordinator', 'tutor'].includes(data.role) ? data.role : 'academic',
       assignedStudents: [],
       ts: new Date().toISOString()
     };
@@ -19806,6 +19924,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     assistantSigninForm.reset();
     // Coordinators get their own desk; academic assistants keep theirs.
     if(typeof cdIsCoordinator === 'function' && cdIsCoordinator(currentAssistantAccount)) await openCoordDesk();
+    else if(typeof tdIsTutor === 'function' && tdIsTutor(currentAssistantAccount)) await openTutorDesk();
     else await openAssistantDashboard();
   });
 
@@ -20737,6 +20856,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       if(btn.dataset.dashtab === 'tabMistakes') renderMistakeHistory();
       if(btn.dataset.dashtab === 'tabWeakPoints') renderWeakPointsPage();
       if(btn.dataset.dashtab === 'tabRecordings') renderRecordingsPage();
+      if(btn.dataset.dashtab === 'tabBooking' && typeof renderStudentBooking === 'function') renderStudentBooking();
       if(btn.dataset.dashtab === 'tabAssistantChat') renderAssistantChatList();
       if(btn.dataset.dashtab === 'tabGraph' && typeof drawGraph === 'function') drawGraph();
       if(btn.dataset.dashtab === 'tabPlanner') renderStudyPlanner();
@@ -22042,16 +22162,17 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       tr.innerHTML = `
         <td>${esc(a.username)}</td>
         <td><select class="assistant-role-select" aria-label="Role of ${esc(a.username)}">
-          <option value="academic"${a.role === 'coordinator' ? '' : ' selected'}>🎓 Academic</option>
+          <option value="academic"${['coordinator', 'tutor'].includes(a.role) ? '' : ' selected'}>🎓 Academic</option>
           <option value="coordinator"${a.role === 'coordinator' ? ' selected' : ''}>🗂️ Coordinator</option>
+          <option value="tutor"${a.role === 'tutor' ? ' selected' : ''}>🧑‍🏫 Session assistant</option>
         </select></td>
         <td><span class="status-pill ${a.status === 'approved' ? 'status-approved' : a.status === 'declined' ? 'status-declined' : 'status-pending'}">${esc(a.status)}</span></td>
-        <td>${a.role === 'coordinator' ? 'All students' : assignedCount === 0 ? 'None yet' : `${assignedCount} student${assignedCount===1?'':'s'}`}</td>
-        <td>${a.role === 'coordinator' ? '—' : assignedSkillCount === 0 ? 'None yet' : `${assignedSkillCount} skill${assignedSkillCount===1?'':'s'}`}</td>
+        <td>${a.role === 'coordinator' ? 'All students' : a.role === 'tutor' ? `${(a.tutorSlots || []).filter(x => new Date(x.date + 'T' + (x.time || '00:00')) > new Date()).length} free times` : assignedCount === 0 ? 'None yet' : `${assignedCount} student${assignedCount===1?'':'s'}`}</td>
+        <td>${['coordinator', 'tutor'].includes(a.role) ? '—' : assignedSkillCount === 0 ? 'None yet' : `${assignedSkillCount} skill${assignedSkillCount===1?'':'s'}`}</td>
         <td style="white-space:nowrap;">
           ${a.status !== 'approved' ? `<button class="student-action-btn approve-assistant-btn">Approve</button>` : ''}
           ${a.status !== 'declined' ? `<button class="student-action-btn decline-assistant-btn">Decline</button>` : ''}
-          ${a.role === 'coordinator' ? `<button class="student-action-btn coord-tasks-btn">🗒️ Tasks${(a.tasks || []).filter(t => !t.done).length ? ` (${(a.tasks || []).filter(t => !t.done).length})` : ''}</button>` : `<button class="student-action-btn manage-students-btn">Manage students</button>
+          ${a.role === 'tutor' ? '<span class="cd-muted">Students book them in 📅 Book a session</span>' : a.role === 'coordinator' ? `<button class="student-action-btn coord-tasks-btn">🗒️ Tasks${(a.tasks || []).filter(t => !t.done).length ? ` (${(a.tasks || []).filter(t => !t.done).length})` : ''}</button>` : `<button class="student-action-btn manage-students-btn">Manage students</button>
           <button class="student-action-btn manage-skills-btn">Manage skills</button>`}
           <button class="student-action-btn delete-assistant-btn">Delete</button>
         </td>
@@ -22173,7 +22294,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     }).join('');
   }
 
-  document.getElementById('refreshAssistantActivity').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); invalidateDbCache('assistants'); renderAssistantActivity(); if(typeof cdRenderCoordinatorActivity === 'function') cdRenderCoordinatorActivity(); });
+  document.getElementById('refreshAssistantActivity').addEventListener('click', ()=>{ invalidateDbCache('mistakes'); invalidateDbCache('assistants'); renderAssistantActivity(); if(typeof cdRenderCoordinatorActivity === 'function') cdRenderCoordinatorActivity(); if(typeof tdRenderAdminActivity === 'function') tdRenderAdminActivity(); });
 
   // Monday 00:00:00 of the current week — the goal resets every week, so
   // "this week" needs a stable, predictable start point rather than a
@@ -23913,7 +24034,11 @@ $$);`;
   }
   function cdRing(value, size, opts){
     opts = opts || {};
-    if(value === null || value === undefined) return progressRing(0, { size, stroke: opts.stroke || Math.max(5, Math.round(size / 11)), centre: '—', sub: opts.sub, colour: 'var(--line-strong)' });
+    if(value === null || value === undefined){
+      // A plain count (e.g. "3 today"): full ring when there is something, grey when zero.
+      if(opts.centre !== undefined) return progressRing(Number(opts.centre) > 0 ? 100 : 0, { size, stroke: opts.stroke || Math.max(5, Math.round(size / 11)), centre: opts.centre, sub: opts.sub, tone: opts.tone || 'signal', colour: Number(opts.centre) > 0 ? opts.colour : 'var(--line-strong)' });
+      return progressRing(0, { size, stroke: opts.stroke || Math.max(5, Math.round(size / 11)), centre: '—', sub: opts.sub, colour: 'var(--line-strong)' });
+    }
     return progressRing(value, { size, stroke: opts.stroke || Math.max(5, Math.round(size / 11)), tone: opts.tone || 'score', sub: opts.sub, colour: opts.colour });
   }
 
@@ -23933,7 +24058,8 @@ $$);`;
     cdData = {
       students: approved, courses,
       hwBy: by(hw, 'username'), atBy: by(attempts, 'username'),
-      sessions: sessions.filter(s => !s._index), sessBy: by(sessions.filter(s => !s._index), 'username'),
+      // Bookings with session assistants have their own desk, so they stay out of the teacher's schedule.
+      sessions: sessions.filter(s => !s._index && !s.slotId), sessBy: by(sessions.filter(s => !s._index), 'username'),
       announcements,
     };
     cdData.metrics = new Map(approved.map(s => [cdNorm(s.username), cdMetrics(s)]));
@@ -24563,7 +24689,7 @@ $$);`;
     const isToday = iso => iso && cdDay(iso) === today, inWeek = iso => iso && new Date(iso).getTime() >= weekAgo;
     // Sessions that already started (last 30 days) with students still unmarked.
     const groups = new Map();
-    sessions.filter(x => !x._index && x.date).forEach(x => { const k = `${x.date}|${x.time || ''}|${cdNorm(x.topic)}`; if(!groups.has(k)) groups.set(k, { date: x.date, time: x.time, topic: x.topic, rows: [] }); groups.get(k).rows.push(x); });
+    sessions.filter(x => !x._index && x.date && !x.slotId).forEach(x => { const k = `${x.date}|${x.time || ''}|${cdNorm(x.topic)}`; if(!groups.has(k)) groups.set(k, { date: x.date, time: x.time, topic: x.topic, rows: [] }); groups.get(k).rows.push(x); });
     const dueList = [...groups.values()].filter(g => { const t = cdGroupStart(g.date, g.time).getTime(); return t <= Date.now() && t >= Date.now() - 30 * 864e5 && g.rows.some(r => !(r.coordAttendance && r.coordAttendance.status)); });
     const dueHtml = `<div class="cd-card ${dueList.length ? 'cd-admin-due' : ''}"><b>${dueList.length ? `✋ ${dueList.length} session${dueList.length === 1 ? '' : 's'} still need attendance` : '✓ Every session that has started has its attendance'}</b>${dueList.length ? `<div class="cd-muted" style="margin-top:4px;">${dueList.slice(0, 5).map(g => `${esc(g.topic || 'Session')} (${esc(cdFmtDay(g.date))}${g.time ? ' ' + esc(g.time) : ''})`).join(' · ')}${dueList.length > 5 ? ' …' : ''}</div>` : ''}</div>`;
     el.innerHTML = dueHtml + accounts.map(a => {
@@ -25156,6 +25282,486 @@ $$);`;
       await cdLoad(); cdRenderSchedule(); cdUpdateDue();
     });
     preview();
+  }
+</script>
+<script>
+  /* =====================================================================
+     SESSION ASSISTANTS + STUDENT BOOKING
+     Staff with the "Session assistant" role (role: 'tutor') publish their
+     free times:
+       • private slots — one student each, who writes what they want to do
+       • group sessions — a topic with a number of seats
+     The slots live on the assistant's own record (assistants[*].tutorSlots).
+     When a student reserves, a normal session record is created for them
+     (kind 'private' | 'group', tutor, slotId, bookingNote), so it shows in
+     their sessions, gets a join link, and attendance works like any session.
+     ===================================================================== */
+  let tdData = null, tdTab = 'today';
+  let tdFormKind = 'private', tdDays = new Set(), tdMsg = null, tdBookFilter = 'upcoming';
+  let tdDueTimer = null;
+  const TD_DURATIONS = [30, 45, 60, 90, 120];
+
+  function tdIsTutor(acct){ return !!acct && acct.role === 'tutor'; }
+  const tdMe = () => currentAssistantAccount ? currentAssistantAccount.username : '';
+  const tdStart = s => cdGroupStart(s.date, s.time);
+  const tdEnd = s => new Date(tdStart(s).getTime() + (Number(s.duration) || 60) * 60000);
+  const tdFmtTime = s => `${cdFmtDay(s.date)} · ${s.time}${s.duration ? ` (${s.duration} min)` : ''}`;
+
+  // Everything booked against one slot.
+  function tdBookingsFor(slot, sessions){ return sessions.filter(x => x.slotId === slot.id); }
+
+  async function tdLoad(){
+    invalidateDbCache('assistants'); invalidateDbCache('sessions'); invalidateDbCache('students');
+    const [me, sessions, students] = await Promise.all([getAssistantAccount(tdMe()), fetchAllSessions(), fetchAllStudents()]);
+    if(me) currentAssistantAccount = me;
+    const mine = sessions.filter(x => !x._index && cdNorm(x.tutor) === cdNorm(tdMe()));
+    tdData = {
+      me: currentAssistantAccount,
+      slots: ((currentAssistantAccount && currentAssistantAccount.tutorSlots) || []).slice().sort((a, b) => tdStart(a) - tdStart(b)),
+      bookings: mine.sort((a, b) => tdStart(a) - tdStart(b)),
+      students: new Map(students.filter(s => s && s.username).map(s => [cdNorm(s.username), s])),
+    };
+  }
+  async function tdSaveSlots(slots){
+    const me = await getAssistantAccount(tdMe());
+    if(!me) return false;
+    me.tutorSlots = slots;
+    const ok = await dbSet('assistants', assistantAcctKey(me.username), me);
+    if(ok){ currentAssistantAccount = me; invalidateDbCache('assistants'); }
+    return ok;
+  }
+
+  async function openTutorDesk(){
+    document.getElementById('tutorDesk').classList.add('open');
+    const h = new Date().getHours();
+    document.getElementById('tdHello').textContent = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${tdMe()} 👋`;
+    document.getElementById('tdDate').textContent = new Date().toLocaleDateString(undefined, { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    document.getElementById('tdToday').innerHTML = '<div class="admin-empty">Loading your schedule…</div>';
+    await tdLoad();
+    tdShow(tdTab);
+    clearInterval(tdDueTimer);
+    tdDueTimer = setInterval(()=>{ if(tdData) tdUpdateDue(); }, 60000);
+  }
+  function closeTutorDesk(){
+    clearInterval(tdDueTimer);
+    document.getElementById('tutorDesk').classList.remove('open');
+    currentAssistantAccount = null; tdData = null;
+  }
+  document.getElementById('tdSignOut').addEventListener('click', closeTutorDesk);
+  document.getElementById('tdRefresh').addEventListener('click', async (e)=>{
+    const b = e.currentTarget; b.disabled = true; await tdLoad(); tdShow(tdTab); b.disabled = false;
+  });
+  document.querySelectorAll('#tutorDesk .td-tab').forEach(t => t.addEventListener('click', ()=> tdShow(t.dataset.td)));
+
+  function tdShow(tab){
+    tdTab = tab;
+    document.querySelectorAll('#tutorDesk .td-tab').forEach(t => { const on = t.dataset.td === tab; t.classList.toggle('active', on); t.setAttribute('aria-selected', on); });
+    const ids = { today: 'tdToday', schedule: 'tdSchedule', bookings: 'tdBookings', history: 'tdHistory' };
+    Object.entries(ids).forEach(([k, id]) => document.getElementById(id).classList.toggle('active', k === tab));
+    if(!tdData) return;
+    tdUpdateDue();
+    ({ today: tdRenderToday, schedule: tdRenderSchedule, bookings: tdRenderBookings, history: tdRenderHistory })[tab]();
+  }
+
+  // Bookings whose time has come and nobody marked attendance.
+  function tdDue(){ const now = Date.now(); return tdData.bookings.filter(b => tdStart(b).getTime() <= now && tdStart(b).getTime() >= now - 30 * 864e5 && !(b.coordAttendance && b.coordAttendance.status)); }
+  function tdUpdateDue(){
+    const banner = document.getElementById('tdDueBanner'), badge = document.getElementById('tdBookBadge');
+    if(!tdData) return;
+    const due = tdDue();
+    const soon = tdData.bookings.filter(b => { const t = tdStart(b).getTime() - Date.now(); return t > 0 && t < 7 * 864e5; }).length;
+    badge.hidden = !(due.length || soon); badge.textContent = due.length || soon;
+    badge.classList.toggle('cd-badge-soft', !due.length);
+    if(!due.length){ banner.hidden = true; banner.innerHTML = ''; return; }
+    banner.hidden = false;
+    banner.innerHTML = `<div class="cd-due-title">✋ Mark attendance for ${due.length} session${due.length === 1 ? '' : 's'}</div>
+      <div class="cd-due-list">${due.slice(0, 4).map(b => `<div class="cd-due-row"><span><b>${esc(b.username)}</b> <span class="cd-due-when">${esc(b.kind === 'group' ? 'Group · ' + (b.topic || '') : 'Private')} · ${esc(tdFmtTime(b))}</span></span>
+        <button type="button" class="btn btn-primary cd-small td-due-go">Open bookings</button></div>`).join('')}</div>`;
+    banner.querySelectorAll('.td-due-go').forEach(x => x.addEventListener('click', ()=>{ tdBookFilter = 'due'; tdShow('bookings'); }));
+  }
+
+  /* ---------------- 🏠 Today ---------------- */
+  function tdRenderToday(){
+    const el = document.getElementById('tdToday');
+    const now = Date.now(), weekEnd = now + 7 * 864e5;
+    const upSlots = tdData.slots.filter(s => tdStart(s).getTime() > now);
+    const weekSlots = upSlots.filter(s => tdStart(s).getTime() <= weekEnd);
+    const privWeek = weekSlots.filter(s => s.kind === 'private');
+    const privTaken = privWeek.filter(s => tdBookingsFor(s, tdData.bookings).length).length;
+    const grpWeek = weekSlots.filter(s => s.kind === 'group');
+    const seats = grpWeek.reduce((a, s) => a + (Number(s.capacity) || 0), 0);
+    const seatsTaken = grpWeek.reduce((a, s) => a + tdBookingsFor(s, tdData.bookings).length, 0);
+    const past = tdData.bookings.filter(b => tdStart(b).getTime() <= now);
+    const marked = past.filter(b => b.coordAttendance && b.coordAttendance.status && b.coordAttendance.status !== 'excused');
+    const came = marked.filter(b => ['present', 'late'].includes(b.coordAttendance.status)).length;
+    const today = cdToday();
+    const todays = tdData.bookings.filter(b => b.date === today);
+    const next = tdData.bookings.filter(b => tdEnd(b).getTime() > now).slice(0, 6);
+    el.innerHTML = `
+      <div class="cd-rings">
+        <div class="cd-ring-card">${cdRing(privWeek.length ? Math.round(privTaken / privWeek.length * 100) : null, 108, { tone: 'signal', sub: `${privTaken}/${privWeek.length} slots` })}<div class="cd-ring-label">Private booked (7 days)</div></div>
+        <div class="cd-ring-card">${cdRing(seats ? Math.round(seatsTaken / seats * 100) : null, 108, { tone: 'signal', sub: `${seatsTaken}/${seats} seats` })}<div class="cd-ring-label">Group seats filled</div></div>
+        <div class="cd-ring-card">${cdRing(marked.length ? Math.round(came / marked.length * 100) : null, 108, { sub: `${came} of ${marked.length}` })}<div class="cd-ring-label">Students who came</div></div>
+        <div class="cd-ring-card">${cdRing(null, 108, { centre: String(todays.length), sub: 'today' })}<div class="cd-ring-label">Sessions today</div></div>
+      </div>
+      <section class="cd-card">
+        <div class="cd-card-head"><h3>⏭️ Next sessions</h3><button type="button" class="btn btn-ghost cd-small td-go-sched">🗓️ Add free times</button></div>
+        ${next.length ? next.map(b => tdBookingRow(b, true)).join('') : `<div class="cd-empty">No bookings yet. ${upSlots.length ? `You have ${upSlots.length} free time${upSlots.length === 1 ? '' : 's'} open — students will book them.` : 'Add your free times so students can book you.'}</div>`}
+      </section>`;
+    el.querySelector('.td-go-sched').addEventListener('click', ()=> tdShow('schedule'));
+    tdWireBookingRows(el);
+  }
+
+  /* ---------------- 🗓️ My schedule ---------------- */
+  function tdSlotDates(){
+    const mode = document.querySelector('#tdSchedule input[name="tdMode"]:checked');
+    if(!mode) return [];
+    if(mode.value === 'once'){ const d = document.getElementById('tdDate1').value; return d ? [d] : []; }
+    const from = document.getElementById('tdFrom').value, weeks = Math.max(1, Math.min(12, parseInt(document.getElementById('tdWeeks').value, 10) || 0));
+    if(!from || !tdDays.size) return [];
+    const out = [], start = new Date(from + 'T00:00:00');
+    for(let i = 0; i < weeks * 7; i++){ const d = new Date(start); d.setDate(start.getDate() + i); if(tdDays.has(String(d.getDay()))) out.push(cdDay(d)); }
+    return out;
+  }
+  const tdMin = t => { const [h, m] = String(t || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
+  const tdHm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  function tdPlannedSlots(){
+    const dates = tdSlotDates();
+    if(tdFormKind === 'private'){
+      const from = tdMin(document.getElementById('tdFromTime').value), to = tdMin(document.getElementById('tdToTime').value), len = Number(document.getElementById('tdLen').value) || 60;
+      if(!(to > from)) return [];
+      const times = []; for(let t = from; t + len <= to; t += len) times.push(tdHm(t));
+      return dates.flatMap(d => times.map(time => ({ kind: 'private', date: d, time, duration: len })));
+    }
+    const time = document.getElementById('tdGTime').value, len = Number(document.getElementById('tdGLen').value) || 60;
+    return time ? dates.map(d => ({ kind: 'group', date: d, time, duration: len })) : [];
+  }
+
+  function tdRenderSchedule(){
+    const el = document.getElementById('tdSchedule');
+    const now = Date.now();
+    const up = tdData.slots.filter(s => tdEnd(s).getTime() > now);
+    const courses = [...new Set([...tdData.students.values()].filter(s => s.status === 'approved').map(s => s.course).filter(Boolean))].sort();
+    const byDay = new Map();
+    up.forEach(s => { if(!byDay.has(s.date)) byDay.set(s.date, []); byDay.get(s.date).push(s); });
+    el.innerHTML = `
+      <section class="cd-card">
+        <div class="cd-card-head"><h3>➕ Add free times</h3></div>
+        <div class="cd-mode td-kind" role="radiogroup" aria-label="Type">
+          <label><input type="radio" name="tdKind" value="private"${tdFormKind === 'private' ? ' checked' : ''}> 👤 Private (one student each)</label>
+          <label><input type="radio" name="tdKind" value="group"${tdFormKind === 'group' ? ' checked' : ''}> 👥 Group session</label>
+        </div>
+        ${tdFormKind === 'private' ? `
+          <div class="cd-sched-fields td-3">
+            <label><span class="field-label">From</span><input type="time" id="tdFromTime" value="16:00"></label>
+            <label><span class="field-label">To</span><input type="time" id="tdToTime" value="20:00"></label>
+            <label><span class="field-label">Each session</span><select id="tdLen">${TD_DURATIONS.map(d => `<option value="${d}"${d === 60 ? ' selected' : ''}>${d} min</option>`).join('')}</select></label>
+          </div>` : `
+          <div class="cd-sched-fields">
+            <label class="se-wide"><span class="field-label">Topic</span><input type="text" id="tdGTopic" placeholder="e.g. Geometry revision — group"></label>
+            <label><span class="field-label">Time</span><input type="time" id="tdGTime" value="18:00"></label>
+            <label><span class="field-label">Length</span><select id="tdGLen">${TD_DURATIONS.map(d => `<option value="${d}"${d === 90 ? ' selected' : ''}>${d} min</option>`).join('')}</select></label>
+            <label><span class="field-label">Seats</span><input type="number" id="tdGSeats" min="2" max="50" value="6"></label>
+            <label><span class="field-label">Who can book</span><select id="tdGCourse"><option value="">Every student</option>${courses.map(c => `<option value="${esc(c)}">${esc(c)} only</option>`).join('')}</select></label>
+          </div>`}
+        <label class="td-link"><span class="field-label">Join link (optional — you can add it later)</span><input type="url" id="tdLink" placeholder="https://zoom.us/j/…"></label>
+        <div class="cd-section-title">When</div>
+        <div class="cd-mode" role="radiogroup" aria-label="How often">
+          <label><input type="radio" name="tdMode" value="once" checked> One day</label>
+          <label><input type="radio" name="tdMode" value="weekly"> Every week</label>
+        </div>
+        <div id="tdOnce" class="cd-sched-fields"><label><span class="field-label">Date</span><input type="date" id="tdDate1" value="${cdToday()}"></label></div>
+        <div id="tdWeekly" hidden>
+          <div class="cd-days" role="group" aria-label="Days of the week">${CD_WEEKDAYS.map(([v, l]) => `<button type="button" class="cd-day${tdDays.has(v) ? ' on' : ''}" data-dow="${v}" aria-pressed="${tdDays.has(v)}">${l}</button>`).join('')}</div>
+          <div class="cd-sched-fields"><label><span class="field-label">Starting</span><input type="date" id="tdFrom" value="${cdToday()}"></label>
+            <label><span class="field-label">For how many weeks</span><input type="number" id="tdWeeks" min="1" max="12" value="4"></label></div>
+        </div>
+        <div class="cd-assign-preview" id="tdPreview" aria-live="polite"></div>
+        <button type="button" class="btn btn-primary" id="tdAdd" style="width:100%;">Publish these times</button>
+        <div class="cd-hint" id="tdHint" role="status" aria-live="polite"></div>
+      </section>
+
+      <div class="cd-section-title">Your free times (${up.length})</div>
+      ${byDay.size ? [...byDay.entries()].map(([d, list]) => `
+        <section class="cd-card td-day">
+          <div class="cd-card-head"><h3>${esc(new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }))}</h3><span class="cd-count">${list.length}</span></div>
+          <div class="td-slots">${list.map(s => {
+            const bk = tdBookingsFor(s, tdData.bookings);
+            const taken = s.kind === 'private' ? bk.length > 0 : false;
+            const label = s.kind === 'private'
+              ? (taken ? `👤 ${esc(bk[0].username)}` : '👤 Free')
+              : `👥 ${esc(s.topic || 'Group')} · ${bk.length}/${s.capacity}${s.course ? ` · ${esc(s.course)}` : ''}`;
+            return `<div class="td-slot${taken || (s.kind === 'group' && bk.length) ? ' booked' : ''}">
+              <span class="td-slot-time">${esc(s.time)}<small>${s.duration}m</small></span>
+              <span class="td-slot-label">${label}</span>
+              ${bk.length ? '' : `<button type="button" class="td-slot-del" data-id="${esc(s.id)}" aria-label="Remove this free time">✕</button>`}
+            </div>`;
+          }).join('')}</div>
+        </section>`).join('') : '<div class="admin-empty">No free times yet. Add some above.</div>'}`;
+
+    const preview = ()=>{
+      const plan = tdPlannedSlots();
+      const dates = [...new Set(plan.map(p => p.date))];
+      el.querySelector('#tdPreview').textContent = !plan.length ? (tdFormKind === 'private' ? 'Pick a date and a From–To time.' : 'Pick a date and a time.')
+        : `${plan.length} ${tdFormKind === 'private' ? 'private slot' : 'group session'}${plan.length === 1 ? '' : 's'} on ${dates.length} day${dates.length === 1 ? '' : 's'}${tdFormKind === 'private' ? ` (${[...new Set(plan.map(p => p.time))].join(', ')})` : ''}: ${dates.slice(0, 5).map(cdFmtDay).join(', ')}${dates.length > 5 ? ' …' : ''}.`;
+    };
+    el.querySelectorAll('input[name="tdKind"]').forEach(r => r.addEventListener('change', ()=>{ tdFormKind = r.value; tdRenderSchedule(); }));
+    el.querySelectorAll('input[name="tdMode"]').forEach(r => r.addEventListener('change', ()=>{
+      const w = el.querySelector('input[name="tdMode"]:checked').value === 'weekly';
+      el.querySelector('#tdOnce').hidden = w; el.querySelector('#tdWeekly').hidden = !w; preview();
+    }));
+    el.querySelectorAll('.cd-day').forEach(d => d.addEventListener('click', ()=>{
+      const v = d.dataset.dow; tdDays.has(v) ? tdDays.delete(v) : tdDays.add(v);
+      d.classList.toggle('on', tdDays.has(v)); d.setAttribute('aria-pressed', tdDays.has(v)); preview();
+    }));
+    el.querySelectorAll('#tdSchedule input, #tdSchedule select').forEach(i => i.addEventListener('input', preview));
+    preview();
+    if(tdMsg){ const h = el.querySelector('#tdHint'); h.textContent = tdMsg.text; h.className = tdMsg.cls; tdMsg = null; }
+
+    el.querySelector('#tdAdd').addEventListener('click', async (e)=>{
+      const hint = el.querySelector('#tdHint');
+      const plan = tdPlannedSlots().filter(p => tdStart(p).getTime() > Date.now());
+      if(!plan.length){ hint.className = 'cd-hint'; hint.textContent = 'Nothing to add — check the date and times (they must be in the future).'; return; }
+      const topic = tdFormKind === 'group' ? el.querySelector('#tdGTopic').value.trim() : '';
+      if(tdFormKind === 'group' && !topic){ hint.className = 'cd-hint'; hint.textContent = 'Give the group session a topic.'; return; }
+      const link = el.querySelector('#tdLink').value.trim() || null;
+      const extra = tdFormKind === 'group' ? { topic, capacity: Math.max(2, Math.min(50, parseInt(el.querySelector('#tdGSeats').value, 10) || 6)), course: el.querySelector('#tdGCourse').value || null } : {};
+      const existing = new Set(tdData.slots.map(s => `${s.date}|${s.time}`));
+      const fresh = plan.filter(p => !existing.has(`${p.date}|${p.time}`)).map(p => ({ id: generateId('slot'), ...p, ...extra, link, createdAt: new Date().toISOString() }));
+      if(!fresh.length){ hint.className = 'cd-hint'; hint.textContent = 'You already have free times at those exact times.'; return; }
+      e.currentTarget.disabled = true;
+      const ok = await tdSaveSlots(((currentAssistantAccount && currentAssistantAccount.tutorSlots) || []).concat(fresh));
+      tdMsg = ok ? { text: `✓ ${fresh.length} free time${fresh.length === 1 ? '' : 's'} published — students can book ${fresh.length === 1 ? 'it' : 'them'} now.${plan.length > fresh.length ? ` (${plan.length - fresh.length} skipped: you already had those times.)` : ''}`, cls: 'cd-hint good' }
+        : { text: 'Could not save — check your connection.', cls: 'cd-hint' };
+      tdDays.clear();
+      await tdLoad(); tdRenderSchedule();
+    });
+    el.querySelectorAll('.td-slot-del').forEach(b => b.addEventListener('click', async ()=>{
+      b.disabled = true;
+      await tdSaveSlots(((currentAssistantAccount && currentAssistantAccount.tutorSlots) || []).filter(s => s.id !== b.dataset.id));
+      await tdLoad(); tdRenderSchedule();
+    }));
+  }
+
+  /* ---------------- 📥 Bookings ---------------- */
+  function tdBookingRow(b, compact){
+    const st = tdData.students.get(cdNorm(b.username));
+    const started = tdStart(b).getTime() <= Date.now();
+    const att = b.coordAttendance && b.coordAttendance.status;
+    const wa = st ? cdWaLink(st.parentNumber, `Hello! This is ${tdMe()} from Mr. Mohamed Ibrahim's math team about ${b.username}'s session on ${tdFmtTime(b)}.`) : null;
+    return `<div class="td-booking${started && !att ? ' is-due' : ''}" data-id="${esc(b.id)}">
+      <div class="td-bk-head">
+        <div class="td-bk-when"><b>${esc(tdFmtTime(b))}</b> <span class="td-kind-pill ${b.kind === 'group' ? 'g' : 'p'}">${b.kind === 'group' ? '👥 Group' : '👤 Private'}</span></div>
+        <div class="td-bk-who">${esc(b.username)}${st && st.course ? ` <span class="cd-muted">· ${esc(st.course)}</span>` : ''}${b.kind === 'group' && b.topic ? ` <span class="cd-muted">· ${esc(b.topic)}</span>` : ''}</div>
+      </div>
+      ${b.bookingNote ? `<div class="td-bk-note" dir="auto">📝 ${esc(b.bookingNote)}</div>` : ''}
+      ${compact ? '' : `
+        <div class="td-bk-actions">
+          ${started ? `<div class="cd-seg" role="group" aria-label="Attendance">${CD_STATUSES.map(s => `<button type="button" class="cd-seg-btn s-${s.key}${att === s.key ? ' on' : ''}" data-att="${s.key}" aria-pressed="${att === s.key}"><span class="cd-seg-full">${s.label}</span><span class="cd-seg-short">${s.short}</span></button>`).join('')}</div>` : ''}
+          <input type="url" class="td-bk-link" value="${esc(b.link || '')}" placeholder="Join link (https://…)" aria-label="Join link">
+          <button type="button" class="cd-act" data-bk="link">💾 Save link</button>
+          ${wa ? `<a class="cd-act" href="${wa}" target="_blank" rel="noopener">💬 Parent</a>` : ''}
+          ${!started ? `<button type="button" class="cd-act" data-bk="cancel">✕ Cancel</button>` : ''}
+        </div>
+        ${started ? `<textarea class="cd-textarea td-bk-after" rows="2" placeholder="After the session: what did you cover? what should they practise?">${esc(b.tutorNote || '')}</textarea>
+          <button type="button" class="cd-act" data-bk="note">💾 Save notes</button>` : ''}`}
+    </div>`;
+  }
+  function tdWireBookingRows(root){
+    root.querySelectorAll('.td-booking').forEach(row => {
+      const id = row.dataset.id;
+      const save = async patch => {
+        const rec = await dbGet('sessions', id); if(!rec) return false;
+        const ok = await dbSet('sessions', id, { ...rec, ...patch }); invalidateDbCache('sessions'); return ok;
+      };
+      row.querySelectorAll('[data-att]').forEach(b => b.addEventListener('click', async ()=>{
+        const on = b.classList.contains('on');
+        const rec = await dbGet('sessions', id); if(!rec) return;
+        const next = { ...rec };
+        if(on) delete next.coordAttendance; else next.coordAttendance = { status: b.dataset.att, by: tdMe(), at: new Date().toISOString() };
+        await dbSet('sessions', id, next); invalidateDbCache('sessions');
+        await tdLoad(); tdShow(tdTab);
+      }));
+      const bk = row.querySelectorAll('[data-bk]');
+      bk.forEach(b => b.addEventListener('click', async ()=>{
+        const act = b.dataset.bk;
+        if(act === 'link'){ b.disabled = true; await save({ link: row.querySelector('.td-bk-link').value.trim() || null }); b.textContent = '✓ Saved'; setTimeout(()=>{ b.textContent = '💾 Save link'; b.disabled = false; }, 1200); }
+        else if(act === 'note'){ b.disabled = true; await save({ tutorNote: row.querySelector('.td-bk-after').value.trim() }); b.textContent = '✓ Saved'; setTimeout(()=>{ b.textContent = '💾 Save notes'; b.disabled = false; }, 1200); }
+        else if(act === 'cancel'){
+          const rec = tdData.bookings.find(x => x.id === id);
+          if(!confirm(`Cancel ${rec ? rec.username + "'s" : 'this'} booking? The time becomes free again.`)) return;
+          await deleteSessionRecord(id); invalidateDbCache('sessions');
+          if(rec && rec.username) await saveAnnouncement(generateId('announce'), { text: `Your ${rec.kind === 'group' ? 'group' : 'private'} session with ${tdMe()} on ${tdFmtTime(rec)} was cancelled. Please book another time in 📅 Book a session.`, course: null, targetUsername: rec.username, postedBy: tdMe(), ts: new Date().toISOString() });
+          await tdLoad(); tdShow(tdTab);
+        }
+      }));
+    });
+  }
+  function tdRenderBookings(){
+    const el = document.getElementById('tdBookings');
+    const now = Date.now();
+    const upcoming = tdData.bookings.filter(b => tdEnd(b).getTime() > now && tdStart(b).getTime() > now);
+    const due = tdDue();
+    const list = tdBookFilter === 'due' ? due : upcoming;
+    el.innerHTML = `
+      <div class="cd-filters">
+        ${[['upcoming', `Upcoming ${upcoming.length}`], ['due', `✋ Needs attendance ${due.length}`]].map(([k, l]) => `<button type="button" class="cd-chip${tdBookFilter === k ? ' active' : ''}${k === 'due' && due.length ? ' cd-chip-alert' : ''}" data-bf="${k}">${l}</button>`).join('')}
+      </div>
+      <div class="td-bookings">${list.map(b => tdBookingRow(b, false)).join('') || `<div class="admin-empty">${tdBookFilter === 'due' ? '🎉 Attendance is done for every session.' : 'No upcoming bookings yet.'}</div>`}</div>`;
+    el.querySelectorAll('[data-bf]').forEach(c => c.addEventListener('click', ()=>{ tdBookFilter = c.dataset.bf; tdRenderBookings(); }));
+    tdWireBookingRows(el);
+  }
+  function tdRenderHistory(){
+    const el = document.getElementById('tdHistory');
+    const past = tdData.bookings.filter(b => tdStart(b).getTime() <= Date.now()).reverse();
+    el.innerHTML = `<div class="td-bookings">${past.slice(0, 80).map(b => tdBookingRow(b, false)).join('') || '<div class="admin-empty">No past sessions yet.</div>'}</div>`;
+    tdWireBookingRows(el);
+  }
+
+  /* ---------------- student: 📅 Book a session ---------------- */
+  let bkFilter = 'all', bkTutor = '', bkPick = null;
+  async function renderStudentBooking(){
+    const el = document.getElementById('bookingWrap');
+    if(!el || !currentStudent) return;
+    el.innerHTML = '<div class="admin-empty">Loading free times…</div>';
+    invalidateDbCache('assistants'); invalidateDbCache('sessions');
+    const [accounts, sessions] = await Promise.all([fetchAllAssistantAccounts(), fetchAllSessions()]);
+    const me = cdNorm(currentStudent.username), now = Date.now(), horizon = now + 28 * 864e5;
+    const tutors = accounts.filter(a => a.role === 'tutor' && a.status === 'approved');
+    const booked = sessions.filter(x => !x._index && x.slotId);
+    const mine = booked.filter(x => cdNorm(x.username) === me).sort((a, b) => tdStart(a) - tdStart(b));
+    const slots = [];
+    tutors.forEach(t => (t.tutorSlots || []).forEach(s => {
+      const start = tdStart(s).getTime();
+      if(start <= now || start > horizon) return;
+      if(s.kind === 'group' && s.course && !sameCourseName(s.course, currentStudent.course)) return;
+      const taken = booked.filter(x => x.slotId === s.id);
+      const mineHere = taken.some(x => cdNorm(x.username) === me);
+      if(s.kind === 'private' && taken.length && !mineHere) return;
+      slots.push({ ...s, tutor: t.username, taken: taken.length, mineHere });
+    }));
+    slots.sort((a, b) => tdStart(a) - tdStart(b));
+    const shown = slots.filter(s => (bkFilter === 'all' || s.kind === bkFilter) && (!bkTutor || s.tutor === bkTutor));
+    const byDay = new Map(); shown.forEach(s => { if(!byDay.has(s.date)) byDay.set(s.date, []); byDay.get(s.date).push(s); });
+    const upcomingMine = mine.filter(b => tdEnd(b).getTime() > now);
+    const pastMine = mine.filter(b => tdEnd(b).getTime() <= now).reverse();
+    const monthAgo = now - 30 * 864e5;
+    const monthMine = mine.filter(b => tdStart(b).getTime() >= monthAgo && tdStart(b).getTime() <= now);
+    const came = monthMine.filter(b => b.coordAttendance && ['present', 'late'].includes(b.coordAttendance.status)).length;
+
+    el.innerHTML = `
+      <div class="bk-rings">
+        <div class="cd-ring-card">${cdRing(null, 96, { centre: String(upcomingMine.length), sub: 'booked' })}<div class="cd-ring-label">Coming up</div></div>
+        <div class="cd-ring-card">${cdRing(monthMine.length ? Math.round(came / monthMine.length * 100) : null, 96, { sub: `${came} of ${monthMine.length}` })}<div class="cd-ring-label">Attended (30 days)</div></div>
+        <div class="cd-ring-card">${cdRing(null, 96, { tone: 'signal', centre: String(slots.filter(s => !s.mineHere).length), sub: 'open' })}<div class="cd-ring-label">Free times</div></div>
+      </div>
+      ${upcomingMine.length ? `<div class="hw-section-title">My bookings</div>
+        <div class="bk-mine">${upcomingMine.map(b => `<div class="bk-booking">
+          <div><b>${esc(tdFmtTime(b))}</b> <span class="td-kind-pill ${b.kind === 'group' ? 'g' : 'p'}">${b.kind === 'group' ? '👥 Group' : '👤 Private'}</span></div>
+          <div class="cd-muted">with ${esc(b.tutor)}${b.kind === 'group' && b.topic ? ` · ${esc(b.topic)}` : ''}</div>
+          ${b.bookingNote ? `<div class="td-bk-note" dir="auto">📝 ${esc(b.bookingNote)}</div>` : ''}
+          <div class="bk-booking-acts">
+            ${b.link ? `<a class="btn btn-primary cd-small" href="${esc(b.link)}" target="_blank" rel="noopener">▶ Join</a>` : '<span class="cd-muted">The join link appears here before the session.</span>'}
+            <button type="button" class="btn btn-ghost cd-small bk-cancel" data-id="${esc(b.id)}">Cancel</button>
+          </div></div>`).join('')}</div>` : ''}
+      <div class="hw-section-title">Free times</div>
+      ${tutors.length ? `<div class="cd-filters">
+        ${[['all', 'All'], ['private', '👤 Private'], ['group', '👥 Group']].map(([k, l]) => `<button type="button" class="cd-chip${bkFilter === k ? ' active' : ''}" data-bk-f="${k}">${l}</button>`).join('')}
+        ${tutors.length > 1 ? `<select id="bkTutor" aria-label="Assistant"><option value="">Every assistant</option>${tutors.map(t => `<option value="${esc(t.username)}"${bkTutor === t.username ? ' selected' : ''}>${esc(t.username)}</option>`).join('')}</select>` : ''}
+      </div>` : ''}
+      ${byDay.size ? [...byDay.entries()].map(([d, list]) => `
+        <div class="bk-day">
+          <div class="bk-day-title">${esc(new Date(d + 'T00:00:00').toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'short' }))}</div>
+          <div class="bk-slots">${list.map(s => {
+            const full = s.kind === 'group' && s.taken >= s.capacity && !s.mineHere;
+            return `<button type="button" class="bk-slot${s.mineHere ? ' mine' : ''}${full ? ' full' : ''}" data-slot="${esc(s.id)}" ${s.mineHere || full ? 'disabled' : ''}>
+              <span class="bk-slot-time">${esc(s.time)} <small>${s.duration} min</small></span>
+              <span class="bk-slot-what">${s.kind === 'group' ? `👥 ${esc(s.topic || 'Group')}` : '👤 Private'}</span>
+              <span class="bk-slot-who">${esc(s.tutor)}${s.kind === 'group' ? ` · ${Math.max(0, s.capacity - s.taken)} seat${s.capacity - s.taken === 1 ? '' : 's'} left` : ''}</span>
+              <span class="bk-slot-state">${s.mineHere ? '✓ Booked' : full ? 'Full' : 'Reserve'}</span>
+            </button>`;
+          }).join('')}</div>
+        </div>`).join('') : `<div class="admin-empty">${tutors.length ? 'No free times right now — check back soon.' : 'No session assistants yet.'}</div>`}
+      ${pastMine.length ? `<div class="hw-section-title">Past sessions</div>
+        <div class="bk-mine">${pastMine.slice(0, 10).map(b => `<div class="bk-booking past">
+          <div><b>${esc(tdFmtTime(b))}</b> · ${esc(b.tutor)} ${b.coordAttendance ? `<span class="cd-muted">· ${esc(b.coordAttendance.status)}</span>` : ''}</div>
+          ${b.tutorNote ? `<div class="td-bk-note" dir="auto">💬 ${esc(b.tutor)}: ${esc(b.tutorNote)}</div>` : ''}
+        </div>`).join('')}</div>` : ''}`;
+
+    el.querySelectorAll('[data-bk-f]').forEach(c => c.addEventListener('click', ()=>{ bkFilter = c.dataset.bkF; renderStudentBooking(); }));
+    const ts = el.querySelector('#bkTutor'); if(ts) ts.addEventListener('change', ()=>{ bkTutor = ts.value; renderStudentBooking(); });
+    el.querySelectorAll('.bk-slot:not([disabled])').forEach(b => b.addEventListener('click', ()=>{
+      const s = slots.find(x => x.id === b.dataset.slot); if(s) bkOpenReserve(s);
+    }));
+    el.querySelectorAll('.bk-cancel').forEach(b => b.addEventListener('click', async ()=>{
+      const rec = mine.find(x => x.id === b.dataset.id);
+      if(!confirm(`Cancel your session on ${rec ? tdFmtTime(rec) : 'this day'}?`)) return;
+      b.disabled = true;
+      await deleteSessionRecord(b.dataset.id); invalidateDbCache('sessions');
+      renderStudentBooking();
+    }));
+  }
+  function bkOpenReserve(s){
+    bkPick = s;
+    document.getElementById('bkReserveTitle').textContent = s.kind === 'group' ? '👥 Join group session' : '👤 Reserve a private session';
+    document.getElementById('bkReserveInfo').innerHTML = `<div><b>${esc(tdFmtTime(s))}</b></div><div class="cd-muted">with ${esc(s.tutor)}${s.kind === 'group' ? ` · ${esc(s.topic || '')} · ${Math.max(0, s.capacity - s.taken)} seats left` : ''}</div>`;
+    document.getElementById('bkReserveNoteLabel').textContent = s.kind === 'group' ? 'Anything you want covered? (optional)' : 'What do you want to work on?';
+    document.getElementById('bkReserveNote').value = '';
+    document.getElementById('bkReserveHint').textContent = ''; document.getElementById('bkReserveHint').className = 'cd-hint';
+    document.getElementById('bkReserveConfirm').disabled = false;
+    document.getElementById('bkReserveModal').classList.add('open');
+    setTimeout(()=> document.getElementById('bkReserveNote').focus(), 50);
+  }
+  document.getElementById('bkReserveClose').addEventListener('click', ()=> document.getElementById('bkReserveModal').classList.remove('open'));
+  document.getElementById('bkReserveConfirm').addEventListener('click', async (e)=>{
+    const s = bkPick, hint = document.getElementById('bkReserveHint');
+    if(!s || !currentStudent) return;
+    const note = document.getElementById('bkReserveNote').value.trim();
+    if(s.kind === 'private' && note.length < 3){ hint.className = 'cd-hint'; hint.textContent = 'Write what you want to work on, so the assistant can prepare.'; return; }
+    e.currentTarget.disabled = true;
+    // Check again right before saving — someone may have just taken it.
+    invalidateDbCache('sessions');
+    const taken = (await fetchAllSessions()).filter(x => x.slotId === s.id);
+    if(taken.some(x => cdNorm(x.username) === cdNorm(currentStudent.username))){ hint.textContent = 'You already booked this one.'; return; }
+    if((s.kind === 'private' && taken.length) || (s.kind === 'group' && taken.length >= s.capacity)){
+      hint.className = 'cd-hint'; hint.textContent = 'Sorry — someone just booked this. Pick another time.';
+      await renderStudentBooking(); return;
+    }
+    const ok = await saveSessionRecord(generateId('sess'), {
+      username: currentStudent.username, date: s.date, time: s.time, duration: s.duration,
+      topic: s.kind === 'group' ? (s.topic || 'Group session') : `Private session with ${s.tutor}`,
+      link: s.link || null, tutor: s.tutor, kind: s.kind, slotId: s.id, bookingNote: note || null, bookedAt: new Date().toISOString(),
+      recordingUrl: null, recordingViewLimit: null, recordingViews: 0, pdfUrl: null, ts: new Date().toISOString(),
+    });
+    if(!ok){ e.currentTarget.disabled = false; hint.className = 'cd-hint'; hint.textContent = 'Could not book — check your connection and try again.'; return; }
+    invalidateDbCache('sessions');
+    hint.className = 'cd-hint good'; hint.textContent = `✓ Booked! ${s.tutor} can see your note. The join link will appear in My bookings.`;
+    await renderStudentBooking();
+    setTimeout(()=> document.getElementById('bkReserveModal').classList.remove('open'), 1400);
+  });
+
+  /* ---------------- admin: session assistants activity ---------------- */
+  async function tdRenderAdminActivity(){
+    const el = document.getElementById('tdActivityWrap');
+    if(!el) return;
+    const tutors = (await fetchAllAssistantAccounts()).filter(a => a.role === 'tutor' && a.status === 'approved');
+    if(!tutors.length){ el.innerHTML = '<div class="admin-empty">No session assistants yet. In the Assistants tab, set someone\'s role to Session assistant.</div>'; return; }
+    const sessions = (await fetchAllSessions()).filter(x => !x._index && x.slotId);
+    const now = Date.now(), weekEnd = now + 7 * 864e5, weekAgo = now - 7 * 864e5;
+    el.innerHTML = tutors.map(t => {
+      const mine = sessions.filter(x => cdNorm(x.tutor) === cdNorm(t.username));
+      const openSlots = (t.tutorSlots || []).filter(s => { const st = tdStart(s).getTime(); return st > now && st <= weekEnd; });
+      const bookedNext = mine.filter(x => { const st = tdStart(x).getTime(); return st > now && st <= weekEnd; });
+      const doneWeek = mine.filter(x => { const st = tdStart(x).getTime(); return st <= now && st >= weekAgo; });
+      const unmarked = mine.filter(x => tdStart(x).getTime() <= now && !(x.coordAttendance && x.coordAttendance.status)).length;
+      return `<div class="cd-card"><div class="cd-card-head"><h3>🧑‍🏫 ${esc(t.username)}</h3>${cdRing(openSlots.length ? Math.round(bookedNext.length / openSlots.length * 100) : null, 48, { tone: 'signal', stroke: 5 })}</div>
+        <div class="cd-act-stats">
+          <div class="cd-act-stat"><div class="k">Free times next 7 days</div><div class="v">${openSlots.length}</div></div>
+          <div class="cd-act-stat"><div class="k">Booked next 7 days</div><div class="v">${bookedNext.length}</div></div>
+          <div class="cd-act-stat"><div class="k">Sessions last 7 days</div><div class="v">${doneWeek.length}</div></div>
+          <div class="cd-act-stat"><div class="k">Attendance missing</div><div class="v">${unmarked}</div></div>
+        </div></div>`;
+    }).join('');
   }
 </script>
 
