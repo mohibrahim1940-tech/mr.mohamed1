@@ -3848,6 +3848,34 @@
   #bkReserveNote{ margin-bottom:12px; }
   @media (max-width:560px){ .td-3{ grid-template-columns:1fr 1fr; } .td-3 label:last-child{ grid-column:1 / -1; } .bk-slots, .td-slots{ grid-template-columns:1fr 1fr; } }
   @media (max-width:380px){ .bk-slots, .td-slots{ grid-template-columns:1fr; } }
+
+  /* ---------- student dashboard on laptops / PCs ----------
+     The side menu stays put while the page scrolls, and it always fits the
+     screen: every tab is visible at once, however short the laptop screen is.
+     The tabs shrink evenly to fit; nothing inside the menu needs scrolling. */
+  @media (min-width:901px){
+    #studentDashboard{ padding-top:24px !important; }
+    #studentDashboard > .section-head{ margin-bottom:18px; }
+    #studentDashboard > .section-head h2{ font-size:clamp(1.4rem, 3.2vh, 2rem); }
+    #studentDashboard > .section-head p{ display:none; }
+    .dash-sidebar{
+      top:var(--dash-side-top, 84px);
+      max-height:var(--dash-side-h, calc(100vh - 96px));
+      display:flex; flex-direction:column; overflow:hidden;
+      padding:12px 10px;
+    }
+    .dash-sidebar-user{ margin-bottom:8px; padding-bottom:8px; flex-shrink:0; }
+    .dash-sidebar-avatar{ width:34px; height:34px; }
+    .dash-sidebar-nav{ flex:0 1 auto; min-height:0; gap:2px; }
+    .dash-sidebar-nav .dash-tab-btn{
+      flex:0 1 44px; min-height:0; height:44px; padding:0 14px;
+      font-size:clamp(0.8rem, 1.9vh, 0.98rem); line-height:1.1;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .dash-sidebar-nav .dash-tab-btn::first-letter{ font-size:1.2em; }
+    .dash-sidebar-actions{ margin-top:8px; padding-top:8px; flex-shrink:0; flex-direction:row; gap:6px; }
+    .dash-sidebar-actions .btn{ flex:1 1 0; padding:8px 6px; font-size:0.78rem; line-height:1.2; }
+  }
 </style>
 </head>
 <body>
@@ -4528,7 +4556,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 29 Sep 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 29 Sep 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -25763,6 +25791,33 @@ $$);`;
         </div></div>`;
     }).join('');
   }
+</script>
+<script>
+  /* Keep the student side menu inside the screen on laptops/PCs. */
+  (function(){
+    const side = document.querySelector('.dash-sidebar');
+    if(!side) return;
+    let last = '';
+    function fit(){
+      if(innerWidth <= 900 || !side.offsetParent){ if(last){ side.style.removeProperty('--dash-side-h'); side.style.removeProperty('--dash-side-top'); last = ''; } return; }
+      const head = document.getElementById('siteHeader');
+      const top = Math.round((head ? head.getBoundingClientRect().height : 70) + 12);
+      // Where the menu sits when the page is at the very top — it must fit from there too.
+      const shell = side.parentElement.getBoundingClientRect().top + scrollY;
+      const from = Math.max(top, Math.min(shell, top + 400));
+      const h = Math.max(260, innerHeight - from - 12);
+      const key = top + '|' + h;
+      if(key === last) return;
+      last = key;
+      side.style.setProperty('--dash-side-top', top + 'px');
+      side.style.setProperty('--dash-side-h', h + 'px');
+    }
+    addEventListener('resize', fit);
+    addEventListener('scroll', fit, { passive: true });
+    new MutationObserver(fit).observe(document.getElementById('studentDashboard') || document.body, { attributes: true, attributeFilter: ['style', 'class'] });
+    setInterval(fit, 1500);
+    fit();
+  })();
 </script>
 
 </div>
