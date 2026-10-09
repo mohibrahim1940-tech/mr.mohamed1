@@ -3921,6 +3921,48 @@
   .am-del-choices button b{ font-size:0.95rem; }
   .am-del-choices button span{ color:var(--muted); font-size:0.82rem; }
   .am-del-choices button:disabled{ opacity:0.6; cursor:wait; }
+
+  /* ---------- Plan maker ---------- */
+  .pm-box{ max-width:640px; }
+  .pm-input{ width:100%; padding:10px 12px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.9rem; min-width:0; }
+  .pm-input:disabled{ opacity:0.7; }
+  .pm-step{ display:flex; align-items:center; gap:8px; font-weight:700; margin:18px 0 8px; font-family:'Space Grotesk',sans-serif; flex-wrap:wrap; }
+  .pm-step > span:first-child{ width:24px; height:24px; border-radius:50%; background:var(--signal); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0; }
+  .pm-step .cd-muted{ font-weight:400; font-family:inherit; }
+  .pm-pick-tools{ display:grid; gap:8px; }
+  .pm-kinds{ margin:0; }
+  .pm-pick-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .pm-list{ max-height:260px; overflow:auto; border:1px solid var(--line); border-radius:12px; margin-top:8px; background:var(--panel-2); }
+  .pm-opt{ display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; gap:8px; align-items:center; padding:9px 12px; border-bottom:1px solid var(--line); cursor:pointer; font-size:0.88rem; }
+  .pm-opt:last-child{ border-bottom:none; }
+  .pm-opt:hover{ background:var(--panel); }
+  .pm-opt.on{ background:var(--accent-wash); }
+  .pm-opt input{ width:18px; height:18px; accent-color:var(--signal); }
+  .pm-opt-name{ overflow-wrap:anywhere; }
+  .pm-spread{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+  .pm-spread[hidden]{ display:none; }
+  .pm-chosen{ display:grid; gap:6px; }
+  .pm-empty{ color:var(--muted); font-size:0.86rem; padding:12px; border:1px dashed var(--line-strong); border-radius:10px; text-align:center; }
+  .pm-item{ display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:center; padding:6px 8px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); }
+  .pm-day{ display:flex; align-items:center; gap:4px; font-size:0.74rem; color:var(--muted); }
+  .pm-day input{ width:58px; padding:6px 6px; border-radius:7px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.86rem; }
+  .pm-item-name{ font-size:0.88rem; overflow-wrap:anywhere; }
+  .pm-item-btns{ display:flex; gap:4px; }
+  .pm-item-btns button{ min-width:32px; min-height:32px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:inherit; }
+  .pm-item-btns button:disabled{ opacity:0.35; cursor:default; }
+  .pm-item-btns [data-rm]:hover{ color:var(--ember); border-color:var(--ember); }
+  .pm-give{ display:grid; grid-template-columns:1.4fr 1fr; gap:10px; }
+  .pm-give label{ display:block; min-width:0; }
+  @media (max-width:520px){ .pm-give{ grid-template-columns:1fr; } .pm-item{ grid-template-columns:1fr auto; } .pm-item-name{ grid-column:1 / -1; grid-row:1; } }
+  .pm-preview{ font-size:0.84rem; color:var(--muted); margin:14px 0 10px; line-height:1.5; }
+  .pm-preview b{ color:var(--text); }
+  .pm-open-from-sp{ width:100%; margin-top:10px; }
+  .cd-plans-box{ margin-bottom:14px; }
+  .cd-plans-list{ display:grid; gap:6px; max-height:240px; overflow:auto; }
+  .cd-plan-item{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); }
+  .cd-plan-item-main{ display:grid; gap:2px; min-width:0; }
+  .cd-plan-item-main b{ overflow-wrap:anywhere; font-size:0.9rem; }
+  .cd-plan-item-acts{ display:flex; gap:6px; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -4601,7 +4643,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 9 Oct 2026 · B</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 9 Oct 2026 · C</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -5808,6 +5850,50 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button type="button" data-amdel="delete" class="danger"><b>🗑 Delete completely</b><span>Best for a test account — it's deleted everywhere, including the student's Mistake History.</span></button>
     </div>
     <div class="cd-hint" id="amDelHint" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- Make / edit a plan (coordinators and admin) -->
+<div class="modal-overlay" id="pmModal" style="z-index:530;">
+  <div class="modal-box cd-modal pm-box" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
+    <button class="modal-close" id="pmClose" aria-label="Close">&times;</button>
+    <h3 id="pmTitle">➕ New plan</h3>
+    <p class="cd-modal-sub">Pick the skills and exams, put them on days, and save. Every day becomes a homework on its own morning.</p>
+
+    <label class="field-label" for="pmName">Plan name</label>
+    <input type="text" id="pmName" class="pm-input" placeholder="e.g. EST Algebra — 3 weeks" autocomplete="off">
+    <div class="cd-hint" id="pmNameHint"></div>
+
+    <div class="pm-step"><span>1</span> Choose skills and exams</div>
+    <div class="pm-pick-tools">
+      <div class="cd-filters pm-kinds" id="pmKinds"></div>
+      <input type="search" id="pmSearch" class="pm-input" placeholder="🔍 Search…" autocomplete="off" aria-label="Search skills and exams">
+      <div class="pm-pick-row">
+        <span class="cd-muted" id="pmShownCount"></span>
+        <button type="button" class="btn btn-ghost cd-small" id="pmAllShown">☑ Choose all shown</button>
+      </div>
+    </div>
+    <div class="pm-list" id="pmList"><div class="admin-empty">Loading…</div></div>
+
+    <div class="pm-step"><span>2</span> Put them on days <span class="cd-muted" id="pmChosenCount"></span></div>
+    <div class="pm-spread" id="pmSpread">
+      <span class="cd-muted">Quick fill:</span>
+      <button type="button" class="cd-chip" data-gap="1">One per day</button>
+      <button type="button" class="cd-chip" data-gap="2">Every 2 days</button>
+      <button type="button" class="cd-chip" data-gap="3">Every 3 days</button>
+      <button type="button" class="cd-chip" data-gap="0">All on Day 1</button>
+    </div>
+    <div class="pm-chosen" id="pmChosen"></div>
+
+    <div class="pm-step"><span>3</span> Give it to a student now <span class="cd-muted">(optional)</span></div>
+    <div class="pm-give">
+      <label><span class="field-label">Student</span><select id="pmStudent" class="pm-input"><option value="">— Just save the plan —</option></select></label>
+      <label><span class="field-label">Start date (Day 1)</span><input type="date" id="pmStart" class="pm-input"></label>
+    </div>
+
+    <div class="pm-preview" id="pmPreview" aria-live="polite"></div>
+    <button type="button" class="btn btn-primary" id="pmSave" style="width:100%;">Save plan</button>
+    <div class="cd-hint" id="pmHint" role="status" aria-live="polite"></div>
   </div>
 </div>
 
@@ -26074,6 +26160,233 @@ $$);`;
 
   { const _amRender = renderAnswerMistakesList;
     renderAnswerMistakesList = async function(){ await _amRender.apply(this, arguments); amDelDecorate(); }; }
+</script>
+<script>
+  /* =====================================================================
+     PLAN MAKER — coordinators (and the admin) build a new plan from any
+     skills and exams: choose them, put them on days, save, and optionally
+     give it to a student straight away. Saved in the same "plans" table as
+     the admin's Course Plans, so it shows everywhere plans are used.
+     ===================================================================== */
+  let pmOptions = [], pmItems = [], pmKind = 'all', pmEditId = null, pmEditPlan = null, pmPlans = [], pmAfterSave = null;
+  const PM_KINDS = [['all', 'All'], ['skill', '🧠 Skills'], ['exam', '📝 Exams'], ['book', '📚 Books']];
+  const pmIcon = k => k === 'skill' ? '🧠' : k === 'exam' ? '📝' : '📚';
+
+  async function openPlanMaker(opts){
+    opts = opts || {};
+    pmEditId = opts.planId || null; pmAfterSave = opts.onSaved || null;
+    pmItems = []; pmKind = 'all';
+    const modal = document.getElementById('pmModal');
+    document.getElementById('pmTitle').textContent = pmEditId ? '✏️ Edit plan' : '➕ New plan';
+    document.getElementById('pmSave').textContent = pmEditId ? 'Save changes' : 'Save plan';
+    document.getElementById('pmSave').disabled = false;
+    ['pmHint', 'pmNameHint'].forEach(id => { const h = document.getElementById(id); h.textContent = ''; h.className = 'cd-hint'; });
+    document.getElementById('pmSearch').value = '';
+    document.getElementById('pmStart').value = toDateInputValue(new Date());
+    document.getElementById('pmList').innerHTML = '<div class="admin-empty">Loading skills and exams…</div>';
+    modal.classList.add('open');
+    invalidateDbCache('plans');
+    const [options, plans, students] = await Promise.all([loadPlanSourceOptions(), fetchAllPlans(), fetchAllStudents()]);
+    pmOptions = options; pmPlans = plans;
+    pmEditPlan = pmEditId ? plans.find(p => p.id === pmEditId) || null : null;
+    const name = document.getElementById('pmName');
+    name.value = pmEditPlan ? pmEditPlan.name : '';
+    // Homework remembers the plan by its name, so renaming would lose students' progress.
+    name.disabled = !!pmEditPlan;
+    if(pmEditPlan){
+      document.getElementById('pmNameHint').textContent = "The name can't change — students' progress is linked to it.";
+      pmEditPlan.entries.forEach(en => planEntrySources(en).forEach(v => pmItems.push({ value: v, day: en.day })));
+    }
+    const approved = students.filter(s => s && s.username && s.status === 'approved').sort((a, b) => a.username.localeCompare(b.username));
+    const sel = document.getElementById('pmStudent');
+    sel.innerHTML = '<option value="">— Just save the plan —</option>' + approved.map(s => `<option value="${esc(s.username)}">${esc(s.username)}${s.course ? ` · ${esc(s.course)}` : ''}</option>`).join('');
+    sel.value = opts.student && approved.some(s => s.username === opts.student) ? opts.student : '';
+    pmRenderKinds(); pmRenderList(); pmRenderChosen();
+    if(!pmEditPlan) setTimeout(()=> name.focus(), 60);
+  }
+  function closePlanMaker(){ document.getElementById('pmModal').classList.remove('open'); }
+  document.getElementById('pmClose').addEventListener('click', closePlanMaker);
+
+  const pmLabel = v => { const o = pmOptions.find(x => x.value === v); return o ? o.label : '(deleted)'; };
+  const pmKindOf = v => v.split(':')[0];
+  function pmShown(){
+    const q = cdNorm(document.getElementById('pmSearch').value);
+    return pmOptions.filter(o => (pmKind === 'all' || o.kind === pmKind) && (!q || cdNorm(o.label).includes(q)));
+  }
+  function pmRenderKinds(){
+    document.getElementById('pmKinds').innerHTML = PM_KINDS.map(([k, l]) => {
+      const n = k === 'all' ? pmOptions.length : pmOptions.filter(o => o.kind === k).length;
+      return (k === 'book' && !n) ? '' : `<button type="button" class="cd-chip${pmKind === k ? ' active' : ''}" data-pk="${k}">${l} ${n}</button>`;
+    }).join('');
+    document.querySelectorAll('#pmKinds [data-pk]').forEach(b => b.addEventListener('click', ()=>{ pmKind = b.dataset.pk; pmRenderKinds(); pmRenderList(); }));
+  }
+  function pmRenderList(){
+    const list = pmShown(), chosen = new Set(pmItems.map(i => i.value));
+    document.getElementById('pmShownCount').textContent = `${list.length} shown`;
+    document.getElementById('pmAllShown').disabled = !list.length || list.every(o => chosen.has(o.value));
+    document.getElementById('pmList').innerHTML = list.length ? list.map(o => `
+      <label class="pm-opt${chosen.has(o.value) ? ' on' : ''}">
+        <input type="checkbox" value="${esc(o.value)}"${chosen.has(o.value) ? ' checked' : ''}>
+        <span class="pm-opt-icon">${pmIcon(o.kind)}</span>
+        <span class="pm-opt-name">${esc(o.label)}</span>
+        <span class="cd-muted">${o.isBook ? `${o.count} exam${o.count === 1 ? '' : 's'} · one a day` : `${o.count} question${o.count === 1 ? '' : 's'}`}</span>
+      </label>`).join('') : `<div class="admin-empty">${pmOptions.length ? 'Nothing matches.' : 'No skills or exams yet.'}</div>`;
+    document.querySelectorAll('#pmList input').forEach(cb => cb.addEventListener('change', ()=>{
+      if(cb.checked) pmAdd([cb.value]); else pmItems = pmItems.filter(i => i.value !== cb.value);
+      pmRenderList(); pmRenderChosen();
+    }));
+  }
+  // New picks go on the day after the last one, so ticking in order makes a ready plan.
+  function pmAdd(values){
+    values.forEach(v => {
+      if(pmItems.some(i => i.value === v)) return;
+      const last = pmItems.length ? Math.max(...pmItems.map(i => i.day)) : 0;
+      pmItems.push({ value: v, day: last + 1 });
+    });
+  }
+  document.getElementById('pmSearch').addEventListener('input', pmRenderList);
+  document.getElementById('pmAllShown').addEventListener('click', ()=>{ pmAdd(pmShown().map(o => o.value)); pmRenderList(); pmRenderChosen(); });
+  document.querySelectorAll('#pmSpread [data-gap]').forEach(b => b.addEventListener('click', ()=>{
+    const gap = Number(b.dataset.gap);
+    pmItems.forEach((it, i) => { it.day = gap ? 1 + i * gap : 1; });
+    pmRenderChosen();
+  }));
+
+  function pmRenderChosen(){
+    const el = document.getElementById('pmChosen');
+    document.getElementById('pmChosenCount').textContent = pmItems.length ? `· ${pmItems.length} chosen` : '';
+    document.getElementById('pmSpread').hidden = pmItems.length < 2;
+    el.innerHTML = pmItems.length ? pmItems.map((it, i) => `
+      <div class="pm-item" data-i="${i}">
+        <label class="pm-day"><span>Day</span><input type="number" min="1" max="365" value="${it.day}" aria-label="Day for ${esc(pmLabel(it.value))}"></label>
+        <span class="pm-item-name">${pmIcon(pmKindOf(it.value))} ${esc(pmLabel(it.value))}</span>
+        <span class="pm-item-btns">
+          <button type="button" data-mv="-1" aria-label="Move up"${i === 0 ? ' disabled' : ''}>↑</button>
+          <button type="button" data-mv="1" aria-label="Move down"${i === pmItems.length - 1 ? ' disabled' : ''}>↓</button>
+          <button type="button" data-rm aria-label="Remove">✕</button>
+        </span>
+      </div>`).join('') : '<div class="pm-empty">Tick skills or exams above — they appear here.</div>';
+    el.querySelectorAll('.pm-item').forEach(row => {
+      const i = Number(row.dataset.i);
+      row.querySelector('input').addEventListener('input', e => { const v = parseInt(e.target.value, 10); if(v > 0) { pmItems[i].day = Math.min(365, v); pmPreview(); } });
+      row.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', ()=>{
+        const j = i + Number(b.dataset.mv); if(j < 0 || j >= pmItems.length) return;
+        // Swap the items but keep the days where they were, so ↑/↓ just changes the order.
+        const di = pmItems[i].day, dj = pmItems[j].day;
+        [pmItems[i], pmItems[j]] = [pmItems[j], pmItems[i]];
+        pmItems[i].day = di; pmItems[j].day = dj;
+        pmRenderChosen();
+      }));
+      row.querySelector('[data-rm]').addEventListener('click', ()=>{ pmItems.splice(i, 1); pmRenderList(); pmRenderChosen(); });
+    });
+    pmPreview();
+  }
+  function pmEntries(){
+    const byDay = new Map();
+    pmItems.forEach(it => { if(!byDay.has(it.day)) byDay.set(it.day, []); byDay.get(it.day).push(it.value); });
+    return [...byDay.entries()].sort((a, b) => a[0] - b[0]).map(([day, sources]) => ({ day, sources, source: sources[0] || '', title: null }));
+  }
+  function pmPreview(){
+    const el = document.getElementById('pmPreview');
+    const entries = pmEntries();
+    if(!entries.length){ el.textContent = ''; return; }
+    const last = entries[entries.length - 1].day;
+    const hw = pmItems.length;
+    el.innerHTML = `<b>${hw} homework${hw === 1 ? '' : 's'}</b> over <b>${last} day${last === 1 ? '' : 's'}</b>: ` +
+      entries.slice(0, 6).map(e => `Day ${e.day} — ${e.sources.map(v => esc(pmLabel(v))).join(' + ')}`).join(' · ') + (entries.length > 6 ? ' · …' : '');
+  }
+
+  document.getElementById('pmSave').addEventListener('click', async (e)=>{
+    const btn = e.currentTarget, hint = document.getElementById('pmHint');
+    const name = document.getElementById('pmName').value.trim();
+    hint.className = 'cd-hint';
+    if(!name){ hint.textContent = 'Give the plan a name.'; document.getElementById('pmName').focus(); return; }
+    if(!pmEditPlan && pmPlans.some(p => cdNorm(p.name) === cdNorm(name))){ hint.textContent = 'There is already a plan with this name — pick another name.'; return; }
+    const entries = pmEntries();
+    if(!entries.length){ hint.textContent = 'Choose at least one skill or exam.'; return; }
+    const student = document.getElementById('pmStudent').value, startRaw = document.getElementById('pmStart').value;
+    if(student && !startRaw){ hint.textContent = 'Pick the start date.'; return; }
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const who = getCurrentAnswererIdentity();
+    const id = pmEditPlan ? pmEditPlan.id : generateId('plan');
+    const plan = { ...(pmEditPlan || {}), name, entries, ts: new Date().toISOString(), createdBy: (pmEditPlan && pmEditPlan.createdBy) || who, updatedBy: who };
+    const ok = await savePlanRecord(id, plan);
+    invalidateDbCache('plans');
+    if(!ok){ btn.disabled = false; btn.textContent = pmEditPlan ? 'Save changes' : 'Save plan'; hint.textContent = 'Could not save — check your connection and try again.'; return; }
+    let msg = `✓ “${name}” saved.`;
+    if(student){
+      const { created, skipped } = await applyPlanToStudents({ id, ...plan }, [student], new Date(startRaw + 'T00:00:00'),
+        (n, total) => { btn.textContent = `Giving it to ${student}… (${n}/${total})`; });
+      msg += created ? ` ${created} homework${created === 1 ? '' : 's'} scheduled for ${student}${skipped ? ` (${skipped} skipped — empty)` : ''}.` : ` Nothing was scheduled for ${student} — the skills or exams may be empty.`;
+    }
+    hint.className = 'cd-hint good'; hint.textContent = msg;
+    btn.textContent = '✓ Saved';
+    if(pmAfterSave) await pmAfterSave({ id, ...plan }, student);
+    setTimeout(closePlanMaker, 1300);
+  });
+
+  /* "➕ Make a new plan" inside the existing plan window (for one student). */
+  (function(){
+    const add = document.getElementById('studentPlanAdd');
+    if(!add) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'btn btn-ghost pm-open-from-sp'; b.id = 'spMakePlanBtn';
+    b.textContent = '➕ Make a new plan';
+    add.appendChild(b);
+    b.addEventListener('click', ()=>{
+      const st = planStudent;
+      openPlanMaker({ student: st ? st.username : '', onSaved: async (plan, given)=>{
+        invalidateDbCache('plans');
+        if(st && document.getElementById('studentPlanModal').classList.contains('open')){
+          const plans = await fetchAllPlans(); window.__spPlans = plans;
+          const sel = document.getElementById('studentPlanSelect');
+          sel.innerHTML = plans.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+          sel.value = plan.id; document.getElementById('studentPlanApplyBtn').disabled = false;
+          updateStudentPlanPreview();
+          if(given) { invalidateDbCache('homework'); await renderStudentPlanCurrent(); }
+        }
+      } });
+    });
+  })();
+
+  /* Plans list on the coordinator's 📋 Plans & HW page. */
+  async function cdRenderPlansBox(){
+    const box = document.getElementById('cdPlansBox');
+    if(!box) return;
+    invalidateDbCache('plans');
+    const plans = await fetchAllPlans();
+    const me = cdNorm(getCurrentAnswererIdentity());
+    const lastDay = p => (p.entries || []).reduce((m, e) => Math.max(m, e.day || 0), 0);
+    const count = p => (p.entries || []).reduce((s, e) => s + planEntrySources(e).length, 0);
+    const list = box.querySelector('.cd-plans-list');
+    list.innerHTML = plans.length ? plans.map(p => `
+      <div class="cd-plan-item">
+        <div class="cd-plan-item-main"><b>📋 ${esc(p.name)}</b><span class="cd-muted">${count(p)} homework${count(p) === 1 ? '' : 's'} · ${lastDay(p)} day${lastDay(p) === 1 ? '' : 's'}${p.createdBy ? ` · by ${esc(p.createdBy)}` : ''}</span></div>
+        ${cdNorm(p.createdBy) === me ? `<span class="cd-plan-item-acts"><button type="button" class="cd-act" data-pe="${esc(p.id)}">✏️ Edit</button><button type="button" class="cd-act" data-pd="${esc(p.id)}">🗑</button></span>` : ''}
+      </div>`).join('') : '<div class="cd-empty">No plans yet — make the first one.</div>';
+    box.querySelector('.cd-plans-count').textContent = plans.length;
+    list.querySelectorAll('[data-pe]').forEach(b => b.addEventListener('click', ()=> openPlanMaker({ planId: b.dataset.pe, onSaved: async ()=>{ await cdLoad(); cdShow(cdTab); } })));
+    list.querySelectorAll('[data-pd]').forEach(b => b.addEventListener('click', async ()=>{
+      const p = plans.find(x => x.id === b.dataset.pd); if(!p) return;
+      if(!confirm(`Delete the plan “${p.name}”? Homework already given to students stays.`)) return;
+      b.disabled = true; await deletePlanRecord(p.id); invalidateDbCache('plans'); cdRenderPlansBox();
+    }));
+  }
+  { const _cdTrack = cdRenderTrack;
+    cdRenderTrack = function(){
+      _cdTrack.apply(this, arguments);
+      const el = document.getElementById('cdTrack');
+      const box = document.createElement('section');
+      box.className = 'cd-card cd-plans-box'; box.id = 'cdPlansBox';
+      box.innerHTML = `<div class="cd-card-head"><h3>📚 Plans <span class="cd-count cd-plans-count">…</span></h3>
+        <button type="button" class="btn btn-primary cd-small" id="cdNewPlanBtn">➕ Make a new plan</button></div>
+        <div class="cd-plans-list"><div class="cd-empty">Loading…</div></div>`;
+      const sum = el.querySelector('.cd-track-sum');
+      sum ? sum.after(box) : el.prepend(box);
+      box.querySelector('#cdNewPlanBtn').addEventListener('click', ()=> openPlanMaker({ onSaved: async ()=>{ await cdLoad(); cdShow(cdTab); } }));
+      cdRenderPlansBox();
+    }; }
+  document.getElementById('pmName').addEventListener('input', ()=>{ const h = document.getElementById('pmHint'); if(!/✓/.test(h.textContent)){ h.textContent = ''; h.className = 'cd-hint'; } });
 </script>
 
 </div>
