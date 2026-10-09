@@ -3789,6 +3789,30 @@
   .cd-admin-due{ border-color:rgba(255,107,74,0.55); background:var(--ember-soft); }
   @media (max-width:480px){ .cd-sched-edit, .cd-sched-fields{ grid-template-columns:1fr; } }
 
+  /* 📋 Plans & HW */
+  .cd-track-sum{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; margin-bottom:14px; }
+  .cd-track-sum > div{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; display:grid; gap:2px; }
+  .cd-track-sum b{ font-family:'Space Grotesk',sans-serif; font-size:1.5rem; line-height:1.1; }
+  .cd-track-sum span{ color:var(--muted); font-size:0.8rem; }
+  .cd-track-sum > div.warn b{ color:var(--ember); }
+  @media (max-width:640px){ .cd-track-sum{ grid-template-columns:1fr 1fr; } }
+  .cd-track{ display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:14px; }
+  @media (max-width:420px){ .cd-track{ grid-template-columns:1fr; } }
+  .cd-track .cd-card{ margin-bottom:0; display:grid; gap:10px; align-content:start; }
+  .cd-track-card.has-hw{ box-shadow:inset 3px 0 0 var(--ember); }
+  .cd-track-head{ display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap; }
+  .cd-track-name{ min-width:0; }
+  .cd-track-rings{ display:flex; gap:8px; }
+  .cd-track-rings > div{ display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .cd-track-rings > div > span{ font-size:0.7rem; color:var(--muted); }
+  .cd-track-row{ display:grid; grid-template-columns:78px minmax(0,1fr); gap:8px; align-items:center; font-size:0.88rem; }
+  .cd-track-row.top{ align-items:start; }
+  .cd-track-k{ font-family:'IBM Plex Mono',monospace; font-size:0.68rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); padding-top:2px; }
+  .cd-track-hw{ margin:0; }
+  .cd-track-more{ background:none; border:none; color:var(--signal); font:inherit; font-size:0.82rem; cursor:pointer; padding:2px 0; }
+  .cd-warn-text{ color:var(--ember); font-weight:600; }
+  .cd-track-acts{ display:flex; gap:8px; flex-wrap:wrap; padding-top:4px; border-top:1px solid var(--line); }
+
   /* ---------- Session Assistant Desk + student booking ---------- */
   #tutorDesk{ z-index:410; }
   .cd-sched-fields select, .td-link input, #bkTutor{ width:100%; padding:9px 11px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.88rem; min-width:0; }
@@ -3876,6 +3900,27 @@
     .dash-sidebar-actions{ margin-top:8px; padding-top:8px; flex-shrink:0; flex-direction:row; gap:6px; }
     .dash-sidebar-actions .btn{ flex:1 1 0; padding:8px 6px; font-size:0.78rem; line-height:1.2; }
   }
+
+  /* ---------- Answer Mistakes: remove questions (main admin) ---------- */
+  .am-del-bar{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; padding:10px 12px; border:1px dashed var(--line-strong); border-radius:10px; }
+  .am-del-bar[hidden]{ display:none; }
+  .am-del-bar select{ max-width:240px; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:9px 12px; border-radius:8px; font:inherit; font-size:0.88rem; }
+  .am-del-bar .btn{ padding:8px 14px; font-size:0.84rem; }
+  .am-del-bar .btn.active{ border-color:var(--signal); background:var(--accent-wash); }
+  .am-del-bar .am-danger{ color:var(--ember); border-color:var(--ember); }
+  .am-del-bar .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .am-mistake-card .am-card-info{ flex:1; min-width:0; }
+  .am-del-check{ width:20px; height:20px; flex-shrink:0; accent-color:var(--signal); cursor:pointer; }
+  .am-del-one{ margin-left:auto; flex-shrink:0; border:1px solid var(--line); background:var(--panel-2); color:var(--muted); border-radius:8px; min-width:38px; min-height:38px; cursor:pointer; font-size:1rem; }
+  .am-del-one:hover{ border-color:var(--ember); color:var(--ember); }
+  .am-mistake-card.am-selected{ border-color:var(--signal); background:var(--accent-wash); }
+  .am-del-choices{ display:grid; gap:10px; margin-top:6px; }
+  .am-del-choices button{ text-align:left; display:grid; gap:3px; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:var(--panel-2); color:var(--text); font:inherit; cursor:pointer; }
+  .am-del-choices button:hover:not(:disabled){ border-color:var(--signal); }
+  .am-del-choices button.danger:hover:not(:disabled){ border-color:var(--ember); }
+  .am-del-choices button b{ font-size:0.95rem; }
+  .am-del-choices button span{ color:var(--muted); font-size:0.82rem; }
+  .am-del-choices button:disabled{ opacity:0.6; cursor:wait; }
 </style>
 </head>
 <body>
@@ -4556,7 +4601,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 29 Sep 2026 · B</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 9 Oct 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -5627,6 +5672,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     <div class="cd-due" id="cdDueBanner" hidden role="alert"></div>
     <div class="cd-tabs" role="tablist">
       <button class="cd-tab active" data-cd="today" role="tab">🏠 Today</button>
+      <button class="cd-tab" data-cd="track" role="tab">📋 Plans &amp; HW</button>
       <button class="cd-tab" data-cd="students" role="tab">👥 Students</button>
       <button class="cd-tab" data-cd="schedule" role="tab">📅 Schedule</button>
       <button class="cd-tab" data-cd="attendance" role="tab">✅ Attendance <span class="cd-badge" id="cdAttBadge" hidden></span></button>
@@ -5637,6 +5683,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="cd-tab" data-cd="tasks" role="tab">🗒️ Tasks <span class="cd-badge" id="cdTaskBadge" hidden></span></button>
     </div>
     <div class="cd-panel active" id="cdToday"></div>
+    <div class="cd-panel" id="cdTrack"></div>
     <div class="cd-panel" id="cdStudents"></div>
     <div class="cd-panel" id="cdSchedule"></div>
     <div class="cd-panel" id="cdAttendance"></div>
@@ -5747,6 +5794,20 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     <textarea id="bkReserveNote" rows="4" class="cd-textarea" placeholder="e.g. I keep getting quadratic word problems wrong — can we go through Barron's test 3, questions 12–18?"></textarea>
     <button type="button" class="btn btn-primary" id="bkReserveConfirm" style="width:100%;">Reserve</button>
     <div class="cd-hint" id="bkReserveHint" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- Admin: remove questions from Answer Mistakes -->
+<div class="modal-overlay" id="amDelModal" style="z-index:520;">
+  <div class="modal-box cd-modal" role="dialog" aria-modal="true" aria-labelledby="amDelTitle">
+    <button class="modal-close" id="amDelClose" aria-label="Close">&times;</button>
+    <h3 id="amDelTitle">Remove this question?</h3>
+    <p class="cd-modal-sub" id="amDelSub"></p>
+    <div class="am-del-choices">
+      <button type="button" data-amdel="queue"><b>🧹 Remove from the queue</b><span>Nobody needs to answer it. The student still sees it in their Mistake History.</span></button>
+      <button type="button" data-amdel="delete" class="danger"><b>🗑 Delete completely</b><span>Best for a test account — it's deleted everywhere, including the student's Mistake History.</span></button>
+    </div>
+    <div class="cd-hint" id="amDelHint" role="status" aria-live="polite"></div>
   </div>
 </div>
 
@@ -6784,6 +6845,13 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
             <option value="all">All</option>
           </select>
           <button class="btn btn-ghost" id="refreshAnswerMistakes">Refresh</button>
+        </div>
+        <div class="am-del-bar" id="amDelBar" hidden>
+          <select id="amStudentSelect" aria-label="Show one student"><option value="">All students</option></select>
+          <button type="button" class="btn btn-ghost" id="amSelectMode">☑ Select</button>
+          <button type="button" class="btn btn-ghost" id="amSelectAll" hidden>Select all / none</button>
+          <button type="button" class="btn btn-ghost am-danger" id="amDelSelected" hidden>🗑 Remove selected (0)</button>
+          <button type="button" class="btn btn-ghost am-danger" id="amDelAll">🗑 Remove all shown</button>
         </div>
         <div id="amListWrap" style="display:flex; flex-direction:column; gap:10px; margin-top:16px;">
           <div class="admin-empty" id="amListEmpty" style="display:none;">Nothing here right now.</div>
@@ -21213,6 +21281,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       status: m.status || null, answer: m.answer || null, studentRating: m.studentRating || null,
       studentFollowUp: m.studentFollowUp || null,
       claimedBy: m.claimedBy || null,
+      queueRemoved: m.queueRemoved || false,
       ts: m.ts
     }));
 
@@ -21679,6 +21748,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   // Ibrahim) always sees everything regardless of claim, for oversight.
   function isMistakeInAssistantQueue(row){
     if(row.status === null || row.status === undefined) return false;
+    if(row.queueRemoved) return false; // the admin took it out of the queue
     const isResolved = row.status === 'answered' && row.studentRating && !row.studentFollowUp;
     if(isResolved) return false;
     if(row.claimedBy && currentAdminRole !== 'admin' && row.claimedBy !== getCurrentAnswererIdentity()) return false;
@@ -21710,6 +21780,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     // through, and a resolved mistake with no open question doesn't need
     // anyone's attention anymore.
     rows = rows.filter(isMistakeInAssistantQueue);
+    if(typeof amDelBeforeFilter === 'function') rows = amDelBeforeFilter(rows);
 
     const needsCount = rows.filter(r => r.status !== 'answered').length;
     const counterEl = document.getElementById('amCounter');
@@ -21730,6 +21801,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     rows.forEach(row=>{
       const card = document.createElement('div');
       card.className = 'am-mistake-card';
+      card.dataset.id = row.id; card.dataset.user = row.username || '—';
       card.innerHTML = `
         <span class="am-status-badge ${row.status === 'answered' ? 'answered' : 'delivered'}">${row.status === 'answered' ? '✅ Done' : '🔵 Delivered'}</span>
         ${row.stillConfused ? `<span class="am-status-badge" style="background:rgba(255,176,32,0.14);color:var(--warn);border-color:rgba(255,176,32,0.4);">🙋 Still confused — needs another explanation</span>` : ''}
@@ -24181,12 +24253,12 @@ $$);`;
   function cdShow(tab){
     cdTab = tab;
     document.querySelectorAll('#coordDesk .cd-tab').forEach(t => { const on = t.dataset.cd === tab; t.classList.toggle('active', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); });
-    const ids = { today: 'cdToday', students: 'cdStudents', schedule: 'cdSchedule', attendance: 'cdAttendance', marks: 'cdMarks', hwall: 'cdHwAll', homework: 'cdHomework', calls: 'cdCalls', tasks: 'cdTasks' };
+    const ids = { today: 'cdToday', track: 'cdTrack', students: 'cdStudents', schedule: 'cdSchedule', attendance: 'cdAttendance', marks: 'cdMarks', hwall: 'cdHwAll', homework: 'cdHomework', calls: 'cdCalls', tasks: 'cdTasks' };
     Object.entries(ids).forEach(([k, id]) => document.getElementById(id).classList.toggle('active', k === tab));
     cdUpdateTaskBadge();
     if(!cdData) return;
     cdUpdateDue();
-    ({ today: cdRenderToday, students: cdRenderStudents, schedule: cdRenderSchedule, attendance: cdRenderAttendance, marks: cdRenderMarks,
+    ({ today: cdRenderToday, track: cdRenderTrack, students: cdRenderStudents, schedule: cdRenderSchedule, attendance: cdRenderAttendance, marks: cdRenderMarks,
        hwall: cdRenderHwAll, homework: cdRenderHomework, calls: cdRenderCalls, tasks: cdRenderTasks })[tab]();
   }
 
@@ -24442,6 +24514,71 @@ $$);`;
         </button>`).join('') || '<div class="admin-empty">No students match.</div>'}</div>`;
     el.querySelectorAll('.cd-chip').forEach(c => c.addEventListener('click', ()=>{ cdMarksSort = c.dataset.s; cdRenderMarks(); }));
     el.querySelectorAll('.cd-mark-row').forEach(r => r.addEventListener('click', ()=> openStudentAnalysis(r.dataset.u)));
+  }
+
+  /* ---------------- 📋 Plans & HW (one simple page) ----------------
+     One card per student: their marks, the homework they haven't done,
+     and their plan — with the two buttons coordinators use most. */
+  let cdTrackFilter = 'all';
+  const cdTrackOpen = new Set();
+  function cdRenderTrack(){
+    const el = document.getElementById('cdTrack');
+    const all = [...cdData.metrics.values()].filter(m => cdMatchesSearch(m.st));
+    const groups = {
+      all: all,
+      hw: all.filter(m => m.waiting.length),
+      noplan: all.filter(m => !m.plan),
+      low: all.filter(m => m.avgPct !== null && m.avgPct < 60),
+    };
+    const rows = (groups[cdTrackFilter] || all).slice().sort((a, b) => b.waiting.length - a.waiting.length || (a.avgPct ?? 101) - (b.avgPct ?? 101) || a.st.username.localeCompare(b.st.username));
+    const notDone = all.reduce((s, m) => s + m.waiting.length, 0);
+    const markPill = s => `<span class="cd-pill ${s.pct >= 75 ? 'good' : s.pct >= 50 ? 'mid' : 'bad'}" title="${esc((s.kind === 'exam' ? 'Exam: ' : 'HW: ') + (s.title || ''))}">${Math.round(s.pct)}%</span>`;
+    el.innerHTML = `
+      <div class="cd-track-sum">
+        <div><b>${all.length}</b><span>students</span></div>
+        <div class="${notDone ? 'warn' : ''}"><b>${notDone}</b><span>homeworks not done</span></div>
+        <div class="${groups.noplan.length ? 'warn' : ''}"><b>${groups.noplan.length}</b><span>without a plan</span></div>
+        <div class="${groups.low.length ? 'warn' : ''}"><b>${groups.low.length}</b><span>marks under 60%</span></div>
+      </div>
+      <div class="cd-filters">
+        ${[['all', 'All'], ['hw', '📚 HW not done'], ['noplan', '📋 No plan'], ['low', '📉 Low marks']].map(([k, l]) => `<button type="button" class="cd-chip${cdTrackFilter === k ? ' active' : ''}" data-tf="${k}">${l} ${groups[k].length}</button>`).join('')}
+      </div>
+      <div class="cd-track">${rows.map(m => {
+        const u = m.st.username, open = cdTrackOpen.has(cdNorm(u));
+        const list = open ? m.waiting : m.waiting.slice(0, 4);
+        return `<section class="cd-card cd-track-card${m.waiting.length ? ' has-hw' : ''}">
+          <div class="cd-track-head">
+            <div class="cd-track-name"><h3>${esc(u)}</h3><span class="cd-muted">${esc(m.st.course || '')}</span></div>
+            <div class="cd-track-rings">
+              <div>${cdRing(m.avgPct, 56, { stroke: 6 })}<span>Mark</span></div>
+              <div>${cdRing(m.hwPct, 56, { stroke: 6, tone: 'signal' })}<span>HW done</span></div>
+              <div>${cdRing(m.plan ? Math.round(m.plan.done / Math.max(1, m.plan.total) * 100) : null, 56, { stroke: 6, tone: 'signal' })}<span>Plan</span></div>
+            </div>
+          </div>
+          <div class="cd-track-row"><span class="cd-track-k">Last marks</span><span class="cd-pills">${m.scores.slice(-5).reverse().map(markPill).join('') || '<span class="cd-muted">no marks yet</span>'}</span></div>
+          <div class="cd-track-row"><span class="cd-track-k">Plan</span><span>${m.plan ? `📋 ${esc(m.plan.name)} · <b>${m.plan.done}/${m.plan.total}</b> done` : '<span class="cd-warn-text">No plan yet</span>'}</span></div>
+          <div class="cd-track-row top"><span class="cd-track-k">Not done</span>
+            ${m.waiting.length ? `<ul class="cd-hw-list cd-track-hw">${list.map(h => {
+              const d = cdDaysAgo(h.publishAt || h.ts);
+              return `<li><span>${esc(h.title || 'Homework')}</span><span class="cd-hw-age ${d >= 3 ? 'late' : ''}">${d <= 0 ? 'given today' : d === 1 ? 'given 1 day ago' : 'given ' + d + ' days ago'}</span></li>`;
+            }).join('')}${m.waiting.length > 4 ? `<li><button type="button" class="cd-track-more" data-u="${esc(u)}">${open ? 'Show less' : `+${m.waiting.length - 4} more`}</button></li>` : ''}</ul>`
+              : '<span class="cd-ok">✓ All homework done</span>'}
+          </div>
+          <div class="cd-track-acts">
+            <button type="button" class="btn btn-primary cd-small" data-tact="plan" data-u="${esc(u)}">📋 ${m.plan ? 'Change plan' : 'Add a plan'}</button>
+            ${m.waiting.length ? `<button type="button" class="btn btn-ghost cd-small" data-tact="remind" data-u="${esc(u)}">🔔 Remind${cdRemindedToday(u) ? ' (sent today)' : ''}</button>` : ''}
+            <button type="button" class="btn btn-ghost cd-small" data-tact="details" data-u="${esc(u)}">📈 All marks</button>
+          </div>
+        </section>`;
+      }).join('') || `<div class="admin-empty">${cdTrackFilter === 'hw' ? '🎉 Nobody has homework waiting.' : cdTrackFilter === 'noplan' ? '🎉 Every student has a plan.' : cdTrackFilter === 'low' ? '🎉 Nobody is under 60%.' : 'No students match.'}</div>`}</div>`;
+    el.querySelectorAll('[data-tf]').forEach(c => c.addEventListener('click', ()=>{ cdTrackFilter = c.dataset.tf; cdRenderTrack(); }));
+    el.querySelectorAll('.cd-track-more').forEach(b => b.addEventListener('click', ()=>{ const k = cdNorm(b.dataset.u); cdTrackOpen.has(k) ? cdTrackOpen.delete(k) : cdTrackOpen.add(k); cdRenderTrack(); }));
+    el.querySelectorAll('[data-tact]').forEach(b => b.addEventListener('click', ()=>{
+      const m = cdData.metrics.get(cdNorm(b.dataset.u)); if(!m) return;
+      if(b.dataset.tact === 'plan') cdOpenPlan(m.st);
+      else if(b.dataset.tact === 'remind') cdOpenRemind(m);
+      else openStudentAnalysis(m.st.username);
+    }));
   }
 
   /* ---------------- 📚 Homework follow-up ---------------- */
@@ -25818,6 +25955,125 @@ $$);`;
     setInterval(fit, 1500);
     fit();
   })();
+</script>
+<script>
+  /* =====================================================================
+     ANSWER MISTAKES — the main admin can take questions out of the queue
+     (e.g. ones made from a test account). Two ways:
+       • Remove from the queue — nobody has to answer it any more, but the
+         student still sees it in their Mistake History.
+       • Delete completely — the mistake record is gone everywhere.
+     ===================================================================== */
+  let amStudentFilter = '', amSelectMode = false;
+  const amSel = new Set();
+  let amDelTargets = [];
+  const amIsMainAdmin = () => currentAdminRole === 'admin' && !currentAssistantAccount;
+
+  // Called from renderAnswerMistakesList right after the queue filter.
+  function amDelBeforeFilter(rows){
+    const sel = document.getElementById('amStudentSelect');
+    if(sel){
+      const counts = new Map();
+      rows.forEach(r => { const u = r.username || '—'; counts.set(u, (counts.get(u) || 0) + (r.status !== 'answered' ? 1 : 0)); });
+      const names = [...counts.keys()].sort((a, b) => a.localeCompare(b));
+      if(amStudentFilter && !counts.has(amStudentFilter)) amStudentFilter = '';
+      sel.innerHTML = `<option value="">All students</option>` + names.map(n => `<option value="${esc(n)}"${n === amStudentFilter ? ' selected' : ''}>${esc(n)}${counts.get(n) ? ` (${counts.get(n)})` : ''}</option>`).join('');
+    }
+    return amStudentFilter ? rows.filter(r => (r.username || '—') === amStudentFilter) : rows;
+  }
+
+  function amDelDecorate(){
+    const bar = document.getElementById('amDelBar');
+    const main = amIsMainAdmin();
+    if(bar) bar.hidden = !main;
+    const cards = [...document.querySelectorAll('#amListWrap .am-mistake-card')];
+    const ids = new Set(cards.map(c => c.dataset.id));
+    [...amSel].forEach(id => { if(!ids.has(id)) amSel.delete(id); });
+    cards.forEach(card => {
+      card.querySelectorAll('.am-del-check, .am-del-one').forEach(x => x.remove());
+      if(!main) return;
+      const id = card.dataset.id;
+      if(amSelectMode){
+        const box = document.createElement('input');
+        box.type = 'checkbox'; box.className = 'am-del-check'; box.checked = amSel.has(id);
+        box.setAttribute('aria-label', 'Select this question');
+        box.addEventListener('click', e => e.stopPropagation());
+        box.addEventListener('change', ()=>{ box.checked ? amSel.add(id) : amSel.delete(id); card.classList.toggle('am-selected', box.checked); amDelUpdateBar(); });
+        card.prepend(box);
+        card.classList.toggle('am-selected', amSel.has(id));
+      } else card.classList.remove('am-selected');
+      const del = document.createElement('button');
+      del.type = 'button'; del.className = 'am-del-one'; del.textContent = '🗑';
+      del.title = 'Remove this question'; del.setAttribute('aria-label', 'Remove this question');
+      del.addEventListener('click', e => { e.stopPropagation(); amOpenDel([id]); });
+      card.appendChild(del);
+    });
+    amDelUpdateBar();
+  }
+  function amDelUpdateBar(){
+    const shown = document.querySelectorAll('#amListWrap .am-mistake-card').length;
+    const selBtn = document.getElementById('amDelSelected'), allBtn = document.getElementById('amDelAll'), modeBtn = document.getElementById('amSelectMode');
+    if(!selBtn) return;
+    modeBtn.textContent = amSelectMode ? '✕ Stop selecting' : '☑ Select';
+    modeBtn.classList.toggle('active', amSelectMode);
+    selBtn.hidden = !amSelectMode;
+    selBtn.disabled = !amSel.size;
+    selBtn.textContent = `🗑 Remove selected (${amSel.size})`;
+    allBtn.disabled = !shown;
+    allBtn.textContent = `🗑 Remove all shown (${shown})`;
+    const pickAll = document.getElementById('amSelectAll');
+    pickAll.hidden = !amSelectMode || !shown;
+  }
+
+  function amOpenDel(ids){
+    amDelTargets = ids.slice();
+    const cards = ids.map(id => document.querySelector(`#amListWrap .am-mistake-card[data-id="${CSS.escape(id)}"]`)).filter(Boolean);
+    const names = [...new Set(cards.map(c => c.dataset.user))];
+    document.getElementById('amDelTitle').textContent = ids.length === 1 ? 'Remove this question?' : `Remove ${ids.length} questions?`;
+    document.getElementById('amDelSub').textContent = names.length ? `From ${names.length > 3 ? names.slice(0, 3).join(', ') + ` and ${names.length - 3} more` : names.join(', ')}.` : '';
+    document.getElementById('amDelHint').textContent = ''; document.getElementById('amDelHint').className = 'cd-hint';
+    document.querySelectorAll('#amDelModal button[data-amdel]').forEach(b => b.disabled = false);
+    document.getElementById('amDelModal').classList.add('open');
+  }
+  document.getElementById('amDelClose').addEventListener('click', ()=> document.getElementById('amDelModal').classList.remove('open'));
+  document.querySelectorAll('#amDelModal button[data-amdel]').forEach(btn => btn.addEventListener('click', async ()=>{
+    const how = btn.dataset.amdel, hint = document.getElementById('amDelHint');
+    if(how === 'delete' && !confirm(`Delete ${amDelTargets.length === 1 ? 'this question' : amDelTargets.length + ' questions'} completely? It disappears from the student's Mistake History too, and this can't be undone.`)) return;
+    document.querySelectorAll('#amDelModal button[data-amdel]').forEach(b => b.disabled = true);
+    let done = 0, bad = 0;
+    for(const id of amDelTargets){
+      hint.textContent = `Working… ${done + bad + 1} of ${amDelTargets.length}`;
+      let ok = false;
+      if(how === 'delete') ok = await deleteMistakeRecord(id);
+      else {
+        const rec = await dbGet('mistakes', id);
+        ok = rec ? await dbSet('mistakes', id, { ...rec, queueRemoved: true, queueRemovedBy: getCurrentAnswererIdentity(), queueRemovedAt: new Date().toISOString() }) : false;
+      }
+      ok ? done++ : bad++;
+      if(ok) amSel.delete(id);
+    }
+    invalidateDbCache('mistakes');
+    if(bad){ hint.textContent = `${done} done, ${bad} could not be changed — check your connection and try again.`; document.querySelectorAll('#amDelModal button[data-amdel]').forEach(b => b.disabled = false); }
+    else document.getElementById('amDelModal').classList.remove('open');
+    await renderAnswerMistakesList();
+  }));
+
+  document.getElementById('amStudentSelect').addEventListener('change', e => { amStudentFilter = e.target.value; amSel.clear(); renderAnswerMistakesList(); });
+  document.getElementById('amSelectMode').addEventListener('click', ()=>{ amSelectMode = !amSelectMode; if(!amSelectMode) amSel.clear(); amDelDecorate(); });
+  document.getElementById('amSelectAll').addEventListener('click', ()=>{
+    const cards = [...document.querySelectorAll('#amListWrap .am-mistake-card')];
+    const all = cards.every(c => amSel.has(c.dataset.id));
+    cards.forEach(c => all ? amSel.delete(c.dataset.id) : amSel.add(c.dataset.id));
+    amDelDecorate();
+  });
+  document.getElementById('amDelSelected').addEventListener('click', ()=>{ if(amSel.size) amOpenDel([...amSel]); });
+  document.getElementById('amDelAll').addEventListener('click', ()=>{
+    const ids = [...document.querySelectorAll('#amListWrap .am-mistake-card')].map(c => c.dataset.id);
+    if(ids.length) amOpenDel(ids);
+  });
+
+  { const _amRender = renderAnswerMistakesList;
+    renderAnswerMistakesList = async function(){ await _amRender.apply(this, arguments); amDelDecorate(); }; }
 </script>
 
 </div>
