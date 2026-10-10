@@ -3923,40 +3923,40 @@
   .am-del-choices button:disabled{ opacity:0.6; cursor:wait; }
 
   /* ---------- Plan maker ---------- */
-  .pm-box{ max-width:640px; }
-  .pm-input{ width:100%; padding:10px 12px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.9rem; min-width:0; }
-  .pm-input:disabled{ opacity:0.7; }
-  .pm-step{ display:flex; align-items:center; gap:8px; font-weight:700; margin:18px 0 8px; font-family:'Space Grotesk',sans-serif; flex-wrap:wrap; }
-  .pm-step > span:first-child{ width:24px; height:24px; border-radius:50%; background:var(--signal); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0; }
-  .pm-step .cd-muted{ font-weight:400; font-family:inherit; }
-  .pm-pick-tools{ display:grid; gap:8px; }
-  .pm-kinds{ margin:0; }
-  .pm-pick-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
-  .pm-list{ max-height:260px; overflow:auto; border:1px solid var(--line); border-radius:12px; margin-top:8px; background:var(--panel-2); }
-  .pm-opt{ display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; gap:8px; align-items:center; padding:9px 12px; border-bottom:1px solid var(--line); cursor:pointer; font-size:0.88rem; }
-  .pm-opt:last-child{ border-bottom:none; }
-  .pm-opt:hover{ background:var(--panel); }
-  .pm-opt.on{ background:var(--accent-wash); }
-  .pm-opt input{ width:18px; height:18px; accent-color:var(--signal); }
-  .pm-opt-name{ overflow-wrap:anywhere; }
-  .pm-spread{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
-  .pm-spread[hidden]{ display:none; }
-  .pm-chosen{ display:grid; gap:6px; }
-  .pm-empty{ color:var(--muted); font-size:0.86rem; padding:12px; border:1px dashed var(--line-strong); border-radius:10px; text-align:center; }
-  .pm-item{ display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:center; padding:6px 8px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); }
-  .pm-day{ display:flex; align-items:center; gap:4px; font-size:0.74rem; color:var(--muted); }
-  .pm-day input{ width:58px; padding:6px 6px; border-radius:7px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.86rem; }
-  .pm-item-name{ font-size:0.88rem; overflow-wrap:anywhere; }
-  .pm-item-btns{ display:flex; gap:4px; }
-  .pm-item-btns button{ min-width:32px; min-height:32px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:inherit; }
-  .pm-item-btns button:disabled{ opacity:0.35; cursor:default; }
-  .pm-item-btns [data-rm]:hover{ color:var(--ember); border-color:var(--ember); }
-  .pm-give{ display:grid; grid-template-columns:1.4fr 1fr; gap:10px; }
-  .pm-give label{ display:block; min-width:0; }
-  @media (max-width:520px){ .pm-give{ grid-template-columns:1fr; } .pm-item{ grid-template-columns:1fr auto; } .pm-item-name{ grid-column:1 / -1; grid-row:1; } }
-  .pm-preview{ font-size:0.84rem; color:var(--muted); margin:14px 0 10px; line-height:1.5; }
-  .pm-preview b{ color:var(--text); }
-  .pm-open-from-sp{ width:100%; margin-top:10px; }
+  .pk-box{ max-width:640px; }
+  .pk-input{ width:100%; padding:10px 12px; border-radius:9px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.9rem; min-width:0; }
+  .pk-input:disabled{ opacity:0.7; }
+  .pk-step{ display:flex; align-items:center; gap:8px; font-weight:700; margin:18px 0 8px; font-family:'Space Grotesk',sans-serif; flex-wrap:wrap; }
+  .pk-step > span:first-child{ width:24px; height:24px; border-radius:50%; background:var(--signal); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0; }
+  .pk-step .cd-muted{ font-weight:400; font-family:inherit; }
+  .pk-pick-tools{ display:grid; gap:8px; }
+  .pk-kinds{ margin:0; }
+  .pk-pick-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .pk-list{ max-height:260px; overflow:auto; border:1px solid var(--line); border-radius:12px; margin-top:8px; background:var(--panel-2); }
+  .pk-opt{ display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; gap:8px; align-items:center; padding:9px 12px; border-bottom:1px solid var(--line); cursor:pointer; font-size:0.88rem; }
+  .pk-opt:last-child{ border-bottom:none; }
+  .pk-opt:hover{ background:var(--panel); }
+  .pk-opt.on{ background:var(--accent-wash); }
+  .pk-opt input{ width:18px; height:18px; accent-color:var(--signal); }
+  .pk-opt-name{ overflow-wrap:anywhere; }
+  .pk-spread{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px; }
+  .pk-spread[hidden]{ display:none; }
+  .pk-chosen{ display:grid; gap:6px; }
+  .pk-empty{ color:var(--muted); font-size:0.86rem; padding:12px; border:1px dashed var(--line-strong); border-radius:10px; text-align:center; }
+  .pk-item{ display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:8px; align-items:center; padding:6px 8px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); }
+  .pk-day{ display:flex; align-items:center; gap:4px; font-size:0.74rem; color:var(--muted); }
+  .pk-day input{ width:58px; padding:6px 6px; border-radius:7px; border:1px solid var(--line); background:var(--ink); color:var(--text); font:inherit; font-size:0.86rem; }
+  .pk-item-name{ font-size:0.88rem; overflow-wrap:anywhere; }
+  .pk-item-btns{ display:flex; gap:4px; }
+  .pk-item-btns button{ min-width:32px; min-height:32px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); cursor:pointer; font:inherit; }
+  .pk-item-btns button:disabled{ opacity:0.35; cursor:default; }
+  .pk-item-btns [data-rm]:hover{ color:var(--ember); border-color:var(--ember); }
+  .pk-give{ display:grid; grid-template-columns:1.4fr 1fr; gap:10px; }
+  .pk-give label{ display:block; min-width:0; }
+  @media (max-width:520px){ .pk-give{ grid-template-columns:1fr; } .pk-item{ grid-template-columns:1fr auto; } .pk-item-name{ grid-column:1 / -1; grid-row:1; } }
+  .pk-preview{ font-size:0.84rem; color:var(--muted); margin:14px 0 10px; line-height:1.5; }
+  .pk-preview b{ color:var(--text); }
+  .pk-open-from-sp{ width:100%; margin-top:10px; }
   .cd-plans-box{ margin-bottom:14px; }
   .cd-plans-list{ display:grid; gap:6px; max-height:240px; overflow:auto; }
   .cd-plan-item{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-2); }
@@ -4030,7 +4030,7 @@
 <header id="siteHeader">
   <div class="wrap">
     <nav>
-      <a href="#top" class="logo"><img class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim</a>
+      <a href="#top" class="logo"><img loading="lazy" decoding="async" class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim</a>
       <div class="nav-links" id="navLinks">
         <a href="#courses">Courses</a>
         <button class="open-auth-btn" data-tab="signinForm" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Sign in</button>
@@ -4616,7 +4616,7 @@
   <div class="wrap">
     <div class="footer-top">
       <div>
-        <a href="#top" class="logo"><img class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim</a>
+        <a href="#top" class="logo"><img loading="lazy" decoding="async" class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim</a>
         <p class="footer-desc">Math courses for EST, SAT, and ACT — for students who want it to actually click.</p>
       </div>
       <div>
@@ -4643,7 +4643,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 9 Oct 2026 · C</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 10 Oct 2026</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -5693,7 +5693,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 <div class="admin-overlay" id="coordDesk" aria-label="Coordinator desk">
   <div class="admin-bar">
     <div class="wrap">
-      <a href="#top" class="logo"><img class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim <span class="mono cd-role-label">/ COORDINATOR</span></a>
+      <a href="#top" class="logo"><img loading="lazy" decoding="async" class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim <span class="mono cd-role-label">/ COORDINATOR</span></a>
       <div style="display:flex;align-items:center;gap:10px;">
         <button class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark"><span class="theme-toggle-icon"></span></button>
         <button class="btn btn-ghost" id="cdSignOut" style="padding:9px 16px;">Sign out</button>
@@ -5795,7 +5795,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 <div class="admin-overlay" id="tutorDesk" aria-label="Session assistant desk">
   <div class="admin-bar">
     <div class="wrap">
-      <a href="#top" class="logo"><img class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim <span class="mono cd-role-label">/ SESSION ASSISTANT</span></a>
+      <a href="#top" class="logo"><img loading="lazy" decoding="async" class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim <span class="mono cd-role-label">/ SESSION ASSISTANT</span></a>
       <div style="display:flex;align-items:center;gap:10px;">
         <button class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark"><span class="theme-toggle-icon"></span></button>
         <button class="btn btn-ghost" id="tdSignOut" style="padding:9px 16px;">Sign out</button>
@@ -5854,46 +5854,46 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 </div>
 
 <!-- Make / edit a plan (coordinators and admin) -->
-<div class="modal-overlay" id="pmModal" style="z-index:530;">
-  <div class="modal-box cd-modal pm-box" role="dialog" aria-modal="true" aria-labelledby="pmTitle">
-    <button class="modal-close" id="pmClose" aria-label="Close">&times;</button>
-    <h3 id="pmTitle">➕ New plan</h3>
+<div class="modal-overlay" id="pkModal" style="z-index:530;">
+  <div class="modal-box cd-modal pk-box" role="dialog" aria-modal="true" aria-labelledby="pkTitle">
+    <button class="modal-close" id="pkClose" aria-label="Close">&times;</button>
+    <h3 id="pkTitle">➕ New plan</h3>
     <p class="cd-modal-sub">Pick the skills and exams, put them on days, and save. Every day becomes a homework on its own morning.</p>
 
-    <label class="field-label" for="pmName">Plan name</label>
-    <input type="text" id="pmName" class="pm-input" placeholder="e.g. EST Algebra — 3 weeks" autocomplete="off">
-    <div class="cd-hint" id="pmNameHint"></div>
+    <label class="field-label" for="pkName">Plan name</label>
+    <input type="text" id="pkName" class="pk-input" placeholder="e.g. EST Algebra — 3 weeks" autocomplete="off">
+    <div class="cd-hint" id="pkNameHint"></div>
 
-    <div class="pm-step"><span>1</span> Choose skills and exams</div>
-    <div class="pm-pick-tools">
-      <div class="cd-filters pm-kinds" id="pmKinds"></div>
-      <input type="search" id="pmSearch" class="pm-input" placeholder="🔍 Search…" autocomplete="off" aria-label="Search skills and exams">
-      <div class="pm-pick-row">
-        <span class="cd-muted" id="pmShownCount"></span>
-        <button type="button" class="btn btn-ghost cd-small" id="pmAllShown">☑ Choose all shown</button>
+    <div class="pk-step"><span>1</span> Choose skills and exams</div>
+    <div class="pk-pick-tools">
+      <div class="cd-filters pk-kinds" id="pkKinds"></div>
+      <input type="search" id="pkSearch" class="pk-input" placeholder="🔍 Search…" autocomplete="off" aria-label="Search skills and exams">
+      <div class="pk-pick-row">
+        <span class="cd-muted" id="pkShownCount"></span>
+        <button type="button" class="btn btn-ghost cd-small" id="pkAllShown">☑ Choose all shown</button>
       </div>
     </div>
-    <div class="pm-list" id="pmList"><div class="admin-empty">Loading…</div></div>
+    <div class="pk-list" id="pkList"><div class="admin-empty">Loading…</div></div>
 
-    <div class="pm-step"><span>2</span> Put them on days <span class="cd-muted" id="pmChosenCount"></span></div>
-    <div class="pm-spread" id="pmSpread">
+    <div class="pk-step"><span>2</span> Put them on days <span class="cd-muted" id="pkChosenCount"></span></div>
+    <div class="pk-spread" id="pkSpread">
       <span class="cd-muted">Quick fill:</span>
       <button type="button" class="cd-chip" data-gap="1">One per day</button>
       <button type="button" class="cd-chip" data-gap="2">Every 2 days</button>
       <button type="button" class="cd-chip" data-gap="3">Every 3 days</button>
       <button type="button" class="cd-chip" data-gap="0">All on Day 1</button>
     </div>
-    <div class="pm-chosen" id="pmChosen"></div>
+    <div class="pk-chosen" id="pkChosen"></div>
 
-    <div class="pm-step"><span>3</span> Give it to a student now <span class="cd-muted">(optional)</span></div>
-    <div class="pm-give">
-      <label><span class="field-label">Student</span><select id="pmStudent" class="pm-input"><option value="">— Just save the plan —</option></select></label>
-      <label><span class="field-label">Start date (Day 1)</span><input type="date" id="pmStart" class="pm-input"></label>
+    <div class="pk-step"><span>3</span> Give it to a student now <span class="cd-muted">(optional)</span></div>
+    <div class="pk-give">
+      <label><span class="field-label">Student</span><select id="pkStudent" class="pk-input"><option value="">— Just save the plan —</option></select></label>
+      <label><span class="field-label">Start date (Day 1)</span><input type="date" id="pkStart" class="pk-input"></label>
     </div>
 
-    <div class="pm-preview" id="pmPreview" aria-live="polite"></div>
-    <button type="button" class="btn btn-primary" id="pmSave" style="width:100%;">Save plan</button>
-    <div class="cd-hint" id="pmHint" role="status" aria-live="polite"></div>
+    <div class="pk-preview" id="pkPreview" aria-live="polite"></div>
+    <button type="button" class="btn btn-primary" id="pkSave" style="width:100%;">Save plan</button>
+    <div class="cd-hint" id="pkHint" role="status" aria-live="polite"></div>
   </div>
 </div>
 
@@ -6092,7 +6092,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 <div class="admin-overlay" id="adminOverlay">
   <div class="admin-bar">
     <div class="wrap">
-      <a href="#top" class="logo"><img class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim <span class="mono" id="adminRoleLabel" style="font-size:0.7rem;color:var(--muted);margin-left:6px;">/ ADMIN</span></a>
+      <a href="#top" class="logo"><img loading="lazy" decoding="async" class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim <span class="mono" id="adminRoleLabel" style="font-size:0.7rem;color:var(--muted);margin-left:6px;">/ ADMIN</span></a>
       <div style="display:flex;align-items:center;gap:12px;">
         <button class="theme-toggle" data-theme-toggle aria-label="Switch between light and dark"><span class="theme-toggle-icon"></span></button>
         <button class="btn btn-ghost" id="closeAdmin" style="padding:9px 18px;">Close</button>
@@ -8821,7 +8821,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           <button type="button" class="remove-image-btn" style="${block._imageData ? '' : 'display:none;'}">Remove image</button>
         </div>
         <span class="paste-hint">📋 You can also just paste (Ctrl+V) a copied image anywhere in this question box.</span>
-        <img class="q-image-preview" style="${block._imageData ? 'display:block;' : ''}" src="${block._imageData || ''}">
+        <img loading="lazy" decoding="async" class="q-image-preview" style="${block._imageData ? 'display:block;' : ''}" src="${block._imageData || ''}">
       </div>
       <div class="q-video-row">
         <label class="field-label" style="margin-bottom:6px;">Your written explanation (optional — shown to a student only if they get this wrong)</label>
@@ -8833,7 +8833,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
               <div class="explanation-text-wrap" style="margin-top:0;margin-bottom:8px;">
                 <div class="explanation-video-label">📝 ${exp.by ? esc(exp.by) : 'Unknown'}</div>
                 ${exp.text ? `<div class="explanation-text-body">${esc(exp.text)}</div>` : ''}
-                ${exp.photo ? `<img src="${exp.photo}" alt="Explanation photo" style="max-width:200px;border-radius:6px;display:block;margin-top:6px;">` : ''}
+                ${exp.photo ? `<img loading="lazy" decoding="async" src="${exp.photo}" alt="Explanation photo" style="max-width:200px;border-radius:6px;display:block;margin-top:6px;">` : ''}
                 ${exp.video ? `<video controls playsinline preload="metadata" src="${exp.video}" style="max-width:280px;border-radius:6px;display:block;margin-top:6px;"></video>` : ''}
                 ${exp.voice ? `<audio controls src="${exp.voice}" style="width:100%;margin-top:6px;"></audio>` : ''}
               </div>
@@ -8874,7 +8874,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
                 <input type="file" accept="image/*" class="q-option-image-input" data-idx="${i}">
               </label>
               <button type="button" class="remove-option-image-btn" data-idx="${i}" style="${optImg ? 'display:inline-block;' : ''}">✕ Remove</button>
-              <img class="q-option-image-preview" data-idx="${i}" style="${optImg ? 'display:block;' : ''}" src="${optImg || ''}">
+              <img loading="lazy" decoding="async" class="q-option-image-preview" data-idx="${i}" style="${optImg ? 'display:block;' : ''}" src="${optImg || ''}">
             </div>
           </div>
         </div>
@@ -9151,7 +9151,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const content = document.getElementById('studentPreviewContent');
     content.innerHTML = `
       <div class="exam-q-count">PREVIEW</div>
-      ${image ? `<img class="exam-q-image" src="${image}" alt="Question image">` : ''}
+      ${image ? `<img loading="lazy" decoding="async" class="exam-q-image" src="${image}" alt="Question image">` : ''}
       ${text ? `<div class="exam-q-text">${esc(text)}</div>` : ''}
       <div id="studentPreviewOptions"></div>
     `;
@@ -9165,7 +9165,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       row.innerHTML = `
         <input type="radio" disabled>
         <div class="option-content">
-          ${optImg ? `<img src="${optImg}" alt="Option ${i+1}" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
+          ${optImg ? `<img loading="lazy" decoding="async" src="${optImg}" alt="Option ${i+1}" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
           ${hasText ? `<span>${esc(opt)}</span>` : ''}
           ${fallbackLabel}
         </div>
@@ -9474,7 +9474,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           : (isWrongPick ? '✗ Your answer' : '');
         return `<div class="rb-opt${isCorrect ? ' is-correct' : ''}${isWrongPick ? ' is-wrong-pick' : ''}">
           <span class="ltr">${letters[k] || k + 1}</span>
-          ${img ? `<img src="${img}" alt="Option ${k+1}">` : ''}
+          ${img ? `<img loading="lazy" decoding="async" src="${img}" alt="Option ${k+1}">` : ''}
           ${text ? `<span>${esc(text)}</span>` : ''}
           ${tag ? `<span class="tag">${tag}</span>` : ''}
         </div>`;
@@ -9487,7 +9487,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
             <span class="rb-detail-q">Question ${i + 1} of ${rows.length}${r.lesson ? ' · ' + esc(r.lesson) : ''}</span>
             <span class="rb-status ${st}">${st === 'right' ? '✓ Correct' : st === 'wrong' ? '✗ Wrong' : '– Not answered'}</span>
           </div>
-          ${r.image ? `<img class="rb-qimg" src="${r.image}" alt="Question image">` : ''}
+          ${r.image ? `<img loading="lazy" decoding="async" class="rb-qimg" src="${r.image}" alt="Question image">` : ''}
           ${r.text && r.text !== '(question with image)' ? `<div class="rb-detail-text">${esc(r.text)}</div>` : ''}
           <div class="rb-opts">${opts}</div>
           ${explanationAreaHtml(i)}
@@ -9632,7 +9632,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const text = row.options && row.options[index];
     if(text) return esc(text);
     const img = row.optionImages && row.optionImages[index];
-    if(img) return `<img src="${img}" alt="Option ${index+1}" style="max-width:70px;max-height:46px;border-radius:4px;vertical-align:middle;object-fit:contain;">`;
+    if(img) return `<img loading="lazy" decoding="async" src="${img}" alt="Option ${index+1}" style="max-width:70px;max-height:46px;border-radius:4px;vertical-align:middle;object-fit:contain;">`;
     return '—';
   }
 
@@ -10372,7 +10372,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       const tag = isRight && isMine ? '✓ Your answer' : isRight ? '✓ Correct answer' : isMine ? '✗ Your answer' : '';
       return `<div class="at-opt ${cls}">
         <span class="at-letter">${String.fromCharCode(65 + k)}</span>
-        <span class="at-opt-text" dir="auto">${o !== null && o !== undefined && String(o).trim() ? esc(o) : ''}${img ? `<img src="${esc(img)}" alt="Choice ${String.fromCharCode(65 + k)}">` : ''}</span>
+        <span class="at-opt-text" dir="auto">${o !== null && o !== undefined && String(o).trim() ? esc(o) : ''}${img ? `<img loading="lazy" decoding="async" src="${esc(img)}" alt="Choice ${String.fromCharCode(65 + k)}">` : ''}</span>
         ${tag ? `<span class="at-tag">${tag}</span>` : ''}
       </div>`;
     }).join('');
@@ -10382,7 +10382,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <div class="at-expl-item">
           ${e.by ? `<div class="at-expl-by">${esc(e.by)}</div>` : ''}
           ${e.text ? `<div class="at-expl-text" dir="auto">${esc(e.text)}</div>` : ''}
-          ${e.photo ? `<img src="${esc(e.photo)}" alt="Explanation">` : ''}
+          ${e.photo ? `<img loading="lazy" decoding="async" src="${esc(e.photo)}" alt="Explanation">` : ''}
           ${e.video ? explanationVideoPlayerHtml(e.video, esc(e.by || 'your coach')) : ''}
           ${e.voice ? `<audio controls src="${esc(e.voice)}"></audio>` : ''}
         </div>`).join('')}</div>` : '';
@@ -10391,7 +10391,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <span class="at-q-num">Q${i + 1}${r.lesson ? ` · ${esc(r.lesson)}` : ''}</span>
         <span class="at-q-verdict">${ok ? '✓ Right' : unanswered ? '— Not answered' : '✗ Wrong'}</span>
       </div>
-      ${r.image ? `<img class="at-q-img" src="${esc(r.image)}" alt="Question ${i + 1}">` : ''}
+      ${r.image ? `<img loading="lazy" decoding="async" class="at-q-img" src="${esc(r.image)}" alt="Question ${i + 1}">` : ''}
       ${text ? `<div class="at-q-text" dir="auto">${esc(text)}</div>` : ''}
       <div class="at-opts">${optionsHtml}</div>
       ${unanswered ? '<div class="at-note">You didn\'t answer this one.</div>' : ''}
@@ -10905,7 +10905,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           <div class="exam-q-count">${matchMode ? `PLAY ${current+1} OF ${exam.questions.length}` : `QUESTION ${current+1} OF ${exam.questions.length}`}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
           <button type="button" class="flag-review-btn${flagged[current] ? ' active' : ''}" id="flagReviewBtn">🚩 ${flagged[current] ? 'Flagged for review' : 'Flag for review'}</button>
         </div>
-        ${q.image ? `<img class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
+        ${q.image ? `<img loading="lazy" decoding="async" class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
         ${q.text ? `<div class="exam-q-text">${esc(q.text)}</div>` : ''}
         <div id="examOptions"></div>
         <div class="ask-box">
@@ -10944,7 +10944,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         row.innerHTML = `
           <input type="radio" name="exam-answer" value="${i}" ${answers[current]===i ? 'checked' : ''}>
           <div class="option-content">
-            ${optImg ? `<img src="${optImg}" alt="Option ${i+1}" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
+            ${optImg ? `<img loading="lazy" decoding="async" src="${optImg}" alt="Option ${i+1}" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
             ${hasText ? `<span>${esc(opt)}</span>` : ''}
             ${fallbackLabel}
           </div>
@@ -16253,7 +16253,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       return `
         <div class="am-chat-bubble" style="margin-bottom:16px;">
           <div class="bubble-label">#${i + 1} · ${esc(row.source)} · ${esc(row.lesson)} · <span style="color:var(--ember);">missed by ${item.missedByCount} student${item.missedByCount===1?'':'s'} (${item.totalMisses} time${item.totalMisses===1?'':'s'} total)</span></div>
-          ${row.image ? `<img src="${esc(row.image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
+          ${row.image ? `<img loading="lazy" decoding="async" src="${esc(row.image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
           ${row.text ? `<div style="margin-bottom:8px;">${esc(row.text)}</div>` : ''}
           ${optionsHtml}
         </div>
@@ -16347,7 +16347,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <td>${esc(ask.username)}</td>
         <td>${esc(ask.homeworkTitle || '')}</td>
         <td>${esc(ask.questionText || '')}</td>
-        <td>${ask.questionImage ? `<img class="mistake-thumb" src="${ask.questionImage}" alt="Question photo">` : '—'}</td>
+        <td>${ask.questionImage ? `<img loading="lazy" decoding="async" class="mistake-thumb" src="${ask.questionImage}" alt="Question photo">` : '—'}</td>
         <td>${esc(ask.message || '')}</td>
         <td>${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</td>
         <td><button class="student-action-btn delete-ask-btn">Delete</button></td>
@@ -17230,7 +17230,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         const letter = String.fromCharCode(65 + oi);
         const img = q.optionImages && q.optionImages[oi];
         const text = (o !== null && o !== undefined && String(o).trim()) ? esc2(o) : '';
-        return `<div class="opt"><span class="letter">${letter})</span> ${text}${img ? `<br><img class="opt-img" src="${esc2(img)}">` : ''}</div>`;
+        return `<div class="opt"><span class="letter">${letter})</span> ${text}${img ? `<br><img loading="lazy" decoding="async" class="opt-img" src="${esc2(img)}">` : ''}</div>`;
       }).join('');
       return `
         <div class="q">
@@ -17239,7 +17239,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
             <span class="q-lesson">${esc2(q.lesson || '')}</span>
           </div>
           ${q.text ? `<div class="q-text">${esc2(q.text)}</div>` : ''}
-          ${q.image ? `<img class="q-img" src="${esc2(q.image)}">` : ''}
+          ${q.image ? `<img loading="lazy" decoding="async" class="q-img" src="${esc2(q.image)}">` : ''}
           <div class="opts">${opts4}</div>
         </div>`;
     }).join('');
@@ -18234,7 +18234,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       item.innerHTML = `
         <div class="mistake-history-main">
           <span class="hw-date">${date ? date.toLocaleDateString() : ''}</span>
-          ${row.image ? `<img class="mistake-thumb" src="${row.image}" alt="Question photo" onerror="this.style.display='none'">` : ''}
+          ${row.image ? `<img loading="lazy" decoding="async" class="mistake-thumb" src="${row.image}" alt="Question photo" onerror="this.style.display='none'">` : ''}
           <span class="hw-title">${esc(row.source || '')} · ${esc(row.text)}</span>
           <button class="btn btn-ghost view-mistake-btn" style="padding:5px 12px;font-size:0.78rem;flex-shrink:0;">View</button>
         </div>
@@ -18375,7 +18375,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <div class="am-chat-bubble" style="margin-top:10px;">
           <div class="bubble-label">You asked${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
           ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
-          ${row.studentFollowUp.photoUrl ? `<img src="${esc(row.studentFollowUp.photoUrl)}" alt="Your photo">` : ''}
+          ${row.studentFollowUp.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.studentFollowUp.photoUrl)}" alt="Your photo">` : ''}
           ${row.studentFollowUp.videoUrl ? `<video controls playsinline preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
           ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
         </div>
@@ -18397,14 +18397,14 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       thread.innerHTML = `
         <div class="am-chat-bubble">
           <div class="bubble-label">${esc(row.lesson)} · ${esc(row.source)}</div>
-          ${row.image ? `<img src="${esc(row.image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
+          ${row.image ? `<img loading="lazy" decoding="async" src="${esc(row.image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
           ${row.text ? `<div>${esc(row.text)}</div>` : ''}
         </div>
         ${row.answer ? `
           <div class="am-chat-bubble answer-bubble">
             <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'your coach')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
             ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
-            ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+            ${row.answer.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
             ${row.answer.videoUrl ? `<div style="margin-top:8px;">${explanationVideoPlayerHtml(row.answer.videoUrl, esc(row.answer.answeredBy || 'your coach'))}</div>` : ''}
             ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
             <div style="margin-top:12px;">
@@ -19715,7 +19715,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           <div class="exam-q-count">QUESTION ${current+1} OF ${hw.questions.length}${q.lesson ? ' · ' + esc(q.lesson).toUpperCase() : ''}</div>
           <button type="button" class="flag-review-btn${flagged[current] ? ' active' : ''}" id="flagReviewBtn">🚩 ${flagged[current] ? 'Flagged for review' : 'Flag for review'}</button>
         </div>
-        ${q.image ? `<img class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
+        ${q.image ? `<img loading="lazy" decoding="async" class="exam-q-image" src="${q.image}" alt="Question image">` : ''}
         ${q.text ? `<div class="exam-q-text">${esc(q.text)}</div>` : ''}
         <div id="examOptions"></div>
         <div class="ask-box">
@@ -19748,7 +19748,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         row.innerHTML = `
           <input type="radio" name="hw-answer" value="${i}" ${answers[current]===i ? 'checked' : ''}>
           <div class="option-content">
-            ${optImg ? `<img src="${optImg}" alt="Option ${i+1}" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
+            ${optImg ? `<img loading="lazy" decoding="async" src="${optImg}" alt="Option ${i+1}" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
             ${hasText ? `<span>${esc(opt)}</span>` : ''}
             ${fallbackLabel}
           </div>
@@ -20382,14 +20382,14 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     function questionCardHtml(idPrefix, i, source, lesson, badgeHtml, image, text, options, optionImages, correctAnswer){
       const optionsHtml = (options || []).map((opt, oi) => `
         <div style="padding:6px 10px; margin:3px 0; border-radius:6px; background:${oi === correctAnswer ? 'var(--success-soft)' : 'var(--ink)'}; font-size:0.85rem;">
-          ${optionImages && optionImages[oi] ? `<img src="${esc(optionImages[oi])}" style="max-width:100px;border-radius:4px;display:block;margin-bottom:4px;" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
+          ${optionImages && optionImages[oi] ? `<img loading="lazy" decoding="async" src="${esc(optionImages[oi])}" style="max-width:100px;border-radius:4px;display:block;margin-bottom:4px;" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
           ${esc(opt || '')} ${oi === correctAnswer ? ' ✓' : ''}
         </div>
       `).join('');
       return `
         <div class="am-chat-bubble" data-${idPrefix}-index="${i}">
           <div class="bubble-label">${esc(source)} · ${esc(lesson)} · ${badgeHtml}</div>
-          ${image ? `<img src="${esc(image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
+          ${image ? `<img loading="lazy" decoding="async" src="${esc(image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
           ${text ? `<div style="margin-bottom:8px;">${esc(text)}</div>` : ''}
           ${optionsHtml}
           <div class="am-answer-tools explain-answer-tools" style="margin-top:12px;">
@@ -21629,7 +21629,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <td>Q${row.questionNumber}${row.questionTotal ? ` of ${row.questionTotal}` : ''}</td>
         <td><span class="tag-pill">${esc(row.lesson)}</span></td>
         <td>${esc(row.text)}</td>
-        <td>${row.image ? `<img class="mistake-thumb" src="${row.image}" alt="Question photo" onerror="this.parentElement.textContent='⚠'">` : '—'}</td>
+        <td>${row.image ? `<img loading="lazy" decoding="async" class="mistake-thumb" src="${row.image}" alt="Question photo" onerror="this.parentElement.textContent='⚠'">` : '—'}</td>
         <td>${esc(row.chosenText)}</td>
         <td>${esc(row.correctText)}</td>
         <td>${date ? date.toLocaleDateString() : '—'}</td>
@@ -21697,14 +21697,14 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       const hasText = opt !== null && opt !== undefined && String(opt).trim().length > 0;
       const fallbackLabel = !hasText && !optImg ? `<span style="color:var(--muted);font-style:italic;">(Option ${String.fromCharCode(65+i)} — no content saved)</span>` : '';
       const bodyHtml = optImg
-        ? `<img src="${optImg}" alt="Option ${i+1}" style="max-width:140px;max-height:90px;border-radius:6px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">${hasText ? ` <span>${esc(opt)}</span>` : ''}`
+        ? `<img loading="lazy" decoding="async" src="${optImg}" alt="Option ${i+1}" style="max-width:140px;max-height:90px;border-radius:6px;object-fit:contain;vertical-align:middle;" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">${hasText ? ` <span>${esc(opt)}</span>` : ''}`
         : (hasText ? `<span>${esc(opt)}</span>` : fallbackLabel);
       return `<div class="qview-option ${cls}"><span style="flex:1;">${bodyHtml}</span>${tag}</div>`;
     }).join('') || `<div style="color:var(--ember);font-style:italic;padding:10px 0;">⚠ No answer choices were saved for this question.</div>`;
 
     content.innerHTML = `
       <div class="eyebrow" style="margin-bottom:14px;">${esc(row.source || '')} · ${esc(row.lesson)}${row.questionNumber ? ` · Question ${row.questionNumber}${row.questionTotal ? ` of ${row.questionTotal}` : ''}` : ''}</div>
-      ${row.image ? `<img class="exam-q-image" src="${row.image}" alt="Question image" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
+      ${row.image ? `<img loading="lazy" decoding="async" class="exam-q-image" src="${row.image}" alt="Question image" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
       <div class="exam-q-text" style="margin-bottom:20px;">${esc(row.text)}</div>
       ${optionsHtml}
       ${row.answer
@@ -21715,7 +21715,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <div class="am-chat-bubble answer-bubble" style="margin-top:16px;">
           <div class="bubble-label">Answered by ${esc(row.answer.answeredBy || 'assistant')}${row.answer.answeredAt ? ' · ' + new Date(row.answer.answeredAt).toLocaleString() : ''}</div>
           ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
-          ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+          ${row.answer.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
           ${row.answer.videoUrl ? explanationVideoPlayerHtml(row.answer.videoUrl, esc(row.answer.answeredBy || 'assistant')) : ''}
           ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
           ${currentStudent && !currentAdminRole ? `
@@ -21940,7 +21940,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       const fallbackLabel = !hasText && !optImg ? `<span style="color:var(--muted);font-style:italic;">(Option ${String.fromCharCode(65+i)} — no content saved)</span>` : '';
       return `
         <div style="padding:8px 12px;margin:4px 0;border-radius:8px;background:${isCorrect ? 'var(--success-soft)' : (isChosen ? 'var(--ember-soft)' : 'var(--ink)')};">
-          ${optImg ? `<img src="${optImg}" style="max-width:120px;border-radius:6px;display:block;margin-bottom:4px;" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
+          ${optImg ? `<img loading="lazy" decoding="async" src="${optImg}" style="max-width:120px;border-radius:6px;display:block;margin-bottom:4px;" onerror="this.outerHTML='&lt;span style=&quot;color:var(--ember);font-style:italic;&quot;&gt;⚠ Image failed to load&lt;/span&gt;'">` : ''}
           ${hasText ? esc(opt) : fallbackLabel} ${isCorrect ? ' ✓' : ''}${isChosen && !isCorrect ? ' (their answer)' : ''}
         </div>
       `;
@@ -21954,7 +21954,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           ${canDeleteThisAnswer ? `<button type="button" id="amDeleteAnswerBtn" class="am-tool-btn" style="color:var(--ember);border-color:var(--ember);padding:4px 10px;font-size:0.78rem;">🗑 Delete</button>` : ''}
         </div>
         ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
-        ${row.answer.photoUrl ? `<img src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
+        ${row.answer.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
         ${row.answer.videoUrl ? `<video controls playsinline preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
         ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
         ${row.studentRating ? `<div style="margin-top:10px;color:var(--muted);font-size:0.85rem;">Student rated this: ${'⭐'.repeat(row.studentRating)}</div>` : `<div style="margin-top:10px;color:var(--muted);font-size:0.82rem;font-style:italic;">Not rated by the student yet.</div>`}
@@ -21965,7 +21965,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <div class="am-chat-bubble" style="margin-top:10px;">
         <div class="bubble-label">${esc(row.username)} followed up${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
         ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
-        ${row.studentFollowUp.photoUrl ? `<img src="${esc(row.studentFollowUp.photoUrl)}" alt="Student's photo">` : ''}
+        ${row.studentFollowUp.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.studentFollowUp.photoUrl)}" alt="Student's photo">` : ''}
         ${row.studentFollowUp.videoUrl ? `<video controls playsinline preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
         ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
       </div>
@@ -22014,7 +22014,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       </div>
       <div class="am-chat-bubble">
         <div class="bubble-label">${esc(row.username)} · ${esc(row.lesson)} · ${esc(row.source)}</div>
-        ${row.image ? `<img src="${esc(row.image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
+        ${row.image ? `<img loading="lazy" decoding="async" src="${esc(row.image)}" alt="Question" onerror="this.outerHTML='&lt;div style=&quot;color:var(--ember);font-style:italic;padding:8px 0;&quot;&gt;⚠ Question image failed to load&lt;/div&gt;'">` : ''}
         ${row.text ? `<div style="margin-bottom:10px;">${esc(row.text)}</div>` : ''}
         ${optionsHtml}
       </div>
@@ -22894,7 +22894,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           : '';
         row.innerHTML = `
           <span class="analysis-q-icon ${r.correct ? 'correct' : 'incorrect'}">${r.correct ? '✓' : '✕'}</span>
-          ${r.image ? `<img class="mistake-thumb" src="${r.image}" alt="Question photo">` : ''}
+          ${r.image ? `<img loading="lazy" decoding="async" class="mistake-thumb" src="${r.image}" alt="Question photo">` : ''}
           <div class="analysis-q-text">
             Q${idx + 1}: ${esc(r.text || '(question)')}
             <div class="analysis-q-meta">${esc(r.lesson || 'General')}${wrongDetail}</div>
@@ -22988,7 +22988,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         const dateLabel = m.ts ? new Date(m.ts).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : '';
         row.innerHTML = `
           <span class="analysis-q-icon incorrect">✕</span>
-          ${m.image ? `<img class="mistake-thumb" src="${m.image}" alt="Question photo">` : ''}
+          ${m.image ? `<img loading="lazy" decoding="async" class="mistake-thumb" src="${m.image}" alt="Question photo">` : ''}
           <div class="analysis-q-text">
             ${esc(m.text || '(question)')}
             <div class="analysis-q-meta">${esc(m.source || 'Unknown')} · ${esc(m.lesson || 'General')} · chose "${esc(m.chosenText)}", correct was "${esc(m.correctText)}" · ${esc(dateLabel)}</div>
@@ -23665,7 +23665,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const hasText = row.text && row.text !== '(question)' && row.text !== '(question with image)';
     aiOrig.innerHTML = `
       <div class="ai-orig-label">${esc(row.lesson || 'General')}${row.source ? ' · ' + esc(row.source) : ''}</div>
-      ${row.image ? `<img src="${esc(row.image)}" alt="The original question" onerror="this.style.display='none'">` : ''}
+      ${row.image ? `<img loading="lazy" decoding="async" src="${esc(row.image)}" alt="The original question" onerror="this.style.display='none'">` : ''}
       ${hasText ? `<div class="ai-orig-text" dir="auto">${esc(row.text)}</div>` : ''}`;
     aiShowLeft(null);
     aiModal.classList.add('open');
@@ -26168,151 +26168,151 @@ $$);`;
      give it to a student straight away. Saved in the same "plans" table as
      the admin's Course Plans, so it shows everywhere plans are used.
      ===================================================================== */
-  let pmOptions = [], pmItems = [], pmKind = 'all', pmEditId = null, pmEditPlan = null, pmPlans = [], pmAfterSave = null;
-  const PM_KINDS = [['all', 'All'], ['skill', '🧠 Skills'], ['exam', '📝 Exams'], ['book', '📚 Books']];
-  const pmIcon = k => k === 'skill' ? '🧠' : k === 'exam' ? '📝' : '📚';
+  let pkOptions = [], pkItems = [], pkKind = 'all', pkEditId = null, pkEditPlan = null, pkPlans = [], pkAfterSave = null;
+  const PK_KINDS = [['all', 'All'], ['skill', '🧠 Skills'], ['exam', '📝 Exams'], ['book', '📚 Books']];
+  const pkIcon = k => k === 'skill' ? '🧠' : k === 'exam' ? '📝' : '📚';
 
   async function openPlanMaker(opts){
     opts = opts || {};
-    pmEditId = opts.planId || null; pmAfterSave = opts.onSaved || null;
-    pmItems = []; pmKind = 'all';
-    const modal = document.getElementById('pmModal');
-    document.getElementById('pmTitle').textContent = pmEditId ? '✏️ Edit plan' : '➕ New plan';
-    document.getElementById('pmSave').textContent = pmEditId ? 'Save changes' : 'Save plan';
-    document.getElementById('pmSave').disabled = false;
-    ['pmHint', 'pmNameHint'].forEach(id => { const h = document.getElementById(id); h.textContent = ''; h.className = 'cd-hint'; });
-    document.getElementById('pmSearch').value = '';
-    document.getElementById('pmStart').value = toDateInputValue(new Date());
-    document.getElementById('pmList').innerHTML = '<div class="admin-empty">Loading skills and exams…</div>';
+    pkEditId = opts.planId || null; pkAfterSave = opts.onSaved || null;
+    pkItems = []; pkKind = 'all';
+    const modal = document.getElementById('pkModal');
+    document.getElementById('pkTitle').textContent = pkEditId ? '✏️ Edit plan' : '➕ New plan';
+    document.getElementById('pkSave').textContent = pkEditId ? 'Save changes' : 'Save plan';
+    document.getElementById('pkSave').disabled = false;
+    ['pkHint', 'pkNameHint'].forEach(id => { const h = document.getElementById(id); h.textContent = ''; h.className = 'cd-hint'; });
+    document.getElementById('pkSearch').value = '';
+    document.getElementById('pkStart').value = toDateInputValue(new Date());
+    document.getElementById('pkList').innerHTML = '<div class="admin-empty">Loading skills and exams…</div>';
     modal.classList.add('open');
     invalidateDbCache('plans');
     const [options, plans, students] = await Promise.all([loadPlanSourceOptions(), fetchAllPlans(), fetchAllStudents()]);
-    pmOptions = options; pmPlans = plans;
-    pmEditPlan = pmEditId ? plans.find(p => p.id === pmEditId) || null : null;
-    const name = document.getElementById('pmName');
-    name.value = pmEditPlan ? pmEditPlan.name : '';
+    pkOptions = options; pkPlans = plans;
+    pkEditPlan = pkEditId ? plans.find(p => p.id === pkEditId) || null : null;
+    const name = document.getElementById('pkName');
+    name.value = pkEditPlan ? pkEditPlan.name : '';
     // Homework remembers the plan by its name, so renaming would lose students' progress.
-    name.disabled = !!pmEditPlan;
-    if(pmEditPlan){
-      document.getElementById('pmNameHint').textContent = "The name can't change — students' progress is linked to it.";
-      pmEditPlan.entries.forEach(en => planEntrySources(en).forEach(v => pmItems.push({ value: v, day: en.day })));
+    name.disabled = !!pkEditPlan;
+    if(pkEditPlan){
+      document.getElementById('pkNameHint').textContent = "The name can't change — students' progress is linked to it.";
+      pkEditPlan.entries.forEach(en => planEntrySources(en).forEach(v => pkItems.push({ value: v, day: en.day })));
     }
     const approved = students.filter(s => s && s.username && s.status === 'approved').sort((a, b) => a.username.localeCompare(b.username));
-    const sel = document.getElementById('pmStudent');
+    const sel = document.getElementById('pkStudent');
     sel.innerHTML = '<option value="">— Just save the plan —</option>' + approved.map(s => `<option value="${esc(s.username)}">${esc(s.username)}${s.course ? ` · ${esc(s.course)}` : ''}</option>`).join('');
     sel.value = opts.student && approved.some(s => s.username === opts.student) ? opts.student : '';
-    pmRenderKinds(); pmRenderList(); pmRenderChosen();
-    if(!pmEditPlan) setTimeout(()=> name.focus(), 60);
+    pkRenderKinds(); pkRenderList(); pkRenderChosen();
+    if(!pkEditPlan) setTimeout(()=> name.focus(), 60);
   }
-  function closePlanMaker(){ document.getElementById('pmModal').classList.remove('open'); }
-  document.getElementById('pmClose').addEventListener('click', closePlanMaker);
+  function closePlanMaker(){ document.getElementById('pkModal').classList.remove('open'); }
+  document.getElementById('pkClose').addEventListener('click', closePlanMaker);
 
-  const pmLabel = v => { const o = pmOptions.find(x => x.value === v); return o ? o.label : '(deleted)'; };
-  const pmKindOf = v => v.split(':')[0];
-  function pmShown(){
-    const q = cdNorm(document.getElementById('pmSearch').value);
-    return pmOptions.filter(o => (pmKind === 'all' || o.kind === pmKind) && (!q || cdNorm(o.label).includes(q)));
+  const pkLabel = v => { const o = pkOptions.find(x => x.value === v); return o ? o.label : '(deleted)'; };
+  const pkKindOf = v => v.split(':')[0];
+  function pkShown(){
+    const q = cdNorm(document.getElementById('pkSearch').value);
+    return pkOptions.filter(o => (pkKind === 'all' || o.kind === pkKind) && (!q || cdNorm(o.label).includes(q)));
   }
-  function pmRenderKinds(){
-    document.getElementById('pmKinds').innerHTML = PM_KINDS.map(([k, l]) => {
-      const n = k === 'all' ? pmOptions.length : pmOptions.filter(o => o.kind === k).length;
-      return (k === 'book' && !n) ? '' : `<button type="button" class="cd-chip${pmKind === k ? ' active' : ''}" data-pk="${k}">${l} ${n}</button>`;
+  function pkRenderKinds(){
+    document.getElementById('pkKinds').innerHTML = PK_KINDS.map(([k, l]) => {
+      const n = k === 'all' ? pkOptions.length : pkOptions.filter(o => o.kind === k).length;
+      return (k === 'book' && !n) ? '' : `<button type="button" class="cd-chip${pkKind === k ? ' active' : ''}" data-pk="${k}">${l} ${n}</button>`;
     }).join('');
-    document.querySelectorAll('#pmKinds [data-pk]').forEach(b => b.addEventListener('click', ()=>{ pmKind = b.dataset.pk; pmRenderKinds(); pmRenderList(); }));
+    document.querySelectorAll('#pkKinds [data-pk]').forEach(b => b.addEventListener('click', ()=>{ pkKind = b.dataset.pk; pkRenderKinds(); pkRenderList(); }));
   }
-  function pmRenderList(){
-    const list = pmShown(), chosen = new Set(pmItems.map(i => i.value));
-    document.getElementById('pmShownCount').textContent = `${list.length} shown`;
-    document.getElementById('pmAllShown').disabled = !list.length || list.every(o => chosen.has(o.value));
-    document.getElementById('pmList').innerHTML = list.length ? list.map(o => `
-      <label class="pm-opt${chosen.has(o.value) ? ' on' : ''}">
+  function pkRenderList(){
+    const list = pkShown(), chosen = new Set(pkItems.map(i => i.value));
+    document.getElementById('pkShownCount').textContent = `${list.length} shown`;
+    document.getElementById('pkAllShown').disabled = !list.length || list.every(o => chosen.has(o.value));
+    document.getElementById('pkList').innerHTML = list.length ? list.map(o => `
+      <label class="pk-opt${chosen.has(o.value) ? ' on' : ''}">
         <input type="checkbox" value="${esc(o.value)}"${chosen.has(o.value) ? ' checked' : ''}>
-        <span class="pm-opt-icon">${pmIcon(o.kind)}</span>
-        <span class="pm-opt-name">${esc(o.label)}</span>
+        <span class="pk-opt-icon">${pkIcon(o.kind)}</span>
+        <span class="pk-opt-name">${esc(o.label)}</span>
         <span class="cd-muted">${o.isBook ? `${o.count} exam${o.count === 1 ? '' : 's'} · one a day` : `${o.count} question${o.count === 1 ? '' : 's'}`}</span>
-      </label>`).join('') : `<div class="admin-empty">${pmOptions.length ? 'Nothing matches.' : 'No skills or exams yet.'}</div>`;
-    document.querySelectorAll('#pmList input').forEach(cb => cb.addEventListener('change', ()=>{
-      if(cb.checked) pmAdd([cb.value]); else pmItems = pmItems.filter(i => i.value !== cb.value);
-      pmRenderList(); pmRenderChosen();
+      </label>`).join('') : `<div class="admin-empty">${pkOptions.length ? 'Nothing matches.' : 'No skills or exams yet.'}</div>`;
+    document.querySelectorAll('#pkList input').forEach(cb => cb.addEventListener('change', ()=>{
+      if(cb.checked) pkAdd([cb.value]); else pkItems = pkItems.filter(i => i.value !== cb.value);
+      pkRenderList(); pkRenderChosen();
     }));
   }
   // New picks go on the day after the last one, so ticking in order makes a ready plan.
-  function pmAdd(values){
+  function pkAdd(values){
     values.forEach(v => {
-      if(pmItems.some(i => i.value === v)) return;
-      const last = pmItems.length ? Math.max(...pmItems.map(i => i.day)) : 0;
-      pmItems.push({ value: v, day: last + 1 });
+      if(pkItems.some(i => i.value === v)) return;
+      const last = pkItems.length ? Math.max(...pkItems.map(i => i.day)) : 0;
+      pkItems.push({ value: v, day: last + 1 });
     });
   }
-  document.getElementById('pmSearch').addEventListener('input', pmRenderList);
-  document.getElementById('pmAllShown').addEventListener('click', ()=>{ pmAdd(pmShown().map(o => o.value)); pmRenderList(); pmRenderChosen(); });
-  document.querySelectorAll('#pmSpread [data-gap]').forEach(b => b.addEventListener('click', ()=>{
+  document.getElementById('pkSearch').addEventListener('input', pkRenderList);
+  document.getElementById('pkAllShown').addEventListener('click', ()=>{ pkAdd(pkShown().map(o => o.value)); pkRenderList(); pkRenderChosen(); });
+  document.querySelectorAll('#pkSpread [data-gap]').forEach(b => b.addEventListener('click', ()=>{
     const gap = Number(b.dataset.gap);
-    pmItems.forEach((it, i) => { it.day = gap ? 1 + i * gap : 1; });
-    pmRenderChosen();
+    pkItems.forEach((it, i) => { it.day = gap ? 1 + i * gap : 1; });
+    pkRenderChosen();
   }));
 
-  function pmRenderChosen(){
-    const el = document.getElementById('pmChosen');
-    document.getElementById('pmChosenCount').textContent = pmItems.length ? `· ${pmItems.length} chosen` : '';
-    document.getElementById('pmSpread').hidden = pmItems.length < 2;
-    el.innerHTML = pmItems.length ? pmItems.map((it, i) => `
-      <div class="pm-item" data-i="${i}">
-        <label class="pm-day"><span>Day</span><input type="number" min="1" max="365" value="${it.day}" aria-label="Day for ${esc(pmLabel(it.value))}"></label>
-        <span class="pm-item-name">${pmIcon(pmKindOf(it.value))} ${esc(pmLabel(it.value))}</span>
-        <span class="pm-item-btns">
+  function pkRenderChosen(){
+    const el = document.getElementById('pkChosen');
+    document.getElementById('pkChosenCount').textContent = pkItems.length ? `· ${pkItems.length} chosen` : '';
+    document.getElementById('pkSpread').hidden = pkItems.length < 2;
+    el.innerHTML = pkItems.length ? pkItems.map((it, i) => `
+      <div class="pk-item" data-i="${i}">
+        <label class="pk-day"><span>Day</span><input type="number" min="1" max="365" value="${it.day}" aria-label="Day for ${esc(pkLabel(it.value))}"></label>
+        <span class="pk-item-name">${pkIcon(pkKindOf(it.value))} ${esc(pkLabel(it.value))}</span>
+        <span class="pk-item-btns">
           <button type="button" data-mv="-1" aria-label="Move up"${i === 0 ? ' disabled' : ''}>↑</button>
-          <button type="button" data-mv="1" aria-label="Move down"${i === pmItems.length - 1 ? ' disabled' : ''}>↓</button>
+          <button type="button" data-mv="1" aria-label="Move down"${i === pkItems.length - 1 ? ' disabled' : ''}>↓</button>
           <button type="button" data-rm aria-label="Remove">✕</button>
         </span>
-      </div>`).join('') : '<div class="pm-empty">Tick skills or exams above — they appear here.</div>';
-    el.querySelectorAll('.pm-item').forEach(row => {
+      </div>`).join('') : '<div class="pk-empty">Tick skills or exams above — they appear here.</div>';
+    el.querySelectorAll('.pk-item').forEach(row => {
       const i = Number(row.dataset.i);
-      row.querySelector('input').addEventListener('input', e => { const v = parseInt(e.target.value, 10); if(v > 0) { pmItems[i].day = Math.min(365, v); pmPreview(); } });
+      row.querySelector('input').addEventListener('input', e => { const v = parseInt(e.target.value, 10); if(v > 0) { pkItems[i].day = Math.min(365, v); pkPreview(); } });
       row.querySelectorAll('[data-mv]').forEach(b => b.addEventListener('click', ()=>{
-        const j = i + Number(b.dataset.mv); if(j < 0 || j >= pmItems.length) return;
+        const j = i + Number(b.dataset.mv); if(j < 0 || j >= pkItems.length) return;
         // Swap the items but keep the days where they were, so ↑/↓ just changes the order.
-        const di = pmItems[i].day, dj = pmItems[j].day;
-        [pmItems[i], pmItems[j]] = [pmItems[j], pmItems[i]];
-        pmItems[i].day = di; pmItems[j].day = dj;
-        pmRenderChosen();
+        const di = pkItems[i].day, dj = pkItems[j].day;
+        [pkItems[i], pkItems[j]] = [pkItems[j], pkItems[i]];
+        pkItems[i].day = di; pkItems[j].day = dj;
+        pkRenderChosen();
       }));
-      row.querySelector('[data-rm]').addEventListener('click', ()=>{ pmItems.splice(i, 1); pmRenderList(); pmRenderChosen(); });
+      row.querySelector('[data-rm]').addEventListener('click', ()=>{ pkItems.splice(i, 1); pkRenderList(); pkRenderChosen(); });
     });
-    pmPreview();
+    pkPreview();
   }
-  function pmEntries(){
+  function pkEntries(){
     const byDay = new Map();
-    pmItems.forEach(it => { if(!byDay.has(it.day)) byDay.set(it.day, []); byDay.get(it.day).push(it.value); });
+    pkItems.forEach(it => { if(!byDay.has(it.day)) byDay.set(it.day, []); byDay.get(it.day).push(it.value); });
     return [...byDay.entries()].sort((a, b) => a[0] - b[0]).map(([day, sources]) => ({ day, sources, source: sources[0] || '', title: null }));
   }
-  function pmPreview(){
-    const el = document.getElementById('pmPreview');
-    const entries = pmEntries();
+  function pkPreview(){
+    const el = document.getElementById('pkPreview');
+    const entries = pkEntries();
     if(!entries.length){ el.textContent = ''; return; }
     const last = entries[entries.length - 1].day;
-    const hw = pmItems.length;
+    const hw = pkItems.length;
     el.innerHTML = `<b>${hw} homework${hw === 1 ? '' : 's'}</b> over <b>${last} day${last === 1 ? '' : 's'}</b>: ` +
-      entries.slice(0, 6).map(e => `Day ${e.day} — ${e.sources.map(v => esc(pmLabel(v))).join(' + ')}`).join(' · ') + (entries.length > 6 ? ' · …' : '');
+      entries.slice(0, 6).map(e => `Day ${e.day} — ${e.sources.map(v => esc(pkLabel(v))).join(' + ')}`).join(' · ') + (entries.length > 6 ? ' · …' : '');
   }
 
-  document.getElementById('pmSave').addEventListener('click', async (e)=>{
-    const btn = e.currentTarget, hint = document.getElementById('pmHint');
-    const name = document.getElementById('pmName').value.trim();
+  document.getElementById('pkSave').addEventListener('click', async (e)=>{
+    const btn = e.currentTarget, hint = document.getElementById('pkHint');
+    const name = document.getElementById('pkName').value.trim();
     hint.className = 'cd-hint';
-    if(!name){ hint.textContent = 'Give the plan a name.'; document.getElementById('pmName').focus(); return; }
-    if(!pmEditPlan && pmPlans.some(p => cdNorm(p.name) === cdNorm(name))){ hint.textContent = 'There is already a plan with this name — pick another name.'; return; }
-    const entries = pmEntries();
+    if(!name){ hint.textContent = 'Give the plan a name.'; document.getElementById('pkName').focus(); return; }
+    if(!pkEditPlan && pkPlans.some(p => cdNorm(p.name) === cdNorm(name))){ hint.textContent = 'There is already a plan with this name — pick another name.'; return; }
+    const entries = pkEntries();
     if(!entries.length){ hint.textContent = 'Choose at least one skill or exam.'; return; }
-    const student = document.getElementById('pmStudent').value, startRaw = document.getElementById('pmStart').value;
+    const student = document.getElementById('pkStudent').value, startRaw = document.getElementById('pkStart').value;
     if(student && !startRaw){ hint.textContent = 'Pick the start date.'; return; }
     btn.disabled = true; btn.textContent = 'Saving…';
     const who = getCurrentAnswererIdentity();
-    const id = pmEditPlan ? pmEditPlan.id : generateId('plan');
-    const plan = { ...(pmEditPlan || {}), name, entries, ts: new Date().toISOString(), createdBy: (pmEditPlan && pmEditPlan.createdBy) || who, updatedBy: who };
+    const id = pkEditPlan ? pkEditPlan.id : generateId('plan');
+    const plan = { ...(pkEditPlan || {}), name, entries, ts: new Date().toISOString(), createdBy: (pkEditPlan && pkEditPlan.createdBy) || who, updatedBy: who };
     const ok = await savePlanRecord(id, plan);
     invalidateDbCache('plans');
-    if(!ok){ btn.disabled = false; btn.textContent = pmEditPlan ? 'Save changes' : 'Save plan'; hint.textContent = 'Could not save — check your connection and try again.'; return; }
+    if(!ok){ btn.disabled = false; btn.textContent = pkEditPlan ? 'Save changes' : 'Save plan'; hint.textContent = 'Could not save — check your connection and try again.'; return; }
     let msg = `✓ “${name}” saved.`;
     if(student){
       const { created, skipped } = await applyPlanToStudents({ id, ...plan }, [student], new Date(startRaw + 'T00:00:00'),
@@ -26321,7 +26321,7 @@ $$);`;
     }
     hint.className = 'cd-hint good'; hint.textContent = msg;
     btn.textContent = '✓ Saved';
-    if(pmAfterSave) await pmAfterSave({ id, ...plan }, student);
+    if(pkAfterSave) await pkAfterSave({ id, ...plan }, student);
     setTimeout(closePlanMaker, 1300);
   });
 
@@ -26330,7 +26330,7 @@ $$);`;
     const add = document.getElementById('studentPlanAdd');
     if(!add) return;
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'btn btn-ghost pm-open-from-sp'; b.id = 'spMakePlanBtn';
+    b.type = 'button'; b.className = 'btn btn-ghost pk-open-from-sp'; b.id = 'spMakePlanBtn';
     b.textContent = '➕ Make a new plan';
     add.appendChild(b);
     b.addEventListener('click', ()=>{
@@ -26386,7 +26386,37 @@ $$);`;
       box.querySelector('#cdNewPlanBtn').addEventListener('click', ()=> openPlanMaker({ onSaved: async ()=>{ await cdLoad(); cdShow(cdTab); } }));
       cdRenderPlansBox();
     }; }
-  document.getElementById('pmName').addEventListener('input', ()=>{ const h = document.getElementById('pmHint'); if(!/✓/.test(h.textContent)){ h.textContent = ''; h.className = 'cd-hint'; } });
+  document.getElementById('pkName').addEventListener('input', ()=>{ const h = document.getElementById('pkHint'); if(!/✓/.test(h.textContent)){ h.textContent = ''; h.className = 'cd-hint'; } });
+</script>
+<script>
+  /* =====================================================================
+     PHOTOS THAT FAIL TO LOAD — try again automatically.
+     When many photos are asked for at the same moment, Supabase Storage
+     can refuse some of them for a few seconds ("too many requests").
+     Before, those photos stayed broken until the page was reloaded. Now a
+     photo from our storage that fails is quietly retried a few times
+     (after 1.5s, 3s, 6s and 12s) before the "failed to load" message shows.
+     ===================================================================== */
+  (function(){
+    const DELAYS = [1500, 3000, 6000, 12000];
+    const isOurs = src => typeof src === 'string' && src.indexOf('/storage/v1/object/public/') !== -1;
+    window.addEventListener('error', function(e){
+      const img = e.target;
+      if(!img || img.tagName !== 'IMG') return;
+      const src = img.currentSrc || img.src;
+      if(!isOurs(src)) return;
+      const n = Number(img.dataset.retry || 0);
+      if(n >= DELAYS.length) return;            // give up — let the page show its own message
+      e.stopImmediatePropagation();             // keep the page's "failed" message from replacing it yet
+      img.dataset.retry = String(n + 1);
+      const base = (img.dataset.origSrc || src).split('#')[0];
+      img.dataset.origSrc = base;
+      setTimeout(()=>{
+        if(!img.isConnected) return;
+        img.src = base + (base.indexOf('?') === -1 ? '?' : '&') + 'retry=' + (n + 1);
+      }, DELAYS[n] + Math.floor(Math.random() * 600));
+    }, true);
+  })();
 </script>
 
 </div>
