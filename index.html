@@ -3963,6 +3963,88 @@
   .cd-plan-item-main{ display:grid; gap:2px; min-width:0; }
   .cd-plan-item-main b{ overflow-wrap:anywhere; font-size:0.9rem; }
   .cd-plan-item-acts{ display:flex; gap:6px; flex-shrink:0; }
+
+  /* ---------- Course quality ---------- */
+  .qx{ display:grid; gap:8px; margin:8px 0; }
+  .qx-img{ max-width:min(100%, 520px); border-radius:10px; background:#fff; }
+  .qx-text{ font-size:0.95rem; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+  .qx-opts{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:6px; }
+  .qx-opt{ padding:7px 10px; border-radius:8px; background:var(--ink); border:1px solid var(--line); font-size:0.86rem; overflow-wrap:anywhere; }
+  .qx-opt.ok{ background:var(--success-soft); border-color:var(--success); }
+  .qx-opt-img{ max-width:110px; display:block; border-radius:6px; margin:4px 0; background:#fff; }
+  .qx-has{ font-size:0.82rem; color:var(--muted); display:grid; gap:4px; background:var(--panel-2); border-radius:8px; padding:8px 10px; }
+  .qx-form{ display:grid; gap:8px; margin-top:6px; }
+  .qx-form-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .qx-form-row .qx-save{ margin-left:auto; }
+  .qc-list, .qu-list, .qg-list, .qh-list{ display:grid; gap:10px; }
+  .qc-row, .qu-row, .qg-row, .qh-row{ margin-bottom:0; }
+  .qc-head{ width:100%; display:flex; align-items:center; gap:12px; background:none; border:none; color:inherit; font:inherit; text-align:left; cursor:pointer; padding:0; }
+  .qc-main{ flex:1; min-width:0; display:grid; gap:2px; }
+  .qc-main b{ overflow-wrap:anywhere; }
+  .qc-miss{ color:var(--ember); font-weight:600; }
+  .qc-caret{ color:var(--muted); }
+  .qc-body{ margin-top:12px; display:grid; gap:12px; }
+  .qc-q{ border-top:1px dashed var(--line-strong); padding-top:12px; }
+  .qc-q-num{ font-family:'IBM Plex Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); }
+  .qv-bar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; border-top:1px dashed var(--line); padding-top:10px; margin-top:10px; font-size:0.85rem; }
+  .qv-q{ color:var(--muted); margin-right:auto; }
+  .qv-btn{ border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:999px; padding:6px 12px; font:inherit; font-size:0.82rem; cursor:pointer; min-height:36px; }
+  .qv-btn:hover{ border-color:var(--signal); }
+  .qv-btn.on{ background:var(--accent-wash); border-color:var(--signal); font-weight:700; }
+  .qu-head{ display:flex; gap:12px; justify-content:space-between; flex-wrap:wrap; }
+  .qu-main{ flex:1 1 260px; min-width:0; display:grid; gap:4px; }
+  .qu-text{ overflow-wrap:anywhere; }
+  .qu-votes{ display:grid; grid-template-columns:auto auto; gap:4px 10px; align-items:center; font-size:0.86rem; min-width:150px; }
+  .qu-bad{ color:var(--ember); font-weight:700; } .qu-good{ color:var(--success); font-weight:700; }
+  .qu-bar{ grid-column:1 / -1; height:6px; border-radius:6px; background:var(--success-soft); overflow:hidden; }
+  .qu-bar span{ display:block; height:100%; background:var(--ember); }
+  .qu-votes .cd-muted{ grid-column:1 / -1; }
+  .qu-exp{ margin-top:8px; font-size:0.86rem; background:var(--panel-2); border-radius:8px; padding:8px 10px; overflow-wrap:anywhere; }
+  .qu-acts{ margin-top:8px; }
+  .qu-body{ margin-top:10px; }
+  .qg-head{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .qg-main{ flex:1; min-width:160px; display:grid; gap:2px; }
+  .qg-main h3{ margin:0; }
+  .qg-auto{ display:flex; gap:6px; align-items:center; font-size:0.86rem; cursor:pointer; }
+  .qg-auto input{ width:18px; height:18px; accent-color:var(--signal); }
+  .qg-open{ list-style:none; margin:10px 0 0; padding:0; display:grid; gap:4px; }
+  .qg-open li{ display:flex; gap:8px; align-items:center; justify-content:space-between; font-size:0.84rem; padding:5px 0; border-bottom:1px dashed var(--line); }
+  .qg-open li > span:first-child{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .qg-rm{ border:none; background:none; color:var(--muted); cursor:pointer; min-width:30px; min-height:30px; border-radius:6px; }
+  .qg-rm:hover{ color:var(--ember); background:var(--panel-2); }
+  .qt-todo{ display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:var(--accent-wash); border:1px solid var(--signal); border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:0.9rem; }
+  .qt-card{ margin-bottom:12px; }
+  .qh-row.is-wait{ box-shadow:inset 3px 0 0 var(--ember); }
+  .qh-row.is-done{ box-shadow:inset 3px 0 0 var(--success); }
+  .qh-row.is-later{ opacity:0.8; }
+  .qh-head{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .qh-main{ flex:1; min-width:160px; display:grid; gap:2px; }
+  .qh-main b{ overflow-wrap:anywhere; }
+  .qh-state{ width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--panel-2); font-size:1.4rem; flex-shrink:0; }
+  .qh-facts{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px; margin-top:10px; }
+  .qh-facts span{ display:grid; gap:1px; font-size:0.86rem; }
+  .qh-facts b{ font-family:'IBM Plex Mono',monospace; font-size:0.66rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); font-weight:500; }
+  .qh-late{ color:var(--ember); font-weight:600; }
+  .qh-topics{ display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+  .qr-tools label{ display:flex; gap:8px; align-items:center; }
+  .qr-tools input[type="month"]{ padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:var(--text); font:inherit; }
+  .qr-title{ font-family:'Space Grotesk',sans-serif; margin:6px 0 12px; }
+  .qr-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:12px; }
+  @media (max-width:420px){ .qr-grid{ grid-template-columns:1fr; } }
+  .qr-card{ margin-bottom:0; display:grid; gap:10px; align-content:start; }
+  .qr-head{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
+  .qr-head h3{ margin:0; }
+  .qr-big{ display:grid; justify-items:end; text-align:right; }
+  .qr-big b{ font-family:'Space Grotesk',sans-serif; font-size:1.7rem; line-height:1; }
+  .qr-big span{ font-size:0.76rem; color:var(--muted); }
+  .qr-big .cd-trend{ font-size:0.74rem; }
+  .qr-stats{ display:grid; gap:4px; }
+  .qr-stats > div{ display:flex; justify-content:space-between; gap:10px; font-size:0.86rem; padding:5px 0; border-bottom:1px dashed var(--line); }
+  .qr-stats b{ text-align:right; }
+  .qa-tabs{ margin-bottom:16px; }
+  .qa-badge{ background:var(--ember); color:#fff; border-radius:999px; font-size:0.7rem; padding:1px 7px; font-weight:700; margin-left:4px; }
+  .qa-badge[hidden]{ display:none; }
+  #qAsdTasks, #qAsdHw, #qAsdCov, #qAsdUn{ flex:1; overflow-y:auto; padding:20px 24px 48px; }
 </style>
 </head>
 <body>
@@ -4643,7 +4725,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 10 Oct 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 19 Oct 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -5720,6 +5802,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="cd-tab" data-cd="attendance" role="tab">✅ Attendance <span class="cd-badge" id="cdAttBadge" hidden></span></button>
       <button class="cd-tab" data-cd="marks" role="tab">📊 Marks</button>
       <button class="cd-tab" data-cd="hwall" role="tab">📝 Homework</button>
+      <button class="cd-tab" data-cd="hwd" role="tab">📘 HW details</button>
       <button class="cd-tab" data-cd="homework" role="tab">📚 Homework follow-up</button>
       <button class="cd-tab" data-cd="calls" role="tab">📞 Parent calls</button>
       <button class="cd-tab" data-cd="tasks" role="tab">🗒️ Tasks <span class="cd-badge" id="cdTaskBadge" hidden></span></button>
@@ -5731,6 +5814,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     <div class="cd-panel" id="cdAttendance"></div>
     <div class="cd-panel" id="cdMarks"></div>
     <div class="cd-panel" id="cdHwAll"></div>
+    <div class="cd-panel" id="cdHwd"></div>
     <div class="cd-panel" id="cdHomework"></div>
     <div class="cd-panel" id="cdCalls"></div>
     <div class="cd-panel" id="cdTasks"></div>
@@ -5908,10 +5992,18 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="btn btn-primary" id="asdShowProgressBtn">📊 Student Progress</button>
       <button class="btn btn-ghost" id="asdShowMistakesBtn">💬 Answer Mistakes</button>
       <button class="btn btn-ghost" id="asdShowExplainBtn">📝 Explain Questions</button>
+      <button class="btn btn-ghost" id="qAsdTasksBtn">🎯 My tasks <span class="qa-badge" id="qAsdTasksBadge" hidden></span></button>
+      <button class="btn btn-ghost" id="qAsdHwBtn">📘 Homework</button>
+      <button class="btn btn-ghost" id="qAsdCovBtn">📚 Coverage</button>
+      <button class="btn btn-ghost" id="qAsdUnBtn">😕 Unclear</button>
     </div>
     <div id="assistantDashContent" style="max-height:65vh; overflow-y:auto;"></div>
     <div id="asdMistakesContent" style="max-height:65vh; overflow-y:auto; display:none;"></div>
     <div id="asdExplainContent" style="max-height:65vh; overflow-y:auto; display:none;"></div>
+    <div id="qAsdTasks" style="display:none;"></div>
+    <div id="qAsdHw" style="display:none;"></div>
+    <div id="qAsdCov" style="display:none;"></div>
+    <div id="qAsdUn" style="display:none;"></div>
   </div>
 </div>
 
@@ -6132,6 +6224,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="admin-tab" data-tab="parentMeetingPanel" data-roles="assistant">👨‍👩‍👦 Parent meeting</button>
       <button class="admin-tab" data-tab="assistantAcctsPanel" data-roles="admin">Assistants</button>
       <button class="admin-tab" data-tab="assistantActivityPanel" data-roles="admin">📊 Assistant Activity</button>
+      <button class="admin-tab" data-tab="qualityPanel" data-roles="admin">🏅 Quality</button>
       <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant,act-admin">Weekly Updates</button>
       <button class="admin-tab" data-tab="aiReportsPanel" data-roles="admin">🤖 AI &amp; Parent Reports</button>
     </div>
@@ -6949,6 +7042,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <div id="amDetailContent"></div>
       </div>
     </div>
+
+    <div class="admin-panel" id="qualityPanel"><div id="qaRoot"><div class="admin-empty">Loading…</div></div></div>
 
     <div class="admin-panel" id="assistantAcctsPanel">
       <div class="admin-note">Staff with their own accounts. <b>🎓 Academic</b> assistants answer students' mistakes and only see the students you assign them. <b>🗂️ Coordinators</b> get the Coordinator Desk: every student, attendance, marks, homework follow-up, parent calls and the tasks you give them. <b>🧑‍🏫 Session assistants</b> publish free times for private and group sessions, and students book them from 📅 Book a session. Change someone's role with the Role menu. They sign in from "Staff login" at the top of the site.</div>
@@ -17230,7 +17325,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         const letter = String.fromCharCode(65 + oi);
         const img = q.optionImages && q.optionImages[oi];
         const text = (o !== null && o !== undefined && String(o).trim()) ? esc2(o) : '';
-        return `<div class="opt"><span class="letter">${letter})</span> ${text}${img ? `<br><img loading="lazy" decoding="async" class="opt-img" src="${esc2(img)}">` : ''}</div>`;
+        return `<div class="opt"><span class="letter">${letter})</span> ${text}${img ? `<br><img loading="eager" class="opt-img" src="${esc2(img)}">` : ''}</div>`;
       }).join('');
       return `
         <div class="q">
@@ -17239,7 +17334,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
             <span class="q-lesson">${esc2(q.lesson || '')}</span>
           </div>
           ${q.text ? `<div class="q-text">${esc2(q.text)}</div>` : ''}
-          ${q.image ? `<img loading="lazy" decoding="async" class="q-img" src="${esc2(q.image)}">` : ''}
+          ${q.image ? `<img loading="eager" class="q-img" src="${esc2(q.image)}">` : ''}
           <div class="opts">${opts4}</div>
         </div>`;
     }).join('');
@@ -17284,8 +17379,26 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     if(!w){ alert('Your browser blocked the popup. Allow popups for this site, then try again.'); return; }
     w.document.write(html);
     w.document.close();
-    // Wait for images to load, otherwise they print blank.
-    w.onload = ()=> setTimeout(()=> w.print(), 400);
+    // Wait until EVERY picture has loaded (or failed after a few tries),
+    // otherwise they print blank. Supabase can briefly refuse photos when
+    // many are asked for at once, so a failed one is retried.
+    let printed = false;
+    const printNow = ()=>{ if(printed) return; printed = true; setTimeout(()=>{ try{ w.focus(); w.print(); }catch(e){} }, 300); };
+    const waitImages = ()=>{
+      const imgs = Array.from(w.document.images || []);
+      const left = ()=> imgs.filter(im => !(im.complete && (im.naturalWidth > 0 || Number(im.dataset.tries || 0) >= 4))).length;
+      imgs.forEach(im => {
+        im.addEventListener('error', ()=>{
+          const n = Number(im.dataset.tries || 0) + 1; im.dataset.tries = n;
+          if(n < 4){ const base = (im.dataset.orig || im.src).split('?')[0]; im.dataset.orig = base; setTimeout(()=>{ im.src = base + '?retry=' + n; }, 800 * n); }
+        });
+      });
+      const started = Date.now();
+      const tick = ()=>{ if(!left() || Date.now() - started > 25000) printNow(); else setTimeout(tick, 250); };
+      tick();
+    };
+    if(w.document.readyState === 'complete') waitImages(); else w.addEventListener('load', waitImages);
+    setTimeout(waitImages, 1500);
   }
 
   // A recording field can hold several links — one per line — so a long
@@ -21368,6 +21481,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       studentFollowUp: m.studentFollowUp || null,
       claimedBy: m.claimedBy || null,
       queueRemoved: m.queueRemoved || false,
+      explVotes: m.explVotes || null,
       ts: m.ts
     }));
 
@@ -24339,12 +24453,12 @@ $$);`;
   function cdShow(tab){
     cdTab = tab;
     document.querySelectorAll('#coordDesk .cd-tab').forEach(t => { const on = t.dataset.cd === tab; t.classList.toggle('active', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); });
-    const ids = { today: 'cdToday', track: 'cdTrack', students: 'cdStudents', schedule: 'cdSchedule', attendance: 'cdAttendance', marks: 'cdMarks', hwall: 'cdHwAll', homework: 'cdHomework', calls: 'cdCalls', tasks: 'cdTasks' };
+    const ids = { today: 'cdToday', hwd: 'cdHwd', track: 'cdTrack', students: 'cdStudents', schedule: 'cdSchedule', attendance: 'cdAttendance', marks: 'cdMarks', hwall: 'cdHwAll', homework: 'cdHomework', calls: 'cdCalls', tasks: 'cdTasks' };
     Object.entries(ids).forEach(([k, id]) => document.getElementById(id).classList.toggle('active', k === tab));
     cdUpdateTaskBadge();
     if(!cdData) return;
     cdUpdateDue();
-    ({ today: cdRenderToday, track: cdRenderTrack, students: cdRenderStudents, schedule: cdRenderSchedule, attendance: cdRenderAttendance, marks: cdRenderMarks,
+    ({ today: cdRenderToday, hwd: ()=> qRenderAsdHomework(document.getElementById('cdHwd'), true), track: cdRenderTrack, students: cdRenderStudents, schedule: cdRenderSchedule, attendance: cdRenderAttendance, marks: cdRenderMarks,
        hwall: cdRenderHwAll, homework: cdRenderHomework, calls: cdRenderCalls, tasks: cdRenderTasks })[tab]();
   }
 
@@ -26417,6 +26531,655 @@ $$);`;
       }, DELAYS[n] + Math.floor(Math.random() * 600));
     }, true);
   })();
+</script>
+<script>
+  /* =====================================================================
+     COURSE QUALITY
+       • 📚 Coverage      — which skill/exam questions still have no explanation
+       • 😕 Unclear       — students vote on every explanation (👍 / 😕);
+                            the weakest ones are listed to be rewritten
+       • 🎲 Questions     — the admin gives each academic assistant random
+                            questions to explain (or 5 new ones every day)
+       • 📋 Staff report  — a monthly report card for every staff member
+       • 📘 Homework      — every homework detail for academic assistants
+     ===================================================================== */
+  const qN = s => String(s == null ? '' : s).trim().toLowerCase();
+  const qMe = () => getCurrentAnswererIdentity();
+  const qIsMainAdmin = () => !currentAssistantAccount && currentAdminRole === 'admin';
+  const qHasContent = e => !!(e && (e.text || e.photo || e.video || e.voice));
+  const qExpls = q => getQuestionExplanations(q || {}).filter(qHasContent);
+  const qHasExpl = q => qExpls(q).length > 0;
+  const qHasExplBy = (q, name) => qExpls(q).some(e => qN(e.by) === qN(name));
+  const qDayKey = d => { d = new Date(d); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const qRing = (pct, size, opts) => (typeof cdRing === 'function') ? cdRing(pct, size, opts) : progressRing(pct || 0, { size, ...(opts || {}) });
+  function qShuffle(a){ for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  // Every explanation saved from now on remembers when it was written, so
+  // the monthly report can count them.
+  { const _qUpsert = upsertQuestionExplanation;
+    upsertQuestionExplanation = function(q, entry){ return _qUpsert(q, { ...entry, at: new Date().toISOString() }); }; }
+
+  async function qLoadSources(){
+    const [skills, exams] = await Promise.all([fetchAllSkills(), fetchAllExams()]);
+    return [
+      ...skills.map(s => ({ kind: 'skills', id: s.id, title: s.skill || '(untitled skill)', course: s.course || null, questions: Array.isArray(s.questions) ? s.questions : [] })),
+      ...exams.map(e => ({ kind: 'exams', id: e.id, title: e.title || '(untitled exam)', course: e.course || null, questions: Array.isArray(e.questions) ? e.questions : [] })),
+    ];
+  }
+  async function qSaveByIndex(kind, id, qi, text, by, extras){
+    extras = extras || {};
+    const rec = await dbGet(kind, id);
+    if(!rec || !Array.isArray(rec.questions) || !rec.questions[qi]) return { ok: false };
+    upsertQuestionExplanation(rec.questions[qi], { by, text: text || null,
+      photo: extras.explanationPhoto !== undefined ? extras.explanationPhoto : null,
+      video: null, voice: null });
+    const ok = await dbSet(kind, id, rec);
+    invalidateDbCache(kind);
+    if(ok && typeof backfillExplanationVideos === 'function'){ try{ await backfillExplanationVideos(kind === 'skills' ? rec.skill : rec.title, rec.questions); }catch(e){} }
+    return { ok };
+  }
+
+  /* ---------- shared bits: show a question, write an explanation ---------- */
+  function qQuestionHtml(q, opts){
+    opts = opts || {};
+    const options = (q.options || []).map((o, i) => {
+      const img = q.optionImages && q.optionImages[i];
+      const ok = i === q.correct;
+      return `<div class="qx-opt${ok ? ' ok' : ''}"><b>${String.fromCharCode(65 + i)})</b> ${img ? `<img src="${esc(img)}" alt="" class="qx-opt-img">` : ''}${esc(o == null ? '' : o)}${ok ? ' ✓' : ''}</div>`;
+    }).join('');
+    const ex = opts.showExpl ? qExpls(q) : [];
+    return `<div class="qx">
+      ${q.image ? `<img class="qx-img" src="${esc(q.image)}" alt="Question">` : ''}
+      ${q.text ? `<div class="qx-text" dir="auto">${esc(q.text)}</div>` : ''}
+      <div class="qx-opts">${options}</div>
+      ${ex.length ? `<div class="qx-has">${ex.map(e => `<div>💡 <b>${esc(e.by || 'Explanation')}:</b> ${esc((e.text || (e.photo ? '(photo)' : e.video ? '(video)' : '(voice note)')).slice(0, 160))}</div>`).join('')}</div>` : ''}
+    </div>`;
+  }
+  function qFormHtml(label){
+    return `<div class="qx-form">
+      <textarea class="cd-textarea qx-input" rows="3" placeholder="${esc(label || 'Explain why the correct answer is right, step by step…')}"></textarea>
+      <div class="qx-form-row">
+        <input type="file" accept="image/*" class="qx-photo" hidden>
+        <button type="button" class="btn btn-ghost cd-small qx-photo-btn">📷 Add a photo</button>
+        <span class="cd-muted qx-photo-name"></span>
+        <button type="button" class="btn btn-primary cd-small qx-save">Save explanation</button>
+      </div>
+      <div class="cd-hint qx-hint" role="status"></div>
+    </div>`;
+  }
+  // onSave(text, extras) must return true when it worked.
+  function qWireForm(root, onSave){
+    const input = root.querySelector('.qx-input'), photo = root.querySelector('.qx-photo'), name = root.querySelector('.qx-photo-name');
+    const save = root.querySelector('.qx-save'), hint = root.querySelector('.qx-hint');
+    root.querySelector('.qx-photo-btn').addEventListener('click', ()=> photo.click());
+    photo.addEventListener('change', ()=>{ name.textContent = photo.files[0] ? '📷 ' + photo.files[0].name : ''; });
+    save.addEventListener('click', async ()=>{
+      const text = input.value.trim(), file = photo.files[0];
+      if(!text && !file){ hint.className = 'cd-hint qx-hint'; hint.textContent = 'Write the explanation (or add a photo) first.'; return; }
+      save.disabled = true; save.textContent = 'Saving…';
+      try{
+        const extras = {};
+        if(file) extras.explanationPhoto = await uploadMistakeAnswerFile(file, (file.name.split('.').pop() || 'jpg'), file.type || 'image/jpeg');
+        const ok = await onSave(text, extras);
+        if(!ok){ hint.className = 'cd-hint qx-hint'; hint.textContent = 'Could not save — the question may have been edited. Refresh and try again.'; save.disabled = false; save.textContent = 'Save explanation'; }
+      }catch(err){
+        hint.className = 'cd-hint qx-hint'; hint.textContent = (err && err.message) || 'Could not save — check your connection.';
+        save.disabled = false; save.textContent = 'Save explanation';
+      }
+    });
+  }
+
+  /* =================== 📚 COVERAGE =================== */
+  let qCovKind = 'all', qCovSort = 'low', qCovOpen = null, qCovMore = 12;
+  async function qRenderCoverage(root){
+    root.innerHTML = '<div class="admin-empty">Loading every skill and exam…</div>';
+    const sources = await qLoadSources();
+    const draw = ()=>{
+      const me = qMe(), mainAdmin = qIsMainAdmin();
+      const rows = sources.map(s => {
+        const missing = s.questions.map((q, qi) => ({ q, qi })).filter(x => !qHasExpl(x.q));
+        const mine = s.questions.filter(q => qHasExplBy(q, me)).length;
+        return { ...s, total: s.questions.length, done: s.questions.length - missing.length, missing, mine };
+      }).filter(r => r.total);
+      const totalQ = rows.reduce((a, r) => a + r.total, 0), doneQ = rows.reduce((a, r) => a + r.done, 0);
+      const full = rows.filter(r => !r.missing.length).length;
+      const search = qN((root.querySelector('#qCovSearch') || {}).value);
+      let shown = rows.filter(r => (qCovKind === 'all' || r.kind === qCovKind) && (!search || qN(r.title).includes(search)));
+      shown.sort(qCovSort === 'low' ? (a, b) => (a.done / a.total) - (b.done / b.total) || b.missing.length - a.missing.length : (a, b) => a.title.localeCompare(b.title));
+      root.innerHTML = `
+        <div class="cd-rings cd-rings-sm">
+          <div class="cd-ring-card">${qRing(totalQ ? Math.round(doneQ / totalQ * 100) : null, 100, { sub: `${doneQ}/${totalQ}` })}<div class="cd-ring-label">Questions with an explanation</div></div>
+          <div class="cd-ring-card">${qRing(rows.length ? Math.round(full / rows.length * 100) : null, 100, { tone: 'signal', sub: `${full} of ${rows.length}` })}<div class="cd-ring-label">Skills &amp; exams fully explained</div></div>
+          <div class="cd-ring-card">${qRing(null, 100, { centre: String(totalQ - doneQ), sub: 'missing', colour: 'var(--ember)' })}<div class="cd-ring-label">Questions still need one</div></div>
+        </div>
+        <div class="cd-filters">
+          ${[['all', 'All'], ['skills', '🧠 Skills'], ['exams', '📝 Exams']].map(([k, l]) => `<button type="button" class="cd-chip${qCovKind === k ? ' active' : ''}" data-qk="${k}">${l}</button>`).join('')}
+          <span class="cd-muted">Sort:</span>
+          ${[['low', 'Least explained first'], ['name', 'Name']].map(([k, l]) => `<button type="button" class="cd-chip${qCovSort === k ? ' active' : ''}" data-qs="${k}">${l}</button>`).join('')}
+          <input type="search" id="qCovSearch" class="cd-search" placeholder="🔍 Find a skill or exam…" value="${esc(search)}">
+        </div>
+        <div class="qc-list">${shown.map(r => {
+          const pct = Math.round(r.done / r.total * 100), key = r.kind + ':' + r.id, open = qCovOpen === key;
+          return `<section class="cd-card qc-row${open ? ' open' : ''}" data-key="${esc(key)}">
+            <button type="button" class="qc-head" aria-expanded="${open}">
+              ${qRing(pct, 54, { stroke: 6 })}
+              <span class="qc-main"><b>${r.kind === 'skills' ? '🧠' : '📝'} ${esc(r.title)}</b>
+                <span class="cd-muted">${r.done} of ${r.total} explained${r.missing.length ? ` · <span class="qc-miss">${r.missing.length} missing</span>` : ' · ✅ complete'}${!mainAdmin ? ` · ${r.mine} by you` : ''}${r.course ? ' · ' + esc(r.course) : ''}</span></span>
+              <span class="qc-caret" aria-hidden="true">${open ? '▴' : '▾'}</span>
+            </button>
+            ${open ? `<div class="qc-body">${r.missing.length ? r.missing.slice(0, qCovMore).map(x => `
+              <div class="qc-q" data-qi="${x.qi}">
+                <div class="qc-q-num">Question ${x.qi + 1}${x.q.lesson ? ' · ' + esc(x.q.lesson) : ''}</div>
+                ${qQuestionHtml(x.q)}
+                ${qFormHtml()}
+              </div>`).join('') + (r.missing.length > qCovMore ? `<button type="button" class="btn btn-ghost cd-small qc-more">Show ${Math.min(12, r.missing.length - qCovMore)} more</button>` : '')
+              : '<div class="cd-empty">🎉 Every question here has an explanation.</div>'}</div>` : ''}
+          </section>`;
+        }).join('') || '<div class="admin-empty">Nothing matches.</div>'}</div>`;
+      root.querySelectorAll('[data-qk]').forEach(b => b.addEventListener('click', ()=>{ qCovKind = b.dataset.qk; draw(); }));
+      root.querySelectorAll('[data-qs]').forEach(b => b.addEventListener('click', ()=>{ qCovSort = b.dataset.qs; draw(); }));
+      const s = root.querySelector('#qCovSearch');
+      s.addEventListener('input', ()=>{ const pos = s.selectionStart; draw(); const n = root.querySelector('#qCovSearch'); n.focus(); try{ n.setSelectionRange(pos, pos); }catch(e){} });
+      root.querySelectorAll('.qc-head').forEach(h => h.addEventListener('click', ()=>{ const k = h.parentElement.dataset.key; qCovOpen = qCovOpen === k ? null : k; qCovMore = 12; draw(); }));
+      root.querySelectorAll('.qc-more').forEach(b => b.addEventListener('click', ()=>{ qCovMore += 12; draw(); }));
+      root.querySelectorAll('.qc-q').forEach(box => {
+        const [kind, id] = box.closest('.qc-row').dataset.key.split(/:(.*)/s);
+        const qi = Number(box.dataset.qi);
+        qWireForm(box, async (text, extras)=>{
+          const r = await qSaveByIndex(kind, id, qi, text, qMe(), extras);
+          if(!r.ok) return false;
+          const src = sources.find(x => x.kind === kind && x.id === id);
+          if(src && src.questions[qi]) upsertQuestionExplanation(src.questions[qi], { by: qMe(), text: text || null, photo: extras.explanationPhoto || null });
+          draw();
+          return true;
+        });
+      });
+    };
+    draw();
+  }
+
+  /* =================== 😕 STUDENT VOTES ON EXPLANATIONS =================== */
+  // The vote is kept on the student's own mistake record (explVotes[by]),
+  // so no new table is needed and every vote belongs to a real wrong answer.
+  { const _qEVH = explanationVideoHtml;
+    explanationVideoHtml = function(row){
+      const html = _qEVH(row);
+      if(!html || !row || !currentStudent || currentAssistantAccount || currentAdminRole) return html;
+      const exps = qExpls(row);
+      const parts = html.split('<div class="explanation-card">');
+      if(parts.length - 1 !== exps.length) return html;
+      const isMistake = row.id && row.username && row.chosenAnswer !== undefined;
+      return parts[0] + parts.slice(1).map((part, i) => {
+        const by = exps[i].by || '';
+        const mine = row.explVotes && row.explVotes[by] && row.explVotes[by].v;
+        const bar = `<div class="qv-bar" data-by="${esc(by)}" data-src="${esc(row.source || '')}" data-text="${esc(row.text || '')}" data-mid="${isMistake ? esc(row.id) : ''}">
+          <span class="qv-q">${mine ? 'Thanks for your vote!' : 'Was this explanation clear?'}</span>
+          <button type="button" class="qv-btn${mine === 'clear' ? ' on' : ''}" data-qv="clear">👍 Clear</button>
+          <button type="button" class="qv-btn${mine === 'confused' ? ' on' : ''}" data-qv="confused">😕 Still confused</button>
+        </div>`;
+        return '<div class="explanation-card">' + part.replace(/<\/div>\s*$/, bar + '</div>');
+      }).join('');
+    }; }
+  document.addEventListener('click', async (e)=>{
+    const btn = e.target.closest && e.target.closest('.qv-btn');
+    if(!btn || !currentStudent) return;
+    e.preventDefault(); e.stopPropagation();
+    const bar = btn.closest('.qv-bar'), v = btn.dataset.qv, by = bar.dataset.by;
+    bar.querySelectorAll('.qv-btn').forEach(b => b.disabled = true);
+    let rec = bar.dataset.mid ? await dbGet('mistakes', bar.dataset.mid) : null;
+    if(!rec){
+      // Opened from a homework/exam review: find this student's matching mistake.
+      const rows = await gatherAllMistakeRows(currentStudent.username);
+      const hit = rows.find(r => qN(r.text) === qN(bar.dataset.text) && (!bar.dataset.src || qN(r.source) === qN(bar.dataset.src))) || rows.find(r => qN(r.text) === qN(bar.dataset.text));
+      if(hit) rec = await dbGet('mistakes', hit.id);
+    }
+    if(rec){
+      rec.explVotes = { ...(rec.explVotes || {}), [by]: { v, at: new Date().toISOString() } };
+      await dbSet('mistakes', rec.id, rec);
+      invalidateDbCache('mistakes');
+    }
+    bar.querySelectorAll('.qv-btn').forEach(b => { b.disabled = false; b.classList.toggle('on', b.dataset.qv === v); });
+    bar.querySelector('.qv-q').textContent = v === 'clear' ? 'Thanks — glad it helped! 👍' : "Thanks — we'll make this explanation clearer.";
+  }, true);
+
+  // Votes grouped by explanation (author + question).
+  async function qVoteGroups(){
+    invalidateDbCache('mistakes');
+    const all = await fetchAllMistakes();
+    const groups = new Map();
+    all.filter(m => !m._index && m.explVotes).forEach(m => Object.entries(m.explVotes).forEach(([by, vote]) => {
+      if(!vote || !vote.v) return;
+      const k = qN(by) + '|' + qN(m.source) + '|' + qN(m.text);
+      if(!groups.has(k)) groups.set(k, { by, rep: m, mistakes: [], confused: 0, clear: 0, votes: [] });
+      const g = groups.get(k);
+      g.mistakes.push(m); g.votes.push({ ...vote, by, username: m.username });
+      if(vote.v === 'confused') g.confused++; else g.clear++;
+      if(new Date(m.ts || 0) > new Date(g.rep.ts || 0)) g.rep = m;
+    }));
+    return [...groups.values()];
+  }
+
+  /* =================== 😕 UNCLEAR EXPLANATIONS LIST =================== */
+  let qUnOpen = null;
+  async function qRenderUnclear(root){
+    root.innerHTML = '<div class="admin-empty">Loading votes…</div>';
+    let groups = await qVoteGroups();
+    const mainAdmin = qIsMainAdmin(), me = qMe();
+    if(!mainAdmin) groups = groups.filter(g => qN(g.by) === qN(me));
+    const totalVotes = groups.reduce((a, g) => a + g.confused + g.clear, 0), clearVotes = groups.reduce((a, g) => a + g.clear, 0);
+    const weak = groups.filter(g => g.confused > 0).sort((a, b) => b.confused - a.confused || (b.confused / (b.confused + b.clear)) - (a.confused / (a.confused + a.clear)));
+    root.innerHTML = `
+      <div class="cd-rings cd-rings-sm">
+        <div class="cd-ring-card">${qRing(totalVotes ? Math.round(clearVotes / totalVotes * 100) : null, 100, { sub: `${clearVotes} of ${totalVotes}` })}<div class="cd-ring-label">Students found ${mainAdmin ? 'explanations' : 'your explanations'} clear</div></div>
+        <div class="cd-ring-card">${qRing(null, 100, { centre: String(weak.length), sub: 'to rewrite', colour: weak.length ? 'var(--ember)' : undefined })}<div class="cd-ring-label">Explanations with 😕 votes</div></div>
+      </div>
+      <div class="admin-note">After every explanation students now answer <b>“Was this explanation clear?”</b> with 👍 or 😕. The ones that confuse students are listed here — most confusing first. Rewrite one and its votes start fresh.</div>
+      <div class="qu-list">${weak.map((g, i) => {
+        const m = g.rep, open = qUnOpen === i, pct = Math.round(g.confused / (g.confused + g.clear) * 100);
+        const exp = qExpls(m).find(e => qN(e.by) === qN(g.by));
+        return `<section class="cd-card qu-row" data-i="${i}">
+          <div class="qu-head">
+            <div class="qu-main">
+              <div class="cd-muted">${esc(m.source || '')}${m.lesson ? ' · ' + esc(m.lesson) : ''} · explanation by <b>${esc(g.by || '—')}</b></div>
+              <div class="qu-text" dir="auto">${m.image ? '🖼️ ' : ''}${esc((m.text || '(question with image)').slice(0, 180))}</div>
+            </div>
+            <div class="qu-votes"><span class="qu-bad">😕 ${g.confused}</span><span class="qu-good">👍 ${g.clear}</span><div class="qu-bar"><span style="width:${pct}%"></span></div><span class="cd-muted">${pct}% confused</span></div>
+          </div>
+          ${exp && exp.text ? `<div class="qu-exp" dir="auto"><b>Now:</b> ${esc(exp.text.slice(0, 300))}</div>` : ''}
+          <div class="qu-acts"><button type="button" class="btn ${open ? 'btn-ghost' : 'btn-primary'} cd-small qu-toggle">${open ? 'Close' : '✏️ Rewrite it'}</button></div>
+          ${open ? `<div class="qu-body">${qQuestionHtml({ text: m.text, image: m.image, options: m.options, optionImages: m.optionImages, correct: m.correctAnswer }, { showExpl: true })}${qFormHtml('Explain it a different way — simpler steps, a photo of your working…')}</div>` : ''}
+        </section>`;
+      }).join('') || `<div class="admin-empty">${totalVotes ? '🎉 No explanation has confused a student.' : 'No votes yet — they appear here as students rate explanations.'}</div>`}</div>`;
+    root.querySelectorAll('.qu-toggle').forEach(b => b.addEventListener('click', ()=>{ const i = Number(b.closest('.qu-row').dataset.i); qUnOpen = qUnOpen === i ? null : i; qRenderUnclearDraw(); }));
+    const qRenderUnclearDraw = ()=> qRenderUnclear(root);
+    root.querySelectorAll('.qu-body').forEach(body => {
+      const g = weak[Number(body.closest('.qu-row').dataset.i)];
+      qWireForm(body, async (text, extras)=>{
+        const r = await saveExplanationForQuestion(g.rep, text, qMe(), extras);
+        if(!r || !r.ok) return false;
+        // Votes for this explanation start fresh.
+        for(const m of g.mistakes){
+          const rec = await dbGet('mistakes', m.id);
+          if(rec && rec.explVotes){ delete rec.explVotes[g.by]; await dbSet('mistakes', m.id, rec); }
+        }
+        invalidateDbCache('mistakes'); invalidateDbCache('skills'); invalidateDbCache('exams');
+        qUnOpen = null;
+        await qRenderUnclear(root);
+        return true;
+      });
+    });
+  }
+
+  /* =================== 🎲 RANDOM QUESTIONS FOR ACADEMIC ASSISTANTS =================== */
+  const qIsAcademic = a => a && a.status === 'approved' && !['coordinator', 'tutor'].includes(a.role);
+  const qOpenTasks = a => (a.qTasks || []).filter(t => !t.doneAt);
+  async function qGiveRandom(username, n, assignedBy, sources){
+    sources = sources || await qLoadSources();
+    invalidateDbCache('assistants');
+    const accounts = await fetchAllAssistantAccounts();
+    const acct = await getAssistantAccount(username);
+    if(!acct) return 0;
+    const taken = new Set();
+    accounts.forEach(a => qOpenTasks(a).forEach(t => taken.add(`${t.kind}:${t.srcId}:${t.qi}`)));
+    const all = [];
+    sources.forEach(s => s.questions.forEach((q, qi) => all.push({ s, q, qi, key: `${s.kind}:${s.id}:${qi}` })));
+    const free = all.filter(x => !taken.has(x.key));
+    // Questions nobody has explained come first; then ones this assistant hasn't.
+    let pick = qShuffle(free.filter(x => !qHasExpl(x.q))).slice(0, n);
+    if(pick.length < n) pick = pick.concat(qShuffle(free.filter(x => qHasExpl(x.q) && !qHasExplBy(x.q, username))).slice(0, n - pick.length));
+    if(!pick.length) return 0;
+    const now = new Date().toISOString();
+    acct.qTasks = (acct.qTasks || []).concat(pick.map(x => ({
+      id: generateId('qt'), kind: x.s.kind, srcId: x.s.id, qi: x.qi, title: x.s.title, lesson: x.q.lesson || null,
+      text: (x.q.text || '').slice(0, 200), assignedAt: now, assignedBy, doneAt: null,
+    })));
+    const ok = await dbSet('assistants', assistantAcctKey(acct.username), acct);
+    invalidateDbCache('assistants');
+    return ok ? pick.length : 0;
+  }
+  // Marks tasks done once this assistant's explanation exists on the question.
+  async function qSyncTasks(acct, sources){
+    let changed = false;
+    for(const t of qOpenTasks(acct)){
+      const s = sources.find(x => x.kind === t.kind && x.id === t.srcId);
+      const q = s && s.questions[t.qi];
+      if(!q){ t.doneAt = new Date().toISOString(); t.gone = true; changed = true; continue; }
+      if(qHasExplBy(q, acct.username)){ t.doneAt = new Date().toISOString(); changed = true; }
+    }
+    if(changed){ await dbSet('assistants', assistantAcctKey(acct.username), acct); invalidateDbCache('assistants'); }
+    return acct;
+  }
+
+  async function qRenderGive(root){
+    root.innerHTML = '<div class="admin-empty">Loading assistants…</div>';
+    invalidateDbCache('assistants');
+    const list = (await fetchAllAssistantAccounts()).filter(qIsAcademic).sort((a, b) => a.username.localeCompare(b.username));
+    const month = new Date(); month.setDate(1); month.setHours(0, 0, 0, 0);
+    root.innerHTML = `
+      <div class="admin-note">Each academic assistant explains <b>questions you give them</b> (picked at random — ones with no explanation come first) <b>plus</b> the questions their students get wrong (💬 Answer Mistakes). Turn on <b>“5 every day”</b> and they get 5 new random questions each day automatically.</div>
+      <div class="cd-filters"><button type="button" class="btn btn-primary cd-small" id="qGiveAll" ${list.length ? '' : 'disabled'}>🎲 Give 5 random questions to every academic assistant</button></div>
+      <div class="qg-list">${list.map(a => {
+        const open = qOpenTasks(a), doneMonth = (a.qTasks || []).filter(t => t.doneAt && !t.gone && new Date(t.doneAt) >= month).length;
+        const given = (a.qTasks || []).length, done = (a.qTasks || []).filter(t => t.doneAt && !t.gone).length;
+        return `<section class="cd-card qg-row" data-u="${esc(a.username)}">
+          <div class="qg-head">
+            ${qRing(given ? Math.round(done / given * 100) : null, 56, { stroke: 6, sub: `${done}/${given}` })}
+            <div class="qg-main"><h3>🎓 ${esc(a.username)}</h3><span class="cd-muted">${open.length} waiting · ${doneMonth} done this month · ${(a.assignedStudents || []).length} student${(a.assignedStudents || []).length === 1 ? '' : 's'}</span></div>
+            <label class="qg-auto"><input type="checkbox" class="qg-auto-cb"${a.autoQTasks ? ' checked' : ''}> 5 every day</label>
+            <button type="button" class="btn btn-ghost cd-small qg-give">🎲 Give 5 now</button>
+          </div>
+          ${open.length ? `<ul class="qg-open">${open.map(t => `<li><span>${t.kind === 'skills' ? '🧠' : '📝'} ${esc(t.title)} · Q${t.qi + 1}${t.text ? ` — <span class="cd-muted">${esc(t.text.slice(0, 70))}</span>` : ''}</span><span class="cd-muted">${esc(new Date(t.assignedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }))}${t.assignedBy === 'auto' ? ' · auto' : ''}</span><button type="button" class="qg-rm" data-t="${esc(t.id)}" aria-label="Remove">✕</button></li>`).join('')}</ul>` : ''}
+          <div class="cd-hint qg-hint"></div>
+        </section>`;
+      }).join('') || '<div class="admin-empty">No approved academic assistants yet.</div>'}</div>`;
+    let sources = null;
+    const getSources = async ()=> sources || (sources = await qLoadSources());
+    root.querySelectorAll('.qg-row').forEach(row => {
+      const u = row.dataset.u, hint = row.querySelector('.qg-hint');
+      row.querySelector('.qg-give').addEventListener('click', async (e)=>{
+        e.currentTarget.disabled = true; hint.textContent = 'Picking questions…';
+        const n = await qGiveRandom(u, 5, qMe(), await getSources());
+        hint.className = 'cd-hint qg-hint' + (n ? ' good' : ''); hint.textContent = n ? `✓ ${n} questions given to ${u}.` : 'No questions left to give.';
+        setTimeout(()=> qRenderGive(root), 900);
+      });
+      row.querySelector('.qg-auto-cb').addEventListener('change', async (e)=>{
+        const acct = await getAssistantAccount(u); if(!acct) return;
+        acct.autoQTasks = e.target.checked;
+        await dbSet('assistants', assistantAcctKey(u), acct); invalidateDbCache('assistants');
+        hint.className = 'cd-hint qg-hint good'; hint.textContent = e.target.checked ? `✓ ${u} now gets 5 new questions every day.` : 'Daily questions turned off.';
+      });
+      row.querySelectorAll('.qg-rm').forEach(b => b.addEventListener('click', async ()=>{
+        const acct = await getAssistantAccount(u); if(!acct) return;
+        acct.qTasks = (acct.qTasks || []).filter(t => t.id !== b.dataset.t);
+        await dbSet('assistants', assistantAcctKey(u), acct); invalidateDbCache('assistants');
+        qRenderGive(root);
+      }));
+    });
+    const all = root.querySelector('#qGiveAll');
+    all.addEventListener('click', async ()=>{
+      all.disabled = true;
+      let n = 0;
+      for(const a of list){ all.textContent = `Giving… ${++n}/${list.length}`; await qGiveRandom(a.username, 5, qMe(), await getSources()); }
+      qRenderGive(root);
+    });
+  }
+
+  /* =================== 🎯 ASSISTANT: MY TASKS =================== */
+  async function qRenderMyTasks(root){
+    root.innerHTML = '<div class="admin-empty">Loading your questions…</div>';
+    let acct = await getAssistantAccount(currentAssistantAccount.username);
+    if(!acct){ root.innerHTML = '<div class="admin-empty">Could not load your account.</div>'; return; }
+    const sources = await qLoadSources();
+    const today = qDayKey(new Date());
+    if(acct.autoQTasks && acct.autoQDay !== today){
+      await qGiveRandom(acct.username, 5, 'auto', sources);
+      acct = await getAssistantAccount(acct.username);
+      acct.autoQDay = today;   // once a day, even if no questions were left to give
+      await dbSet('assistants', assistantAcctKey(acct.username), acct); invalidateDbCache('assistants');
+    }
+    acct = await qSyncTasks(acct, sources);
+    currentAssistantAccount = acct;
+    const open = qOpenTasks(acct);
+    const doneToday = (acct.qTasks || []).filter(t => t.doneAt && !t.gone && qDayKey(t.doneAt) === today).length;
+    const given = (acct.qTasks || []).filter(t => !t.gone).length, done = (acct.qTasks || []).filter(t => t.doneAt && !t.gone).length;
+    const assigned = new Set((acct.assignedStudents || []).map(qN));
+    const mistakes = (await gatherAllMistakeRows(null)).filter(isMistakeInAssistantQueue).filter(m => assigned.has(qN(m.username)) && m.status !== 'answered');
+    root.innerHTML = `
+      <div class="cd-rings cd-rings-sm">
+        <div class="cd-ring-card">${qRing(given ? Math.round(done / given * 100) : null, 96, { sub: `${done}/${given}` })}<div class="cd-ring-label">Questions you were given — explained</div></div>
+        <div class="cd-ring-card">${qRing(null, 96, { centre: String(open.length), sub: 'waiting', colour: open.length ? 'var(--signal)' : undefined })}<div class="cd-ring-label">Given questions left</div></div>
+        <div class="cd-ring-card">${qRing(null, 96, { centre: String(mistakes.length), sub: 'mistakes', colour: mistakes.length ? 'var(--ember)' : undefined })}<div class="cd-ring-label">Student mistakes to answer</div></div>
+      </div>
+      <div class="qt-todo">
+        <div><b>Your job:</b> explain the ${open.length || ''} question${open.length === 1 ? '' : 's'} Mr. Mohamed Ibrahim gave you below <b>+</b> answer every question your students got wrong.</div>
+        ${mistakes.length ? `<button type="button" class="btn btn-primary cd-small" id="qGoMistakes">💬 Answer ${mistakes.length} student mistake${mistakes.length === 1 ? '' : 's'}</button>` : '<span class="cd-ok">✓ No student mistakes waiting</span>'}
+      </div>
+      ${doneToday ? `<div class="cd-hint good">✓ ${doneToday} explained today — great work!</div>` : ''}
+      <div class="analysis-section-title">🎲 Questions given to you (${open.length})</div>
+      ${open.length ? open.map(t => {
+        const s = sources.find(x => x.kind === t.kind && x.id === t.srcId), q = s && s.questions[t.qi];
+        return q ? `<section class="cd-card qt-card" data-t="${esc(t.id)}">
+          <div class="cd-muted">${t.kind === 'skills' ? '🧠' : '📝'} ${esc(t.title)} · Question ${t.qi + 1}${q.lesson ? ' · ' + esc(q.lesson) : ''}</div>
+          ${qQuestionHtml(q, { showExpl: true })}
+          ${qFormHtml()}
+        </section>` : '';
+      }).join('') : '<div class="admin-empty">🎉 Nothing waiting. New questions appear here when Mr. Mohamed Ibrahim gives you some.</div>'}`;
+    const go = root.querySelector('#qGoMistakes');
+    if(go) go.addEventListener('click', ()=> document.getElementById('asdShowMistakesBtn').click());
+    root.querySelectorAll('.qt-card').forEach(card => {
+      const t = open.find(x => x.id === card.dataset.t);
+      qWireForm(card, async (text, extras)=>{
+        const r = await qSaveByIndex(t.kind, t.srcId, t.qi, text, acct.username, extras);
+        if(!r.ok) return false;
+        const fresh = await getAssistantAccount(acct.username);
+        const ft = (fresh.qTasks || []).find(x => x.id === t.id);
+        if(ft){ ft.doneAt = new Date().toISOString(); await dbSet('assistants', assistantAcctKey(fresh.username), fresh); invalidateDbCache('assistants'); }
+        await qRenderMyTasks(root);
+        qUpdateAsdBadges();
+        return true;
+      });
+    });
+  }
+
+  /* =================== 📘 ASSISTANT: EVERY HOMEWORK DETAIL =================== */
+  let qHwStudent = '', qHwFilter = 'all';
+  async function qRenderAsdHomework(root, allStudents){
+    root.innerHTML = '<div class="admin-empty">Loading homework…</div>';
+    const acct = currentAssistantAccount;
+    let assigned;
+    if(allStudents){
+      const st = await fetchAllStudents();
+      assigned = new Set(st.filter(x => x && x.username && x.status === 'approved').map(x => qN(x.username)));
+    } else assigned = new Set(((acct && acct.assignedStudents) || []).map(qN));
+    if(!assigned.size){ root.innerHTML = `<div class="admin-empty">${allStudents ? 'No approved students yet.' : 'No students assigned to you yet.'}</div>`; return; }
+    if(!allStudents){ invalidateDbCache('homework'); invalidateDbCache('asks'); }
+    const [hwAll, asks] = await Promise.all([fetchHomeworkIndex(), fetchAllAsks().catch(() => [])]);
+    const now = Date.now();
+    const released = h => !h.publishAt || new Date(h.publishAt).getTime() <= now;
+    const find = allStudents && document.getElementById('cdSearch') ? qN(document.getElementById('cdSearch').value) : '';
+    const mine = hwAll.filter(h => assigned.has(qN(h.username)) && (!find || qN(h.username).includes(find)));
+    const names = [...new Set(mine.map(h => h.username))].sort((a, b) => a.localeCompare(b));
+    const draw = ()=>{
+      const base = mine.filter(h => !qHwStudent || qN(h.username) === qN(qHwStudent));
+      const groups = {
+        all: base,
+        waiting: base.filter(h => released(h) && h.status !== 'completed'),
+        done: base.filter(h => h.status === 'completed'),
+        low: base.filter(h => h.status === 'completed' && h.score && h.score.pct < 60),
+        retake: base.filter(h => h.retakeRequired || h.isRetake),
+        later: base.filter(h => !released(h)),
+      };
+      const rows = (groups[qHwFilter] || base).slice().sort((a, b) => new Date(b.publishAt || b.ts || 0) - new Date(a.publishAt || a.ts || 0));
+      const rel = base.filter(released), doneN = groups.done.length;
+      const scored = groups.done.filter(h => h.score && typeof h.score.pct === 'number');
+      const avg = scored.length ? Math.round(scored.reduce((a, h) => a + h.score.pct, 0) / scored.length) : null;
+      const fmt = d => d ? new Date(d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+      const days = (a, b) => Math.max(0, Math.round((new Date(b) - new Date(a)) / 864e5));
+      root.innerHTML = `
+        <div class="cd-rings cd-rings-sm">
+          <div class="cd-ring-card">${qRing(rel.length ? Math.round(doneN / rel.length * 100) : null, 96, { tone: 'signal', sub: `${doneN}/${rel.length}` })}<div class="cd-ring-label">Released homework done</div></div>
+          <div class="cd-ring-card">${qRing(avg, 96, { sub: `${scored.length} marked` })}<div class="cd-ring-label">Average mark</div></div>
+          <div class="cd-ring-card">${qRing(null, 96, { centre: String(groups.waiting.length), sub: 'not done', colour: groups.waiting.length ? 'var(--ember)' : undefined })}<div class="cd-ring-label">Waiting to be done</div></div>
+        </div>
+        <div class="cd-filters">
+          <select id="qHwStudent" aria-label="Student"><option value="">${allStudents ? 'All students' : 'All my students'}</option>${names.map(n => `<option value="${esc(n)}"${qN(n) === qN(qHwStudent) ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>
+          ${[['all', 'All'], ['waiting', '⏳ Not done'], ['done', '✅ Done'], ['low', '📉 Under 60%'], ['retake', '🔁 Retakes'], ['later', '🗓️ Not released yet']].map(([k, l]) => `<button type="button" class="cd-chip${qHwFilter === k ? ' active' : ''}" data-hf="${k}">${l} ${groups[k].length}</button>`).join('')}
+        </div>
+        <div class="qh-list">${rows.map(h => {
+          const isDone = h.status === 'completed', isRel = released(h);
+          const late = isRel && !isDone ? days(h.publishAt || h.ts, now) : null;
+          const took = isDone && h.submittedAt ? days(h.publishAt || h.ts, h.submittedAt) : null;
+          const pct = isDone && h.score ? h.score.pct : null;
+          const qAsks = asks.filter(a => qN(a.username) === qN(h.username) && qN(a.homeworkTitle) === qN(h.title)).length;
+          const topics = h.topics && typeof h.topics === 'object' ? Object.entries(h.topics) : [];
+          return `<section class="cd-card qh-row ${isDone ? 'is-done' : isRel ? 'is-wait' : 'is-later'}">
+            <div class="qh-head">
+              ${pct !== null ? qRing(pct, 54, { stroke: 6 }) : `<span class="qh-state">${isRel ? '⏳' : '🗓️'}</span>`}
+              <div class="qh-main">
+                <b>${esc(h.title || 'Homework')}</b>
+                <span class="cd-muted">👤 ${esc(h.username)}${h.fromPlan ? ` · 📋 ${esc(h.fromPlan)}` : ''}${h.isRetake ? ' · 🔁 retake' : ''}</span>
+              </div>
+              ${isDone ? `<button type="button" class="btn btn-ghost cd-small qh-open" data-id="${esc(h.id)}" data-u="${esc(h.username)}">🔍 Every answer</button>` : ''}
+            </div>
+            <div class="qh-facts">
+              <span><b>Released</b>${isRel ? fmt(h.publishAt || h.ts) : 'on ' + fmt(h.publishAt)}</span>
+              <span><b>Status</b>${isDone ? `<span class="cd-ok">Done ${fmt(h.submittedAt)}</span>` : isRel ? `<span class="qh-late">Not done${late ? ` · ${late} day${late === 1 ? '' : 's'}` : ' · today'}</span>` : 'Not released yet'}</span>
+              <span><b>Mark</b>${isDone && h.score ? `${h.score.correct}/${h.score.total} (${h.score.pct}%)` : '—'}</span>
+              <span><b>Questions</b>${h.questionCount || '—'}</span>
+              ${took !== null ? `<span><b>Finished after</b>${took === 0 ? 'same day' : took + ' day' + (took === 1 ? '' : 's')}</span>` : ''}
+              ${h.dueDate ? `<span><b>Due</b>${fmt(h.dueDate)}</span>` : ''}
+              ${h.timeLimit ? `<span><b>Time limit</b>${esc(String(h.timeLimit))} min</span>` : ''}
+              ${h.retakeRequired ? `<span><b>Retake</b><span class="qh-late">needed${h.retakeDeadline ? ' by ' + fmt(h.retakeDeadline) : ''}</span></span>` : ''}
+              ${qAsks ? `<span><b>Asked</b>💬 ${qAsks} question${qAsks === 1 ? '' : 's'}</span>` : ''}
+            </div>
+            ${topics.length ? `<div class="qh-topics">${topics.map(([lesson, t]) => {
+              const c = Array.isArray(t) ? t[0] : (t && typeof t === 'object' ? (t.correct ?? null) : null), tot = Array.isArray(t) ? t[1] : (t && typeof t === 'object' ? (t.total ?? null) : null);
+              const p = c !== null && tot ? Math.round(c / tot * 100) : null;
+              return `<span class="cd-pill ${p === null ? '' : p >= 75 ? 'good' : p >= 50 ? 'mid' : 'bad'}">${esc(lesson)}${p !== null ? ` ${c}/${tot}` : ''}</span>`;
+            }).join('')}</div>` : ''}
+          </section>`;
+        }).join('') || '<div class="admin-empty">No homework here.</div>'}</div>`;
+      const sel = root.querySelector('#qHwStudent'); sel.id = root.id + 'Student';
+      sel.addEventListener('change', e => { qHwStudent = e.target.value; draw(); });
+      root.querySelectorAll('[data-hf]').forEach(b => b.addEventListener('click', ()=>{ qHwFilter = b.dataset.hf; draw(); }));
+      root.querySelectorAll('.qh-open').forEach(b => b.addEventListener('click', ()=> cdOpenHwReview(b.dataset.id, b.dataset.u)));
+    };
+    draw();
+  }
+
+  /* =================== 📋 MONTHLY STAFF REPORT CARD =================== */
+  let qRepMonth = null;
+  async function qRenderReport(root){
+    if(!qRepMonth){ const d = new Date(); qRepMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+    root.innerHTML = '<div class="admin-empty">Building the report card…</div>';
+    ['assistants', 'mistakes', 'sessions', 'announcements', 'students'].forEach(invalidateDbCache);
+    const [accounts, mistakes, sessions, anns, students, sources] = await Promise.all([
+      fetchAllAssistantAccounts(), fetchAllMistakes(), fetchAllSessions(), fetchAllAnnouncements().catch(() => []), fetchAllStudents(), qLoadSources()]);
+    const [y, mo] = qRepMonth.split('-').map(Number);
+    const range = off => { const a = new Date(y, mo - 1 + off, 1), b = new Date(y, mo + off, 1); return [a.getTime(), b.getTime()]; };
+    const inR = (d, r) => { if(!d) return false; const t = new Date(d).getTime(); return t >= r[0] && t < r[1]; };
+    const staff = accounts.filter(a => a.status === 'approved').sort((a, b) => (a.role || 'academic').localeCompare(b.role || 'academic') || a.username.localeCompare(b.username));
+    const expls = [];
+    sources.forEach(s => s.questions.forEach(q => qExpls(q).forEach(e => expls.push(e))));
+    const votes = [];
+    mistakes.filter(m => !m._index && m.explVotes).forEach(m => Object.entries(m.explVotes).forEach(([by, v]) => v && votes.push({ by, ...v })));
+    const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
+    function card(a, off){
+      const r = range(off), u = qN(a.username), role = a.role === 'coordinator' ? 'coordinator' : a.role === 'tutor' ? 'tutor' : 'academic';
+      if(role === 'academic'){
+        const ans = mistakes.filter(m => m.answer && qN(m.answer.answeredBy) === u && inR(m.answer.answeredAt, r));
+        const hours = ans.map(m => (new Date(m.answer.answeredAt) - new Date(m.ts)) / 36e5).filter(h => h >= 0 && h < 24 * 60);
+        const ratings = ans.map(m => m.studentRating).filter(x => typeof x === 'number');
+        const myVotes = votes.filter(v => qN(v.by) === u && inR(v.at, r));
+        const tasks = (a.qTasks || []).filter(t => inR(t.assignedAt, r) && !t.gone);
+        return { role, main: ans.length, mainLabel: 'mistakes answered', stats: [
+          ['Mistakes answered', ans.length],
+          ['Avg answer time', hours.length ? (avg(hours) < 1 ? Math.round(avg(hours) * 60) + ' min' : avg(hours).toFixed(1) + ' h') : '—'],
+          ['Student rating', ratings.length ? '⭐ ' + avg(ratings).toFixed(1) + ' / 5' : '—'],
+          ['Explanations written', expls.filter(e => qN(e.by) === u && inR(e.at, r)).length],
+          ['Given questions done', tasks.length ? `${tasks.filter(t => t.doneAt).length} / ${tasks.length}` : '—'],
+          ['Students said “clear”', myVotes.length ? `${Math.round(myVotes.filter(v => v.v === 'clear').length / myVotes.length * 100)}% of ${myVotes.length}` : '—'],
+        ] };
+      }
+      if(role === 'coordinator'){
+        const marks = sessions.filter(x => !x._index && x.coordAttendance && qN(x.coordAttendance.by) === u && inR(x.coordAttendance.at, r)).length;
+        const rem = anns.filter(x => x.kind === 'coord-reminder' && qN(x.postedBy) === u && inR(x.ts, r)).length;
+        const calls = students.reduce((s, st) => s + (st.coordNotes || []).filter(n => qN(n.by) === u && inR(n.at, r)).length, 0);
+        const tasksDone = (a.tasks || []).filter(t => t.done && inR(t.doneAt, r)).length;
+        const tasksOpen = (a.tasks || []).filter(t => !t.done).length;
+        return { role, main: marks + rem + calls, mainLabel: 'actions', stats: [
+          ['Attendance marked', marks], ['Reminders sent', rem], ['Parent calls logged', calls],
+          ['Tasks done', tasksDone], ['Tasks still open', tasksOpen],
+        ] };
+      }
+      const mine = sessions.filter(x => !x._index && x.slotId && qN(x.tutor) === u && inR(x.date + 'T' + (x.time || '00:00'), r) && new Date(x.date + 'T' + (x.time || '00:00')).getTime() <= Date.now());
+      const marked = mine.filter(x => x.coordAttendance && x.coordAttendance.status);
+      const came = marked.filter(x => ['present', 'late'].includes(x.coordAttendance.status)).length;
+      return { role, main: mine.length, mainLabel: 'sessions given', stats: [
+        ['Sessions given', mine.length], ['Private / group', `${mine.filter(x => x.kind !== 'group').length} / ${mine.filter(x => x.kind === 'group').length}`],
+        ['Attendance marked', mine.length ? `${marked.length} / ${mine.length}` : '—'], ['Students who came', marked.length ? Math.round(came / marked.length * 100) + '%' : '—'],
+        ['Notes after session', mine.filter(x => x.tutorNote).length],
+        ['Free times published', (a.tutorSlots || []).filter(s => inR(s.createdAt, r)).length],
+      ] };
+    }
+    const roleName = { academic: '🎓 Academic assistant', coordinator: '🗂️ Coordinator', tutor: '🧑‍🏫 Session assistant' };
+    const monthName = new Date(y, mo - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    const cards = staff.map(a => ({ a, now: card(a, 0), prev: card(a, -1) }));
+    root.innerHTML = `
+      <div class="cd-filters qr-tools">
+        <label class="cd-muted">Month <input type="month" id="qRepMonth" value="${esc(qRepMonth)}"></label>
+        <button type="button" class="btn btn-ghost cd-small" id="qRepPrint">🖨️ Print / save as PDF</button>
+      </div>
+      <h3 class="qr-title">📋 Staff report card — ${esc(monthName)}</h3>
+      <div class="qr-grid">${cards.map(({ a, now, prev }) => {
+        const diff = now.main - prev.main;
+        return `<section class="cd-card qr-card">
+          <div class="qr-head"><div><h3>${esc(a.username)}</h3><span class="cd-muted">${roleName[now.role]}</span></div>
+            <div class="qr-big"><b>${now.main}</b><span>${now.mainLabel}</span><span class="cd-trend ${diff >= 0 ? 'up' : 'down'}">${diff === 0 ? '= last month' : (diff > 0 ? '▲ ' : '▼ ') + Math.abs(diff) + ' vs last month'}</span></div></div>
+          <div class="qr-stats">${now.stats.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join('')}</div>
+        </section>`;
+      }).join('') || '<div class="admin-empty">No approved staff yet.</div>'}</div>`;
+    root.querySelector('#qRepMonth').addEventListener('change', e => { if(e.target.value){ qRepMonth = e.target.value; qRenderReport(root); } });
+    root.querySelector('#qRepPrint').addEventListener('click', ()=>{
+      const w = window.open('', '_blank');
+      if(!w){ alert('Your browser blocked the popup. Allow popups for this site, then try again.'); return; }
+      const e2 = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Staff report card — ${e2(monthName)}</title><style>
+        body{font-family:'Segoe UI',Arial,sans-serif;color:#111;padding:24px;} h1{font-size:20px;margin:0 0 4px;} .sub{color:#666;font-size:12px;margin-bottom:16px;}
+        .c{border:1px solid #ccc;border-radius:10px;padding:12px 14px;margin-bottom:12px;break-inside:avoid;} .c h2{font-size:15px;margin:0;} .r{color:#666;font-size:12px;}
+        table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px;} td{padding:4px 6px;border-top:1px solid #eee;} td:last-child{text-align:right;font-weight:700;}
+      </style></head><body><h1>Staff report card — ${e2(monthName)}</h1><div class="sub">Mr. Mohamed Ibrahim · printed ${e2(new Date().toLocaleDateString())}</div>
+      ${cards.map(({ a, now, prev }) => `<div class="c"><h2>${e2(a.username)}</h2><div class="r">${e2(roleName[now.role].replace(/^\S+\s/, ''))} · ${now.main} ${e2(now.mainLabel)} (last month ${prev.main})</div><table>${now.stats.map(([k, v]) => `<tr><td>${e2(k)}</td><td>${e2(v)}</td></tr>`).join('')}</table></div>`).join('')}
+      </body></html>`);
+      w.document.close();
+      setTimeout(()=> w.print(), 400);
+    });
+  }
+
+  /* =================== ADMIN: 🏅 Quality tab =================== */
+  let qAdminView = 'coverage';
+  function qRenderAdmin(){
+    const root = document.getElementById('qaRoot'); if(!root) return;
+    const views = [['coverage', '📚 Coverage'], ['unclear', '😕 Unclear explanations'], ['give', '🎲 Questions for assistants'], ['report', '📋 Staff report card']];
+    root.innerHTML = `<div class="cd-tabs qa-tabs" role="tablist">${views.map(([k, l]) => `<button type="button" class="cd-tab${qAdminView === k ? ' active' : ''}" data-qa="${k}" role="tab">${l}</button>`).join('')}</div><div id="qaBody"></div>`;
+    root.querySelectorAll('[data-qa]').forEach(b => b.addEventListener('click', ()=>{ qAdminView = b.dataset.qa; qRenderAdmin(); }));
+    const body = document.getElementById('qaBody');
+    ({ coverage: qRenderCoverage, unclear: qRenderUnclear, give: qRenderGive, report: qRenderReport })[qAdminView](body);
+  }
+  { const t = document.querySelector('.admin-tab[data-tab="qualityPanel"]'); if(t) t.addEventListener('click', ()=> setTimeout(qRenderAdmin, 0)); }
+
+  /* =================== ACADEMIC ASSISTANT DASHBOARD: new views =================== */
+  const Q_ASD = [['tasks', 'qAsdTasksBtn', 'qAsdTasks', qRenderMyTasks], ['hw', 'qAsdHwBtn', 'qAsdHw', qRenderAsdHomework],
+                 ['coverage', 'qAsdCovBtn', 'qAsdCov', qRenderCoverage], ['unclear', 'qAsdUnBtn', 'qAsdUn', qRenderUnclear]];
+  function qAsdShow(view){
+    ['asdShowProgressBtn', 'asdShowMistakesBtn', 'asdShowExplainBtn'].forEach(id => document.getElementById(id).classList.replace('btn-primary', 'btn-ghost'));
+    ['assistantDashContent', 'asdMistakesContent', 'asdExplainContent'].forEach(id => document.getElementById(id).style.display = 'none');
+    Q_ASD.forEach(([k, btn, box, fn]) => {
+      const b = document.getElementById(btn), el = document.getElementById(box), on = k === view;
+      b.classList.toggle('btn-primary', on); b.classList.toggle('btn-ghost', !on);
+      el.style.display = on ? 'block' : 'none';
+      if(on) fn(el);
+    });
+  }
+  { const _asdShow = asdShowView;
+    asdShowView = function(view){
+      Q_ASD.forEach(([, btn, box]) => { const b = document.getElementById(btn); b.classList.remove('btn-primary'); b.classList.add('btn-ghost'); document.getElementById(box).style.display = 'none'; });
+      return _asdShow.apply(this, arguments);
+    }; }
+  Q_ASD.forEach(([k, btn]) => document.getElementById(btn).addEventListener('click', ()=> qAsdShow(k)));
+
+  async function qUpdateAsdBadges(){
+    if(!currentAssistantAccount) return;
+    invalidateDbCache('assistants');
+    const acct = await getAssistantAccount(currentAssistantAccount.username);
+    const open = acct ? qOpenTasks(acct).length : 0;
+    const today = qDayKey(new Date());
+    const autoDue = acct && acct.autoQTasks && acct.autoQDay !== today;
+    const b = document.getElementById('qAsdTasksBadge');
+    b.hidden = !(open || autoDue); b.textContent = open ? String(open) : 'new';
+  }
+  { const _openAsd = openAssistantDashboard;
+    openAssistantDashboard = async function(){ const r = await _openAsd.apply(this, arguments); qUpdateAsdBadges(); return r; }; }
 </script>
 
 </div>
