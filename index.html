@@ -4759,7 +4759,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 23 Oct 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 23 Oct 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -27010,7 +27010,7 @@ $$);`;
     if(allStudents){
       const st = await fetchAllStudents();
       assigned = new Set(st.filter(x => x && x.username && x.status === 'approved').map(x => qN(x.username)));
-    } else assigned = new Set(((acct && acct.assignedStudents) || []).map(qN));
+    } else { const live = await qExistingStudents(); assigned = new Set(((acct && acct.assignedStudents) || []).map(qN).filter(u => live.has(u))); }
     if(!assigned.size){ root.innerHTML = `<div class="admin-empty">${allStudents ? 'No approved students yet.' : 'No students assigned to you yet.'}</div>`; return; }
     if(!allStudents){ invalidateDbCache('homework'); invalidateDbCache('asks'); }
     const [hwAll, asks] = await Promise.all([fetchHomeworkIndex(), fetchAllAsks().catch(() => [])]);
@@ -27323,12 +27323,14 @@ $$);`;
 
   /* ---------- admin + assistant2026: Homework tab ---------- */
   let qHwView = 'hw';
+  // Students whose account still exists — deleted accounts are left out everywhere.
+  async function qExistingStudents(){ const st = await fetchAllStudents(); return new Set(st.filter(x => x && x.username).map(x => qN(x.username))); }
   async function qAdminHwScope(){
     const filterVal = (document.getElementById('hwFilterSelect') || {}).value || '';
-    const scoped = await fetchStudentsForCurrentAdmin();
+    const [scoped, existing] = await Promise.all([fetchStudentsForCurrentAdmin(), qExistingStudents()]);
     const allowed = new Set(scoped.map(s => qN(s.username)));
     const ok = u => (!currentAdminCourseFilter || allowed.has(qN(u))) && (!filterVal || qN(u) === qN(filterVal));
-    return { ok, filterVal };
+    return { ok, okLive: u => ok(u) && existing.has(qN(u)), existing, filterVal };
   }
   async function qRenderAdminHwExtra(){
     const box = document.getElementById('qHwExtra'), tableWrap = document.getElementById('homeworkTable').closest('.admin-table-wrap');
@@ -27336,12 +27338,12 @@ $$);`;
     if(qHwView === 'hw'){ box.hidden = true; tableWrap.hidden = false; return; }
     tableWrap.hidden = true; box.hidden = false;
     box.innerHTML = '<div class="admin-empty">Loading…</div>';
-    const { ok } = await qAdminHwScope();
+    const { okLive } = await qAdminHwScope();
     if(qHwView === 'plans'){
-      const hw = (await fetchHomeworkIndex()).filter(h => ok(h.username));
+      const hw = (await fetchHomeworkIndex()).filter(h => okLive(h.username));
       box.innerHTML = qPlansHtml(hw);
     } else {
-      const at = (await fetchAttemptsIndex()).filter(a => ok(a.username));
+      const at = (await fetchAttemptsIndex()).filter(a => okLive(a.username));
       box.innerHTML = qSkillsHtml(at);
       qWireSkills(box);
     }
@@ -27353,18 +27355,22 @@ $$);`;
     renderAdminHomework = async function(){
       const r = await _rah.apply(this, arguments);
       try{
-        const { ok } = await qAdminHwScope();
+        const { ok, existing } = await qAdminHwScope();
         const entries = (await fetchHomeworkIndex()).filter(e => ok(e.username));
         const groups = new Map(qPlanGroups(entries).map(g => [qN(g.username) + '|' + g.name, g]));
         const rows = document.querySelectorAll('#homeworkBody tr');
         if(rows.length === entries.length) rows.forEach((tr, i) => {
           const e = entries[i];
+          // Homework of a deleted student account isn't shown.
+          if(!existing.has(qN(e.username))){ tr.remove(); return; }
           if(!e.fromPlan || tr.querySelector('.qhp-badge')) return;
           const g = groups.get(qN(e.username) + '|' + e.fromPlan);
           const day = g ? g.rows.findIndex(h => h.id === e.id) + 1 : 0;
           const cell = tr.cells[1];
           if(cell) cell.insertAdjacentHTML('beforeend', `<div class="qhp-badge">📋 ${esc(e.fromPlan)}${day ? ` · day ${day} of ${g.total}` : ''}${g ? ` · ${g.done}/${g.total} done` : ''}</div>`);
         });
+        const left = document.querySelectorAll('#homeworkBody tr').length;
+        document.getElementById('homeworkEmpty').style.display = left ? 'none' : 'block';
       }catch(err){ console.warn('plan badges', err); }
       if(qHwView !== 'hw') qRenderAdminHwExtra();
       return r;
@@ -27376,8 +27382,9 @@ $$);`;
       await _qra(root, allStudents);
       const acct = currentAssistantAccount;
       let assigned;
+      const existingSet = await qExistingStudents();
       if(allStudents){ const st = await fetchAllStudents(); assigned = new Set(st.filter(x => x && x.status === 'approved').map(x => qN(x.username))); }
-      else assigned = new Set(((acct && acct.assignedStudents) || []).map(qN));
+      else assigned = new Set(((acct && acct.assignedStudents) || []).map(qN).filter(u => existingSet.has(u)));
       const [hwAll, atAll] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
       const extra = document.createElement('div');
       extra.className = 'qhx';
