@@ -4045,6 +4045,40 @@
   .qa-badge{ background:var(--ember); color:#fff; border-radius:999px; font-size:0.7rem; padding:1px 7px; font-weight:700; margin-left:4px; }
   .qa-badge[hidden]{ display:none; }
   #qAsdTasks, #qAsdHw, #qAsdCov, #qAsdUn{ flex:1; overflow-y:auto; padding:20px 24px 48px; }
+  /* plans + skill practice */
+  .qp-list, .qs-list{ display:grid; gap:10px; }
+  .qp-card{ margin-bottom:0; display:grid; gap:10px; }
+  .qp-card.has-wait{ box-shadow:inset 3px 0 0 var(--ember); }
+  .qp-head{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .qp-main{ flex:1; min-width:180px; display:grid; gap:2px; }
+  .qp-main b{ overflow-wrap:anywhere; }
+  .qp-avg{ display:grid; justify-items:end; gap:2px; }
+  .qp-facts{ display:grid; grid-template-columns:repeat(auto-fill, minmax(130px, 1fr)); gap:8px; }
+  .qp-facts span{ display:grid; gap:1px; font-size:0.86rem; overflow-wrap:anywhere; }
+  .qp-facts b{ font-family:'IBM Plex Mono',monospace; font-size:0.66rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); font-weight:500; }
+  .qp-rows summary{ cursor:pointer; font-size:0.86rem; color:var(--signal); }
+  .qp-rows ul{ list-style:none; margin:8px 0 0; padding:0; display:grid; gap:2px; }
+  .qp-rows li{ display:flex; justify-content:space-between; gap:10px; font-size:0.85rem; padding:5px 0; border-bottom:1px dashed var(--line); }
+  .qp-rows li > span:first-child{ min-width:0; overflow-wrap:anywhere; }
+  .qp-rows li.later{ color:var(--muted); }
+  .qs-sums{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .qs-sum{ display:inline-flex; gap:6px; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:5px 12px; font-size:0.84rem; }
+  .qs-row{ display:flex; gap:12px; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px; flex-wrap:wrap; }
+  .qs-main{ flex:1; min-width:180px; display:grid; gap:3px; }
+  .qs-main b{ overflow-wrap:anywhere; }
+  .qs-main .qh-topics{ margin-top:4px; }
+  .qhp-badge{ margin-top:4px; font-size:0.76rem; color:var(--signal); font-weight:600; }
+  .qhp-badge.inline{ display:inline-block; margin:0 0 0 6px; background:var(--accent-wash); border-radius:999px; padding:1px 8px; }
+  .qhp-mini{ color:var(--signal); font-weight:600; }
+  #qHwViews{ margin-top:16px; }
+  #qHwExtra{ margin-top:12px; }
+  #qHwExtra[hidden], .qhx[hidden]{ display:none; }
+  #qStudentPlans{ display:grid; gap:8px; margin:10px 0 12px; }
+  .qsp{ display:flex; gap:12px; align-items:center; background:var(--accent-wash); border:1px solid var(--signal); border-radius:14px; padding:10px 14px; }
+  .qsp-main{ display:grid; gap:2px; min-width:0; }
+  .qsp-main b{ overflow-wrap:anywhere; }
+  .qa-analysis{ margin-bottom:18px; }
+  .qhx{ margin-top:6px; }
 </style>
 </head>
 <body>
@@ -4725,7 +4759,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 19 Oct 2026 · B</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 23 Oct 2026</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -6453,6 +6487,12 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         </select>
         <button class="btn btn-ghost" id="refreshHomework">Refresh</button>
       </div>
+      <div class="cd-filters" id="qHwViews" role="tablist">
+        <button type="button" class="cd-chip active" data-hv="hw">📘 Homework</button>
+        <button type="button" class="cd-chip" data-hv="plans">📋 Plans</button>
+        <button type="button" class="cd-chip" data-hv="skills">🧠 Skill practice (not homework)</button>
+      </div>
+      <div id="qHwExtra" hidden></div>
       <div class="admin-table-wrap">
         <table class="admin-table" id="homeworkTable">
           <thead><tr><th>Student</th><th>Homework</th><th>Due</th><th>Status</th><th>Score</th><th></th></tr></thead>
@@ -27149,8 +27189,8 @@ $$);`;
   { const t = document.querySelector('.admin-tab[data-tab="qualityPanel"]'); if(t) t.addEventListener('click', ()=> setTimeout(qRenderAdmin, 0)); }
 
   /* =================== ACADEMIC ASSISTANT DASHBOARD: new views =================== */
-  const Q_ASD = [['tasks', 'qAsdTasksBtn', 'qAsdTasks', qRenderMyTasks], ['hw', 'qAsdHwBtn', 'qAsdHw', qRenderAsdHomework],
-                 ['coverage', 'qAsdCovBtn', 'qAsdCov', qRenderCoverage], ['unclear', 'qAsdUnBtn', 'qAsdUn', qRenderUnclear]];
+  const Q_ASD = [['tasks', 'qAsdTasksBtn', 'qAsdTasks', el => qRenderMyTasks(el)], ['hw', 'qAsdHwBtn', 'qAsdHw', el => qRenderAsdHomework(el)],
+                 ['coverage', 'qAsdCovBtn', 'qAsdCov', el => qRenderCoverage(el)], ['unclear', 'qAsdUnBtn', 'qAsdUn', el => qRenderUnclear(el)]];
   function qAsdShow(view){
     ['asdShowProgressBtn', 'asdShowMistakesBtn', 'asdShowExplainBtn'].forEach(id => document.getElementById(id).classList.replace('btn-primary', 'btn-ghost'));
     ['assistantDashContent', 'asdMistakesContent', 'asdExplainContent'].forEach(id => document.getElementById(id).style.display = 'none');
@@ -27180,6 +27220,256 @@ $$);`;
   }
   { const _openAsd = openAssistantDashboard;
     openAssistantDashboard = async function(){ const r = await _openAsd.apply(this, arguments); qUpdateAsdBadges(); return r; }; }
+
+  /* =====================================================================
+     PLANS + SKILL PRACTICE everywhere homework is shown
+       • 📋 which plan every homework belongs to, and each plan's progress
+       • 🧠 skills the student practised on their own (not homework)
+     ===================================================================== */
+  const qFmtDay = d => d ? new Date(d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+  const qReleased = h => !h.publishAt || new Date(h.publishAt).getTime() <= Date.now();
+  const qPill = p => `<span class="cd-pill ${p >= 75 ? 'good' : p >= 50 ? 'mid' : 'bad'}">${Math.round(p)}%</span>`;
+
+  // One entry per student + plan.
+  function qPlanGroups(hwRows){
+    const map = new Map();
+    hwRows.filter(h => h.fromPlan).forEach(h => {
+      const k = qN(h.username) + '|' + h.fromPlan;
+      if(!map.has(k)) map.set(k, { username: h.username, name: h.fromPlan, by: h.planBy || null, rows: [] });
+      map.get(k).rows.push(h);
+    });
+    return [...map.values()].map(g => {
+      g.rows.sort((a, b) => new Date(a.publishAt || a.ts || 0) - new Date(b.publishAt || b.ts || 0));
+      const released = g.rows.filter(qReleased), done = g.rows.filter(h => h.status === 'completed');
+      const scored = done.filter(h => h.score && typeof h.score.pct === 'number');
+      const next = g.rows.find(h => !qReleased(h));
+      const waiting = released.filter(h => h.status !== 'completed');
+      return { ...g, total: g.rows.length, released: released.length, done: done.length, waiting: waiting.length,
+        avg: scored.length ? Math.round(scored.reduce((a, h) => a + h.score.pct, 0) / scored.length) : null,
+        next, finished: done.length === g.rows.length, start: g.rows[0] && (g.rows[0].publishAt || g.rows[0].ts) };
+    }).sort((a, b) => a.finished - b.finished || b.waiting - a.waiting || a.username.localeCompare(b.username));
+  }
+  function qPlansHtml(hwRows){
+    const groups = qPlanGroups(hwRows);
+    if(!groups.length) return '<div class="admin-empty">No student is on a plan yet.</div>';
+    return `<div class="qp-list">${groups.map(g => `
+      <section class="cd-card qp-card${g.waiting ? ' has-wait' : ''}">
+        <div class="qp-head">
+          ${qRing(g.total ? Math.round(g.done / g.total * 100) : null, 58, { stroke: 6, tone: 'signal', sub: `${g.done}/${g.total}` })}
+          <div class="qp-main"><b>📋 ${esc(g.name)}</b><span class="cd-muted">👤 ${esc(g.username)}${g.by ? ` · given by ${esc(g.by)}` : ''} · started ${esc(qFmtDay(g.start))}</span></div>
+          <div class="qp-avg">${g.avg !== null ? qPill(g.avg) + '<span class="cd-muted">average</span>' : '<span class="cd-muted">no marks yet</span>'}</div>
+        </div>
+        <div class="qp-facts">
+          <span><b>Done</b>${g.done} of ${g.total}</span>
+          <span><b>Released</b>${g.released} of ${g.total}</span>
+          <span><b>Not done</b>${g.waiting ? `<span class="qh-late">${g.waiting}</span>` : '0'}</span>
+          <span><b>Next</b>${g.finished ? '✅ finished' : g.next ? `${esc(g.next.title || 'Homework')} · ${esc(qFmtDay(g.next.publishAt))}` : 'all released'}</span>
+        </div>
+        <details class="qp-rows"><summary>Every homework in this plan (${g.total})</summary>
+          <ul>${g.rows.map((h, i) => `<li class="${h.status === 'completed' ? 'ok' : qReleased(h) ? 'wait' : 'later'}">
+            <span>Day ${i + 1} · ${esc(h.title || 'Homework')}</span>
+            <span>${h.status === 'completed' ? (h.score ? qPill(h.score.pct) : '✓') : qReleased(h) ? '<span class="qh-late">not done</span>' : `<span class="cd-muted">${esc(qFmtDay(h.publishAt))}</span>`}</span>
+          </li>`).join('')}</ul>
+        </details>
+      </section>`).join('')}</div>`;
+  }
+  // Skill practice the student did on their own (attempts from the Skills tab).
+  function qSkillAttempts(attempts){ return attempts.filter(a => !a._index || a._index).filter(a => a.source === 'skill'); }
+  function qSkillsHtml(attempts){
+    const list = qSkillAttempts(attempts).slice().sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0));
+    if(!list.length) return '<div class="admin-empty">No skill practice yet.</div>';
+    const byStudent = new Map();
+    list.forEach(a => { const k = a.username; if(!byStudent.has(k)) byStudent.set(k, []); byStudent.get(k).push(a); });
+    const sumRow = [...byStudent.entries()].map(([u, l]) => {
+      const avg = Math.round(l.reduce((s, a) => s + (a.pct || 0), 0) / l.length);
+      return `<span class="qs-sum"><b>${esc(u)}</b> ${l.length} practice${l.length === 1 ? '' : 's'} · ${qPill(avg)}</span>`;
+    }).join('');
+    return `<div class="qs-sums">${sumRow}</div>
+      <div class="qs-list">${list.map(a => {
+        const topics = a.topics && typeof a.topics === 'object' ? Object.entries(a.topics) : [];
+        return `<div class="qs-row">
+          ${qRing(a.pct ?? 0, 48, { stroke: 5 })}
+          <div class="qs-main"><b>🧠 ${esc(a.examTitle || 'Skill')}</b><span class="cd-muted">👤 ${esc(a.username)} · ${esc(qFmtDay(a.ts))} · ${a.correct ?? 0}/${a.total ?? 0} right${a.retakeRequired ? ' · <span class="qh-late">has mistakes to fix</span>' : ''}</span>
+            ${topics.length > 1 ? `<span class="qh-topics">${topics.map(([l, t]) => Array.isArray(t) && t[1] ? `<span class="cd-pill ${t[0] / t[1] >= 0.75 ? 'good' : t[0] / t[1] >= 0.5 ? 'mid' : 'bad'}">${esc(l)} ${t[0]}/${t[1]}</span>` : '').join('')}</span>` : ''}</div>
+          <button type="button" class="btn btn-ghost cd-small qs-open" data-id="${esc(a.id)}" data-u="${esc(a.username)}" data-t="${esc(a.examTitle || 'Skill')}">🔍 Answers</button>
+        </div>`;
+      }).join('')}</div>`;
+  }
+  async function qOpenAttempt(id, username, title){
+    const body = document.getElementById('attemptsBody');
+    body.innerHTML = '<div class="admin-empty">Loading…</div>';
+    document.getElementById('attemptsModal').classList.add('open');
+    const rec = await dbGet('attempts', id);
+    const results = rec && Array.isArray(rec.results) ? rec.results : null;
+    const head = `<div class="at-kicker">🧠 Skill practice · ${esc(username)}</div><h3 id="attemptsTitle">${esc(title)}</h3>
+      <div class="at-summary">${rec && rec.ts ? esc(new Date(rec.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })) + ' · ' : ''}${rec ? `${rec.correct ?? 0} of ${rec.total ?? 0} right (${rec.pct ?? 0}%)` : ''}</div>`;
+    if(!results){ body.innerHTML = head + '<div class="admin-empty">The answers for this practice weren\'t saved.</div>'; return; }
+    const wrongN = results.filter(r => !r.correct).length;
+    body.innerHTML = head + `<div class="at-filters" role="group" aria-label="Show">
+        <button type="button" class="at-filter active" data-f="all">All ${results.length}</button>
+        <button type="button" class="at-filter" data-f="wrong">✗ Wrong ${wrongN}</button>
+        <button type="button" class="at-filter" data-f="right">✓ Right ${results.length - wrongN}</button></div>
+      <div class="at-qs">${results.map((r, i) => attemptQuestionHtml(r, i)).join('')}</div>`;
+    body.querySelectorAll('.at-filter').forEach(b => b.addEventListener('click', ()=>{
+      body.querySelectorAll('.at-filter').forEach(x => x.classList.toggle('active', x === b));
+      body.querySelectorAll('.at-q').forEach(q => { q.hidden = b.dataset.f === 'wrong' ? q.dataset.ok === '1' : b.dataset.f === 'right' ? q.dataset.ok !== '1' : false; });
+    }));
+    body.querySelectorAll('.at-expl-btn').forEach(b => b.addEventListener('click', ()=>{
+      const box = b.nextElementSibling; box.hidden = !box.hidden;
+      b.textContent = box.hidden ? '💡 See the explanation' : '💡 Hide the explanation';
+    }));
+  }
+  function qWireSkills(root){ root.querySelectorAll('.qs-open').forEach(b => b.addEventListener('click', ()=> qOpenAttempt(b.dataset.id, b.dataset.u, b.dataset.t))); }
+
+  /* ---------- admin + assistant2026: Homework tab ---------- */
+  let qHwView = 'hw';
+  async function qAdminHwScope(){
+    const filterVal = (document.getElementById('hwFilterSelect') || {}).value || '';
+    const scoped = await fetchStudentsForCurrentAdmin();
+    const allowed = new Set(scoped.map(s => qN(s.username)));
+    const ok = u => (!currentAdminCourseFilter || allowed.has(qN(u))) && (!filterVal || qN(u) === qN(filterVal));
+    return { ok, filterVal };
+  }
+  async function qRenderAdminHwExtra(){
+    const box = document.getElementById('qHwExtra'), tableWrap = document.getElementById('homeworkTable').closest('.admin-table-wrap');
+    document.querySelectorAll('#qHwViews [data-hv]').forEach(b => b.classList.toggle('active', b.dataset.hv === qHwView));
+    if(qHwView === 'hw'){ box.hidden = true; tableWrap.hidden = false; return; }
+    tableWrap.hidden = true; box.hidden = false;
+    box.innerHTML = '<div class="admin-empty">Loading…</div>';
+    const { ok } = await qAdminHwScope();
+    if(qHwView === 'plans'){
+      const hw = (await fetchHomeworkIndex()).filter(h => ok(h.username));
+      box.innerHTML = qPlansHtml(hw);
+    } else {
+      const at = (await fetchAttemptsIndex()).filter(a => ok(a.username));
+      box.innerHTML = qSkillsHtml(at);
+      qWireSkills(box);
+    }
+  }
+  document.querySelectorAll('#qHwViews [data-hv]').forEach(b => b.addEventListener('click', ()=>{ qHwView = b.dataset.hv; qRenderAdminHwExtra(); }));
+  { const sel = document.getElementById('hwFilterSelect'); if(sel) sel.addEventListener('change', ()=>{ if(qHwView !== 'hw') qRenderAdminHwExtra(); }); }
+  // Plan name under every homework in the table.
+  { const _rah = renderAdminHomework;
+    renderAdminHomework = async function(){
+      const r = await _rah.apply(this, arguments);
+      try{
+        const { ok } = await qAdminHwScope();
+        const entries = (await fetchHomeworkIndex()).filter(e => ok(e.username));
+        const groups = new Map(qPlanGroups(entries).map(g => [qN(g.username) + '|' + g.name, g]));
+        const rows = document.querySelectorAll('#homeworkBody tr');
+        if(rows.length === entries.length) rows.forEach((tr, i) => {
+          const e = entries[i];
+          if(!e.fromPlan || tr.querySelector('.qhp-badge')) return;
+          const g = groups.get(qN(e.username) + '|' + e.fromPlan);
+          const day = g ? g.rows.findIndex(h => h.id === e.id) + 1 : 0;
+          const cell = tr.cells[1];
+          if(cell) cell.insertAdjacentHTML('beforeend', `<div class="qhp-badge">📋 ${esc(e.fromPlan)}${day ? ` · day ${day} of ${g.total}` : ''}${g ? ` · ${g.done}/${g.total} done` : ''}</div>`);
+        });
+      }catch(err){ console.warn('plan badges', err); }
+      if(qHwView !== 'hw') qRenderAdminHwExtra();
+      return r;
+    }; }
+
+  /* ---------- assistant / coordinator homework page: plans + skill practice ---------- */
+  { const _qra = qRenderAsdHomework;
+    qRenderAsdHomework = async function(root, allStudents){
+      await _qra(root, allStudents);
+      const acct = currentAssistantAccount;
+      let assigned;
+      if(allStudents){ const st = await fetchAllStudents(); assigned = new Set(st.filter(x => x && x.status === 'approved').map(x => qN(x.username))); }
+      else assigned = new Set(((acct && acct.assignedStudents) || []).map(qN));
+      const [hwAll, atAll] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
+      const extra = document.createElement('div');
+      extra.className = 'qhx';
+      const decorate = ()=>{
+        const filters = root.querySelector('.cd-filters'); if(!filters) return;
+        const sel = filters.querySelector('select');
+        const who = sel ? sel.value : '';
+        const find = allStudents && document.getElementById('cdSearch') ? qN(document.getElementById('cdSearch').value) : '';
+        const okU = u => assigned.has(qN(u)) && (!who || qN(u) === qN(who)) && (!find || qN(u).includes(find));
+        const hw = hwAll.filter(h => okU(h.username)), at = atAll.filter(a => okU(a.username));
+        const nPlans = qPlanGroups(hw).length, nSkills = qSkillAttempts(at).length;
+        if(!filters.querySelector('[data-hx]')){
+          filters.insertAdjacentHTML('beforeend', `<button type="button" class="cd-chip" data-hx="plans">📋 Plans ${nPlans}</button><button type="button" class="cd-chip" data-hx="skills">🧠 Skill practice ${nSkills}</button>`);
+          filters.querySelectorAll('[data-hx]').forEach(b => b.addEventListener('click', ()=>{
+            const on = !b.classList.contains('active');
+            filters.querySelectorAll('[data-hx], [data-hf]').forEach(x => x.classList.remove('active'));
+            const list = root.querySelector('.qh-list');
+            if(on){
+              b.classList.add('active');
+              if(list) list.hidden = true;
+              extra.hidden = false;
+              extra.innerHTML = b.dataset.hx === 'plans' ? qPlansHtml(hw) : qSkillsHtml(at);
+              qWireSkills(extra);
+            } else { if(list) list.hidden = false; extra.hidden = true; filters.querySelector('[data-hf="all"]') && filters.querySelector('[data-hf="all"]').click(); }
+          }));
+        }
+        // Plan progress next to every plan homework.
+        const groups = new Map(qPlanGroups(hw).map(g => [qN(g.username) + '|' + g.name, g]));
+        root.querySelectorAll('.qh-row').forEach(row => {
+          const main = row.querySelector('.qh-main .cd-muted'); if(!main || row.dataset.qp) return;
+          const m = /👤 (.+?) · 📋 (.+?)(?: · |$)/.exec(main.textContent);
+          if(!m) return;
+          const g = groups.get(qN(m[1]) + '|' + m[2]);
+          if(g){ row.dataset.qp = '1'; main.insertAdjacentHTML('beforeend', ` <span class="qhp-mini">(${g.done}/${g.total} of the plan done)</span>`); }
+        });
+      };
+      extra.hidden = true;
+      if(root._qObs) root._qObs.disconnect();
+      root.querySelectorAll(':scope > .qhx').forEach(x => x.remove());
+      root.appendChild(extra);
+      decorate();
+      // The page redraws itself when a filter is clicked; add the extras back each time.
+      root._qObs = new MutationObserver(()=>{ if(!root.contains(extra)){ extra.hidden = true; root.appendChild(extra); } decorate(); });
+      root._qObs.observe(root, { childList: true });
+    }; }
+
+  /* ---------- student: their plan on the Homework tab ---------- */
+  { const _rsh = renderStudentHomework;
+    renderStudentHomework = async function(){
+      const r = await _rsh.apply(this, arguments);
+      try{
+        if(!currentStudent) return r;
+        const all = await fetchHomeworkIndex();
+        const mineAll = all.filter(e => qN(e.username) === qN(currentStudent.username));
+        const shown = mineAll.filter(e => isHomeworkPublished(e));
+        const groups = qPlanGroups(mineAll).filter(g => !g.finished || Date.now() - new Date(g.rows[g.rows.length - 1].submittedAt || 0).getTime() < 14 * 864e5);
+        const byKey = new Map(qPlanGroups(mineAll).map(g => [g.name, g]));
+        const rows = document.querySelectorAll('#hwList > .hw-row');
+        if(rows.length === shown.length) rows.forEach((row, i) => {
+          const e = shown[i]; if(!e.fromPlan || row.querySelector('.qhp-badge')) return;
+          const g = byKey.get(e.fromPlan); const day = g ? g.rows.findIndex(h => h.id === e.id) + 1 : 0;
+          const t = row.querySelector('.hw-title');
+          if(t) t.insertAdjacentHTML('beforeend', ` <span class="qhp-badge inline">📋 ${esc(e.fromPlan)}${day ? ` · day ${day}` : ''}</span>`);
+        });
+        let banner = document.getElementById('qStudentPlans');
+        if(!banner){ banner = document.createElement('div'); banner.id = 'qStudentPlans'; const list = document.getElementById('hwList'); list.parentNode.insertBefore(banner, list); }
+        banner.innerHTML = groups.map(g => `<div class="qsp">
+          ${qRing(g.total ? Math.round(g.done / g.total * 100) : 0, 54, { stroke: 6, tone: 'signal', sub: `${g.done}/${g.total}` })}
+          <div class="qsp-main"><b>📋 Your plan: ${esc(g.name)}</b>
+            <span class="cd-muted">${g.done} of ${g.total} done${g.avg !== null ? ` · average ${g.avg}%` : ''}${g.waiting ? ` · <span class="qh-late">${g.waiting} waiting for you</span>` : ''}${g.next ? ` · next: ${esc(g.next.title || 'Homework')} on ${esc(qFmtDay(g.next.publishAt))}` : g.finished ? ' · ✅ finished!' : ''}</span></div>
+        </div>`).join('');
+      }catch(err){ console.warn('student plans', err); }
+      return r;
+    }; }
+
+  /* ---------- student analysis (📈 Details): plans + skill practice ---------- */
+  { const _osa = openStudentAnalysis;
+    openStudentAnalysis = async function(username){
+      const r = await _osa.apply(this, arguments);
+      try{
+        const [hw, at] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
+        const mineHw = hw.filter(h => qN(h.username) === qN(username)), mineAt = at.filter(a => qN(a.username) === qN(username));
+        const el = document.getElementById('analysisContent');
+        const sec = document.createElement('div');
+        sec.className = 'qa-analysis';
+        sec.innerHTML = `<div class="analysis-section-title">📋 Plans</div>${qPlansHtml(mineHw)}
+          <div class="analysis-section-title">🧠 Skill practice (not homework)</div>${qSkillsHtml(mineAt)}`;
+        el.prepend(sec);
+        qWireSkills(sec);
+      }catch(err){ console.warn('analysis extras', err); }
+      return r;
+    }; }
 </script>
 
 </div>
