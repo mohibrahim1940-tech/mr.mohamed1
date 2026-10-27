@@ -4079,6 +4079,131 @@
   .qsp-main b{ overflow-wrap:anywhere; }
   .qa-analysis{ margin-bottom:18px; }
   .qhx{ margin-top:6px; }
+
+  /* =====================================================================
+     PHONE + iPAD POLISH  (Oct 2026)
+     1) Side gutters: ".hero{padding:190px 0 …}", ".section-pad{padding:120px 0}"
+        and ".admin-dash{padding:40px 0 …}" were wiping out the side padding
+        of every ".wrap", so on anything narrower than 1180px (phones, every
+        iPad, small laptops) text sat glued to the left edge of the screen.
+     2) Finger-sized tap targets and 16px form fields (iPhone zooms the whole
+        page in when you tap a field with smaller text).
+     3) No text smaller than ~12px.
+     ===================================================================== */
+  :root{ --gut:32px; }
+  .wrap.wrap{ padding-left:var(--gut); padding-right:var(--gut); }
+  @media (max-width:900px){ :root{ --gut:24px; } }
+  @media (max-width:640px){ :root{ --gut:16px; } }
+
+  /* lighter vertical rhythm on small screens — less endless scrolling */
+  @media (max-width:960px){
+    .section-pad{ padding-top:88px; padding-bottom:88px; }
+    .hero{ padding-top:120px; padding-bottom:80px; }
+  }
+  @media (max-width:640px){
+    .section-pad{ padding-top:64px; padding-bottom:64px; }
+    .hero{ padding-top:104px; padding-bottom:56px; gap:28px; }
+    .hero h1{ font-size:clamp(2rem, 9vw, 2.5rem); }
+    .admin-dash{ padding-top:22px; }
+    .admin-bar{ padding:10px 0; }
+    h2{ overflow-wrap:anywhere; }
+  }
+
+  /* ---------- touch devices / phones / iPads ---------- */
+  @media (max-width:1180px), (pointer:coarse){
+    /* form fields */
+    input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]):not([type=hidden]),
+    select, textarea{
+      font-size:16px !important;
+      min-height:44px;
+    }
+    input[type=date], input[type=time], input[type=datetime-local], input[type=month]{
+      padding-left:10px; padding-right:10px; min-width:140px;
+    }
+    select{ padding-left:10px; padding-right:28px; }
+    input[type=checkbox], input[type=radio]{ width:20px; height:20px; }
+
+    /* buttons */
+    .btn, button.btn, a.btn,
+    button[class*="-btn"], a[class*="-btn"],
+    .admin-tab, .cd-tab, .cd-chip, .dash-tab-btn, .lb-mode-btn,
+    .mistake-filter-btn, .student-action-btn, .assistant-role-select{
+      min-height:42px;
+    }
+    a.btn, a[class*="-btn"]{ display:inline-flex; align-items:center; justify-content:center; }
+    .student-action-btn{ padding-left:12px; padding-right:12px; }
+    .remove-q-btn{ min-width:40px; min-height:40px; display:inline-flex; align-items:center; justify-content:center; }
+    .modal-close{ min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
+    .menu-toggle{ min-width:44px; min-height:44px; }
+    .fc-table-btn{ padding:10px 12px; }
+    .cd-name-btn{ padding-top:10px; padding-bottom:10px; }
+
+    /* header: signed-in name / log out / staff + admin buttons */
+    #myScoresBtn, #logoutBtn,
+    .nav-cta .open-auth-btn, .nav-cta .open-admin-btn, .nav-cta .open-assistant-auth-btn{
+      min-height:40px; padding-left:8px; padding-right:8px;
+    }
+    #myScoresBtn{ min-width:40px; }
+
+    /* footer + inline text links */
+    .footer-top li a{ display:inline-block; padding:8px 0; }
+    .footer-top li{ margin-bottom:2px; }
+    #gotoRegister, #gotoSignin{ display:inline-block; padding:8px 0; }
+
+    /* tiny text → readable */
+    .label, .status-pill, small, code, .mono.cd-role-label, #adminRoleLabel,
+    .ov-class-bar-pct, .ov-class-bar-name, .cd-track-k,
+    .qh-facts b, .qp-facts b{
+      font-size:12px !important;
+    }
+    .dow, .cnt, .k, .m, .w{ font-size:12px !important; }
+    .pr-sub{ font-size:11.5px !important; }
+    .nav-links a{ padding-top:10px; padding-bottom:10px; }
+  }
+
+  /* hamburger menu on phones / portrait iPad: big rows instead of tiny links */
+  @media (max-width:860px){
+    .nav-links{ gap:4px; padding:12px var(--gut) 20px; max-height:calc(100vh - 64px); overflow-y:auto; }
+    .nav-links > a, .nav-links > button, .nav-links .btn{
+      min-height:48px; display:flex; align-items:center; width:100%;
+      font-size:1rem !important; border-bottom:1px solid var(--line) !important;
+    }
+    .nav-links > a:last-child, .nav-links > button:last-child{ border-bottom:none !important; }
+  }
+
+  /* ---------- modals fit the screen ---------- */
+  @media (max-width:640px){
+    .modal-box{ width:calc(100vw - 24px) !important; max-width:calc(100vw - 24px) !important; padding-left:18px; padding-right:18px; }
+    .modal-box{ max-height:calc(100dvh - 24px); overflow-y:auto; }
+    .admin-stats{ grid-template-columns:1fr 1fr !important; gap:12px; }
+    .admin-table{ font-size:0.86rem; }
+    .admin-table th, .admin-table td{ padding:10px 10px; }
+  }
+
+  /* ---------- iPad (portrait + landscape) ---------- */
+  @media (min-width:641px) and (max-width:1180px){
+    .modal-box{ max-width:min(760px, calc(100vw - 48px)); }
+    .admin-tabs, .cd-tabs{ scroll-padding-left:var(--gut); }
+  }
+
+  /* safe-area (iPhone notch / home bar) */
+  @supports (padding:max(0px)){
+    .wa-fab{ margin-bottom:env(safe-area-inset-bottom); }
+  }
+
+  /* skill cards: on phones the card stacks vertically, and the desktop
+     "flex:1 1 320px" turned into a 320px-TALL empty block */
+  @media (max-width:640px){
+    .skill-row-list .exam-card .exam-card-main{ flex:0 0 auto; }
+    .skill-row-list .exam-card .exam-card-actions .btn{ width:100%; }
+  }
+  /* nothing in a card may push past its edge */
+  select, input, textarea{ max-width:100%; }
+  .exam-card, .admin-stat-card, .dash-card{ min-width:0; }
+
+  @media (min-width:861px) and (max-width:1180px){
+    .nav-cta > a{ display:inline-flex; align-items:center; min-height:42px; }
+  }
 </style>
 </head>
 <body>
@@ -4759,7 +4884,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 27 Oct 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 27 Oct 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
