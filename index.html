@@ -4080,6 +4080,16 @@
   .qa-analysis{ margin-bottom:18px; }
   .qhx{ margin-top:6px; }
 
+  /* blank-question check */
+  .blank-check{ position:fixed; inset:0; z-index:4000; background:rgba(8,14,20,.55); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .blank-card{ background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:16px; padding:22px 20px; width:min(460px, 100%); max-height:calc(100dvh - 32px); overflow-y:auto; box-shadow:0 18px 50px rgba(0,0,0,.35); }
+  .blank-card h3{ font-size:1.1rem; margin-bottom:8px; }
+  .blank-card p{ color:var(--muted); font-size:0.92rem; margin-bottom:14px; }
+  .blank-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .blank-chip{ min-width:44px; min-height:44px; border-radius:10px; border:1px solid var(--warn, #e0a000); background:rgba(255,176,32,.12); color:var(--text); font-weight:600; cursor:pointer; font-family:inherit; }
+  .blank-actions{ display:flex; flex-direction:column; gap:10px; }
+  .blank-actions .btn{ width:100%; min-height:46px; }
+
   /* =====================================================================
      PHONE + iPAD POLISH  (Oct 2026)
      1) Side gutters: ".hero{padding:190px 0 …}", ".section-pad{padding:120px 0}"
@@ -4884,7 +4894,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 27 Oct 2026 · B</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 27 Oct 2026 · C</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -7749,7 +7759,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
             <div class="hw-row">
               <span class="hw-date">${esc(dateLabel)}</span>
               <span class="hw-title">${esc(a.examTitle || '')}</span>
-              <span class="hw-mark">${a.correct}/${a.total} (${a.pct}%)</span>
+              <span class="hw-mark">${a.correct}/${a.total} (${a.pct}%)${a.skipped ? ` · ${a.skipped} skipped` : ''}</span>
             </div>
           `;
         }).join('');
@@ -10650,7 +10660,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           </span>
           <span class="at-row-score">
             <span class="at-pct ${tone}">${pct}%</span>
-            <span class="at-frac">${a.correct ?? 0}/${a.total ?? 0} right${delta !== null && delta !== 0 ? ` <span class="at-delta ${delta > 0 ? 'up' : 'down'}">${delta > 0 ? '▲' : '▼'} ${Math.abs(delta)}</span>` : ''}</span>
+            <span class="at-frac">${a.correct ?? 0}/${a.total ?? 0} right${a.skipped ? ` <span class="cd-muted">· ${a.skipped} skipped</span>` : ''}${delta !== null && delta !== 0 ? ` <span class="at-delta ${delta > 0 ? 'up' : 'down'}">${delta > 0 ? '▲' : '▼'} ${Math.abs(delta)}</span>` : ''}</span>
           </span>
           <span class="at-row-go" aria-hidden="true">Review ›</span>
         </button>`;
@@ -10667,7 +10677,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button type="button" class="btn btn-ghost at-back">‹ All attempts</button>
       <div class="at-kicker">${esc(atState.title)}</div>
       <h3 id="attemptsTitle">Attempt ${n}</h3>
-      <div class="at-summary">${rec && rec.ts ? esc(atDate(rec.ts)) + ' · ' : ''}${rec ? `${rec.correct ?? 0} of ${rec.total ?? 0} right (${rec.pct ?? 0}%)` : ''}</div>`;
+      <div class="at-summary">${rec && rec.ts ? esc(atDate(rec.ts)) + ' · ' : ''}${rec ? `${rec.correct ?? 0} of ${rec.total ?? 0} right (${rec.pct ?? 0}%)${rec.skipped ? ` · ${rec.skipped} skipped — still waiting in the skill` : ''}` : ''}</div>`;
     if(!results){
       body.innerHTML = head + '<div class="admin-empty">The question-by-question details of this attempt weren\'t saved.</div>';
       body.querySelector('.at-back').addEventListener('click', renderAttemptsList);
@@ -11201,6 +11211,40 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     if(e.target === examModal){ stopActiveTimer(); examModal.classList.remove('open'); }
   });
 
+
+  /* Blank-question check before finishing a quiz / homework. */
+  function askAboutBlanks(answers, opts){
+    const blanks = answers.map((a, i) => (a == null ? i : -1)).filter(i => i >= 0);
+    if(blanks.length === 0){ opts.onSubmit(); return; }
+    document.querySelectorAll('.blank-check').forEach(el => el.remove());
+    const answered = answers.length - blanks.length;
+    const n = blanks.length, s = n === 1 ? '' : 's';
+    const box = document.createElement('div');
+    box.className = 'blank-check';
+    box.innerHTML = `<div class="blank-card" role="dialog" aria-modal="true">
+      <h3>⚠ ${n} question${s} not answered yet</h3>
+      <p>${opts.practice
+        ? (answered > 0
+            ? `If you finish now you're marked on the ${answered} you answered — the ${n} blank one${s} stay in this skill for next time.`
+            : `You haven't answered any question yet.`)
+        : `If you submit now, the blank one${s} count as wrong.`}</p>
+      <div class="blank-chips">${blanks.slice(0, 60).map(i => `<button type="button" class="blank-chip" data-i="${i}">${i + 1}</button>`).join('')}${n > 60 ? ' …' : ''}</div>
+      <div class="blank-actions">
+        <button type="button" class="btn btn-primary blank-go">Answer question ${blanks[0] + 1}</button>
+        ${opts.practice && answered === 0 ? '' : `<button type="button" class="btn btn-ghost blank-submit">${opts.practice ? 'Finish anyway' : 'Submit anyway'}</button>`}
+      </div></div>`;
+    document.body.appendChild(box);
+    const close = ()=> box.remove();
+    box.querySelector('.blank-go').addEventListener('click', ()=>{ close(); opts.onJump(blanks[0]); });
+    box.querySelectorAll('.blank-chip').forEach(b => b.addEventListener('click', ()=>{ close(); opts.onJump(Number(b.dataset.i)); }));
+    const sub = box.querySelector('.blank-submit');
+    if(sub) sub.addEventListener('click', ()=>{ close(); opts.onSubmit(); });
+    box.addEventListener('click', e => { if(e.target === box) close(); });
+  }
+  // A second tap that lands within this many ms of a new question appearing
+  // is the same finger, not a decision to skip it.
+  const NEXT_TAP_GUARD_MS = 450;
+
   function startExam(exam, matchMode, opts){
     const practice = opts && opts.practice ? opts : null;   // skill practice: mark only what they answer
     let current = 0;
@@ -11262,6 +11306,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         </div>
         ${practice ? `<p class="practice-stop-hint">You're marked only on the questions you answer — the rest stay here for next time.</p>` : ''}
       `;
+      examPlayer._shownAt = Date.now();
       document.getElementById('qNavWrap').appendChild(
         buildQuestionNav(exam.questions.length, current, answers, flagged, (i)=>{ current = i; renderQuestion(); })
       );
@@ -11362,7 +11407,10 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         await renderScore();
       });
       document.getElementById('examNextBtn').addEventListener('click', async ()=>{
-        if(current === exam.questions.length-1){ await renderScore(); }
+        if(Date.now() - (examPlayer._shownAt || 0) < NEXT_TAP_GUARD_MS) return;
+        if(current === exam.questions.length-1){
+          askAboutBlanks(answers, { practice: !!practice, onJump: (i)=>{ current = i; renderQuestion(); }, onSubmit: ()=> renderScore() });
+        }
         else if(matchMode && !halfTimeShown && current + 1 === halfwayPoint && exam.questions.length >= 4){
           halfTimeShown = true;
           current++;
@@ -11407,6 +11455,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 
     let scoreRendered = false;
     let practiceLeftBehind = 0;
+    let practiceSkippedQs = [];
     async function renderScore(){
       // The student can hit Submit in the same second the clock runs out;
       // without this the result would be saved -- and counted -- twice.
@@ -11423,6 +11472,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         const keptIdx = answers.map((a,i)=> a != null ? i : -1).filter(i => i >= 0);
         if(keptIdx.length > 0 && keptIdx.length < exam.questions.length){
           practiceLeftBehind = exam.questions.length - keptIdx.length;
+          practiceSkippedQs = exam.questions.filter((q, i) => answers[i] == null);
           const keptQuestions = keptIdx.map(i => exam.questions[i]);
           const keptAnswers = keptIdx.map(i => answers[i]);
           exam.questions = keptQuestions;
@@ -11502,7 +11552,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           // What this attempt belongs to, so a skill or exam card can list
           // exactly its own attempts (titles alone can clash).
           source: (practice || exam.skillId) ? 'skill' : (exam.id ? 'exam' : 'other'),
-          sourceId: practice ? practice.skillId : (exam.skillId || exam.id || null)
+          sourceId: practice ? practice.skillId : (exam.skillId || exam.id || null),
+          skipped: practice ? practiceLeftBehind : 0
         };
         let attemptResult, mistakeResults;
         try{
@@ -11576,6 +11627,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         practiceLeftHtml = `<div class="practice-left-note">
           📗 Marked on the ${exam.questions.length} question${exam.questions.length === 1 ? '' : 's'} you answered${practiceLeftBehind ? ` — the ${practiceLeftBehind} you skipped are still waiting` : ''}.
           ${stillLeft > 0 ? `<br><strong>${stillLeft} more</strong> left in \u201C${esc(practice.skillName || exam.title)}\u201D whenever you want them.` : `<br>That\u2019s the whole set finished. \ud83c\udf89`}
+          ${practiceSkippedQs.length ? `<button type="button" class="btn btn-primary" id="practiceDoSkippedBtn" style="width:100%;margin-top:12px;">Answer the ${practiceSkippedQs.length} skipped now</button>` : ''}
         </div>`;
       }
 
@@ -11623,6 +11675,12 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       const examSticker = examPlayer.querySelector('.score-sticker');
       if(examSticker) examSticker.classList.add('rb-bounce');
       wireResultBoard(examPlayer, boardRows, { kind:'exam', title: exam.title });
+      const doSkippedBtn = document.getElementById('practiceDoSkippedBtn');
+      if(doSkippedBtn && practice) doSkippedBtn.addEventListener('click', ()=>{
+        const again = practiceSkippedQs.slice();
+        startExam({ title: exam.title, questions: again }, false,
+          { ...practice, remainingTotal: Math.max(again.length, (practice.remainingTotal || 0) - exam.questions.length) });
+      });
       celebrateResult(pct);
       const retryBtn = document.getElementById('retrySaveBtn');
       if(retryBtn){
@@ -20170,8 +20228,12 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       document.getElementById('examPrevBtn').addEventListener('click', ()=>{
         if(current > 0){ current--; rememberProgress(); renderQuestion(); }
       });
+      examPlayer._shownAt = Date.now();
       document.getElementById('examNextBtn').addEventListener('click', ()=>{
-        if(current === hw.questions.length-1){ submitHomework(); }
+        if(Date.now() - (examPlayer._shownAt || 0) < NEXT_TAP_GUARD_MS) return;
+        if(current === hw.questions.length-1){
+          askAboutBlanks(answers, { practice: false, onJump: (i)=>{ current = i; rememberProgress(); renderQuestion(); }, onSubmit: ()=> submitHomework() });
+        }
         else { current++; rememberProgress(); renderQuestion(); }
       });
     }
@@ -27509,7 +27571,7 @@ $$);`;
         const topics = a.topics && typeof a.topics === 'object' ? Object.entries(a.topics) : [];
         return `<div class="qs-row">
           ${qRing(a.pct ?? 0, 48, { stroke: 5 })}
-          <div class="qs-main"><b>🧠 ${esc(a.examTitle || 'Skill')}</b><span class="cd-muted">👤 ${esc(a.username)} · ${esc(qFmtDay(a.ts))} · ${a.correct ?? 0}/${a.total ?? 0} right${a.retakeRequired ? ' · <span class="qh-late">has mistakes to fix</span>' : ''}</span>
+          <div class="qs-main"><b>🧠 ${esc(a.examTitle || 'Skill')}</b><span class="cd-muted">👤 ${esc(a.username)} · ${esc(qFmtDay(a.ts))} · ${a.correct ?? 0}/${a.total ?? 0} right${a.skipped ? ` · ${a.skipped} skipped (still waiting)` : ''}${a.retakeRequired ? ' · <span class="qh-late">has mistakes to fix</span>' : ''}</span>
             ${topics.length > 1 ? `<span class="qh-topics">${topics.map(([l, t]) => Array.isArray(t) && t[1] ? `<span class="cd-pill ${t[0] / t[1] >= 0.75 ? 'good' : t[0] / t[1] >= 0.5 ? 'mid' : 'bad'}">${esc(l)} ${t[0]}/${t[1]}</span>` : '').join('')}</span>` : ''}</div>
           <button type="button" class="btn btn-ghost cd-small qs-open" data-id="${esc(a.id)}" data-u="${esc(a.username)}" data-t="${esc(a.examTitle || 'Skill')}">🔍 Answers</button>
         </div>`;
@@ -27522,7 +27584,7 @@ $$);`;
     const rec = await dbGet('attempts', id);
     const results = rec && Array.isArray(rec.results) ? rec.results : null;
     const head = `<div class="at-kicker">🧠 Skill practice · ${esc(username)}</div><h3 id="attemptsTitle">${esc(title)}</h3>
-      <div class="at-summary">${rec && rec.ts ? esc(new Date(rec.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })) + ' · ' : ''}${rec ? `${rec.correct ?? 0} of ${rec.total ?? 0} right (${rec.pct ?? 0}%)` : ''}</div>`;
+      <div class="at-summary">${rec && rec.ts ? esc(new Date(rec.ts).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })) + ' · ' : ''}${rec ? `${rec.correct ?? 0} of ${rec.total ?? 0} right (${rec.pct ?? 0}%)${rec.skipped ? ` · ${rec.skipped} skipped — still waiting in the skill` : ''}` : ''}</div>`;
     if(!results){ body.innerHTML = head + '<div class="admin-empty">The answers for this practice weren\'t saved.</div>'; return; }
     const wrongN = results.filter(r => !r.correct).length;
     body.innerHTML = head + `<div class="at-filters" role="group" aria-label="Show">
