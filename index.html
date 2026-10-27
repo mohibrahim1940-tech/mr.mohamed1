@@ -4759,7 +4759,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 23 Oct 2026 · B</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 27 Oct 2026</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -7658,9 +7658,30 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     });
   }
 
+  const _inlineImgCache = new Map();
+  async function moveInlineImagesToStorage(data){
+    let txt;
+    try{ txt = JSON.stringify(data); }catch(e){ return data; }
+    if(!txt || txt.indexOf('"data:image/') === -1) return data;
+    const walk = async v => {
+      if(typeof v === 'string'){
+        if(v.startsWith('data:image/') && v.indexOf(';base64,') !== -1){
+          if(_inlineImgCache.has(v)) return _inlineImgCache.get(v);
+          try{ const url = await uploadBase64ImageToStorage(v); _inlineImgCache.set(v, url); return url; }
+          catch(err){ console.warn('could not move a picture to storage — saving it as it is', err); return v; }
+        }
+        return v;
+      }
+      if(Array.isArray(v)){ for(let i = 0; i < v.length; i++) v[i] = await walk(v[i]); return v; }
+      if(v && typeof v === 'object'){ for(const k of Object.keys(v)) v[k] = await walk(v[k]); return v; }
+      return v;
+    };
+    return await walk(JSON.parse(txt));
+  }
   async function dbSet(collection, docId, data, attempt){
     attempt = attempt || 1;
     if(!storageAvailable()) return false;
+    if(attempt === 1 && ['homework', 'attempts', 'asks', 'exams', 'skills', 'mistakes'].includes(collection) && !String(docId).startsWith('idx-')) data = await moveInlineImagesToStorage(data);
     try{
       const { error } = await supabaseClient.from(collection).upsert({ id: docId, data });
       if(error) throw error;
@@ -7834,6 +7855,62 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   // if something's actually missing — so once healed, it stays cheap.
   const _backfillDone = { skills: false, exams: false };
   const _backfillInFlight = {}; // collection -> in-progress promise, so concurrent callers share one check instead of each starting their own
+  // Lists only the ids of a table (a few KB) instead of every full row.
+  async function dbListIds(collection){
+    if(!storageAvailable()) return [];
+    const PAGE = 1000; let out = [], offset = 0;
+    while(true){
+      const { data, error } = await supabaseClient.from(collection).select('id').range(offset, offset + PAGE - 1);
+      if(error) throw error;
+      const page = (data || []).map(r => r.id);
+      out = out.concat(page);
+      if(page.length < PAGE) break;
+      offset += PAGE;
+    }
+    return out;
+  }
+  // Rows whose data.<field> equals value (not case-sensitive) — the server
+  // does the filtering, so a student downloads only their own rows instead
+  // of the whole table. Callers still check the exact match themselves.
+  async function dbGetWhere(collection, field, value){
+    if(!storageAvailable() || value == null || value === '') return [];
+    const cacheKey = `${collection}||w:${field}:${String(value).trim().toLowerCase()}`;
+    const cached = _dbCache[cacheKey];
+    if(cached && (Date.now() - cached.ts) < DB_CACHE_TTL) return cached.data;
+    if(_inFlightRequests[cacheKey]) return _inFlightRequests[cacheKey];
+    const promise = (async ()=>{
+      try{
+        const pattern = String(value).trim().replace(/[\\%]/g, m => '\\' + m);
+        const PAGE = 1000; let rows = [], offset = 0;
+        while(true){
+          const { data, error } = await supabaseClient.from(collection).select('data').ilike(`data->>${field}`, pattern).range(offset, offset + PAGE - 1);
+          if(error) throw error;
+          const page = (data || []).map(r => r.data);
+          rows = rows.concat(page);
+          if(page.length < PAGE) break;
+          offset += PAGE;
+        }
+        _dbCache[cacheKey] = { data: rows, ts: Date.now() };
+        return rows;
+      }catch(err){
+        console.error(`dbGetWhere(${collection}.${field}) failed — falling back to the full table:`, err);
+        const all = await dbGetAll(collection);
+        const v = String(value).trim().toLowerCase();
+        return all.filter(r => String((r || {})[field] || '').trim().toLowerCase() === v);
+      }finally{ delete _inFlightRequests[cacheKey]; }
+    })();
+    _inFlightRequests[cacheKey] = promise;
+    return promise;
+  }
+  // Homework records are one per student; to find a homework's questions by
+  // its title, open just one matching record instead of the whole table.
+  async function findHomeworkByTitle(title){
+    if(!title) return null;
+    const idx = await fetchHomeworkIndex();
+    const cands = idx.filter(h => h.title === title && (h.questionCount || 0) > 0).slice(0, 5);
+    for(const c of cands){ const rec = await dbGet('homework', c.id); if(rec && Array.isArray(rec.questions) && rec.questions.length) return rec; }
+    return null;
+  }
   async function ensureIndexBackfilled(collection, buildIndexRecord){
     if(_backfillDone[collection]) return;
     if(_backfillInFlight[collection]) return _backfillInFlight[collection];
@@ -7848,14 +7925,16 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           _backfillDone[collection] = true;
           return;
         }
-        const [fullRows, idxRows] = await Promise.all([
-          dbGetAll(collection).then(rows => rows.filter(r => !r._index)),
-          dbGetAllByIdPrefix(collection, 'idx-')
-        ]);
-        const indexedIds = new Set(idxRows.map(r => r.id));
-        const missing = fullRows.filter(r => !indexedIds.has(r.id));
-        for(const row of missing){
-          await dbSet(collection, `idx-${row.id}`, buildIndexRecord(row));
+        // Only the ids are listed (tiny), then just the few rows missing an
+        // index entry are opened. This used to download the WHOLE table on
+        // every visit whenever a single index entry was missing — over
+        // 100 MB for homework — which timed out and made the site lag.
+        const ids = await dbListIds(collection);
+        const idSet = new Set(ids);
+        const missing = ids.filter(id => !id.startsWith('idx-') && !idSet.has('idx-' + id)).slice(0, 60);
+        for(const id of missing){
+          const row = await dbGet(collection, id);
+          if(row) await dbSet(collection, `idx-${id}`, buildIndexRecord({ ...row, id: row.id || id }));
         }
         if(missing.length > 0) invalidateDbCache(collection);
       }catch(err){
@@ -9533,7 +9612,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       // when it couldn't be attached to the original question (a retake, or
       // a skill that has since been renamed). Newest first, so if someone
       // re-answered, their latest wording is the one kept.
-      const mistakes = (await fetchAllMistakes())
+      const mistakes = (await (context.title ? dbGetWhere('mistakes', 'source', context.title) : Promise.resolve([])))
         .filter(m => !m._index)
         .sort((a,b)=> new Date((b.answer && b.answer.answeredAt) || b.ts || 0) - new Date((a.answer && a.answer.answeredAt) || a.ts || 0));
       mistakes.forEach(m=>{
@@ -11956,7 +12035,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     // something to do about it rather than just a number.
     let weakestLine = '';
     try{
-      const mine = (await fetchAllMistakes()).filter(m => !m._index &&
+      const mine = (await dbGetWhere('mistakes', 'username', currentStudent.username)).filter(m => !m._index &&
         (m.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase() && !m.masteredByStudent);
       const tally = {};
       mine.forEach(m => { const l = (m.lesson || 'General').trim(); tally[l] = (tally[l] || 0) + 1; });
@@ -12179,8 +12258,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           const source = await findSourceRecordForMistake(m);
           let liveQuestions = source ? (source.record.questions || []) : null;
           if(!liveQuestions){
-            const allHw = await fetchAllHomework();
-            const match = allHw.find(h => !h._index && h.title === m.source && (h.questions||[]).length);
+            const match = await findHomeworkByTitle(m.source);
             if(match) liveQuestions = match.questions;
           }
           const liveQ = liveQuestions ? matchQuestionForMistake(m, liveQuestions) : null;
@@ -12232,7 +12310,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         topics: data.status === 'completed' ? topicSummary(data.results) : null,
         fromPlan: data.fromPlan || null, planBy: data.planBy || null
       });
-      backfillExplanationVideos(data.title, data.questions || []);
+      if(!(currentStudent && !currentAdminRole && !currentAssistantAccount)) backfillExplanationVideos(data.title, data.questions || []);
     }
     return ok;
   }
@@ -12823,17 +12901,30 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   async function repairSkillsIndexCourses(){
     if(_skillsCourseRepairDone) return;
     _skillsCourseRepairDone = true;
+    // This used to rewrite every skill's index on EVERY visit by EVERY
+    // student (thousands of saves a day). Now only the main admin checks it,
+    // at most once a day, and only skills that are actually out of date are saved.
+    if(!(currentAdminRole === 'admin' && !currentAssistantAccount)) return;
+    try{ if(localStorage.getItem('mi-skillidx-check') === new Date().toDateString()) return; }catch(e){}
     try{
-      const fullSkills = await fetchAllSkills();
+      const [fullSkills, idxRows] = await Promise.all([fetchAllSkills(), dbGetAllByIdPrefix('skills', 'idx-')]);
+      const have = new Map(idxRows.map(r => [r.id, r]));
+      let changed = 0;
       for(const skill of fullSkills){
-        await dbSet('skills', `idx-${skill.id}`, {
+        const want = {
           _index: true, id: skill.id, skill: skill.skill, course: skill.course || null,
           courses: Array.isArray(skill.courses) ? skill.courses : (skill.course ? [skill.course] : []),
           createdByRole: skill.createdByRole, questionCount: (skill.questions || []).length, ts: skill.ts,
           recordingUrl: skill.recordingUrl || null
-        });
+        };
+        const h = have.get(skill.id);
+        const sig = r => JSON.stringify([r.skill, r.course || null, r.courses || [], r.questionCount, r.ts, r.recordingUrl || null]);
+        if(h && sig(h) === sig(want)) continue;
+        await dbSet('skills', `idx-${skill.id}`, want);
+        changed++;
       }
-      if(fullSkills.length > 0) invalidateDbCache('skills');
+      try{ localStorage.setItem('mi-skillidx-check', new Date().toDateString()); }catch(e){}
+      if(changed > 0) invalidateDbCache('skills');
     }catch(err){
       console.error('repairSkillsIndexCourses failed:', err);
     }
@@ -16183,8 +16274,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         if(!liveQuestions){
           // Homework has a separate record per student, so findSourceRecordForMistake
           // (which only covers exams and skills) won't find it — look it up by title.
-          const allHw = await fetchAllHomework();
-          const match = allHw.find(h => !h._index && h.title === entry.source && (h.questions||[]).length);
+          const match = await findHomeworkByTitle(entry.source);
           if(match) liveQuestions = match.questions;
         }
         if(!liveQuestions) continue;
@@ -16207,6 +16297,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 
   async function backfillExplanationVideos(sourceTitle, questions){
     if(!sourceTitle || !Array.isArray(questions) || questions.length === 0) return;
+    // Nothing to copy when none of the questions has an explanation yet.
+    if(!questions.some(q => q && (getQuestionExplanations(q).length || q.explanationVideo || q.explanationText || q.explanationPhoto || q.explanationVoice))) return;
     try{
       const allMistakes = await fetchAllMistakes();
       // Mistakes from this exact source, plus any from a DIFFERENT source
@@ -18162,7 +18254,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     if(!el) return;
     el.innerHTML = '<div class="admin-empty">Loading…</div>';
 
-    const allMistakes = await fetchAllMistakes();
+    const allMistakes = await dbGetWhere('mistakes', 'username', currentStudent.username);
     const mine = allMistakes.filter(m => !m._index &&
       (m.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
 
@@ -18278,7 +18370,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   async function renderWeakPoints(){
     if(!currentStudent) return;
     const wpList = document.getElementById('weakPointsList');
-    const allMistakes = await fetchAllMistakes();
+    const allMistakes = await dbGetWhere('mistakes', 'username', currentStudent.username);
     const mine = allMistakes.filter(m => (m.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase());
 
     const tally = {}; // lesson -> mistake count
@@ -21488,7 +21580,11 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   // answer, saved the moment a student submits), so each one has a stable id
   // and can be deleted individually — e.g. once you've gone over it with them.
   async function gatherAllMistakeRows(usernameFilter){
-    const all = await fetchAllMistakes();
+    // One student's mistakes come straight from the server (already
+    // filtered) unless the whole table happens to be loaded already.
+    const all = (usernameFilter && !(_dbCache.mistakes && (Date.now() - _dbCache.mistakes.ts) < DB_CACHE_TTL))
+      ? await dbGetWhere('mistakes', 'username', usernameFilter)
+      : await fetchAllMistakes();
     const filtered = usernameFilter
       ? all.filter(m => (m.username || '').trim().toLowerCase() === usernameFilter.trim().toLowerCase())
       : all;
@@ -21829,8 +21925,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         const source = await findSourceRecordForMistake(row);
         let liveQuestions = source ? (source.record.questions || []) : null;
         if(!liveQuestions){
-          const allHw = await fetchAllHomework();
-          const match = allHw.find(h => !h._index && h.title === row.source && (h.questions||[]).length);
+          const match = await findHomeworkByTitle(row.source);
           if(match) liveQuestions = match.questions;
         }
         const liveQ = liveQuestions ? matchQuestionForMistake(row, liveQuestions) : null;
