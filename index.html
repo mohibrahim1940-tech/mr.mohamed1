@@ -4090,6 +4090,21 @@
   .blank-actions{ display:flex; flex-direction:column; gap:10px; }
   .blank-actions .btn{ width:100%; min-height:46px; }
 
+  /* ---------- Android speed ---------- */
+  .tap-media{ display:flex; align-items:center; gap:10px; width:100%; max-width:520px; min-height:56px; margin-top:8px; padding:12px 16px;
+    border:1px solid var(--line); border-radius:12px; background:var(--panel-2, var(--panel)); color:var(--text); font:inherit; font-weight:600; cursor:pointer; text-align:left; }
+  .tap-media .tm-play{ width:36px; height:36px; flex:0 0 36px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:var(--signal, #0e9aa7); color:#fff; font-size:0.9rem; }
+  .tap-media small{ display:block; font-weight:400; color:var(--muted); font-size:12px; }
+  .tap-media-live video{ width:100%; max-width:520px; border-radius:10px; margin-top:8px; display:block; }
+  .tap-media-live .explanation-embed{ margin-top:8px; }
+  .show-more-wrap{ display:flex; justify-content:center; padding:14px 0 6px; }
+  .show-more-wrap .btn{ min-width:220px; }
+  .mistake-history-row, .assistant-chat-thread{ content-visibility:auto; contain-intrinsic-size:auto 120px; }
+  @media (max-width:860px), (pointer:coarse){
+    header.scrolled{ backdrop-filter:none !important; -webkit-backdrop-filter:none !important; background:var(--ink) !important; }
+    .wa-pulse{ animation:none !important; display:none !important; }
+  }
+
   /* =====================================================================
      PHONE + iPAD POLISH  (Oct 2026)
      1) Side gutters: ".hero{padding:190px 0 …}", ".section-pad{padding:120px 0}"
@@ -4894,7 +4909,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 27 Oct 2026 · C</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 30 Oct 2026</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -9183,8 +9198,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
                 <div class="explanation-video-label">📝 ${exp.by ? esc(exp.by) : 'Unknown'}</div>
                 ${exp.text ? `<div class="explanation-text-body">${esc(exp.text)}</div>` : ''}
                 ${exp.photo ? `<img loading="lazy" decoding="async" src="${exp.photo}" alt="Explanation photo" style="max-width:200px;border-radius:6px;display:block;margin-top:6px;">` : ''}
-                ${exp.video ? `<video controls playsinline preload="metadata" src="${exp.video}" style="max-width:280px;border-radius:6px;display:block;margin-top:6px;"></video>` : ''}
-                ${exp.voice ? `<audio controls src="${exp.voice}" style="width:100%;margin-top:6px;"></audio>` : ''}
+                ${exp.video ? `${tapMediaHtml('video', exp.video, 'Explanation video')}` : ''}
+                ${exp.voice ? `<audio controls preload="none" src="${exp.voice}" style="width:100%;margin-top:6px;"></audio>` : ''}
               </div>
             `).join('')}
           </div>
@@ -10022,10 +10037,9 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   function explanationVideoPlayerHtml(url, who){
     const isLink = /youtube\.com|youtu\.be|drive\.google\.com|vimeo\.com|player\.|iframe\.mediadelivery/.test(url);
     if(isLink){
-      return `<div class="explanation-embed"><iframe src="${esc(toEmbedUrl(url))}" title="Video explanation from ${who}"
-        allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>`;
+      return tapMediaHtml('embed', toEmbedUrl(url), `Video explanation from ${who}`);
     }
-    return `<video class="explanation-video" controls preload="metadata" playsinline src="${esc(url)}"></video>`;
+    return tapMediaHtml('video', url, `Video explanation from ${who}`);
   }
 
   // One card per person: their name once at the top, then whatever they sent
@@ -10733,7 +10747,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           ${e.text ? `<div class="at-expl-text" dir="auto">${esc(e.text)}</div>` : ''}
           ${e.photo ? `<img loading="lazy" decoding="async" src="${esc(e.photo)}" alt="Explanation">` : ''}
           ${e.video ? explanationVideoPlayerHtml(e.video, esc(e.by || 'your coach')) : ''}
-          ${e.voice ? `<audio controls src="${esc(e.voice)}"></audio>` : ''}
+          ${e.voice ? `<audio controls preload="none" src="${esc(e.voice)}"></audio>` : ''}
         </div>`).join('')}</div>` : '';
     return `<div class="at-q ${ok ? 'ok' : 'bad'}" data-ok="${ok ? 1 : 0}">
       <div class="at-q-head">
@@ -12508,6 +12522,156 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   // Lightweight version for lists/summaries/leaderboards — no question
   // content or images. Use fetchAllHomework()/dbGet('homework', id) when you
   // actually need the questions (starting homework or the full Analysis view).
+
+  /* ===================== ANDROID SPEED HELPERS ===================== */
+  var LIST_PAGE = 30;
+
+  // A student only ever needs THEIR OWN homework list — let Supabase filter
+  // it instead of downloading all ~3,000 rows of everyone's homework.
+  async function fetchMyHomeworkIndex(){
+    if(!currentStudent || !storageAvailable()) return fetchHomeworkIndex();
+    const uname = currentStudent.username.trim();
+    const cacheKey = `homework||myidx:${uname.toLowerCase()}`;
+    const cached = _dbCache[cacheKey];
+    if(cached && (Date.now() - cached.ts) < DB_CACHE_TTL) return cached.data;
+    if(_inFlightRequests[cacheKey]) return _inFlightRequests[cacheKey];
+    const promise = (async ()=>{
+      try{
+        const pattern = uname.replace(/[\\%_]/g, m => '\\' + m);
+        const PAGE = 1000; let rows = [], offset = 0;
+        while(true){
+          const { data, error } = await supabaseClient.from('homework').select('data')
+            .like('id', 'idx-%').ilike('data->>username', pattern).range(offset, offset + PAGE - 1);
+          if(error) throw error;
+          const page = (data || []).map(r => r.data).filter(Boolean);
+          rows = rows.concat(page);
+          if(page.length < PAGE) break;
+          offset += PAGE;
+        }
+        rows = rows.filter(r => String(r.username || '').trim().toLowerCase() === uname.toLowerCase());
+        rows.sort((a,b)=> new Date(b.ts || 0) - new Date(a.ts || 0));
+        _dbCache[cacheKey] = { data: rows, ts: Date.now() };
+        return rows;
+      }catch(err){
+        console.error('fetchMyHomeworkIndex failed, using the full list:', err);
+        const all = await fetchHomeworkIndex();
+        return all.filter(r => String(r.username || '').trim().toLowerCase() === uname.toLowerCase());
+      }finally{ delete _inFlightRequests[cacheKey]; }
+    })();
+    _inFlightRequests[cacheKey] = promise;
+    return promise;
+  }
+
+  // The dashboard only needs, for each finished homework / attempt, which
+  // lesson each question was and whether it was right. Before, it opened
+  // every one IN FULL, one request each, on every visit. Now: only the
+  // answers part, 25 per request, and kept on the phone afterwards (a
+  // finished homework never changes). The light list row supplies every
+  // other field, so retake flags etc. are always fresh.
+  var _liteStore = {};
+  var _liteInflight = {};
+  var LITE_PREFIX = 'mi-lite1:';
+  function _liteLoad(coll){
+    if(!_liteStore[coll]){ let v = null; try{ v = JSON.parse(localStorage.getItem(LITE_PREFIX + coll) || 'null'); }catch(e){} _liteStore[coll] = (v && typeof v === 'object') ? v : {}; }
+    return _liteStore[coll];
+  }
+  function _liteSave(coll){
+    const st = _liteStore[coll]; if(!st) return;
+    let keys = Object.keys(st);
+    if(keys.length > 600){ keys.slice(0, keys.length - 600).forEach(k => delete st[k]); }
+    try{ localStorage.setItem(LITE_PREFIX + coll, JSON.stringify(st)); }
+    catch(e){ try{ keys = Object.keys(st); keys.slice(0, Math.ceil(keys.length / 2)).forEach(k => delete st[k]); localStorage.setItem(LITE_PREFIX + coll, JSON.stringify(st)); }catch(e2){} }
+  }
+  function _liteCompact(results){
+    if(!Array.isArray(results)) return null;
+    return results.map(r => ({ lesson: (r && r.lesson) || 'General', text: String((r && r.text) || '').slice(0, 240), correct: !!(r && r.correct) }));
+  }
+  async function getResultsLite(coll, indexRows){
+    const rows = (indexRows || []).filter(r => r && r.id);
+    const store = _liteLoad(coll);
+    const keyOf = r => r.id + '|' + (r.submittedAt || r.ts || '');
+    const out = new Array(rows.length);
+    const need = [];
+    rows.forEach((r, i) => { const c = store[keyOf(r)]; if(c) out[i] = { ...r, results: c }; else need.push(i); });
+    let changed = false;
+    // Another part of the page may already be fetching some of these.
+    const waitFor = need.filter(i => _liteInflight[coll + '|' + rows[i].id]);
+    if(waitFor.length){
+      await Promise.all(waitFor.map(i => _liteInflight[coll + '|' + rows[i].id].then(res => { out[i] = { ...rows[i], results: res }; })));
+    }
+    const todo = need.filter(i => !out[i]);
+    let release = null;
+    const gate = new Promise(r => { release = r; });
+    const resultsById = {};
+    todo.forEach(i => { const id = rows[i].id; _liteInflight[coll + '|' + id] = gate.then(() => resultsById[id] || null); });
+    try{
+    for(let k = 0; k < todo.length; k += 25){
+      const chunk = todo.slice(k, k + 25);
+      const ids = chunk.map(i => rows[i].id);
+      let got = null;
+      try{
+        const { data, error } = await supabaseClient.from(coll).select('id, results:data->results').in('id', ids);
+        if(error) throw error;
+        got = data || [];
+      }catch(err){
+        got = await Promise.all(ids.map(async id => { const rec = await dbGet(coll, id); return rec ? { id, results: rec.results } : null; }));
+      }
+      const byId = new Map(got.filter(Boolean).map(x => [x.id, x.results]));
+      chunk.forEach(i => {
+        const r = rows[i];
+        const compact = _liteCompact(byId.get(r.id));
+        // Only finished work is remembered — anything else is read fresh.
+        if(compact && (coll === 'attempts' || r.status === 'completed')){ store[keyOf(r)] = compact; changed = true; }
+        out[i] = { ...r, results: compact };
+        resultsById[r.id] = compact;
+      });
+    }
+    } finally {
+      release();
+      todo.forEach(i => { delete _liteInflight[coll + '|' + rows[i].id]; });
+    }
+    if(changed) _liteSave(coll);
+    return out.filter(Boolean);
+  }
+
+  function showMoreButton(left, onMore){
+    const wrap = document.createElement('div');
+    wrap.className = 'show-more-wrap';
+    const n = Math.min(left, LIST_PAGE);
+    wrap.innerHTML = `<button type="button" class="btn btn-ghost">Show ${n} more <span style="color:var(--muted);font-weight:400;">(${left} left)</span></button>`;
+    wrap.querySelector('button').addEventListener('click', e => { e.currentTarget.disabled = true; e.currentTarget.textContent = 'Loading…'; onMore(); });
+    return wrap;
+  }
+
+  // Videos and YouTube players are only created when the student taps
+  // them. A page with dozens of ready-to-play videos was enough to make
+  // Android Chrome run out of memory and reload the tab.
+  function tapMediaHtml(kind, url, label){
+    if(!url) return '';
+    return `<button type="button" class="tap-media" data-kind="${kind}" data-src="${esc(String(url))}" data-label="${esc(label || 'Video')}">
+      <span class="tm-play" aria-hidden="true">▶</span><span>${esc(label || 'Play video')}<small>Tap to play</small></span></button>`;
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.tap-media');
+    if(!b) return;
+    e.preventDefault();
+    // Only one video plays at a time.
+    document.querySelectorAll('.tap-media-live video').forEach(v => { try{ v.pause(); }catch(_){} });
+    const src = b.dataset.src, label = b.dataset.label || 'Video';
+    const box = document.createElement('div');
+    box.className = 'tap-media-live';
+    if(b.dataset.kind === 'embed'){
+      const sep = src.indexOf('?') === -1 ? '?' : '&';
+      box.innerHTML = `<div class="explanation-embed"><iframe src="${esc(src + (/youtube|vimeo/.test(src) ? sep + 'autoplay=1' : ''))}" title="${esc(label)}"
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>`;
+    } else {
+      box.innerHTML = `<video class="explanation-video" controls playsinline preload="auto" src="${esc(src)}"></video>`;
+      const v = box.querySelector('video'); setTimeout(()=>{ try{ const p = v.play(); if(p && p.catch) p.catch(()=>{}); }catch(_){} }, 0);
+    }
+    b.replaceWith(box);
+  });
+  /* ================================================================== */
+
   async function fetchHomeworkIndex(){
     await ensureIndexBackfilled('homework', (hw)=> ({
       _index: true, id: hw.id, username: hw.username, title: hw.title, dueDate: hw.dueDate,
@@ -18184,7 +18348,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const progressText = document.getElementById('hwProgressText');
     const progressFill = document.getElementById('hwProgressFill');
 
-    const all = await fetchHomeworkIndex();
+    const all = await fetchMyHomeworkIndex();
     const mine = all.filter(e =>
       (e.username || '').trim().toLowerCase() === currentStudent.username.trim().toLowerCase() &&
       isHomeworkPublished(e)
@@ -18609,6 +18773,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   let mistakeFilterStatus = 'all';
   let mistakeFilterLesson = '';
   let mistakeShowMastered = false;
+  let mhShowLimit = 30;
 
   async function renderMistakeHistory(){
     if(!currentStudent) return;
@@ -18654,7 +18819,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     }
 
     list.innerHTML = '';
-    visible.forEach(row=>{
+    visible.slice(0, mhShowLimit).forEach(row=>{
       const date = row.ts ? new Date(row.ts) : null;
       const item = document.createElement('div');
       item.className = 'hw-row mistake-history-row' + (row.masteredByStudent ? ' is-mastered' : '');
@@ -18669,7 +18834,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         ${row.explanationVideo ? `
           <div class="explanation-video-wrap" style="margin-top:10px;">
             <div class="explanation-video-label">🎬 Watch the explanation</div>
-            <video controls playsinline preload="none" src="${row.explanationVideo}"></video>
+            ${tapMediaHtml('video', row.explanationVideo, 'Explanation video')}
           </div>
         ` : ''}
         <div class="mistake-row-actions">
@@ -18722,6 +18887,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       }
       list.appendChild(item);
     });
+    if(visible.length > mhShowLimit) list.appendChild(showMoreButton(visible.length - mhShowLimit, ()=>{ mhShowLimit += LIST_PAGE; renderMistakeHistory(); }));
   }
 
   // Wire the filter controls (they live outside the re-rendered list, so
@@ -18795,7 +18961,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     if(answered.length === 0){ emptyState.style.display = 'block'; return; }
     emptyState.style.display = 'none';
 
-    answered.forEach(row=>{
+    answered.slice(0, acShowLimit).forEach(row=>{
       const thread = document.createElement('div');
       thread.className = 'assistant-chat-thread';
 
@@ -18804,8 +18970,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           <div class="bubble-label">You asked${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
           ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
           ${row.studentFollowUp.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.studentFollowUp.photoUrl)}" alt="Your photo">` : ''}
-          ${row.studentFollowUp.videoUrl ? `<video controls playsinline preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
-          ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
+          ${row.studentFollowUp.videoUrl ? `${tapMediaHtml('video', row.studentFollowUp.videoUrl, 'Your video')}` : ''}
+          ${row.studentFollowUp.voiceUrl ? `<audio controls preload="none" src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
         </div>
       ` : '';
 
@@ -18834,7 +19000,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
             ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
             ${row.answer.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
             ${row.answer.videoUrl ? `<div style="margin-top:8px;">${explanationVideoPlayerHtml(row.answer.videoUrl, esc(row.answer.answeredBy || 'your coach'))}</div>` : ''}
-            ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
+            ${row.answer.voiceUrl ? `<audio controls preload="none" src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
             <div style="margin-top:12px;">
               <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">${row.studentRating ? 'Your rating:' : 'How helpful was this?'}</div>
               <div class="am-rating-stars ${row.studentRating ? 'am-rating-locked' : ''}" data-mistake-id="${esc(row.id || '')}">
@@ -19031,7 +19197,10 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         });
       }
     });
+    list.querySelectorAll('.show-more-wrap').forEach(el => el.remove());
+    if(answered.length > acShowLimit) list.appendChild(showMoreButton(answered.length - acShowLimit, ()=>{ acShowLimit += LIST_PAGE; renderAssistantChatList(); }));
   }
+  let acShowLimit = 30;
 
   // Groups every mistake by the day it happened, and within each day by
   // which exam/homework/skill it came from — so "all exams I got wrong
@@ -19042,12 +19211,11 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   // agree on whether a lesson has already been fixed since a mistake.
   async function getMyRetakeSignals(){
     if(!currentStudent) return { myHw:[], myAttempts:[], myRetakenDayKeys:new Set(), myLaterCorrect:[] };
-    const [myAttemptsIndex, myHwIndex] = await Promise.all([fetchAttemptsIndex(), fetchHomeworkIndex()]);
+    const [myAttemptsIndex, myHwIndex] = await Promise.all([fetchAttemptsIndex(), fetchMyHomeworkIndex()]);
     const uname = currentStudent.username.trim().toLowerCase();
     const myCompletedHwIndex = myHwIndex.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
-    const myHw = (await Promise.all(myCompletedHwIndex.map(h => dbGet('homework', h.id)))).filter(Boolean);
     const myOwnAttemptsIndex = myAttemptsIndex.filter(a => (a.username||'').trim().toLowerCase() === uname);
-    const myAttempts = (await Promise.all(myOwnAttemptsIndex.map(a => dbGet('attempts', a.id)))).filter(Boolean);
+    const [myHw, myAttempts] = await Promise.all([getResultsLite('homework', myCompletedHwIndex), getResultsLite('attempts', myOwnAttemptsIndex)]);
     const myRetakenDayKeys = new Set(
       myAttempts
         .filter(a => (a.username || '').trim().toLowerCase() === uname && a.retakeDayKey)
@@ -19218,7 +19386,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
   // a row have I opened the app."
   async function getStreakCount(){
     if(!currentStudent) return 0;
-    const hw = await fetchHomeworkIndex();
+    const hw = await fetchMyHomeworkIndex();
     const uname = currentStudent.username.trim().toLowerCase();
     return streakFromHomework(hw.filter(h => (h.username||'').trim().toLowerCase() === uname && isHomeworkPublished(h)));
   }
@@ -19681,15 +19849,14 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 
     const streak = await getStreakCount();
 
-    const [hw, attemptsIndex] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
+    const [hw, attemptsIndex] = await Promise.all([fetchMyHomeworkIndex(), fetchAttemptsIndex()]);
     const uname = currentStudent.username.trim().toLowerCase();
     const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
     const myOwnAttemptsIndex = attemptsIndex.filter(a => (a.username||'').trim().toLowerCase() === uname);
     // Full (with per-question results) versions, needed for topic mastery below —
     // fetched individually by id for just this student's own homework/attempts,
     // not everyone's — the lightweight lists above are enough for everything else.
-    const myFullHw = (await Promise.all(mineHw.map(h => dbGet('homework', h.id)))).filter(Boolean);
-    const mineAttempts = (await Promise.all(myOwnAttemptsIndex.map(a => dbGet('attempts', a.id)))).filter(Boolean);
+    const [myFullHw, mineAttempts] = await Promise.all([getResultsLite('homework', mineHw), getResultsLite('attempts', myOwnAttemptsIndex)]);
     const totalCompleted = mineHw.length + mineAttempts.length;
     const allPct = [...mineHw.map(h => h.score ? h.score.pct : 0), ...mineAttempts.map(a => a.pct || 0)];
     const bestPct = allPct.length ? Math.max(...allPct) : 0;
@@ -21538,7 +21705,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
 
   async function downloadProgressCard(){
     const streak = await getStreakCount();
-    const [hw, attempts] = await Promise.all([fetchHomeworkIndex(), fetchAttemptsIndex()]);
+    const [hw, attempts] = await Promise.all([fetchMyHomeworkIndex(), fetchAttemptsIndex()]);
     const uname = currentStudent.username.trim().toLowerCase();
     const mineHw = hw.filter(h => (h.username||'').trim().toLowerCase() === uname && h.status === 'completed');
     const mineAttempts = attempts.filter(a => (a.username||'').trim().toLowerCase() === uname);
@@ -22153,7 +22320,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
           ${row.answer.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
           ${row.answer.videoUrl ? explanationVideoPlayerHtml(row.answer.videoUrl, esc(row.answer.answeredBy || 'assistant')) : ''}
-          ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
+          ${row.answer.voiceUrl ? `<audio controls preload="none" src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
           ${currentStudent && !currentAdminRole ? `
             <div style="margin-top:12px;">
               <div style="font-size:0.8rem;color:var(--muted);margin-bottom:4px;">${row.studentRating ? 'Your rating:' : 'How helpful was this?'}</div>
@@ -22391,8 +22558,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         </div>
         ${row.answer.text ? `<div>${esc(row.answer.text)}</div>` : ''}
         ${row.answer.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.answer.photoUrl)}" alt="Answer steps">` : ''}
-        ${row.answer.videoUrl ? `<video controls playsinline preload="none" src="${esc(row.answer.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
-        ${row.answer.voiceUrl ? `<audio controls src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
+        ${row.answer.videoUrl ? `${tapMediaHtml('video', row.answer.videoUrl, 'Video answer')}` : ''}
+        ${row.answer.voiceUrl ? `<audio controls preload="none" src="${esc(row.answer.voiceUrl)}"></audio>` : ''}
         ${row.studentRating ? `<div style="margin-top:10px;color:var(--muted);font-size:0.85rem;">Student rated this: ${'⭐'.repeat(row.studentRating)}</div>` : `<div style="margin-top:10px;color:var(--muted);font-size:0.82rem;font-style:italic;">Not rated by the student yet.</div>`}
       </div>
     ` : '';
@@ -22402,8 +22569,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         <div class="bubble-label">${esc(row.username)} followed up${row.studentFollowUp.askedAt ? ' · ' + new Date(row.studentFollowUp.askedAt).toLocaleString() : ''}</div>
         ${row.studentFollowUp.text ? `<div>${esc(row.studentFollowUp.text)}</div>` : ''}
         ${row.studentFollowUp.photoUrl ? `<img loading="lazy" decoding="async" src="${esc(row.studentFollowUp.photoUrl)}" alt="Student's photo">` : ''}
-        ${row.studentFollowUp.videoUrl ? `<video controls playsinline preload="none" src="${esc(row.studentFollowUp.videoUrl)}" style="max-width:100%;border-radius:8px;margin-top:8px;"></video>` : ''}
-        ${row.studentFollowUp.voiceUrl ? `<audio controls src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
+        ${row.studentFollowUp.videoUrl ? `${tapMediaHtml('video', row.studentFollowUp.videoUrl, 'Your video')}` : ''}
+        ${row.studentFollowUp.voiceUrl ? `<audio controls preload="none" src="${esc(row.studentFollowUp.voiceUrl)}"></audio>` : ''}
       </div>
     ` : '';
 
@@ -27719,7 +27886,7 @@ $$);`;
       const r = await _rsh.apply(this, arguments);
       try{
         if(!currentStudent) return r;
-        const all = await fetchHomeworkIndex();
+        const all = await fetchMyHomeworkIndex();
         const mineAll = all.filter(e => qN(e.username) === qN(currentStudent.username));
         const shown = mineAll.filter(e => isHomeworkPublished(e));
         const groups = qPlanGroups(mineAll).filter(g => !g.finished || Date.now() - new Date(g.rows[g.rows.length - 1].submittedAt || 0).getTime() < 14 * 864e5);
