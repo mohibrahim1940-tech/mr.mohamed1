@@ -30,7 +30,7 @@
 <!-- Supabase (free tier) powers real, permanent storage for registrations, exams, leads, and the
      leaderboard. See the SUPABASE SETUP comment inside the main script near the bottom of this
      file for step-by-step instructions. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 <style>
   /* Every colour on the site resolves through these tokens, so the light
      theme below is a straight swap of the same names -- nothing downstream
@@ -4090,6 +4090,16 @@
   .blank-actions{ display:flex; flex-direction:column; gap:10px; }
   .blank-actions .btn{ width:100%; min-height:46px; }
 
+  /* Closed popups were still drawn as ~30 invisible full-screen layers
+     (300-450 MB of graphics memory on a phone). Android Chrome ran out and
+     the page flickered / went blank, and the sign-in box couldn't be seen.
+     A closed popup is now not drawn at all. */
+  .modal-overlay:not(.open){ visibility:hidden; transition:opacity .25s ease, visibility 0s linear .25s; }
+  .modal-overlay.open{ visibility:visible; transition:opacity .25s ease, visibility 0s linear 0s; }
+  /* The sideways tab strip on phones made the browser treat the WHOLE
+     dashboard below it as one extra 8,000px-tall graphics layer that was
+     repainted on every change. Lifting the strip above it stops that. */
+  .dash-sidebar-nav{ position:relative; z-index:3; }
   /* ---------- Android speed ---------- */
   .tap-media{ display:flex; align-items:center; gap:10px; width:100%; max-width:520px; min-height:56px; margin-top:8px; padding:12px 16px;
     border:1px solid var(--line); border-radius:12px; background:var(--panel-2, var(--panel)); color:var(--text); font:inherit; font-weight:600; cursor:pointer; text-align:left; }
@@ -4909,7 +4919,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 30 Oct 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 30 Oct 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
