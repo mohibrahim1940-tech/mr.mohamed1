@@ -4080,6 +4080,27 @@
   .qa-analysis{ margin-bottom:18px; }
   .qhx{ margin-top:6px; }
 
+  /* ---------- Academic assistant page: the 7 buttons were each a full-width
+     row (~420px tall), leaving the questions a ~190px strip underneath.
+     Now: a compact tab bar that stays at the top, and the whole page scrolls
+     so every question can be seen in full. ---------- */
+  #assistantDashModal .modal-box{ display:block; overflow-y:auto; overscroll-behavior:contain; }
+  #assistantDashModal #closeAssistantDashModal{ position:fixed; }
+  #assistantDashModal .admin-actions{
+    position:sticky; top:0; z-index:3; display:flex; flex-wrap:wrap; gap:8px;
+    padding:12px 24px; margin:6px auto 0 !important; background:var(--ink);
+    border-bottom:1px solid var(--line);
+  }
+  #assistantDashModal .admin-actions .btn{ width:auto; flex:0 0 auto; padding:9px 15px; font-size:0.88rem; min-height:40px; white-space:nowrap; }
+  #assistantDashContent, #asdMistakesContent, #asdExplainContent, #qAsdTasks, #qAsdHw, #qAsdCov, #qAsdUn{
+    flex:none !important; overflow:visible !important; max-height:none !important;
+  }
+  @media (max-width:760px){
+    #assistantDashModal .admin-actions{ flex-wrap:nowrap; overflow-x:auto; padding:10px 16px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+    #assistantDashModal .admin-actions::-webkit-scrollbar{ display:none; }
+    #assistantDashTitle{ padding-right:64px; }
+  }
+
   /* blank-question check */
   .blank-check{ position:fixed; inset:0; z-index:4000; background:rgba(8,14,20,.55); display:flex; align-items:center; justify-content:center; padding:16px; }
   .blank-card{ background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:16px; padding:22px 20px; width:min(460px, 100%); max-height:calc(100dvh - 32px); overflow-y:auto; box-shadow:0 18px 50px rgba(0,0,0,.35); }
@@ -4969,7 +4990,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 10 Nov 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 10 Nov 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -28045,6 +28066,22 @@ $$);`;
       }catch(err){ console.warn('analysis extras', err); }
       return r;
     }; }
+
+/* Academic assistant page: switching view brings its top into sight under
+   the tab bar (the whole page scrolls now, not a small box inside it). */
+(function(){
+  const modal = document.getElementById('assistantDashModal');
+  if(!modal) return;
+  const box = modal.querySelector('.modal-box');
+  const bar = modal.querySelector('.admin-actions');
+  if(!box || !bar) return;
+  bar.addEventListener('click', e => {
+    const b = e.target.closest('.btn'); if(!b) return;
+    // keep the tapped tab visible in the sideways bar on phones
+    try{ b.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }catch(_){}
+    requestAnimationFrame(()=>{ if(box.scrollTop > bar.offsetTop) box.scrollTop = bar.offsetTop; });
+  });
+})();
 </script>
 <script>
 
