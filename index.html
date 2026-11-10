@@ -4115,6 +4115,56 @@
     .wa-pulse{ animation:none !important; display:none !important; }
   }
 
+  /* ---------- 💡 Ideas ---------- */
+  #ideasPanel input[type=url], #ideasPanel input[type=text], #ideasPanel input[type=date], #ideasPanel select{
+    width:100%; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif; font-size:0.92rem; min-height:42px; }
+  #ideasPanel .q-image-controls input[type=file]{ color:var(--muted); }
+  .id-hint{ display:block; color:var(--muted); font-size:0.8rem; margin-top:6px; }
+  .id-image-preview{ max-width:100%; max-height:320px; border-radius:10px; margin-top:10px; border:1px solid var(--line); }
+  .id-loaders{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .id-loaders select{ flex:1 1 240px; }
+  .id-editing-note{ background:rgba(255,176,32,.12); border:1px solid rgba(255,176,32,.4); border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:0.9rem; }
+  .id-list-head{ margin:30px 0 12px; font-size:1.1rem; }
+  .id-card{ border:1px solid var(--line); background:var(--panel); border-radius:14px; padding:16px; margin-bottom:12px; }
+  .id-card.id-flash{ box-shadow:0 0 0 2px var(--signal); }
+  .id-card-top{ display:flex; gap:14px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; }
+  .id-card-main{ display:flex; flex-direction:column; gap:4px; min-width:0; flex:1 1 260px; }
+  .id-card-title{ font-size:1.02rem; }
+  .id-card-stats{ font-size:0.88rem; }
+  .id-card-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .id-card-actions .btn{ padding:8px 14px; font-size:0.85rem; }
+  .id-card-extra{ margin-top:14px; border-top:1px solid var(--line); padding-top:14px; }
+  .id-assign-tools{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+  .id-assign-tools input{ flex:1 1 200px; }
+  .id-assign-list{ max-height:260px; overflow-y:auto; border:1px solid var(--line); border-radius:10px; padding:6px 10px; }
+  .id-assign-list label[hidden]{ display:none; }
+  .id-assign-dates{ display:flex; gap:12px; flex-wrap:wrap; margin:12px 0; }
+  .id-assign-dates label{ display:flex; flex-direction:column; gap:4px; font-size:0.85rem; color:var(--muted); flex:1 1 160px; }
+  .id-assign-msg{ margin-top:10px; font-size:0.9rem; }
+
+  .idea-intro{ display:flex; flex-direction:column; gap:14px; padding:4px 0 8px; }
+  .idea-kicker{ font-size:0.8rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--signal); }
+  .idea-title{ font-size:1.45rem; line-height:1.25; margin:0; }
+  .idea-rule{ background:rgba(14,154,167,.08); border:1px solid rgba(14,154,167,.35); border-left:4px solid var(--signal); border-radius:12px; padding:16px 18px; font-size:1.05rem; line-height:1.65; white-space:normal; overflow-wrap:anywhere; }
+  .idea-img{ width:100%; max-width:640px; border-radius:12px; border:1px solid var(--line); background:#fff; }
+  .idea-video .tap-media{ max-width:none; }
+  .idea-next{ color:var(--muted); font-size:0.92rem; }
+  .idea-start{ width:100%; min-height:50px; font-size:1rem; }
+  .idea-peek{ position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:6px; width:calc(100% - 54px); margin:0 0 10px; padding:10px 14px; min-height:44px;
+    border:1px solid rgba(14,154,167,.45); border-radius:10px; background:var(--panel); color:var(--text); font:inherit; font-weight:700; cursor:pointer; text-align:left; }
+  .idea-peek span{ font-weight:400; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .idea-sheet{ position:fixed; inset:0; z-index:4100; background:rgba(8,14,20,.6); display:flex; align-items:center; justify-content:center; padding:14px; }
+  .idea-sheet-card{ position:relative; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:16px; padding:22px 18px 18px; width:min(680px, 100%); max-height:calc(100vh - 28px); overflow-y:auto; }
+  .idea-sheet-close{ position:absolute; top:8px; right:8px; }
+  .idea-preview-tag{ display:inline-block; font-size:0.75rem; font-weight:700; padding:3px 10px; border-radius:20px; background:rgba(255,176,32,.15); color:var(--text); margin-bottom:8px; }
+  #idStudentIdeas{ border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:16px; background:var(--panel); }
+  .id-stu-head{ font-weight:700; margin-bottom:10px; }
+  .id-stu-head .cd-muted{ font-weight:400; font-size:0.85rem; }
+  .id-stu-list{ display:flex; gap:8px; flex-wrap:wrap; }
+  .id-stu-chip{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-height:48px; padding:8px 14px; border-radius:10px; border:1px solid rgba(14,154,167,.4);
+    background:rgba(14,154,167,.08); color:var(--text); font:inherit; cursor:pointer; text-align:left; max-width:100%; }
+  .id-stu-chip span{ font-size:0.8rem; color:var(--muted); }
+
   /* =====================================================================
      PHONE + iPAD POLISH  (Oct 2026)
      1) Side gutters: ".hero{padding:190px 0 …}", ".section-pad{padding:120px 0}"
@@ -4919,7 +4969,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 30 Oct 2026 · B</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 10 Nov 2026</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -6400,6 +6450,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="admin-tab" data-tab="examsPanel" data-roles="admin,act-admin">Exams &amp; Questions</button>
       <button class="admin-tab" data-tab="studentsPanel" data-roles="admin,assistant,act-admin">Students</button>
       <button class="admin-tab" data-tab="homeworkPanel" data-roles="admin,assistant,act-admin">Homework</button>
+      <button class="admin-tab" data-tab="ideasPanel" data-roles="admin,assistant,act-admin">💡 Ideas</button>
       <button class="admin-tab" data-tab="skillsPanel" data-roles="admin,act-admin">Skills</button>
       <button class="admin-tab" data-tab="leaderboardPanel" data-roles="admin,act-admin">Leaderboard</button>
       <button class="admin-tab" data-tab="asksPanel" data-roles="admin,assistant,act-admin">Questions asked</button>
@@ -6660,6 +6711,63 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         </table>
         <div class="admin-empty" id="homeworkEmpty" style="display:none;">No homework assigned yet.</div>
       </div>
+    </div>
+
+
+    <div class="admin-panel" id="ideasPanel">
+      <div class="admin-note">💡 Explain one idea — the rule, a picture and/or a video — then add questions on it. When you assign it, each student sees your explanation <b>first</b>, then answers the questions. It goes into their Homework list with a 💡, and scores, mistakes and retakes work like any homework.</div>
+      <div class="exam-editor" style="margin-top:0;">
+        <div class="id-editing-note" id="idEditingNote" hidden></div>
+        <div class="field-row">
+          <label class="field-label">Idea title</label>
+          <input type="text" id="idTitle" placeholder="e.g. Slope from two points">
+        </div>
+        <div class="field-row">
+          <label class="field-label">The rule / explanation</label>
+          <textarea id="idRule" rows="7" placeholder="Write it the way you'd explain it in class.&#10;&#10;e.g. slope = (y2 − y1) ÷ (x2 − x1)&#10;Always subtract in the SAME order on top and bottom."></textarea>
+          <span class="id-hint">Each new line stays a new line. Put **double stars** around words to make them <b>bold</b>.</span>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Picture of the rule (optional)</label>
+          <div class="q-image-controls">
+            <input type="file" accept="image/*" id="idImageInput">
+            <button type="button" class="remove-image-btn" id="idImageRemove" style="display:none;">Remove picture</button>
+          </div>
+          <span class="video-upload-status" id="idImageStatus"></span>
+          <img id="idImagePreview" class="id-image-preview" alt="" style="display:none;">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Video that explains it (optional)</label>
+          <div class="q-image-controls">
+            <input type="file" accept="video/*" id="idVideoFile">
+            <button type="button" class="remove-video-btn" id="idVideoRemove" style="display:none;">Remove video</button>
+          </div>
+          <input type="url" id="idVideoLink" placeholder="…or paste a YouTube / Google Drive link" style="margin-top:8px;">
+          <span class="video-upload-status" id="idVideoStatus"></span>
+          <div id="idVideoPreview"></div>
+        </div>
+
+        <label class="field-label">Questions on this idea</label>
+        <div class="id-loaders">
+          <select id="idLoadSkill"><option value="">— Add questions from a skill —</option></select>
+          <select id="idLoadExam"><option value="">— Add questions from an exam —</option></select>
+        </div>
+        <span class="video-upload-status" id="idLoadStatus"></span>
+        <div id="idQuestionsContainer"></div>
+        <button class="add-q-btn" id="idAddQ" type="button">+ Add question</button>
+        <div class="field-row" style="margin-top:20px;">
+          <label class="field-label">Bulk import (paste questions — e.g. from Claude)</label>
+          <textarea id="idImport" style="min-height:90px;" placeholder='[{"lesson":"Slope","text":"Slope through (1,2) and (3,6)?","options":["1","2","3","4"],"correct":1}]'></textarea>
+          <button class="btn btn-ghost" id="idImportBtn" type="button" style="margin-top:10px;">Import into the questions above</button>
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-primary" id="idSaveBtn" type="button">Save idea</button>
+          <button class="btn btn-ghost" id="idPreviewBtn" type="button">👁 Preview as a student</button>
+          <button class="btn btn-ghost" id="idCancelBtn" type="button" style="display:none;">Cancel edit</button>
+        </div>
+      </div>
+      <h3 class="id-list-head">Your ideas</h3>
+      <div id="idList"></div>
     </div>
 
     <div class="admin-panel" id="skillsPanel">
@@ -12515,7 +12623,8 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         isRetake: data.isRetake || false, publishAt: data.publishAt || null,
         timeLimit: data.timeLimit || null,
         topics: data.status === 'completed' ? topicSummary(data.results) : null,
-        fromPlan: data.fromPlan || null, planBy: data.planBy || null
+        fromPlan: data.fromPlan || null, planBy: data.planBy || null,
+        ideaId: data.ideaId || null
       });
       if(!(currentStudent && !currentAdminRole && !currentAssistantAccount)) backfillExplanationVideos(data.title, data.questions || []);
     }
@@ -27936,6 +28045,439 @@ $$);`;
       }catch(err){ console.warn('analysis extras', err); }
       return r;
     }; }
+</script>
+<script>
+
+/* =====================================================================
+   💡 IDEAS — explain one idea (a rule, a picture, a video), add questions
+   on it, assign it. Students see the explanation FIRST, then answer.
+   Saved ideas live in the "ideas" table; assigning one creates a normal
+   homework for each student (so results, mistakes, retakes, reports and
+   every staff view keep working) carrying the idea with it.
+   ===================================================================== */
+const IDEA_PREFIX = '💡 ';
+let idEditingId = null;
+let idImageUrl = null;
+let idVideoUrl = null;
+const idQC = () => document.getElementById('idQuestionsContainer');
+
+function idN(s){ return String(s || '').trim().toLowerCase(); }
+function idIsLink(url){ return /youtube\.com|youtu\.be|drive\.google\.com|vimeo\.com|player\.|iframe\.mediadelivery/.test(url || ''); }
+function idVideoHtml(url, label){
+  if(!url) return '';
+  return idIsLink(url) ? tapMediaHtml('embed', toEmbedUrl(url), label || 'Watch the explanation') : tapMediaHtml('video', url, label || 'Watch the explanation');
+}
+// The rule as written: new lines kept, **bold** allowed, everything else plain text.
+function idRuleHtml(rule){
+  return esc(String(rule || '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+}
+async function idFetchAll(){
+  const rows = await dbGetAll('ideas');
+  return (rows || []).filter(r => r && r.id && !r._index).sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0));
+}
+
+/* ---------- the explanation screen (student + preview) ---------- */
+function idIntroHtml(idea, nQuestions, opts){
+  opts = opts || {};
+  return `<div class="idea-intro">
+    <div class="idea-kicker">💡 ${opts.again ? 'The idea' : 'First, learn the idea'}</div>
+    <h2 class="idea-title">${esc(idea.title || '')}</h2>
+    ${idea.rule ? `<div class="idea-rule">${idRuleHtml(idea.rule)}</div>` : ''}
+    ${idea.image ? `<img class="idea-img" src="${esc(idea.image)}" alt="The rule" loading="lazy" decoding="async">` : ''}
+    ${idea.video ? `<div class="idea-video">${idVideoHtml(idea.video, 'Watch the explanation video')}</div>` : ''}
+    ${opts.again ? '' : `<div class="idea-next">Next: <b>${nQuestions}</b> question${nQuestions === 1 ? '' : 's'} on this idea. You can open this explanation again any time with the <b>💡 Idea</b> button.</div>
+    <button type="button" class="btn btn-primary idea-start" id="ideaStartBtn">${opts.preview ? 'Close preview' : "I've got it — start the questions →"}</button>`}
+  </div>`;
+}
+
+function idOpenSheet(idea){
+  document.querySelectorAll('.idea-sheet').forEach(el => el.remove());
+  const sh = document.createElement('div');
+  sh.className = 'idea-sheet';
+  sh.innerHTML = `<div class="idea-sheet-card" role="dialog" aria-modal="true">
+    <button type="button" class="modal-close idea-sheet-close" aria-label="Close">✕</button>
+    ${idIntroHtml(idea, 0, { again: true })}
+    <button type="button" class="btn btn-primary idea-sheet-back" style="width:100%;margin-top:14px;">Back</button></div>`;
+  document.body.appendChild(sh);
+  const close = ()=>{ sh.querySelectorAll('video').forEach(v => { try{ v.pause(); }catch(_){} }); sh.remove(); };
+  sh.querySelector('.idea-sheet-close').addEventListener('click', close);
+  sh.querySelector('.idea-sheet-back').addEventListener('click', close);
+  sh.addEventListener('click', e => { if(e.target === sh) close(); });
+}
+
+// "💡 Idea" button that stays at the top while the student answers.
+function idPeekRemove(){ document.querySelectorAll('.idea-peek').forEach(el => el.remove()); }
+function idPeekAdd(idea){
+  idPeekRemove();
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'idea-peek';
+  btn.innerHTML = `💡 Idea: <span>${esc(idea.title || 'see the rule')}</span>`;
+  btn.addEventListener('click', ()=> idOpenSheet(idea));
+  examPlayer.parentNode.insertBefore(btn, examPlayer);
+}
+new MutationObserver(()=>{ if(!examModal.classList.contains('open')) idPeekRemove(); })
+  .observe(examModal, { attributes: true, attributeFilter: ['class'] });
+
+{ const _idStartHomework = startHomework;
+  startHomework = function(hw){
+    idPeekRemove();
+    if(!hw || !hw.idea) return _idStartHomework.apply(this, arguments);
+    const go = ()=>{ _idStartHomework(hw); idPeekAdd(hw.idea); };
+    let resumed = false;
+    try{ const saved = loadInProgress(hw.id); resumed = !!(saved && Array.isArray(saved.answers) && saved.answers.some(a => a != null)); }catch(e){}
+    if(resumed) return go();
+    stopActiveTimer();
+    examPlayer.innerHTML = idIntroHtml(hw.idea, (hw.questions || []).length);
+    examModal.classList.add('open');
+    try{ examPlayer.scrollTop = 0; examPlayer.parentNode.scrollTop = 0; }catch(e){}
+    document.getElementById('ideaStartBtn').addEventListener('click', ()=>{
+      examPlayer.querySelectorAll('video').forEach(v => { try{ v.pause(); }catch(_){} });
+      go();
+    });
+  };
+}
+{ const _idStartExam = startExam;
+  startExam = function(){ idPeekRemove(); return _idStartExam.apply(this, arguments); };
+}
+
+/* ---------- student Homework tab: "💡 Ideas you've learned" ---------- */
+{ const _idRSH = renderStudentHomework;
+  renderStudentHomework = async function(){
+    const r = await _idRSH.apply(this, arguments);
+    try{
+      if(!currentStudent) return r;
+      const all = await fetchMyHomeworkIndex();
+      const mine = all.filter(e => e.ideaId && idN(e.username) === idN(currentStudent.username) && isHomeworkPublished(e));
+      let box = document.getElementById('idStudentIdeas');
+      if(!mine.length){ if(box) box.remove(); return r; }
+      if(!box){ box = document.createElement('div'); box.id = 'idStudentIdeas'; const list = document.getElementById('hwList'); list.parentNode.insertBefore(box, list); }
+      const seen = new Set();
+      const uniq = mine.filter(e => { if(seen.has(e.ideaId)) return false; seen.add(e.ideaId); return true; });
+      box.innerHTML = `<div class="id-stu-head">💡 Ideas you've been given <span class="cd-muted">— open one to see the rule and video again</span></div>
+        <div class="id-stu-list">${uniq.map(e => `<button type="button" class="id-stu-chip" data-hw="${esc(e.id)}" data-idea="${esc(e.ideaId)}">
+          <b>${esc(String(e.title || '').replace(IDEA_PREFIX, ''))}</b>
+          <span>${e.status === 'completed' ? `✅ ${e.score && e.score.pct != null ? e.score.pct + '%' : 'done'}` : '⏳ to do'}</span></button>`).join('')}</div>`;
+      box.querySelectorAll('.id-stu-chip').forEach(b => b.addEventListener('click', async ()=>{
+        b.disabled = true;
+        let idea = null;
+        try{ const rec = await dbGet('homework', b.dataset.hw) || cachedHomeworkRecord(b.dataset.hw); idea = rec && rec.idea; }catch(e){}
+        b.disabled = false;
+        if(idea) idOpenSheet(idea); else alert("Couldn't open this idea — check your connection.");
+      }));
+    }catch(err){ console.warn('student ideas', err); }
+    return r;
+  };
+}
+
+/* ---------- admin: 💡 Ideas tab ---------- */
+function idSetImage(url){
+  idImageUrl = url || null;
+  const img = document.getElementById('idImagePreview');
+  img.src = idImageUrl || ''; img.style.display = idImageUrl ? 'block' : 'none';
+  document.getElementById('idImageRemove').style.display = idImageUrl ? '' : 'none';
+}
+function idSetVideo(url){
+  idVideoUrl = url || null;
+  document.getElementById('idVideoPreview').innerHTML = idVideoUrl ? idVideoHtml(idVideoUrl, 'Preview the video') : '';
+  document.getElementById('idVideoRemove').style.display = idVideoUrl ? '' : 'none';
+}
+function idResetEditor(){
+  idEditingId = null;
+  document.getElementById('idTitle').value = '';
+  document.getElementById('idRule').value = '';
+  document.getElementById('idVideoLink').value = '';
+  document.getElementById('idVideoFile').value = '';
+  document.getElementById('idImageInput').value = '';
+  document.getElementById('idVideoStatus').textContent = '';
+  document.getElementById('idImageStatus').textContent = '';
+  idSetImage(null); idSetVideo(null);
+  idQC().innerHTML = '';
+  addQuestionBlock(null, idQC());
+  document.getElementById('idEditingNote').hidden = true;
+  document.getElementById('idCancelBtn').style.display = 'none';
+  document.getElementById('idSaveBtn').textContent = 'Save idea';
+}
+function idAppendQuestions(questions){
+  const c = idQC();
+  const key = q => q.image ? 'img:' + q.image : 'txt:' + normalizeQuestionText(q.text);
+  const existing = new Set(collectQuestionsFrom(c).map(key));
+  let added = 0;
+  (questions || []).forEach(q => { const k = key(q); if(existing.has(k)) return; existing.add(k); addQuestionBlock(q, c); added++; });
+  const blocks = Array.from(c.querySelectorAll('.question-block'));
+  blocks.forEach(b => {
+    const hasText = (b.querySelector('.q-text')?.value || '').trim();
+    const hasOpt = Array.from(b.querySelectorAll('.q-option')).some(o => o.value.trim());
+    if(!hasText && !b._imageData && !hasOpt && blocks.length > 1) b.remove();
+  });
+  return added;
+}
+function idCollect(){
+  return {
+    title: document.getElementById('idTitle').value.trim(),
+    rule: document.getElementById('idRule').value.trim(),
+    image: idImageUrl, video: idVideoUrl
+  };
+}
+
+async function idRenderAdmin(){
+  const panel = document.getElementById('ideasPanel');
+  if(!panel) return;
+  if(!panel._wired) idWire();
+  if(idQC().children.length === 0) addQuestionBlock(null, idQC());
+  // skill + exam loaders
+  try{
+    const [skills, exams] = await Promise.all([fetchSkillsIndex(), fetchExamsIndex()]);
+    document.getElementById('idLoadSkill').innerHTML = '<option value="">— Add questions from a skill —</option>' +
+      skills.map(s => `<option value="${esc(s.id)}">${esc(s.skill)} (${s.questionCount} question${s.questionCount === 1 ? '' : 's'})</option>`).join('');
+    document.getElementById('idLoadExam').innerHTML = '<option value="">— Add questions from an exam —</option>' +
+      exams.map(e => `<option value="${esc(e.id)}">${esc(e.title)} (${e.questionCount} question${e.questionCount === 1 ? '' : 's'})</option>`).join('');
+  }catch(e){}
+  await idRenderList();
+}
+
+async function idRenderList(){
+  const list = document.getElementById('idList');
+  list.innerHTML = '<div class="admin-empty">Loading…</div>';
+  const [ideas, hw] = await Promise.all([idFetchAll(), fetchHomeworkIndex()]);
+  if(!ideas.length){ list.innerHTML = '<div class="admin-empty">No ideas yet — write your first one above.</div>'; return; }
+  list.innerHTML = '';
+  ideas.forEach(idea => {
+    const rows = hw.filter(h => h.ideaId === idea.id);
+    const done = rows.filter(h => h.status === 'completed');
+    const pcts = done.map(h => h.score && h.score.pct).filter(p => typeof p === 'number');
+    const avg = pcts.length ? Math.round(pcts.reduce((s, x) => s + x, 0) / pcts.length) : null;
+    const card = document.createElement('div');
+    card.className = 'id-card';
+    card.innerHTML = `
+      <div class="id-card-top">
+        <div class="id-card-main">
+          <b class="id-card-title">💡 ${esc(idea.title)}</b>
+          <span class="cd-muted">${(idea.questions || []).length} question${(idea.questions || []).length === 1 ? '' : 's'}${idea.video ? ' · 🎬 video' : ''}${idea.image ? ' · 🖼 picture' : ''}${idea.by ? ' · by ' + esc(idea.by) : ''}</span>
+          <span class="id-card-stats">${rows.length ? `Assigned to <b>${rows.length}</b> · done <b>${done.length}</b>${avg !== null ? ` · average <b>${avg}%</b>` : ''}` : 'Not assigned yet'}</span>
+        </div>
+        <div class="id-card-actions">
+          <button type="button" class="btn btn-primary id-assign">Assign</button>
+          <button type="button" class="btn btn-ghost id-results">Results</button>
+          <button type="button" class="btn btn-ghost id-preview">👁 Preview</button>
+          <button type="button" class="btn btn-ghost id-edit">Edit</button>
+          <button type="button" class="btn btn-ghost id-delete">Delete</button>
+        </div>
+      </div>
+      <div class="id-card-extra" hidden></div>`;
+    const extra = card.querySelector('.id-card-extra');
+    const toggle = async (kind, fn) => {
+      if(!extra.hidden && extra.dataset.kind === kind){ extra.hidden = true; return; }
+      extra.dataset.kind = kind; extra.hidden = false; extra.innerHTML = '<div class="admin-empty">Loading…</div>';
+      await fn(extra);
+    };
+    card.querySelector('.id-assign').addEventListener('click', ()=> toggle('assign', el => idRenderAssign(el, idea, rows)));
+    card.querySelector('.id-results').addEventListener('click', ()=> toggle('results', el => idRenderResults(el, idea, rows)));
+    card.querySelector('.id-preview').addEventListener('click', ()=> idPreview(idea));
+    card.querySelector('.id-edit').addEventListener('click', ()=> idEdit(idea));
+    card.querySelector('.id-delete').addEventListener('click', async ()=>{
+      if(!confirm(`Delete the idea "${idea.title}"?\n\nHomework already given to students stays — only the saved idea is removed.`)) return;
+      await dbDelete('ideas', idea.id); invalidateDbCache('ideas'); idRenderList();
+    });
+    list.appendChild(card);
+  });
+}
+
+async function idRenderAssign(el, idea, rows){
+  const students = await fetchStudentsForCurrentAdmin();
+  const has = new Set(rows.map(r => idN(r.username)));
+  el.innerHTML = `
+    <div class="id-assign-box">
+      <div class="id-assign-tools">
+        <input type="text" class="id-assign-search" placeholder="🔍 Find a student…" autocomplete="off">
+        <button type="button" class="btn btn-ghost id-all">Select all</button>
+        <button type="button" class="btn btn-ghost id-none">Clear</button>
+        <span class="cd-muted id-count">0 selected</span>
+      </div>
+      <div class="id-assign-list">${students.map(s => `<label class="student-checkbox-row" data-name="${esc(idN(s.username))}">
+        <input type="checkbox" value="${esc(s.username)}"><span>${esc(s.username)}${has.has(idN(s.username)) ? ' <span class="cd-muted">(already has it)</span>' : ''}</span></label>`).join('') || '<div class="admin-empty">No approved students yet.</div>'}</div>
+      <div class="id-assign-dates">
+        <label>Due date (optional)<input type="date" class="id-due"></label>
+        <label>Show it from (optional)<input type="date" class="id-pub"></label>
+      </div>
+      <button type="button" class="btn btn-primary id-go">Assign to selected students</button>
+      <div class="id-assign-msg" role="status"></div>
+    </div>`;
+  const count = ()=>{ el.querySelector('.id-count').textContent = el.querySelectorAll('.id-assign-list input:checked').length + ' selected'; };
+  el.querySelectorAll('.id-assign-list input').forEach(cb => cb.addEventListener('change', count));
+  el.querySelector('.id-all').addEventListener('click', ()=>{ el.querySelectorAll('.id-assign-list label:not([hidden]) input').forEach(cb => cb.checked = true); count(); });
+  el.querySelector('.id-none').addEventListener('click', ()=>{ el.querySelectorAll('.id-assign-list input').forEach(cb => cb.checked = false); count(); });
+  el.querySelector('.id-assign-search').addEventListener('input', e => {
+    const q = idN(e.target.value);
+    el.querySelectorAll('.id-assign-list label').forEach(l => { l.hidden = !!q && l.dataset.name.indexOf(q) === -1; });
+  });
+  el.querySelector('.id-go').addEventListener('click', async ()=>{
+    const users = Array.from(el.querySelectorAll('.id-assign-list input:checked')).map(cb => cb.value);
+    const msg = el.querySelector('.id-assign-msg');
+    if(!users.length){ msg.textContent = 'Tick at least one student.'; return; }
+    if(!(idea.questions || []).length){ msg.textContent = 'This idea has no questions yet — edit it and add some first.'; return; }
+    const btn = el.querySelector('.id-go'); btn.disabled = true;
+    const due = el.querySelector('.id-due').value || null;
+    const pub = el.querySelector('.id-pub').value;
+    const publishAt = pub ? new Date(pub + 'T00:00:00').toISOString() : null;
+    let ok = 0;
+    for(const username of users){
+      btn.textContent = `Assigning… (${ok + 1}/${users.length})`;
+      const saved = await saveHomeworkAssignment(generateId('hw'), {
+        username, title: IDEA_PREFIX + idea.title, dueDate: due, timeLimit: null, pdfUrl: null,
+        questions: idea.questions, publishAt,
+        ideaId: idea.id, idea: { id: idea.id, title: idea.title, rule: idea.rule || '', image: idea.image || null, video: idea.video || null },
+        status: 'assigned', score: null, submittedAt: null, ts: new Date().toISOString()
+      });
+      if(saved) ok++;
+    }
+    btn.disabled = false; btn.textContent = 'Assign to selected students';
+    invalidateDbCache('homework');
+    if(ok === users.length){
+      msg.textContent = `✓ Given to ${ok} student${ok === 1 ? '' : 's'}. It's in their Homework list with a 💡.`;
+      for(const u of users){ try{ await refreshDashboardIfSignedInAs(u); }catch(e){} }
+      // update the numbers on this card, keep the message visible
+      try{
+        const fresh = (await fetchHomeworkIndex()).filter(h => h.ideaId === idea.id);
+        rows.splice(0, rows.length, ...fresh);
+        const st = el.closest('.id-card').querySelector('.id-card-stats');
+        const dn = fresh.filter(h => h.status === 'completed').length;
+        if(st) st.innerHTML = `Assigned to <b>${fresh.length}</b> · done <b>${dn}</b>`;
+        el.querySelectorAll('.id-assign-list input:checked').forEach(cb => { cb.checked = false; const sp = cb.nextElementSibling; if(sp && !/already has it/.test(sp.textContent)) sp.insertAdjacentHTML('beforeend', ' <span class="cd-muted">(already has it)</span>'); });
+        count();
+      }catch(e){}
+    } else msg.textContent = `Given to ${ok} of ${users.length} — check the connection and try the rest again.`;
+  });
+}
+
+function idRenderResults(el, idea, rows){
+  if(!rows.length){ el.innerHTML = '<div class="admin-empty">Nobody has this idea yet — press Assign.</div>'; return; }
+  const sorted = rows.slice().sort((a, b) => (a.status === 'completed' ? 0 : 1) - (b.status === 'completed' ? 0 : 1) || idN(a.username).localeCompare(idN(b.username)));
+  el.innerHTML = `<div class="admin-table-wrap"><table class="admin-table id-results-table">
+    <thead><tr><th>Student</th><th>Status</th><th>Score</th><th>Finished</th></tr></thead>
+    <tbody>${sorted.map(h => `<tr>
+      <td>${esc(h.username)}</td>
+      <td>${h.status === 'completed' ? '<span class="status-pill approved">Done</span>' : `<span class="status-pill pending">${!isHomeworkPublished(h) ? 'Scheduled' : 'Not yet'}</span>`}</td>
+      <td>${h.status === 'completed' && h.score ? `<b>${h.score.correct}/${h.score.total}</b> (${h.score.pct}%)` : '—'}</td>
+      <td>${h.submittedAt ? esc(new Date(h.submittedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })) : '—'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function idPreview(idea){
+  // Shown above everything (the admin page included), exactly as a student sees it.
+  document.querySelectorAll('.idea-sheet').forEach(el => el.remove());
+  const sh = document.createElement('div');
+  sh.className = 'idea-sheet';
+  sh.innerHTML = `<div class="idea-sheet-card idea-preview" role="dialog" aria-modal="true">
+    <div class="idea-preview-tag">👁 Student preview</div>
+    <button type="button" class="modal-close idea-sheet-close" aria-label="Close">✕</button>
+    ${idIntroHtml(idea, (idea.questions || []).length, { preview: true })}</div>`;
+  document.body.appendChild(sh);
+  const close = ()=>{ sh.querySelectorAll('video').forEach(v => { try{ v.pause(); }catch(_){} }); sh.remove(); };
+  sh.querySelector('.idea-sheet-close').addEventListener('click', close);
+  sh.querySelector('#ideaStartBtn').addEventListener('click', close);
+  sh.addEventListener('click', e => { if(e.target === sh) close(); });
+}
+
+function idEdit(idea){
+  idResetEditor();
+  idEditingId = idea.id;
+  document.getElementById('idTitle').value = idea.title || '';
+  document.getElementById('idRule').value = idea.rule || '';
+  idSetImage(idea.image); idSetVideo(idea.video);
+  if(idea.video && idIsLink(idea.video)) document.getElementById('idVideoLink').value = idea.video;
+  idQC().innerHTML = '';
+  (idea.questions || []).forEach(q => addQuestionBlock(q, idQC()));
+  if(!idQC().children.length) addQuestionBlock(null, idQC());
+  const note = document.getElementById('idEditingNote');
+  note.hidden = false; note.textContent = `Editing "${idea.title}". Students who already have it keep the version they were given.`;
+  document.getElementById('idCancelBtn').style.display = '';
+  document.getElementById('idSaveBtn').textContent = 'Save changes';
+  document.getElementById('ideasPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function idWire(){
+  const panel = document.getElementById('ideasPanel');
+  panel._wired = true;
+  document.getElementById('idAddQ').addEventListener('click', ()=> addQuestionBlock(null, idQC()));
+  document.getElementById('idCancelBtn').addEventListener('click', idResetEditor);
+
+  document.getElementById('idImageInput').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    const st = document.getElementById('idImageStatus'); st.textContent = 'Uploading picture…';
+    try{ const url = await uploadQuestionImage(f, 1600, 0.85); idSetImage(url); st.textContent = '✓ Picture added'; }
+    catch(err){ st.textContent = '⚠ ' + (err.message || 'Upload failed'); }
+  });
+  document.getElementById('idImageRemove').addEventListener('click', ()=>{ idSetImage(null); document.getElementById('idImageInput').value = ''; document.getElementById('idImageStatus').textContent = ''; });
+
+  document.getElementById('idVideoFile').addEventListener('change', async e => {
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    const st = document.getElementById('idVideoStatus'); st.textContent = `Uploading video (${Math.round(f.size / 1e6)} MB)… keep this page open.`;
+    try{ const url = await uploadExplanationVideo(f); idSetVideo(url); document.getElementById('idVideoLink').value = ''; st.textContent = '✓ Video uploaded'; }
+    catch(err){ st.textContent = '⚠ ' + (err.message || 'Upload failed'); }
+  });
+  document.getElementById('idVideoLink').addEventListener('change', e => {
+    const v = e.target.value.trim();
+    if(v && !/^https?:\/\//i.test(v)){ document.getElementById('idVideoStatus').textContent = '⚠ Paste the full link, starting with https://'; return; }
+    idSetVideo(v || null); document.getElementById('idVideoStatus').textContent = v ? '✓ Link added' : '';
+  });
+  document.getElementById('idVideoRemove').addEventListener('click', ()=>{ idSetVideo(null); document.getElementById('idVideoLink').value = ''; document.getElementById('idVideoFile').value = ''; document.getElementById('idVideoStatus').textContent = ''; });
+
+  const loader = (selId, coll) => document.getElementById(selId).addEventListener('change', async e => {
+    const id = e.target.value; if(!id) return;
+    e.target.disabled = true;
+    const rec = await dbGet(coll, id);
+    e.target.disabled = false;
+    const n = idAppendQuestions(rec && rec.questions);
+    e.target.value = '';
+    const st = document.getElementById('idLoadStatus');
+    st.textContent = rec ? `Added ${n} question${n === 1 ? '' : 's'} from "${rec.skill || rec.title}". Remove any you don't want with ✕.` : "Couldn't load that — try again.";
+  });
+  loader('idLoadSkill', 'skills'); loader('idLoadExam', 'exams');
+
+  document.getElementById('idImportBtn').addEventListener('click', ()=>{
+    const raw = document.getElementById('idImport').value.trim();
+    if(!raw) return;
+    let parsed; try{ parsed = JSON.parse(raw); }catch(e){ alert("That isn't a valid list of questions — check for a missing bracket or comma."); return; }
+    const valid = (Array.isArray(parsed) ? parsed : []).filter(q => q && Array.isArray(q.options) && q.options.length === 4)
+      .map(q => ({ ...q, text: q.text == null ? '' : String(q.text), options: q.options.map(o => o == null ? o : String(o)) }));
+    if(!valid.length){ alert('No questions found — each one needs "text" and 4 "options".'); return; }
+    const n = idAppendQuestions(valid);
+    document.getElementById('idImport').value = '';
+    document.getElementById('idLoadStatus').textContent = `Imported ${n} question${n === 1 ? '' : 's'}.`;
+  });
+
+  document.getElementById('idPreviewBtn').addEventListener('click', ()=>{
+    const d = idCollect();
+    if(!d.title && !d.rule && !d.image && !d.video){ alert('Write the idea first.'); return; }
+    idPreview({ ...d, questions: collectQuestionsFrom(idQC()) });
+  });
+
+  document.getElementById('idSaveBtn').addEventListener('click', async ()=>{
+    const d = idCollect();
+    if(!d.title){ alert('Give the idea a title.'); return; }
+    if(!d.rule && !d.image && !d.video){ alert('Add the rule, a picture or a video — something that explains the idea.'); return; }
+    const btn = document.getElementById('idSaveBtn'); btn.disabled = true; btn.textContent = 'Saving…';
+    await waitForPendingImageUploads(idQC());
+    const questions = collectQuestionsFrom(idQC());
+    const missing = countBlocksWithUnsavedImages(idQC());
+    if(missing > 0 && !confirm(`${missing} picture${missing === 1 ? '' : 's'} didn't finish uploading. Save without ${missing === 1 ? 'it' : 'them'}?`)){ btn.disabled = false; btn.textContent = idEditingId ? 'Save changes' : 'Save idea'; return; }
+    if(!questions.length && !confirm('There are no complete questions yet (each needs text or a picture, 4 options and a correct answer). Save the idea anyway and add questions later?')){ btn.disabled = false; btn.textContent = idEditingId ? 'Save changes' : 'Save idea'; return; }
+    const id = idEditingId || generateId('idea');
+    let prev = null; if(idEditingId){ try{ prev = await dbGet('ideas', id); }catch(e){} }
+    const ok = await dbSet('ideas', id, {
+      id, ...d, questions,
+      by: (prev && prev.by) || getCurrentAnswererIdentity(),
+      ts: (prev && prev.ts) || new Date().toISOString(), updatedAt: new Date().toISOString()
+    });
+    btn.disabled = false;
+    if(!ok){ btn.textContent = idEditingId ? 'Save changes' : 'Save idea'; alert("Couldn't save — check the connection and try again."); return; }
+    invalidateDbCache('ideas');
+    idResetEditor();
+    await idRenderList();
+    const first = document.querySelector('#idList .id-card');
+    if(first){ first.classList.add('id-flash'); first.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  });
+}
+{ const t = document.querySelector('.admin-tab[data-tab="ideasPanel"]'); if(t) t.addEventListener('click', ()=> setTimeout(idRenderAdmin, 0)); }
 </script>
 
 </div>
