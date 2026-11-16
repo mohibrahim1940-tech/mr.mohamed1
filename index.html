@@ -4186,6 +4186,53 @@
     background:rgba(14,154,167,.08); color:var(--text); font:inherit; cursor:pointer; text-align:left; max-width:100%; }
   .id-stu-chip span{ font-size:0.8rem; color:var(--muted); }
 
+  /* ---------- 📄 Session PDFs ---------- */
+  #spdfPanel input[type=text], #spdfPanel input[type=date]{ width:100%; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif; font-size:0.92rem; min-height:42px; }
+  #spdfPanel input[type=file]{ color:var(--muted); }
+  .spdf-two{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:640px){ .spdf-two{ grid-template-columns:1fr; } }
+  .spdf-pills{ display:flex; gap:8px; flex-wrap:wrap; }
+  .spdf-pill{ display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border:1px solid var(--line); border-radius:999px; cursor:pointer; min-height:42px; }
+  .spdf-msg{ margin-top:10px; font-size:0.92rem; }
+  .spdf-admin-card, .spdf-card{ border:1px solid var(--line); background:var(--panel); border-radius:14px; padding:14px 16px; margin-bottom:10px; }
+  .spdf-admin-top{ display:flex; gap:14px; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; }
+  .spdf-main{ display:flex; flex-direction:column; gap:4px; min-width:0; flex:1 1 240px; }
+  .spdf-main > span{ color:var(--muted); font-size:0.86rem; }
+  .spdf-note{ color:var(--text) !important; font-size:0.88rem; }
+  .spdf-new{ color:var(--signal); font-weight:700; }
+  .spdf-tags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+  .spdf-tag{ font-size:12px; padding:3px 9px; border-radius:999px; background:rgba(14,154,167,.1); border:1px solid rgba(14,154,167,.3); }
+  .spdf-viewers-btn{ align-self:flex-start; background:none; border:none; color:var(--text); font:inherit; font-size:0.88rem; padding:6px 0; cursor:pointer; min-height:36px; }
+  .spdf-viewers{ font-size:0.86rem; display:flex; flex-direction:column; gap:4px; padding:6px 0 2px; }
+  .spdf-admin-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .spdf-admin-actions .btn{ padding:8px 14px; font-size:0.85rem; }
+  .spdf-card{ display:flex; align-items:center; gap:14px; }
+  .spdf-icon{ font-size:1.6rem; flex:0 0 auto; }
+  .spdf-card .btn{ flex:0 0 auto; }
+
+  /* the reader */
+  body.pdfv-open{ overflow:hidden; }
+  .pdfv{ position:fixed; inset:0; z-index:5000; background:#2b3036; display:flex; flex-direction:column; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  .pdfv-bar{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 12px; background:#1d2126; color:#fff; flex:0 0 auto; }
+  .pdfv-title{ display:flex; flex-direction:column; min-width:0; }
+  .pdfv-title b{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:0.95rem; }
+  .pdfv-title span{ font-size:12px; opacity:.7; }
+  .pdfv-tools{ display:flex; align-items:center; gap:6px; flex:0 0 auto; font-size:12px; }
+  .pdfv-btn{ min-width:40px; min-height:40px; border-radius:8px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.08); color:#fff; font-size:1.1rem; cursor:pointer; }
+  .pdfv-zoom-val{ min-width:40px; text-align:center; }
+  .pdfv-page{ opacity:.8; padding:0 4px; white-space:nowrap; }
+  .pdfv-scroll{ flex:1; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+  .pdfv-pages{ width:100%; max-width:none; margin:0 auto; padding:12px 8px 40px; box-sizing:border-box; }
+  @media (min-width:900px){ .pdfv-pages{ width:100%; max-width:920px; } }
+  .pdfv-pg{ position:relative; width:100%; background:#fff; margin:0 auto 12px; box-shadow:0 2px 10px rgba(0,0,0,.4); overflow:hidden; }
+  .pdfv-pg canvas{ display:block; width:100%; height:100%; pointer-events:none; }
+  .pdfv-wm{ position:absolute; inset:0; display:grid; grid-template-columns:1fr; align-content:space-around; justify-items:center; pointer-events:none; overflow:hidden; }
+  .pdfv-wm span{ transform:rotate(-28deg); font:700 clamp(14px, 3.4vw, 26px)/1 Inter, sans-serif; color:rgba(200,30,30,.13); white-space:nowrap; letter-spacing:.06em; }
+  .pdfv-num{ position:absolute; right:8px; bottom:6px; font-size:11px; color:#777; background:rgba(255,255,255,.8); padding:1px 6px; border-radius:6px; }
+  .pdfv-msg{ color:#fff; text-align:center; padding:60px 20px; }
+  @media (max-width:520px){ .pdfv-zoom-val, .pdfv-page{ display:none; } }
+  @media print{ .pdfv, .pdfv *{ display:none !important; visibility:hidden !important; } body.pdfv-open *{ visibility:hidden !important; } }
+
   /* =====================================================================
      PHONE + iPAD POLISH  (Oct 2026)
      1) Side gutters: ".hero{padding:190px 0 …}", ".section-pad{padding:120px 0}"
@@ -4545,6 +4592,7 @@
           <button class="dash-tab-btn" data-dashtab="tabGraph">📈 Graphing Tool</button>
           <button class="dash-tab-btn" data-dashtab="tabPlanner">🧠 Study Planner</button>
           <button class="dash-tab-btn" data-dashtab="tabRecordings">🎬 Recordings</button>
+          <button class="dash-tab-btn" data-dashtab="tabSessionPdfs">📄 Session PDFs</button>
           <button class="dash-tab-btn" data-dashtab="tabBooking">📅 Book a session</button>
           <button class="dash-tab-btn" data-dashtab="tabWeakPoints">🎯 Weak Points</button>
           <button class="dash-tab-btn" data-dashtab="tabPayments">💳 My Payments</button>
@@ -4772,6 +4820,13 @@
           </div>
         </div>
 
+
+        <div class="dash-tab-panel" id="tabSessionPdfs">
+          <div class="hw-section-title" style="margin-top:0;">📄 Session PDFs</div>
+          <div class="admin-note" style="margin-bottom:20px;">Notes and sheets from your sessions. Tap <b>Open</b> to read them here.</div>
+          <div id="spdfStudentList"><div class="admin-empty">Loading…</div></div>
+        </div>
+
         <div class="dash-tab-panel" id="tabWeakPoints">
           <div class="hw-section-title" style="margin-top:0;">🎯 Your weak points</div>
           <div class="admin-note" style="margin-bottom:20px;">Every topic you've gotten questions wrong in, worst first. Generate a fresh mock exam on any of them — it pulls <strong>different</strong> questions from that same topic, not the ones you already got wrong.</div>
@@ -4990,7 +5045,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 11 Nov 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 16 Nov 2026</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -6476,6 +6531,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="admin-tab" data-tab="leaderboardPanel" data-roles="admin,act-admin">Leaderboard</button>
       <button class="admin-tab" data-tab="asksPanel" data-roles="admin,assistant,act-admin">Questions asked</button>
       <button class="admin-tab" data-tab="sessionsPanel" data-roles="admin,act-admin">Sessions</button>
+      <button class="admin-tab" data-tab="spdfPanel" data-roles="admin,assistant,act-admin">📄 Session PDFs</button>
       <button class="admin-tab" data-tab="announcementsPanel" data-roles="admin,act-admin">📣 Announcements</button>
       <button class="admin-tab" data-tab="questionAnalyticsPanel" data-roles="admin,act-admin">📉 Question Analytics</button>
       <button class="admin-tab" data-tab="paymentsPanel" data-roles="admin,act-admin">💳 Payments</button>
@@ -6789,6 +6845,47 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       </div>
       <h3 class="id-list-head">Your ideas</h3>
       <div id="idList"></div>
+    </div>
+
+
+    <div class="admin-panel" id="spdfPanel">
+      <div class="admin-note">📄 Upload the PDF of a session and pick who sees it. Students read it <b>inside the website</b> only — there's no download or print button, and each page shows their name across it.</div>
+      <div class="exam-editor" style="margin-top:0;">
+        <div class="id-editing-note" id="spdfEditing" hidden></div>
+        <div class="field-row" id="spdfFileRow">
+          <label class="field-label">PDF file</label>
+          <input type="file" id="spdfFile" accept="application/pdf,.pdf">
+          <span class="video-upload-status" id="spdfFileInfo"></span>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Title</label>
+          <input type="text" id="spdfTitle" placeholder="e.g. Session 5 — Quadratics">
+        </div>
+        <div class="spdf-two">
+          <div class="field-row"><label class="field-label">Session date</label><input type="date" id="spdfDate"></div>
+          <div class="field-row"><label class="field-label">Show it from (optional)</label><input type="date" id="spdfPub"></div>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Note for students (optional)</label>
+          <input type="text" id="spdfNote" placeholder="e.g. Solve page 4 before next session">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Who can see it — whole course(s)</label>
+          <div id="spdfCourses" class="spdf-pills"></div>
+        </div>
+        <div class="field-row">
+          <label class="field-label">…and/or particular students <span class="cd-muted" id="spdfStuCount"></span></label>
+          <input type="text" id="spdfStuSearch" placeholder="🔍 Find a student…" autocomplete="off">
+          <div id="spdfStudents" class="id-assign-list" style="margin-top:8px;"></div>
+        </div>
+        <div class="editor-actions">
+          <button class="btn btn-primary" id="spdfSaveBtn" type="button">Upload &amp; share</button>
+          <button class="btn btn-ghost" id="spdfCancelBtn" type="button" style="display:none;">Cancel edit</button>
+        </div>
+        <div class="spdf-msg" id="spdfMsg" role="status"></div>
+      </div>
+      <h3 class="id-list-head">Session PDFs</h3>
+      <div id="spdfList"></div>
     </div>
 
     <div class="admin-panel" id="skillsPanel">
@@ -28515,6 +28612,377 @@ function idWire(){
   });
 }
 { const t = document.querySelector('.admin-tab[data-tab="ideasPanel"]'); if(t) t.addEventListener('click', ()=> setTimeout(idRenderAdmin, 0)); }
+</script>
+<script>
+
+/* =====================================================================
+   📄 SESSION PDFs — the teacher uploads a PDF for a session and chooses
+   who sees it (whole courses and/or particular students). Students read
+   it INSIDE the website: pages are drawn as pictures with their name
+   across them, with no download / print / open-in-new-tab. Files sit in
+   a PRIVATE storage folder; the viewer gets a link that works for 2
+   minutes only, so there's no permanent link to pass around.
+   ===================================================================== */
+const SPDF_BUCKET = 'session-pdfs';
+const PDFJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const spN = s => String(s || '').trim().toLowerCase();
+
+async function spFetchAll(){
+  const rows = await dbGetAll('sessionpdfs');
+  return (rows || []).filter(r => r && r.id && !r._index)
+    .sort((a, b) => String(b.date || b.ts || '').localeCompare(String(a.date || a.ts || '')));
+}
+function spVisibleTo(p, student){
+  if(!student) return false;
+  if(p.publishAt && new Date(p.publishAt) > new Date()) return false;
+  const u = spN(student.username);
+  if((p.students || []).some(s => spN(s) === u)) return true;
+  return (p.courses || []).some(c => spN(c) === spN(student.course));
+}
+function spDateLabel(d){
+  if(!d) return '';
+  try{ return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }); }catch(e){ return d; }
+}
+
+/* ---------- PDF.js, loaded only the first time a PDF is opened ---------- */
+let _pdfjsPromise = null;
+function spLoadPdfJs(){
+  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  if(_pdfjsPromise) return _pdfjsPromise;
+  _pdfjsPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = PDFJS_URL; s.async = true;
+    s.onload = ()=>{ try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; resolve(window.pdfjsLib); }catch(e){ reject(e); } };
+    s.onerror = ()=>{ _pdfjsPromise = null; reject(new Error('Could not load the PDF reader — check the internet connection.')); };
+    document.head.appendChild(s);
+  });
+  return _pdfjsPromise;
+}
+
+/* ---------- the reader ---------- */
+async function spOpenViewer(p, opts){
+  opts = opts || {};
+  document.querySelectorAll('.pdfv').forEach(el => el.remove());
+  const who = opts.watermark || (currentStudent ? currentStudent.username : 'Preview');
+  const v = document.createElement('div');
+  v.className = 'pdfv';
+  v.innerHTML = `
+    <div class="pdfv-bar">
+      <div class="pdfv-title"><b>${esc(p.title || 'Session PDF')}</b><span>${esc(spDateLabel(p.date))}</span></div>
+      <div class="pdfv-tools">
+        <button type="button" class="pdfv-btn pdfv-zoom-out" aria-label="Smaller">−</button>
+        <span class="pdfv-zoom-val">100%</span>
+        <button type="button" class="pdfv-btn pdfv-zoom-in" aria-label="Bigger">+</button>
+        <span class="pdfv-page">…</span>
+        <button type="button" class="pdfv-btn pdfv-close" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div class="pdfv-scroll"><div class="pdfv-pages"><div class="pdfv-msg">Opening…</div></div></div>`;
+  document.body.appendChild(v);
+  document.body.classList.add('pdfv-open');
+  const scroll = v.querySelector('.pdfv-scroll');
+  const pagesEl = v.querySelector('.pdfv-pages');
+  let doc = null, io = null, closed = false, zoom = 1;
+  const close = ()=>{
+    closed = true;
+    try{ io && io.disconnect(); }catch(e){}
+    v.querySelectorAll('canvas').forEach(c => { c.width = 0; c.height = 0; });
+    try{ doc && doc.destroy(); }catch(e){}
+    v.remove(); document.body.classList.remove('pdfv-open');
+    document.removeEventListener('keydown', onKey, true);
+  };
+  // no printing / saving shortcuts while the reader is open
+  const onKey = e => {
+    const k = (e.key || '').toLowerCase();
+    if((e.ctrlKey || e.metaKey) && (k === 'p' || k === 's')){ e.preventDefault(); e.stopPropagation(); }
+    if(k === 'escape') close();
+  };
+  document.addEventListener('keydown', onKey, true);
+  v.addEventListener('contextmenu', e => e.preventDefault());
+  v.addEventListener('dragstart', e => e.preventDefault());
+  v.querySelector('.pdfv-close').addEventListener('click', close);
+
+  try{
+    let bytes = opts.bytes || null;
+    if(!bytes){
+      const { data, error } = await supabaseClient.storage.from(SPDF_BUCKET).createSignedUrl(p.path, 120);
+      if(error || !data || !data.signedUrl) throw new Error((error && error.message) || 'This PDF could not be found.');
+      const res = await fetch(data.signedUrl, { cache: 'no-store' });
+      if(!res.ok) throw new Error('This PDF could not be downloaded (' + res.status + ').');
+      bytes = new Uint8Array(await res.arrayBuffer());
+    }
+    const pdfjsLib = await spLoadPdfJs();
+    if(closed) return;
+    doc = await pdfjsLib.getDocument({ data: bytes, isEvalSupported: false }).promise;
+    if(closed){ doc.destroy(); return; }
+  }catch(err){
+    pagesEl.innerHTML = `<div class="pdfv-msg">⚠ ${esc(err.message || 'Could not open this PDF.')}<br><button type="button" class="btn btn-ghost pdfv-retry" style="margin-top:12px;">Try again</button></div>`;
+    pagesEl.querySelector('.pdfv-retry').addEventListener('click', ()=>{ close(); spOpenViewer(p, opts); });
+    return;
+  }
+
+  // page placeholders with the right shape; pages are drawn only when near
+  // the screen and cleared again when far away (keeps phones from running
+  // out of memory on long PDFs).
+  const first = await doc.getPage(1);
+  const vp1 = first.getViewport({ scale: 1 });
+  const total = doc.numPages;
+  v.querySelector('.pdfv-page').textContent = `${total} page${total === 1 ? '' : 's'}`;
+  pagesEl.innerHTML = '';
+  const wm = esc(who);
+  const slots = [];
+  for(let i = 1; i <= total; i++){
+    const d = document.createElement('div');
+    d.className = 'pdfv-pg';
+    d.dataset.n = i;
+    d.style.aspectRatio = `${vp1.width} / ${vp1.height}`;
+    d.innerHTML = `<canvas></canvas><div class="pdfv-wm" aria-hidden="true">${Array(9).fill(`<span>${wm}</span>`).join('')}</div><div class="pdfv-num">${i} / ${total}</div>`;
+    pagesEl.appendChild(d);
+    slots.push(d);
+  }
+  const applyZoom = ()=>{ pagesEl.style.width = Math.round(zoom * 100) + '%'; v.querySelector('.pdfv-zoom-val').textContent = Math.round(zoom * 100) + '%'; slots.forEach(s => { s._drawnW = 0; }); refresh(); };
+  v.querySelector('.pdfv-zoom-in').addEventListener('click', ()=>{ zoom = Math.min(3, +(zoom + 0.25).toFixed(2)); applyZoom(); });
+  v.querySelector('.pdfv-zoom-out').addEventListener('click', ()=>{ zoom = Math.max(0.5, +(zoom - 0.25).toFixed(2)); applyZoom(); });
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const draw = async slot => {
+    const w = slot.clientWidth;
+    if(!w || slot._drawing || slot._drawnW === w) return;
+    slot._drawing = true;
+    try{
+      const page = await doc.getPage(+slot.dataset.n);
+      if(closed) return;
+      const base = page.getViewport({ scale: 1 });
+      const scale = (w / base.width) * dpr;
+      const vp = page.getViewport({ scale });
+      const c = slot.querySelector('canvas');
+      c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+      await page.render({ canvasContext: c.getContext('2d', { alpha: false }), viewport: vp }).promise;
+      slot._drawnW = w;
+      page.cleanup();
+    }catch(e){ /* page will be retried when it comes back into view */ }
+    finally{ slot._drawing = false; }
+  };
+  const clear = slot => { const c = slot.querySelector('canvas'); if(c.width){ c.width = 0; c.height = 0; } slot._drawnW = 0; };
+  const near = new Set();
+  io = new IntersectionObserver(entries => {
+    entries.forEach(en => { if(en.isIntersecting) near.add(en.target); else near.delete(en.target); });
+    refresh();
+  }, { root: scroll, rootMargin: '150% 0px' });
+  slots.forEach(s => io.observe(s));
+  function refresh(){
+    slots.forEach(s => { if(near.has(s)) draw(s); else if(s._drawnW) clear(s); });
+  }
+  let t = null;
+  scroll.addEventListener('scroll', ()=>{
+    clearTimeout(t);
+    t = setTimeout(()=>{
+      const mid = scroll.scrollTop + scroll.clientHeight / 2;
+      const cur = slots.find(s => s.offsetTop + s.offsetHeight > mid) || slots[slots.length - 1];
+      v.querySelector('.pdfv-page').textContent = `Page ${cur.dataset.n} of ${total}`;
+    }, 80);
+  }, { passive: true });
+  window.addEventListener('resize', ()=>{ if(!closed){ slots.forEach(s => { s._drawnW = 0; }); refresh(); } }, { passive: true });
+
+  if(opts.onOpened) try{ opts.onOpened(total); }catch(e){}
+}
+
+/* ---------- student tab ---------- */
+async function spRenderStudent(){
+  const el = document.getElementById('spdfStudentList');
+  if(!el || !currentStudent) return;
+  el.innerHTML = '<div class="admin-empty">Loading…</div>';
+  let mine = [];
+  try{ mine = (await spFetchAll()).filter(p => spVisibleTo(p, currentStudent)); }
+  catch(e){ el.innerHTML = '<div class="admin-empty">Couldn\'t load the PDFs — check your connection.</div>'; return; }
+  if(!mine.length){ el.innerHTML = '<div class="admin-empty">No session PDFs yet — they appear here when your teacher adds them.</div>'; return; }
+  const u = spN(currentStudent.username);
+  el.innerHTML = mine.map(p => {
+    const seen = p.views && p.views[u];
+    return `<div class="spdf-card">
+      <div class="spdf-icon" aria-hidden="true">📄</div>
+      <div class="spdf-main"><b>${esc(p.title)}</b><span>${esc(spDateLabel(p.date))}${p.pages ? ` · ${p.pages} page${p.pages === 1 ? '' : 's'}` : ''}${seen ? ' · ✓ opened' : ' · <span class="spdf-new">new</span>'}</span>
+        ${p.note ? `<span class="spdf-note">${esc(p.note)}</span>` : ''}</div>
+      <button type="button" class="btn btn-primary spdf-open" data-id="${esc(p.id)}">Open</button>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.spdf-open').forEach(b => b.addEventListener('click', ()=>{
+    const p = mine.find(x => x.id === b.dataset.id);
+    spOpenViewer(p, { onOpened: pages => spMarkViewed(p, pages) });
+  }));
+}
+async function spMarkViewed(p, pages){
+  try{
+    const fresh = await dbGet('sessionpdfs', p.id); if(!fresh) return;
+    const u = spN(currentStudent.username);
+    const views = fresh.views || {};
+    const prev = views[u] || { n: 0 };
+    views[u] = { n: (prev.n || 0) + 1, first: prev.first || new Date().toISOString(), last: new Date().toISOString(), name: currentStudent.username };
+    await dbSet('sessionpdfs', p.id, { ...fresh, views, pages: fresh.pages || pages });
+    invalidateDbCache('sessionpdfs');
+    p.views = views;
+    const btn = document.querySelector(`.spdf-open[data-id="${CSS.escape(p.id)}"]`);
+    const meta = btn && btn.parentNode.querySelector('.spdf-main > span');
+    if(meta) meta.innerHTML = meta.innerHTML.replace(/ · <span class="spdf-new">new<\/span>/, ' · ✓ opened');
+  }catch(e){}
+}
+{ const b = document.querySelector('.dash-tab-btn[data-dashtab="tabSessionPdfs"]'); if(b) b.addEventListener('click', ()=> spRenderStudent()); }
+
+/* ---------- admin tab ---------- */
+let spFile = null;
+let spEditingId = null;
+async function spRenderAdmin(){
+  const panel = document.getElementById('spdfPanel'); if(!panel) return;
+  if(!panel._wired) spWire();
+  const [courses, students] = await Promise.all([fetchAllCourses(), fetchStudentsForCurrentAdmin()]);
+  const box = document.getElementById('spdfCourses');
+  const keep = new Set(Array.from(box.querySelectorAll('input:checked')).map(i => i.value));
+  box.innerHTML = courses.filter(c => !currentAdminCourseFilter || courseInAdminScope(c.name)).map(c => `<label class="spdf-pill"><input type="checkbox" value="${esc(c.name)}"${keep.has(c.name) ? ' checked' : ''}> ${esc(c.name)}</label>`).join('') || '<span class="cd-muted">No courses yet.</span>';
+  const list = document.getElementById('spdfStudents');
+  const keepS = new Set(Array.from(list.querySelectorAll('input:checked')).map(i => i.value));
+  list.innerHTML = students.filter(s => !s.status || s.status === 'approved').map(s => `<label class="student-checkbox-row" data-name="${esc(spN(s.username))}"><input type="checkbox" value="${esc(s.username)}"${keepS.has(s.username) ? ' checked' : ''}><span>${esc(s.username)} <span class="cd-muted">${esc(s.course || '')}</span></span></label>`).join('') || '<div class="admin-empty">No students yet.</div>';
+  spCount();
+  await spRenderAdminList();
+}
+function spCount(){
+  const n = document.querySelectorAll('#spdfStudents input:checked').length;
+  document.getElementById('spdfStuCount').textContent = n ? `${n} student${n === 1 ? '' : 's'} picked` : '';
+}
+function spReset(){
+  spFile = null; spEditingId = null;
+  ['spdfTitle', 'spdfNote', 'spdfPub'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('spdfDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('spdfFile').value = '';
+  document.getElementById('spdfFileInfo').textContent = '';
+  document.getElementById('spdfFileRow').style.display = '';
+  document.querySelectorAll('#spdfCourses input, #spdfStudents input').forEach(i => { i.checked = false; });
+  document.getElementById('spdfSaveBtn').textContent = 'Upload & share';
+  document.getElementById('spdfCancelBtn').style.display = 'none';
+  document.getElementById('spdfEditing').hidden = true;
+  document.getElementById('spdfMsg').textContent = '';
+  spCount();
+}
+async function spRenderAdminList(){
+  const el = document.getElementById('spdfList');
+  el.innerHTML = '<div class="admin-empty">Loading…</div>';
+  const all = (await spFetchAll()).filter(p => !currentAdminCourseFilter || (p.courses || []).some(courseInAdminScope) || (p.students || []).length);
+  if(!all.length){ el.innerHTML = '<div class="admin-empty">No PDFs yet — upload the first one above.</div>'; return; }
+  el.innerHTML = all.map(p => {
+    const viewers = Object.values(p.views || {});
+    const aud = [...(p.courses || []).map(c => `<span class="spdf-tag">📚 ${esc(c)}</span>`), ...(p.students || []).slice(0, 6).map(s => `<span class="spdf-tag">👤 ${esc(s)}</span>`)].join('') +
+      ((p.students || []).length > 6 ? `<span class="spdf-tag">+${p.students.length - 6} more</span>` : '');
+    const scheduled = p.publishAt && new Date(p.publishAt) > new Date();
+    return `<div class="spdf-admin-card" data-id="${esc(p.id)}">
+      <div class="spdf-admin-top">
+        <div class="spdf-main"><b>📄 ${esc(p.title)}</b>
+          <span>${esc(spDateLabel(p.date))}${p.pages ? ` · ${p.pages} pages` : ''}${p.size ? ` · ${(p.size / 1e6).toFixed(1)} MB` : ''}${scheduled ? ` · 🕒 shows from ${esc(new Date(p.publishAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }))}` : ''}</span>
+          <div class="spdf-tags">${aud || '<span class="cd-muted">Nobody picked yet</span>'}</div>
+          <button type="button" class="spdf-viewers-btn">👁 Opened by <b>${viewers.length}</b> student${viewers.length === 1 ? '' : 's'}</button>
+          <div class="spdf-viewers" hidden>${viewers.length ? viewers.sort((a, b) => String(b.last).localeCompare(String(a.last))).map(x => `<div>${esc(x.name || '')} <span class="cd-muted">— ${x.n} time${x.n === 1 ? '' : 's'}, last ${esc(new Date(x.last).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }))}</span></div>`).join('') : '<span class="cd-muted">Nobody has opened it yet.</span>'}</div>
+        </div>
+        <div class="spdf-admin-actions">
+          <button type="button" class="btn btn-ghost spdf-a-view">👁 View</button>
+          <button type="button" class="btn btn-ghost spdf-a-edit">Edit</button>
+          <button type="button" class="btn btn-ghost spdf-a-del">Delete</button>
+        </div>
+      </div></div>`;
+  }).join('');
+  el.querySelectorAll('.spdf-admin-card').forEach(card => {
+    const p = all.find(x => x.id === card.dataset.id);
+    card.querySelector('.spdf-viewers-btn').addEventListener('click', ()=>{ const d = card.querySelector('.spdf-viewers'); d.hidden = !d.hidden; });
+    card.querySelector('.spdf-a-view').addEventListener('click', ()=> spOpenViewer(p, { watermark: 'Teacher preview' }));
+    card.querySelector('.spdf-a-edit').addEventListener('click', ()=> spEdit(p));
+    card.querySelector('.spdf-a-del').addEventListener('click', async ()=>{
+      if(!confirm(`Delete "${p.title}"? Students won't see it any more.`)) return;
+      try{ await supabaseClient.storage.from(SPDF_BUCKET).remove([p.path]); }catch(e){}
+      await dbDelete('sessionpdfs', p.id); invalidateDbCache('sessionpdfs'); spRenderAdminList();
+    });
+  });
+}
+function spEdit(p){
+  spReset();
+  spEditingId = p.id;
+  document.getElementById('spdfTitle').value = p.title || '';
+  document.getElementById('spdfDate').value = p.date || '';
+  document.getElementById('spdfNote').value = p.note || '';
+  document.getElementById('spdfPub').value = p.publishAt ? p.publishAt.slice(0, 10) : '';
+  const cs = new Set((p.courses || []).map(spN)), ss = new Set((p.students || []).map(spN));
+  document.querySelectorAll('#spdfCourses input').forEach(i => { i.checked = cs.has(spN(i.value)); });
+  document.querySelectorAll('#spdfStudents input').forEach(i => { i.checked = ss.has(spN(i.value)); });
+  document.getElementById('spdfFileRow').style.display = 'none';
+  document.getElementById('spdfSaveBtn').textContent = 'Save changes';
+  document.getElementById('spdfCancelBtn').style.display = '';
+  const n = document.getElementById('spdfEditing'); n.hidden = false; n.textContent = `Editing "${p.title}" — change the title, date or who can see it. To change the file itself, delete this one and upload the new PDF.`;
+  spCount();
+  document.getElementById('spdfPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function spWire(){
+  const panel = document.getElementById('spdfPanel'); panel._wired = true;
+  document.getElementById('spdfDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('spdfFile').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    const info = document.getElementById('spdfFileInfo');
+    spFile = null;
+    if(!f){ info.textContent = ''; return; }
+    if(f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)){ info.textContent = '⚠ That isn\'t a PDF file.'; e.target.value = ''; return; }
+    if(f.size > 100 * 1024 * 1024){ info.textContent = '⚠ That file is bigger than 100 MB — please make it smaller first.'; e.target.value = ''; return; }
+    spFile = f;
+    info.textContent = `✓ ${f.name} (${(f.size / 1e6).toFixed(1)} MB)`;
+    const t = document.getElementById('spdfTitle');
+    if(!t.value.trim()) t.value = f.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').trim();
+  });
+  document.getElementById('spdfStuSearch').addEventListener('input', e => {
+    const q = spN(e.target.value);
+    document.querySelectorAll('#spdfStudents label').forEach(l => { l.hidden = !!q && l.dataset.name.indexOf(q) === -1; });
+  });
+  document.getElementById('spdfStudents').addEventListener('change', spCount);
+  document.getElementById('spdfCancelBtn').addEventListener('click', spReset);
+  document.getElementById('spdfSaveBtn').addEventListener('click', async ()=>{
+    const msg = document.getElementById('spdfMsg');
+    const title = document.getElementById('spdfTitle').value.trim();
+    const date = document.getElementById('spdfDate').value || null;
+    const note = document.getElementById('spdfNote').value.trim();
+    const pub = document.getElementById('spdfPub').value;
+    const courses = Array.from(document.querySelectorAll('#spdfCourses input:checked')).map(i => i.value);
+    const students = Array.from(document.querySelectorAll('#spdfStudents input:checked')).map(i => i.value);
+    if(!spEditingId && !spFile){ msg.textContent = '⚠ Choose the PDF file first.'; return; }
+    if(!title){ msg.textContent = '⚠ Give it a title (e.g. "Session 5 — Quadratics").'; return; }
+    if(!courses.length && !students.length){ msg.textContent = '⚠ Pick a course or at least one student who should see it.'; return; }
+    const btn = document.getElementById('spdfSaveBtn'); btn.disabled = true;
+    try{
+      let rec;
+      if(spEditingId){
+        const prev = await dbGet('sessionpdfs', spEditingId);
+        rec = { ...prev, title, date, note, courses, students, publishAt: pub ? new Date(pub + 'T00:00:00').toISOString() : null, updatedAt: new Date().toISOString() };
+      } else {
+        const id = generateId('spdf');
+        const path = `${id}.pdf`;
+        btn.textContent = `Uploading… (${(spFile.size / 1e6).toFixed(1)} MB)`;
+        const { error } = await supabaseClient.storage.from(SPDF_BUCKET).upload(path, spFile, { contentType: 'application/pdf', upsert: false });
+        if(error) throw error;
+        let pages = null;
+        try{ const lib = await spLoadPdfJs(); const d = await lib.getDocument({ data: new Uint8Array(await spFile.arrayBuffer()), isEvalSupported: false }).promise; pages = d.numPages; d.destroy(); }catch(e){}
+        rec = { id, path, title, date, note, courses, students, size: spFile.size, pages, fileName: spFile.name,
+          publishAt: pub ? new Date(pub + 'T00:00:00').toISOString() : null,
+          by: getCurrentAnswererIdentity(), ts: new Date().toISOString(), views: {} };
+      }
+      const ok = await dbSet('sessionpdfs', rec.id, rec);
+      if(!ok) throw new Error('Saved the file but not its details — try again.');
+      invalidateDbCache('sessionpdfs');
+      const wasEdit = !!spEditingId;
+      spReset();
+      msg.textContent = wasEdit ? '✓ Saved.' : `✓ "${rec.title}" is shared. Students see it in their 📄 Session PDFs tab.`;
+      await spRenderAdminList();
+    }catch(err){
+      msg.textContent = '⚠ ' + (err.message || 'Upload failed — check the connection and try again.');
+    }finally{
+      btn.disabled = false;
+      if(!spEditingId) btn.textContent = 'Upload & share';
+    }
+  });
+}
+{ const t = document.querySelector('.admin-tab[data-tab="spdfPanel"]'); if(t) t.addEventListener('click', ()=> setTimeout(spRenderAdmin, 0)); }
 </script>
 
 </div>
