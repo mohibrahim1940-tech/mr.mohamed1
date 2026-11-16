@@ -4233,6 +4233,16 @@
   @media (max-width:520px){ .pdfv-zoom-val, .pdfv-page{ display:none; } }
   @media print{ .pdfv, .pdfv *{ display:none !important; visibility:hidden !important; } body.pdfv-open *{ visibility:hidden !important; } }
 
+  /* ---------- recordings: name over the video ---------- */
+  #recWm{ position:absolute; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
+  #recWm .rec-wm-tiles{ position:absolute; inset:-10%; display:grid; grid-template-columns:repeat(3, 1fr); align-content:space-around; justify-items:center; transform:rotate(-22deg); }
+  #recWm .rec-wm-tiles span{ font:600 clamp(11px, 1.7vw, 18px)/2.6 Inter, sans-serif; color:rgba(255,255,255,.14); text-shadow:0 0 2px rgba(0,0,0,.18); white-space:nowrap; }
+  #recWm .rec-wm-move{ position:absolute; transform:translate(-10%, -50%); font:700 clamp(12px, 2vw, 20px)/1.2 Inter, sans-serif; color:rgba(255,255,255,.42);
+    text-shadow:0 1px 3px rgba(0,0,0,.55); white-space:nowrap; transition:left 1.2s ease, top 1.2s ease; }
+  /* covers the player's "open in new window" button (top-right corner) */
+  #recShield{ position:absolute; top:0; right:0; width:76px; height:64px; z-index:3; background:transparent; }
+  #recordingPlayerWrap{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+
   /* =====================================================================
      PHONE + iPAD POLISH  (Oct 2026)
      1) Side gutters: ".hero{padding:190px 0 …}", ".section-pad{padding:120px 0}"
@@ -5045,7 +5055,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 16 Nov 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 16 Nov 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -6384,7 +6394,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     <button class="modal-close" id="closeRecordingModal">&times;</button>
     <h3 id="recordingModalTitle">Session recording</h3>
     <div id="recordingPlayerWrap" style="position:relative; width:100%; padding-top:56.25%; background:#000; border-radius:12px; overflow:hidden; margin:14px 0;">
-      <iframe id="recordingPlayerFrame" title="Video player" allowfullscreen webkitallowfullscreen mozallowfullscreen
+      <iframe id="recordingPlayerFrame" title="Video player" referrerpolicy="strict-origin-when-cross-origin"
         style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"></iframe>
     </div>
     <div class="rec-toolbar">
@@ -6394,7 +6404,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     <div id="recordingPartTabs" style="display:none; gap:8px; flex-wrap:wrap; margin-bottom:12px;"></div>
     <div id="recordingViewNote" style="color:var(--muted); font-size:0.84rem;"></div>
     <div style="margin-top:10px;">
-      <a id="recordingFallbackLink" href="#" target="_blank" rel="noopener" style="display:none; color:var(--muted); font-size:0.8rem;">Video not loading? Open it directly ↗</a>
+      <a id="recordingFallbackLink" style="display:none;"></a>
     </div>
   </div>
 </div>
@@ -17883,10 +17893,13 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const fallback = document.getElementById('recordingFallbackLink');
     const frame = document.getElementById('recordingPlayerFrame');
     const showPart = (i)=>{
-      frame.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
+      // no fullscreen / picture-in-picture for the video itself: our own
+      // full-screen button enlarges the frame WITH the name over it.
+      frame.setAttribute('allow', 'autoplay; encrypted-media');
       frame.src = trackableEmbedUrl(parts[i].url);
-      fallback.href = parts[i].url;
-      fallback.style.display = 'inline-block';
+      fallback.removeAttribute('href');
+      fallback.style.display = 'none';
+      recWatermarkStart();
       renderRecordingParts(parts, i, showPart);
       watchSetPart(i, parts[i].url, frame);
     };
@@ -17967,10 +17980,13 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     const fallback = document.getElementById('recordingFallbackLink');
     const frame = document.getElementById('recordingPlayerFrame');
     const showPart = (i)=>{
-      frame.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; fullscreen');
+      // no fullscreen / picture-in-picture for the video itself: our own
+      // full-screen button enlarges the frame WITH the name over it.
+      frame.setAttribute('allow', 'autoplay; encrypted-media');
       frame.src = trackableEmbedUrl(parts[i].url);
-      fallback.href = parts[i].url;
-      fallback.style.display = 'inline-block';
+      fallback.removeAttribute('href');
+      fallback.style.display = 'none';
+      recWatermarkStart();
       renderRecordingParts(parts, i, showPart);
       watchSetPart(i, parts[i].url, frame);
     };
@@ -18115,6 +18131,41 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     };
     if(w.document.readyState === 'complete') waitImages(); else w.addEventListener('load', waitImages);
     setTimeout(waitImages, 1500);
+  }
+
+
+  /* ---------- Recordings: the student's name moves across the video, and
+     the player's "open in a new window" corner is covered so the video
+     link can't be opened, copied or shared from here. ---------- */
+  function recWatermarkName(){
+    if(currentStudent && currentStudent.username) return currentStudent.username;
+    try{ return getCurrentAnswererIdentity() || 'Preview'; }catch(e){ return 'Preview'; }
+  }
+  let _recWmTimer = null;
+  function recWatermarkStart(){
+    const wrap = document.getElementById('recordingPlayerWrap');
+    if(!wrap) return;
+    let wm = document.getElementById('recWm');
+    if(!wm){
+      wm = document.createElement('div');
+      wm.id = 'recWm'; wm.setAttribute('aria-hidden', 'true');
+      wrap.appendChild(wm);
+      const shield = document.createElement('div');
+      shield.id = 'recShield'; shield.title = '';
+      wrap.appendChild(shield);
+      ['contextmenu', 'dragstart'].forEach(ev => wrap.addEventListener(ev, e => e.preventDefault()));
+    }
+    const name = esc(recWatermarkName());
+    const stamp = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    wm.innerHTML = `<div class="rec-wm-tiles">${Array(12).fill(`<span>${name}</span>`).join('')}</div><div class="rec-wm-move">${name} · ${esc(stamp)}</div>`;
+    const mover = wm.querySelector('.rec-wm-move');
+    const jump = ()=>{
+      mover.style.left = (6 + Math.random() * 62) + '%';
+      mover.style.top = (10 + Math.random() * 72) + '%';
+    };
+    jump();
+    clearInterval(_recWmTimer);
+    _recWmTimer = setInterval(()=>{ if(!document.getElementById('recordingModal').classList.contains('open')){ clearInterval(_recWmTimer); return; } jump(); }, 6000);
   }
 
   // A recording field can hold several links — one per line — so a long
