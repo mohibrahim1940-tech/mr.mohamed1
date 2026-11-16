@@ -4332,6 +4332,44 @@
   .pl-status{ margin-top:10px; font-size:0.88rem; }
   @media (max-width:640px){ .pl-actions{ width:100%; } .pl-actions .btn{ flex:1 1 45%; } #plCopyAll{ width:100%; } }
 
+  /* ---------- 🎬 student results (home page) ---------- */
+  .sc-grid{ display:flex; flex-wrap:wrap; justify-content:center; gap:18px; }
+  .sc-grid > *{ flex:0 1 calc(25% - 14px); min-width:200px; max-width:280px; }
+  @media (max-width:960px){ .sc-grid > *{ flex-basis:calc(33.33% - 12px); } }
+  @media (max-width:700px){
+    .sc-grid{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; gap:12px; margin:0 calc(-1 * var(--gut, 16px)); padding:0 var(--gut, 16px) 8px; scrollbar-width:none; }
+    .sc-grid::-webkit-scrollbar{ display:none; }
+    .sc-grid > *{ flex:0 0 68%; max-width:none; min-width:0; scroll-snap-align:center; }
+  }
+  .sc-card{ position:relative; display:block; width:100%; aspect-ratio:9 / 16; border-radius:18px; overflow:hidden; border:1px solid var(--line); padding:0; cursor:pointer; background:#0b0d12; color:#fff; font:inherit; text-align:left; isolation:isolate; }
+  .sc-card:focus-visible{ outline:2px solid var(--signal); outline-offset:3px; }
+  .sc-poster{ position:absolute; inset:0; background:radial-gradient(120% 80% at 20% 0%, hsl(var(--h) 70% 45% / .55), transparent 60%), linear-gradient(160deg, #1b2030, #0b0d12); background-size:cover; background-position:center; transition:transform .5s ease; }
+  .sc-poster.has-img{ background-size:cover; }
+  .sc-card:hover .sc-poster{ transform:scale(1.04); }
+  .sc-shade{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.35) 0%, transparent 30%, transparent 55%, rgba(0,0,0,.8) 100%); }
+  .sc-score{ position:absolute; top:12px; left:12px; z-index:1; background:var(--signal); color:#fff; font-weight:800; font-size:0.95rem; padding:6px 12px; border-radius:999px; box-shadow:0 4px 14px rgba(0,0,0,.35); letter-spacing:.01em; }
+  .sc-play{ position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1; width:64px; height:64px; border-radius:50%; background:rgba(255,255,255,.18); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); border:1.5px solid rgba(255,255,255,.5); display:flex; align-items:center; justify-content:center; font-size:1.4rem; padding-left:4px; transition:transform .2s ease, background .2s ease; }
+  .sc-card:hover .sc-play{ transform:translate(-50%, -50%) scale(1.08); background:rgba(255,255,255,.28); }
+  .sc-info{ position:absolute; left:14px; right:14px; bottom:14px; z-index:1; display:flex; flex-direction:column; gap:2px; }
+  .sc-info b{ font-size:1.05rem; } .sc-info small{ font-size:0.82rem; opacity:.8; }
+  .sc-skel{ cursor:default; background:linear-gradient(90deg, rgba(127,127,127,.08), rgba(127,127,127,.16), rgba(127,127,127,.08)); }
+  .sc-live{ position:relative; width:100%; aspect-ratio:9 / 16; border-radius:18px; overflow:hidden; background:#000; border:1px solid var(--line); }
+  .sc-live iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+  .sc-foot{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:22px; }
+  .sc-foot [hidden]{ display:none !important; }
+  /* admin */
+  #showcasePanel input[type=url], #showcasePanel input[type=text]{ width:100%; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif; font-size:0.92rem; min-height:42px; }
+  .sc-three{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+  @media (max-width:700px){ .sc-three{ grid-template-columns:1fr; } }
+  .sc-inline{ display:flex; gap:8px; } .sc-inline input{ flex:1; }
+  .sc-arow{ display:flex; align-items:center; gap:12px; border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:12px 14px; margin-bottom:8px; flex-wrap:wrap; }
+  .sc-arow.is-hidden{ opacity:.55; }
+  .sc-anum{ width:30px; height:30px; border-radius:50%; background:rgba(14,154,167,.12); display:flex; align-items:center; justify-content:center; font-weight:700; flex:0 0 auto; }
+  .sc-amain{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 220px; }
+  .sc-amain span{ color:var(--muted); font-size:0.85rem; }
+  .sc-alink{ font-size:0.78rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sc-aact{ display:flex; gap:6px; flex-wrap:wrap; } .sc-aact .btn{ padding:8px 12px; font-size:0.85rem; min-height:40px; }
+
   /* =====================================================================
      PHONE + iPAD POLISH  (Oct 2026)
      1) Side gutters: ".hero{padding:190px 0 …}", ".section-pad{padding:120px 0}"
@@ -4525,14 +4563,14 @@
     <nav>
       <a href="#top" class="logo"><img loading="lazy" decoding="async" class="site-logo-img" alt="Mr. Mohamed Ibrahim logo">Mr. Mohamed Ibrahim</a>
       <div class="nav-links" id="navLinks">
-        <a href="#courses">Courses</a>
+        <a href="#courses">Results</a>
         <button class="open-auth-btn" data-tab="signinForm" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Sign in</button>
         <button class="open-auth-btn" data-tab="registerForm" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Register</button>
         <button class="open-assistant-auth-btn" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Staff login</button>
         <button class="open-admin-btn" style="background:none;border:none;color:var(--muted);font-size:0.92rem;cursor:pointer;font-family:inherit;">Admin</button>
       </div>
       <div class="nav-cta" id="navCta">
-        <a href="#courses" style="font-size:0.92rem;color:var(--muted);text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Courses</a>
+        <a href="#courses" style="font-size:0.92rem;color:var(--muted);text-decoration:none;transition:color .2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Results</a>
         <button class="btn btn-ghost open-assistant-auth-btn" style="padding:10px 18px;">Staff login</button>
         <button class="btn btn-ghost open-admin-btn" style="padding:10px 18px;">Admin</button>
         <button class="btn btn-ghost open-auth-btn" data-tab="signinForm" style="padding:10px 20px;">Sign in</button>
@@ -4994,33 +5032,19 @@
     </div>
   </section>
 
-  <!-- COURSES -->
+  <!-- STUDENT RESULTS (TikTok) -->
   <section class="section-pad wrap" id="courses">
     <div class="section-head reveal">
-      <div class="eyebrow">Curriculum</div>
-      <h2>Three exams. One clear path to your target score.</h2>
-      <p>Each course is built around one exam — pick the one you're sitting.</p>
+      <div class="eyebrow">Student results</div>
+      <h2>Real students. Real scores.</h2>
+      <p>Our students share the scores they got — tap a video to watch.</p>
     </div>
-
-    <div class="course-grid">
-      <div class="course-card reveal">
-        <div class="course-code">EST-101</div>
-        <h3>EST Math Prep</h3>
-        <p>Full coverage of the EST Math section — algebra, geometry, and data topics — with timed practice.</p>
-        <div class="course-meta"><span><strong>6 weeks</strong></span><span>Beginner</span></div>
-      </div>
-      <div class="course-card reveal">
-        <div class="course-code">SAT-101</div>
-        <h3>SAT Math Prep</h3>
-        <p>Master every SAT Math topic with timed practice and the strategies that raise scores fastest.</p>
-        <div class="course-meta"><span><strong>6 weeks</strong></span><span>Intermediate</span></div>
-      </div>
-      <div class="course-card reveal">
-        <div class="course-code">ACT-110</div>
-        <h3>ACT Math Bootcamp</h3>
-        <p>Speed and accuracy drills for the ACT's tighter time limits, built around real past papers.</p>
-        <div class="course-meta"><span><strong>5 weeks</strong></span><span>Intermediate</span></div>
-      </div>
+    <div class="sc-grid" id="scGrid">
+      <div class="sc-card sc-skel"></div><div class="sc-card sc-skel"></div><div class="sc-card sc-skel"></div><div class="sc-card sc-skel"></div>
+    </div>
+    <div class="sc-foot">
+      <button type="button" class="btn btn-ghost" id="scMoreBtn" hidden>Show more</button>
+      <a class="btn btn-ghost" id="scProfileLink" href="#" target="_blank" rel="noopener" hidden>See more on TikTok ↗</a>
     </div>
   </section>
 
@@ -5131,7 +5155,7 @@
       <div>
         <h4 class="mono">SITE</h4>
         <ul>
-          <li><a href="#courses">Courses</a></li>
+          <li><a href="#courses">Student results</a></li>
         </ul>
       </div>
       <div>
@@ -5144,7 +5168,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 16 Nov 2026 · D</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 16 Nov 2026 · E</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -6628,6 +6652,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="admin-tab" data-tab="studentsPanel" data-roles="admin,assistant,act-admin">Students</button>
       <button class="admin-tab" data-tab="homeworkPanel" data-roles="admin,assistant,act-admin">Homework</button>
       <button class="admin-tab" data-tab="ideasPanel" data-roles="admin,assistant,act-admin">💡 Ideas</button>
+      <button class="admin-tab" data-tab="showcasePanel" data-roles="admin">🎬 Results videos</button>
       <button class="admin-tab" data-tab="skillsPanel" data-roles="admin,act-admin">Skills</button>
       <button class="admin-tab" data-tab="leaderboardPanel" data-roles="admin,act-admin">Leaderboard</button>
       <button class="admin-tab" data-tab="asksPanel" data-roles="admin,assistant,act-admin">Questions asked</button>
@@ -6987,6 +7012,30 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       </div>
       <h3 class="id-list-head">Session PDFs</h3>
       <div id="spdfList"></div>
+    </div>
+
+
+    <div class="admin-panel" id="showcasePanel">
+      <div class="admin-note">🎬 TikTok videos of your students' scores, shown on the home page under <b>"Student results"</b> (where the course cards were). Newest goes first; use ↑ ↓ to change the order.</div>
+      <div class="exam-editor" style="margin-top:0;">
+        <div class="field-row">
+          <label class="field-label">TikTok video link</label>
+          <input type="url" id="scUrl" placeholder="https://www.tiktok.com/@yourname/video/7312345678901234567">
+        </div>
+        <div class="sc-three">
+          <div class="field-row"><label class="field-label">Student name (optional)</label><input type="text" id="scName" placeholder="e.g. Omar"></div>
+          <div class="field-row"><label class="field-label">Score (optional)</label><input type="text" id="scScore" placeholder="e.g. EST 780"></div>
+          <div class="field-row"><label class="field-label">Course (optional)</label><input type="text" id="scCourse" placeholder="e.g. EST — Oct 2026"></div>
+        </div>
+        <div class="editor-actions"><button class="btn btn-primary" id="scAddBtn" type="button">Add to the home page</button></div>
+        <div class="field-row" style="margin-top:18px;">
+          <label class="field-label">Your TikTok profile link (optional — adds a "See more on TikTok" button)</label>
+          <div class="sc-inline"><input type="url" id="scProfile" placeholder="https://www.tiktok.com/@yourname"><button class="btn btn-ghost" id="scProfileSave" type="button">Save</button></div>
+        </div>
+        <div class="spdf-msg" id="scMsg" role="status"></div>
+      </div>
+      <h3 class="id-list-head">On the home page</h3>
+      <div id="scAdminList"></div>
     </div>
 
     <div class="admin-panel" id="skillsPanel">
@@ -29623,6 +29672,177 @@ function cdRenderParentLinks(){
     finally{ btn.disabled = false; }
   });
 }
+</script>
+<script>
+
+/* =====================================================================
+   🎬 STUDENT RESULTS (home page) — TikTok videos of students' scores.
+   The admin pastes TikTok links in the "🎬 Results videos" tab; the home
+   page shows them as tall cards. A video only loads when tapped, so the
+   home page stays fast on phones.
+   ===================================================================== */
+const SC_PAGE = 8;
+let scShown = SC_PAGE;
+function scVideoId(url){
+  const m = /tiktok\.com\/(?:@[^/]+\/video|v|embed(?:\/v2)?|player\/v1)\/(\d{8,})/i.exec(String(url || ''));
+  return m ? m[1] : null;
+}
+function scIsShortLink(url){ return /(?:vm|vt)\.tiktok\.com\/|tiktok\.com\/t\//i.test(String(url || '')); }
+async function scFetchAll(){
+  const rows = await dbGetAll('showcase');
+  const items = (rows || []).filter(r => r && r.id && r.id !== 'settings' && !r._index && r.videoId);
+  items.sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || String(b.ts || '').localeCompare(String(a.ts || '')));
+  const settings = (rows || []).find(r => r && r.id === 'settings') || {};
+  return { items, settings };
+}
+const _scThumbs = {};
+async function scThumb(item){
+  if(_scThumbs[item.videoId] !== undefined) return _scThumbs[item.videoId];
+  try{
+    const res = await fetch('https://www.tiktok.com/oembed?url=' + encodeURIComponent(item.url));
+    const j = res.ok ? await res.json() : null;
+    _scThumbs[item.videoId] = (j && j.thumbnail_url) || null;
+  }catch(e){ _scThumbs[item.videoId] = null; }
+  return _scThumbs[item.videoId];
+}
+function scCardHtml(it, i){
+  return `<button type="button" class="sc-card" data-vid="${esc(it.videoId)}" aria-label="Play ${esc(it.name || 'student')}'s video">
+    <span class="sc-poster" style="--h:${(i * 47) % 360}"></span>
+    <span class="sc-shade"></span>
+    ${it.score ? `<span class="sc-score">${esc(it.score)}</span>` : ''}
+    <span class="sc-play" aria-hidden="true">▶</span>
+    <span class="sc-info">${it.name ? `<b>${esc(it.name)}</b>` : ''}${it.course ? `<small>${esc(it.course)}</small>` : ''}</span>
+  </button>`;
+}
+async function scRenderHome(){
+  const sec = document.getElementById('courses');
+  const grid = document.getElementById('scGrid');
+  if(!sec || !grid) return;
+  let data;
+  try{ data = await scFetchAll(); }catch(e){ data = { items: [], settings: {} }; }
+  const items = data.items.filter(x => !x.hidden);
+  if(!items.length){ sec.style.display = 'none'; return; }
+  sec.style.display = '';
+  grid.innerHTML = items.slice(0, scShown).map(scCardHtml).join('');
+  const more = document.getElementById('scMoreBtn');
+  more.hidden = items.length <= scShown;
+  more.textContent = `Show ${Math.min(SC_PAGE, items.length - scShown)} more`;
+  const prof = document.getElementById('scProfileLink');
+  if(data.settings.profileUrl){ prof.href = data.settings.profileUrl; prof.hidden = false; } else prof.hidden = true;
+  // pictures: only for cards that are on screen (or about to be)
+  const io = new IntersectionObserver(entries => entries.forEach(async en => {
+    if(!en.isIntersecting) return;
+    io.unobserve(en.target);
+    const it = items.find(x => x.videoId === en.target.dataset.vid); if(!it) return;
+    const t = await scThumb(it);
+    if(t){ const p = en.target.querySelector('.sc-poster'); p.style.backgroundImage = `url("${t.replace(/"/g, '%22')}")`; p.classList.add('has-img'); }
+  }), { rootMargin: '300px' });
+  grid.querySelectorAll('.sc-card').forEach(c => io.observe(c));
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest && e.target.closest('#scGrid .sc-card');
+  if(!c) return;
+  // only one video plays at a time
+  document.querySelectorAll('#scGrid .sc-live').forEach(f => {
+    const back = document.createElement('div'); back.innerHTML = f.dataset.card; f.replaceWith(back.firstElementChild);
+  });
+  const live = document.createElement('div');
+  live.className = 'sc-live';
+  live.dataset.card = c.outerHTML;
+  live.innerHTML = `<iframe src="https://www.tiktok.com/player/v1/${encodeURIComponent(c.dataset.vid)}?autoplay=1&music_info=1&description=1&rel=0&native_context_menu=0&closed_caption=0"
+    title="Student result video" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen loading="eager"></iframe>`;
+  c.replaceWith(live);
+});
+document.addEventListener('DOMContentLoaded', ()=>{
+  const more = document.getElementById('scMoreBtn');
+  if(more) more.addEventListener('click', ()=>{ scShown += SC_PAGE; scRenderHome(); });
+  // the home-page section loads when it comes near the screen
+  const sec = document.getElementById('courses');
+  if(!sec) return;
+  if(new URLSearchParams(location.search).get('parentView')) return;
+  const io = new IntersectionObserver(en => { if(en.some(x => x.isIntersecting)){ io.disconnect(); scRenderHome(); } }, { rootMargin: '600px' });
+  io.observe(sec);
+});
+
+/* ---------- admin: 🎬 Results videos ---------- */
+async function scRenderAdmin(){
+  const panel = document.getElementById('showcasePanel'); if(!panel) return;
+  if(!panel._wired) scWire();
+  const list = document.getElementById('scAdminList');
+  list.innerHTML = '<div class="admin-empty">Loading…</div>';
+  invalidateDbCache('showcase');
+  const { items, settings } = await scFetchAll();
+  document.getElementById('scProfile').value = settings.profileUrl || '';
+  if(!items.length){ list.innerHTML = '<div class="admin-empty">No videos yet — paste the first TikTok link above. Until you add one, the section is hidden on the home page.</div>'; return; }
+  list.innerHTML = items.map((it, i) => `
+    <div class="sc-arow${it.hidden ? ' is-hidden' : ''}" data-id="${esc(it.id)}">
+      <div class="sc-anum">${i + 1}</div>
+      <div class="sc-amain"><b>${esc(it.name || '(no name)')}</b><span>${esc([it.score, it.course].filter(Boolean).join(' · '))}${it.hidden ? ' · <em>hidden</em>' : ''}</span>
+        <a href="${esc(it.url)}" target="_blank" rel="noopener" class="sc-alink">${esc(it.url)}</a></div>
+      <div class="sc-aact">
+        <button type="button" class="btn btn-ghost sc-up" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="btn btn-ghost sc-down" ${i === items.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+        <button type="button" class="btn btn-ghost sc-hide">${it.hidden ? 'Show' : 'Hide'}</button>
+        <button type="button" class="btn btn-ghost sc-del">Delete</button>
+      </div>
+    </div>`).join('');
+  const save = async (it, patch) => { await dbSet('showcase', it.id, { ...it, ...patch }); };
+  const reorder = async (from, to) => {
+    const arr = items.slice(); const [m] = arr.splice(from, 1); arr.splice(to, 0, m);
+    await Promise.all(arr.map((it, k) => it.order === k ? null : save(it, { order: k })));
+    invalidateDbCache('showcase'); scRenderAdmin();
+  };
+  list.querySelectorAll('.sc-arow').forEach((row, i) => {
+    const it = items[i];
+    row.querySelector('.sc-up').addEventListener('click', ()=> reorder(i, i - 1));
+    row.querySelector('.sc-down').addEventListener('click', ()=> reorder(i, i + 1));
+    row.querySelector('.sc-hide').addEventListener('click', async ()=>{ await save(it, { hidden: !it.hidden }); invalidateDbCache('showcase'); scRenderAdmin(); });
+    row.querySelector('.sc-del').addEventListener('click', async ()=>{
+      if(!confirm(`Remove ${it.name || 'this'} video from the home page?`)) return;
+      await dbDelete('showcase', it.id); invalidateDbCache('showcase'); scRenderAdmin();
+    });
+  });
+}
+function scWire(){
+  document.getElementById('showcasePanel')._wired = true;
+  document.getElementById('scAddBtn').addEventListener('click', async ()=>{
+    const msg = document.getElementById('scMsg');
+    const url = document.getElementById('scUrl').value.trim();
+    const name = document.getElementById('scName').value.trim();
+    const score = document.getElementById('scScore').value.trim();
+    const course = document.getElementById('scCourse').value.trim();
+    if(!url){ msg.textContent = '⚠ Paste the TikTok link first.'; return; }
+    const vid = scVideoId(url);
+    if(!vid){
+      msg.textContent = scIsShortLink(url)
+        ? '⚠ That is a short TikTok link. Open it in your browser, then copy the full link from the address bar — it looks like tiktok.com/@name/video/1234567890…'
+        : "⚠ That doesn't look like a TikTok video link. It should look like tiktok.com/@name/video/1234567890…";
+      return;
+    }
+    const btn = document.getElementById('scAddBtn'); btn.disabled = true;
+    const { items } = await scFetchAll();
+    if(items.some(x => x.videoId === vid)){ msg.textContent = 'That video is already on the list.'; btn.disabled = false; return; }
+    // new videos go first
+    await Promise.all(items.map((it, k) => dbSet('showcase', it.id, { ...it, order: k + 1 })));
+    const id = generateId('sc');
+    const ok = await dbSet('showcase', id, { id, url: url.split('?')[0], videoId: vid, name, score, course, order: 0, hidden: false, ts: new Date().toISOString(), by: getCurrentAnswererIdentity() });
+    btn.disabled = false;
+    if(!ok){ msg.textContent = "⚠ Couldn't save — check the connection and try again."; return; }
+    ['scUrl', 'scName', 'scScore', 'scCourse'].forEach(i => { document.getElementById(i).value = ''; });
+    msg.textContent = '✓ Added — it now shows first in "Student results" on the home page.';
+    invalidateDbCache('showcase'); scRenderAdmin(); scShown = SC_PAGE; scRenderHome();
+  });
+  document.getElementById('scProfileSave').addEventListener('click', async ()=>{
+    const v = document.getElementById('scProfile').value.trim();
+    if(v && !/^https?:\/\/(www\.)?tiktok\.com\//i.test(v)){ document.getElementById('scMsg').textContent = '⚠ Paste your TikTok profile link, e.g. https://www.tiktok.com/@yourname'; return; }
+    const prev = await dbGet('showcase', 'settings');
+    await dbSet('showcase', 'settings', { ...(prev || {}), id: 'settings', profileUrl: v || null });
+    invalidateDbCache('showcase');
+    document.getElementById('scMsg').textContent = v ? '✓ Saved — the home page shows a "See more on TikTok" button.' : '✓ Removed the profile button.';
+    scRenderHome();
+  });
+}
+{ const t = document.querySelector('.admin-tab[data-tab="showcasePanel"]'); if(t) t.addEventListener('click', ()=> setTimeout(scRenderAdmin, 0)); }
 </script>
 
 </div>
