@@ -4243,6 +4243,95 @@
   #recShield{ position:absolute; top:0; right:0; width:76px; height:64px; z-index:3; background:transparent; }
   #recordingPlayerWrap{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 
+  /* ---------- 👪 parent report ---------- */
+  #parentViewPage .parent-view-wrap{ max-width:980px; padding:20px 16px 70px; }
+  #parentViewPage .parent-view-tag{ display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .pv-lang{ border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:999px; padding:6px 14px; min-height:36px; font:inherit; font-weight:700; cursor:pointer; }
+  .pv-hero{ padding:8px 0 18px; }
+  .pv-eyebrow{ font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  #parentViewPage[dir=rtl] .pv-eyebrow{ letter-spacing:0; }
+  .pv-name{ font-size:clamp(1.6rem, 5vw, 2.3rem); margin:4px 0 2px; overflow-wrap:anywhere; }
+  .pv-meta{ color:var(--muted); }
+  .pv-hero-facts{ display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .pv-hero-facts span{ background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:7px 14px; font-size:0.88rem; }
+  .pv-kpis{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:14px; }
+  .pv-kpi{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .pv-kpi > span{ font-size:0.82rem; color:var(--muted); }
+  .pv-kpi > b{ font-size:1.5rem; font-family:'Space Grotesk', Inter, sans-serif; }
+  .pv-kpi small{ color:var(--muted); font-size:0.8rem; }
+  .pv-bar{ height:7px; border-radius:99px; background:rgba(127,127,127,.18); overflow:hidden; }
+  .pv-bar span{ display:block; height:100%; border-radius:99px; background:var(--signal); }
+  .pv-bar span.ok{ background:var(--success, #1f9d55); } .pv-bar span.warn{ background:var(--warn, #e0a000); } .pv-bar span.bad{ background:#d9534f; }
+  .pv-card{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin-bottom:14px; }
+  .pv-card h3{ font-size:1.08rem; margin:0 0 12px; }
+  .pv-card h4{ font-size:0.86rem; color:var(--muted); margin:12px 0 6px; font-weight:600; }
+  .pv-alerts{ display:flex; flex-direction:column; gap:8px; }
+  .pv-alert{ display:flex; gap:12px; align-items:flex-start; padding:10px 12px; border-radius:12px; border:1px solid var(--line); }
+  .pv-alert.red{ background:rgba(217,83,79,.1); border-color:rgba(217,83,79,.35); }
+  .pv-alert.amber{ background:rgba(224,160,0,.1); border-color:rgba(224,160,0,.35); }
+  .pv-alert.info{ background:rgba(14,154,167,.08); border-color:rgba(14,154,167,.3); }
+  .pv-alert-ic{ font-size:1.2rem; line-height:1.3; }
+  .pv-alert b{ display:block; font-size:0.93rem; } .pv-alert span{ display:block; color:var(--muted); font-size:0.82rem; margin-top:2px; overflow-wrap:anywhere; }
+  .pv-good{ padding:12px 14px; border-radius:12px; background:rgba(31,157,85,.1); border:1px solid rgba(31,157,85,.3); font-weight:600; }
+  .pv-week{ display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; }
+  .pv-week > div{ border:1px solid var(--line); border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:2px; }
+  .pv-week b{ font-size:1.4rem; font-family:'Space Grotesk', Inter, sans-serif; } .pv-week span{ color:var(--muted); font-size:0.82rem; }
+  .pv-chart{ width:100%; height:auto; display:block; }
+  .pv-grid{ stroke:var(--line); stroke-width:1; } .pv-axis{ fill:var(--muted); font-size:11px; font-family:Inter, sans-serif; }
+  .pv-line{ fill:none; stroke:var(--signal); stroke-width:2.5; stroke-linejoin:round; stroke-linecap:round; }
+  .pv-dot{ fill:var(--panel); stroke:var(--signal); stroke-width:2.5; } .pv-dot-exam{ fill:var(--signal); }
+  .pv-note{ color:var(--muted); font-size:0.8rem; margin-top:6px; }
+  .pv-topics{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:640px){ .pv-topics{ grid-template-columns:1fr; } }
+  .pv-topics h4{ margin-top:0; }
+  .pv-topic{ display:grid; grid-template-columns:1fr auto; gap:2px 10px; margin-bottom:10px; font-size:0.9rem; }
+  .pv-topic .pv-bar{ grid-column:1 / -1; }
+  .pv-chips{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .pv-chip{ border:1px solid var(--line); background:transparent; color:var(--text); border-radius:999px; padding:7px 14px; min-height:40px; font:inherit; font-size:0.86rem; cursor:pointer; }
+  .pv-chip.on{ background:var(--signal); border-color:var(--signal); color:#fff; }
+  .pv-chip small{ opacity:.75; }
+  .pv-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-top:1px solid var(--line); }
+  .pv-row:first-of-type{ border-top:none; }
+  .pv-row-main{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .pv-row-main b{ font-size:0.93rem; overflow-wrap:anywhere; } .pv-row-main span{ color:var(--muted); font-size:0.8rem; }
+  .pv-row-side{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; flex:0 0 auto; }
+  .pv-score{ font-size:0.88rem; white-space:nowrap; } .pv-score.ok{ color:var(--success, #1f9d55); } .pv-score.warn{ color:var(--warn, #b07d00); } .pv-score.bad{ color:#d9534f; }
+  .pv-pill{ font-size:12px; font-weight:600; padding:4px 10px; border-radius:999px; white-space:nowrap; border:1px solid transparent; }
+  .pv-pill.ok{ background:rgba(31,157,85,.12); color:var(--success, #1f9d55); } .pv-pill.warn{ background:rgba(224,160,0,.14); color:#a87600; }
+  .pv-pill.bad{ background:rgba(217,83,79,.12); color:#d9534f; } .pv-pill.mute{ background:rgba(127,127,127,.12); color:var(--muted); }
+  .pv-more{ width:100%; margin-top:10px; }
+  .pv-paysum{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .pv-paysum > div{ flex:1 1 140px; border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; }
+  .pv-paysum span{ color:var(--muted); font-size:0.8rem; } .pv-paysum b{ font-size:1.1rem; } .pv-paysum b.warn{ color:#a87600; } .pv-paysum b.ok{ color:var(--success, #1f9d55); }
+  .pv-xp{ margin-top:16px; display:grid; grid-template-columns:1.3fr 1fr; gap:14px; align-items:center; padding:18px 20px; border-radius:18px;
+    background:linear-gradient(135deg, rgba(14,154,167,.16), rgba(14,154,167,.04)); border:1px solid rgba(14,154,167,.4); }
+  .pv-xp-main{ display:flex; flex-direction:column; gap:4px; }
+  .pv-xp-main > span{ font-size:0.85rem; color:var(--muted); font-weight:600; }
+  .pv-xp-main > b{ font-family:'Space Grotesk', Inter, sans-serif; font-size:clamp(2.4rem, 9vw, 3.4rem); line-height:1; color:var(--signal); }
+  .pv-xp-main > b small{ font-size:1rem; color:var(--muted); font-weight:500; margin-inline-start:4px; }
+  .pv-xp-main em{ font-style:normal; font-size:0.86rem; font-weight:600; } .pv-xp-main em.up{ color:var(--success, #1f9d55); } .pv-xp-main em.down{ color:#d9534f; }
+  .pv-xp-side{ display:flex; gap:10px; flex-wrap:wrap; }
+  .pv-xp-side > div{ flex:1 1 110px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; }
+  .pv-xp-side span{ font-size:0.78rem; color:var(--muted); } .pv-xp-side b{ font-size:1.35rem; font-family:'Space Grotesk', Inter, sans-serif; } .pv-xp-side small{ font-size:0.78rem; color:var(--muted); }
+  .pv-xp-note{ grid-column:1 / -1; font-size:0.78rem; color:var(--muted); }
+  .pv-xp-wait{ grid-template-columns:1fr; }
+  @media (max-width:640px){ .pv-xp{ grid-template-columns:1fr; } }
+  .pv-empty{ color:var(--muted); padding:8px 0; }
+  .pv-contact{ display:flex; align-items:center; justify-content:center; gap:8px; min-height:52px; border-radius:14px; background:#25D366; color:#fff; font-weight:700; text-decoration:none; margin-top:6px; padding:10px 16px; text-align:center; }
+  @media print{ .pv-lang, .pv-chips, .pv-more, .pv-contact{ display:none !important; } .pv-card{ break-inside:avoid; } }
+
+  /* ---------- coordinator: parent links ---------- */
+  .pl-head{ margin-bottom:12px; } .pl-head b{ display:block; font-size:1.05rem; margin-bottom:4px; } .pl-head span{ font-size:0.88rem; }
+  .pl-tools{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .pl-select{ padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--panel); color:var(--text); font:inherit; min-height:42px; }
+  .pl-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 0; border-top:1px solid var(--line); }
+  .pl-who{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 200px; } .pl-who span{ font-size:0.82rem; }
+  .pl-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+  .pl-actions .btn{ padding:8px 12px; font-size:0.84rem; min-height:40px; }
+  .pl-done{ background:rgba(31,157,85,.14) !important; border-color:rgba(31,157,85,.5) !important; }
+  .pl-status{ margin-top:10px; font-size:0.88rem; }
+  @media (max-width:640px){ .pl-actions{ width:100%; } .pl-actions .btn{ flex:1 1 45%; } #plCopyAll{ width:100%; } }
+
   /* =====================================================================
      PHONE + iPAD POLISH  (Oct 2026)
      1) Side gutters: ".hero{padding:190px 0 …}", ".section-pad{padding:120px 0}"
@@ -5055,7 +5144,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 16 Nov 2026 · B</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 16 Nov 2026 · D</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -6135,6 +6224,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="cd-tab" data-cd="hwd" role="tab">📘 HW details</button>
       <button class="cd-tab" data-cd="homework" role="tab">📚 Homework follow-up</button>
       <button class="cd-tab" data-cd="calls" role="tab">📞 Parent calls</button>
+      <button class="cd-tab" data-cd="plink" role="tab">👪 Parent link</button>
       <button class="cd-tab" data-cd="tasks" role="tab">🗒️ Tasks <span class="cd-badge" id="cdTaskBadge" hidden></span></button>
     </div>
     <div class="cd-panel active" id="cdToday"></div>
@@ -6145,6 +6235,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     <div class="cd-panel" id="cdMarks"></div>
     <div class="cd-panel" id="cdHwAll"></div>
     <div class="cd-panel" id="cdHwd"></div>
+    <div class="cd-panel" id="cdPlink"></div>
     <div class="cd-panel" id="cdHomework"></div>
     <div class="cd-panel" id="cdCalls"></div>
     <div class="cd-panel" id="cdTasks"></div>
@@ -7947,7 +8038,9 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
     // Deferred so the rest of this script (including const declarations
     // further down, like the cache) finishes initializing first — calling
     // straight through here would hit them before they exist.
-    setTimeout(()=> renderParentView(parentViewToken), 0);
+    // after every script has loaded (the full report lives in a later script)
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ()=> renderParentView(parentViewToken));
+    else setTimeout(()=> renderParentView(parentViewToken), 0);
   }
 
   async function renderParentView(token){
@@ -25230,12 +25323,12 @@ $$);`;
   function cdShow(tab){
     cdTab = tab;
     document.querySelectorAll('#coordDesk .cd-tab').forEach(t => { const on = t.dataset.cd === tab; t.classList.toggle('active', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); });
-    const ids = { today: 'cdToday', hwd: 'cdHwd', track: 'cdTrack', students: 'cdStudents', schedule: 'cdSchedule', attendance: 'cdAttendance', marks: 'cdMarks', hwall: 'cdHwAll', homework: 'cdHomework', calls: 'cdCalls', tasks: 'cdTasks' };
+    const ids = { today: 'cdToday', hwd: 'cdHwd', plink: 'cdPlink', track: 'cdTrack', students: 'cdStudents', schedule: 'cdSchedule', attendance: 'cdAttendance', marks: 'cdMarks', hwall: 'cdHwAll', homework: 'cdHomework', calls: 'cdCalls', tasks: 'cdTasks' };
     Object.entries(ids).forEach(([k, id]) => document.getElementById(id).classList.toggle('active', k === tab));
     cdUpdateTaskBadge();
     if(!cdData) return;
     cdUpdateDue();
-    ({ today: cdRenderToday, hwd: ()=> qRenderAsdHomework(document.getElementById('cdHwd'), true), track: cdRenderTrack, students: cdRenderStudents, schedule: cdRenderSchedule, attendance: cdRenderAttendance, marks: cdRenderMarks,
+    ({ today: cdRenderToday, plink: ()=> cdRenderParentLinks(), hwd: ()=> qRenderAsdHomework(document.getElementById('cdHwd'), true), track: cdRenderTrack, students: cdRenderStudents, schedule: cdRenderSchedule, attendance: cdRenderAttendance, marks: cdRenderMarks,
        hwall: cdRenderHwAll, homework: cdRenderHomework, calls: cdRenderCalls, tasks: cdRenderTasks })[tab]();
   }
 
@@ -29034,6 +29127,502 @@ function spWire(){
   });
 }
 { const t = document.querySelector('.admin-tab[data-tab="spdfPanel"]'); if(t) t.addEventListener('click', ()=> setTimeout(spRenderAdmin, 0)); }
+</script>
+<script>
+
+/* =====================================================================
+   👪 PARENT LINK — a full, read-only report for the parent: what needs
+   attention, homework (on time / late / missing), scores over time,
+   strong & weak topics, exams & practice, sessions & attendance,
+   recordings watched, payments, help from the assistants, session PDFs.
+   English / عربي switch. Loads only THIS student's rows.
+   ===================================================================== */
+const PV_TXT = {
+  en: {
+    tag: 'Parent report · read-only', lang: 'عربي', loading: 'Loading the report…', bad: "This link isn't valid — please ask for a new one.",
+    report: 'Progress report', updated: 'Updated', lastActive: 'Last active on the website', never: 'not yet', today: 'today', yesterday: 'yesterday', daysAgo: n => `${n} days ago`,
+    examIn: (n, c, d) => `${n} day${n == 1 ? '' : 's'} until the ${c} exam (${d})`, examToday: c => `The ${c} exam is today`, target: 'Target score',
+    kHw: 'Homework done', kOnTime: n => `${n}% on time`, kAvg: 'Average homework score', kAtt: 'Session attendance', kAttSub: (a, b) => `${a} of ${b} sessions`, kPay: 'Payments',
+    kPaidFull: 'Paid in full ✓', kOwed: n => `${n} EGP remaining`, kNoFee: 'No fee set', kPracticeMonth: 'Practice this month', kPracticeSub: 'skills & exams done',
+    attention: 'Needs attention', allGood: 'All good — nothing needs attention right now ✓',
+    aOverdue: n => `${n} homework past the due date and not done`, aRetake: n => `${n} retake${n == 1 ? '' : 's'} waiting (scored low — must redo)`,
+    aAbsent: n => `Missed ${n} session${n == 1 ? '' : 's'} in the last 30 days`, aOwed: n => `${n} EGP of the course fee still unpaid`,
+    aInactive: n => `Hasn't opened the website for ${n} days`, aWeak: t => `Weakest topic: ${t}`, aPending: n => `${n} payment${n == 1 ? '' : 's'} waiting for approval`,
+    week: 'Last 7 days', wHw: 'homework done', wPractice: 'skills / exams practised', wMin: 'minutes of recordings watched', wMistakes: 'mistakes reviewed with an assistant',
+    trend: 'Scores over time', trendNote: 'Each dot is one finished homework or exam (newest on the right).', noScores: 'No scores yet.',
+    topics: 'Topics', strong: 'Strongest', weak: 'Needs more work', noTopics: 'Not enough answers yet to judge topics.',
+    hw: 'Homework', fAll: 'All', fTodo: 'To do', fOverdue: 'Overdue', fDone: 'Done', sOnTime: 'Done on time', sLate: 'Done late', sOverdue: 'Overdue', sTodo: 'To do', sRetake: 'Retake needed',
+    due: 'Due', done: 'Done', noHw: 'No homework yet.', more: n => `Show ${n} more`,
+    exams: 'Exams & skill practice', exam: 'Exam', skill: 'Skill practice', noExams: 'No exams or practice yet.',
+    sessions: 'Sessions & attendance', upcoming: 'Upcoming', past: 'Past sessions', present: 'Present', late: 'Late', absent: 'Absent', excused: 'Excused', notMarked: 'Not marked',
+    watched: m => `watched recording · ${m} min`, notWatched: 'recording not watched yet', noSessions: 'No sessions yet.',
+    pay: 'Payments', paid: 'Paid', fee: 'Course fee', remaining: 'Remaining', pPending: 'Waiting for approval', pConfirmed: 'Confirmed', noPay: 'No payments recorded yet.',
+    help: 'Mistakes & help from the assistants', hTotal: 'questions got wrong (all time)', hAnswered: 'explained by an assistant', hWaiting: 'waiting for an explanation', hMastered: 'now mastered',
+    pdfs: 'Session PDFs', pdfOpened: (a, b) => `Opened ${a} of ${b} session PDFs`,
+    contact: 'Questions? Message Mr. Mohamed Ibrahim on WhatsApp', egp: 'EGP',
+    xp: 'Expected score', xpOnDay: 'Expected on exam day', xpNow: 'Current level', xpTarget: 'Target', xpReached: 'Target reached ✓', xpOnTrack: 'On track to reach it ✓', xpToGo: n => `${n} to go`,
+    xpUp: n => `Improving — about +${n} by the exam`, xpDown: n => `Dropping — about −${n} by the exam`, xpFlat: 'Holding steady',
+    xpNotYet: n => `The expected score appears after 4 results spread over at least a week (now ${n}).`, xpBased: n => `Based on ${n} homework & exam results.`, xpOf: ' / 800'
+  },
+  ar: {
+    tag: 'تقرير ولي الأمر · للاطلاع فقط', lang: 'English', loading: 'جارِ تحميل التقرير…', bad: 'هذا الرابط غير صالح — من فضلك اطلب رابطًا جديدًا.',
+    report: 'تقرير المتابعة', updated: 'آخر تحديث', lastActive: 'آخر دخول على الموقع', never: 'لم يدخل بعد', today: 'اليوم', yesterday: 'أمس', daysAgo: n => `منذ ${n} يوم`,
+    examIn: (n, c, d) => `متبقي ${n} يوم على امتحان ${c} (${d})`, examToday: c => `امتحان ${c} اليوم`, target: 'الدرجة المستهدفة',
+    kHw: 'الواجبات المنجزة', kOnTime: n => `${n}% في الموعد`, kAvg: 'متوسط درجات الواجب', kAtt: 'حضور الحصص', kAttSub: (a, b) => `${a} من ${b} حصة`, kPay: 'المدفوعات',
+    kPaidFull: 'تم الدفع بالكامل ✓', kOwed: n => `متبقي ${n} جنيه`, kNoFee: 'لم تُحدد الرسوم', kPracticeMonth: 'التدريب هذا الشهر', kPracticeSub: 'مهارات وامتحانات',
+    attention: 'يحتاج إلى متابعة', allGood: 'كل شيء على ما يرام — لا يوجد ما يحتاج متابعة الآن ✓',
+    aOverdue: n => `${n} واجب تجاوز موعد التسليم ولم يُحل`, aRetake: n => `${n} إعادة مطلوبة (درجة منخفضة — يجب إعادة الحل)`,
+    aAbsent: n => `غاب عن ${n} حصة خلال آخر 30 يومًا`, aOwed: n => `${n} جنيه من رسوم الكورس لم تُدفع بعد`,
+    aInactive: n => `لم يدخل الموقع منذ ${n} يوم`, aWeak: t => `أضعف موضوع: ${t}`, aPending: n => `${n} دفعة في انتظار التأكيد`,
+    week: 'آخر 7 أيام', wHw: 'واجبات منجزة', wPractice: 'تدريبات مهارات / امتحانات', wMin: 'دقائق مشاهدة تسجيلات', wMistakes: 'أخطاء تمت مراجعتها مع مساعد',
+    trend: 'الدرجات عبر الوقت', trendNote: 'كل نقطة واجب أو امتحان منتهٍ (الأحدث على اليمين).', noScores: 'لا توجد درجات بعد.',
+    topics: 'الموضوعات', strong: 'الأقوى', weak: 'يحتاج مجهود أكثر', noTopics: 'لا توجد إجابات كافية للحكم على الموضوعات بعد.',
+    hw: 'الواجبات', fAll: 'الكل', fTodo: 'لم يُحل', fOverdue: 'متأخر', fDone: 'تم', sOnTime: 'تم في الموعد', sLate: 'تم متأخرًا', sOverdue: 'متأخر', sTodo: 'لم يُحل بعد', sRetake: 'مطلوب إعادة',
+    due: 'التسليم', done: 'تم', noHw: 'لا توجد واجبات بعد.', more: n => `عرض ${n} أخرى`,
+    exams: 'الامتحانات والتدريب', exam: 'امتحان', skill: 'تدريب مهارة', noExams: 'لا توجد امتحانات أو تدريبات بعد.',
+    sessions: 'الحصص والحضور', upcoming: 'القادمة', past: 'الحصص السابقة', present: 'حاضر', late: 'متأخر', absent: 'غائب', excused: 'بعذر', notMarked: 'لم يُسجل',
+    watched: m => `شاهد التسجيل · ${m} دقيقة`, notWatched: 'لم يشاهد التسجيل بعد', noSessions: 'لا توجد حصص بعد.',
+    pay: 'المدفوعات', paid: 'المدفوع', fee: 'رسوم الكورس', remaining: 'المتبقي', pPending: 'في انتظار التأكيد', pConfirmed: 'مؤكد', noPay: 'لا توجد مدفوعات مسجلة بعد.',
+    help: 'الأخطاء ومساعدة المساعدين', hTotal: 'سؤال أخطأ فيه (إجمالي)', hAnswered: 'شرحها مساعد', hWaiting: 'في انتظار الشرح', hMastered: 'أصبح يتقنها',
+    pdfs: 'ملفات الحصص PDF', pdfOpened: (a, b) => `فتح ${a} من ${b} ملف`,
+    contact: 'لأي استفسار راسل مستر محمد إبراهيم على واتساب', egp: 'جنيه',
+    xp: 'الدرجة المتوقعة', xpOnDay: 'المتوقع يوم الامتحان', xpNow: 'المستوى الحالي', xpTarget: 'المستهدف', xpReached: 'وصل للمستهدف ✓', xpOnTrack: 'في الطريق للوصول إليه ✓', xpToGo: n => `متبقي ${n}`,
+    xpUp: n => `في تحسن — حوالي +${n} حتى الامتحان`, xpDown: n => `في تراجع — حوالي −${n} حتى الامتحان`, xpFlat: 'مستقر',
+    xpNotYet: n => `تظهر الدرجة المتوقعة بعد 4 نتائج على مدار أسبوع على الأقل (الآن ${n}).`, xpBased: n => `بناءً على ${n} نتيجة واجبات وامتحانات.`, xpOf: ' / 800'
+  }
+};
+let pvLang = (()=>{ try{ return localStorage.getItem('mi-pv-lang') || 'en'; }catch(e){ return 'en'; } })();
+const pvT = k => PV_TXT[pvLang][k] !== undefined ? PV_TXT[pvLang][k] : PV_TXT.en[k];
+const pvN = s => String(s || '').trim().toLowerCase();
+const pvDay = d => { const x = new Date(d); return isNaN(x) ? null : new Date(x.getFullYear(), x.getMonth(), x.getDate()); };
+const pvFmt = (d, withYear) => { if(!d) return ''; const x = new Date(String(d).length === 10 ? d + 'T00:00:00' : d); if(isNaN(x)) return ''; return x.toLocaleDateString(pvLang === 'ar' ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) }); };
+const pvNum = n => pvLang === 'ar' ? String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]) : String(n);
+
+async function pvIdxFor(coll, username){
+  const pattern = username.trim().replace(/[\\%_]/g, m => '\\' + m);
+  try{
+    let rows = [], off = 0;
+    while(true){
+      const { data, error } = await supabaseClient.from(coll).select('data').like('id', 'idx-%').ilike('data->>username', pattern).range(off, off + 999);
+      if(error) throw error;
+      rows = rows.concat((data || []).map(r => r.data).filter(Boolean));
+      if(!data || data.length < 1000) break; off += 1000;
+    }
+    return rows.filter(r => pvN(r.username) === pvN(username));
+  }catch(e){
+    const all = coll === 'homework' ? await fetchHomeworkIndex() : await fetchAttemptsIndex();
+    return all.filter(r => pvN(r.username) === pvN(username));
+  }
+}
+async function pvMistakes(username){
+  const pattern = username.trim().replace(/[\\%_]/g, m => '\\' + m);
+  try{
+    let rows = [], off = 0;
+    while(true){
+      const { data, error } = await supabaseClient.from('mistakes')
+        .select('id, status:data->>status, lesson:data->>lesson, ts:data->>ts, mastered:data->>masteredByStudent, u:data->>username, ans:data->answer')
+        .ilike('data->>username', pattern).range(off, off + 999);
+      if(error) throw error;
+      rows = rows.concat(data || []);
+      if(!data || data.length < 1000) break; off += 1000;
+    }
+    return rows.filter(r => pvN(r.u) === pvN(username));
+  }catch(e){ return []; }
+}
+
+let _pvState = null;
+renderParentView = async function(token){
+  const loading = document.getElementById('parentViewLoading');
+  const content = document.getElementById('parentViewContent');
+  const errorBox = document.getElementById('parentViewError');
+  loading.textContent = pvT('loading');
+  try{
+    let students = [];
+    try{ students = await dbGetWhere('students', 'parentViewToken', token); }catch(e){}
+    let student = (students || []).find(s => s && s.parentViewToken === token);
+    if(!student){ const all = await fetchAllStudents(); student = all.find(s => s.parentViewToken === token); }
+    if(!student){ loading.style.display = 'none'; errorBox.textContent = pvT('bad'); errorBox.style.display = 'block'; return; }
+    const u = student.username;
+    const [hw, att, sessRaw, courses, mistakes, pdfs] = await Promise.all([
+      pvIdxFor('homework', u), pvIdxFor('attempts', u),
+      dbGetWhere('sessions', 'username', u).catch(()=> []),
+      fetchAllCourses().catch(()=> []), pvMistakes(u), dbGetAll('sessionpdfs').catch(()=> [])
+    ]);
+    const seen = new Set();
+    const sessions = (sessRaw || []).filter(s => s && !s._index && pvN(s.username) === pvN(u) && s.id && !seen.has(s.id) && seen.add(s.id));
+    _pvState = { token, student, hw: hw.filter(h => isHomeworkPublished(h)), att, sessions,
+      course: (courses || []).find(c => c.name === student.course) || null, mistakes,
+      pdfs: (pdfs || []).filter(p => p && !p._index && typeof spVisibleTo === 'function' && spVisibleTo(p, student)), hwFilter: 'all', hwShow: 20, loadedAt: new Date() };
+    pvRender();
+    loading.style.display = 'none';
+    content.style.display = 'block';
+  }catch(err){
+    console.error('Parent view failed:', err);
+    loading.style.display = 'none'; errorBox.textContent = pvT('bad'); errorBox.style.display = 'block';
+  }
+};
+
+function pvHwStatus(h, now){
+  const due = h.dueDate ? new Date(h.dueDate + 'T23:59:59') : null;
+  if(h.status === 'completed'){
+    if(h.retakeRequired) return 'retake';
+    if(due && h.submittedAt && new Date(h.submittedAt) > due) return 'late';
+    return 'ontime';
+  }
+  if(due && due < now) return 'overdue';
+  return 'todo';
+}
+function pvTopics(hw, att){
+  const m = {};
+  const add = t => { if(!t || typeof t !== 'object') return; Object.entries(t).forEach(([k, v]) => { if(!Array.isArray(v)) return; m[k] = m[k] || [0, 0]; m[k][0] += +v[0] || 0; m[k][1] += +v[1] || 0; }); };
+  hw.filter(h => h.status === 'completed').forEach(h => add(h.topics));
+  att.forEach(a => add(a.topics));
+  return Object.entries(m).filter(([k, v]) => v[1] >= 3 && k && k !== 'General').map(([k, v]) => ({ k, pct: Math.round(v[0] / v[1] * 100), n: v[1] }));
+}
+function pvChart(points){
+  if(points.length < 2) return `<div class="pv-empty">${pvT('noScores')}</div>`;
+  const W = 640, H = 200, P = 28, PL = 46;
+  const xs = i => PL + (W - PL - P) * (points.length === 1 ? 0.5 : i / (points.length - 1));
+  const ys = v => H - P - (H - 2 * P) * (v / 100);
+  const line = points.map((p, i) => `${i ? 'L' : 'M'}${xs(i).toFixed(1)},${ys(p.pct).toFixed(1)}`).join(' ');
+  const grid = [0, 50, 100].map(v => `<line x1="${PL}" x2="${W - P}" y1="${ys(v)}" y2="${ys(v)}" class="pv-grid"/><text x="${PL - 8}" y="${ys(v) + 4}" class="pv-axis" text-anchor="end">${v}%</text>`).join('');
+  const dots = points.map((p, i) => `<circle cx="${xs(i).toFixed(1)}" cy="${ys(p.pct).toFixed(1)}" r="4.5" class="pv-dot ${p.kind === 'exam' ? 'pv-dot-exam' : ''}"><title>${esc(p.title)} — ${p.pct}% (${pvFmt(p.ts)})</title></circle>`).join('');
+  return `<svg class="pv-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(pvT('trend'))}" direction="ltr">${grid}<path d="${line}" class="pv-line"/>${dots}</svg>`;
+}
+
+function pvRender(){
+  const S = _pvState; if(!S) return;
+  const st = S.student, now = new Date(), uL = pvN(st.username);
+  document.documentElement.setAttribute('lang', pvLang === 'ar' ? 'ar' : 'en');
+  const page = document.getElementById('parentViewPage');
+  page.setAttribute('dir', pvLang === 'ar' ? 'rtl' : 'ltr');
+  document.querySelector('#parentViewPage .parent-view-tag').innerHTML = `${esc(pvT('tag'))} <button type="button" class="pv-lang" id="pvLangBtn">${esc(pvT('lang'))}</button>`;
+  document.getElementById('pvLangBtn').onclick = ()=>{ pvLang = pvLang === 'ar' ? 'en' : 'ar'; try{ localStorage.setItem('mi-pv-lang', pvLang); }catch(e){} pvRender(); };
+
+  // ----- numbers
+  const hw = S.hw.slice().sort((a, b) => new Date(b.dueDate || b.ts || 0) - new Date(a.dueDate || a.ts || 0));
+  const statusOf = new Map(hw.map(h => [h.id, pvHwStatus(h, now)]));
+  const done = hw.filter(h => h.status === 'completed');
+  const isLate = h => { const due = h.dueDate ? new Date(h.dueDate + 'T23:59:59') : null; return !!(due && h.submittedAt && new Date(h.submittedAt) > due); };
+  const onTime = done.filter(h => !isLate(h)).length;
+  const overdue = hw.filter(h => statusOf.get(h.id) === 'overdue');
+  const hwPcts = done.map(h => h.score && h.score.pct).filter(p => typeof p === 'number');
+  const avg = hwPcts.length ? Math.round(hwPcts.reduce((s, x) => s + x, 0) / hwPcts.length) : null;
+  const retakes = done.filter(h => h.retakeRequired).length + S.att.filter(a => a.retakeRequired).length;
+  const marked = S.sessions.filter(s => s.coordAttendance && s.coordAttendance.status && s.coordAttendance.status !== 'excused');
+  const attended = marked.filter(s => s.coordAttendance.status === 'present' || s.coordAttendance.status === 'late');
+  const d30 = new Date(now - 30 * 864e5), d7 = new Date(now - 7 * 864e5);
+  const absent30 = S.sessions.filter(s => s.coordAttendance && s.coordAttendance.status === 'absent' && new Date(s.date + 'T00:00:00') >= d30).length;
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const practiceMonth = S.att.filter(a => new Date(a.ts) >= monthStart).length;
+  const logins = Array.isArray(st.loginHistory) ? st.loginHistory.map(x => x && x.ts).filter(Boolean) : [];
+  const actTimes = [...logins, ...done.map(h => h.submittedAt), ...S.att.map(a => a.ts)].filter(Boolean).map(t => new Date(t)).filter(d => !isNaN(d));
+  const lastActive = actTimes.length ? new Date(Math.max(...actTimes)) : null;
+  const daysSince = lastActive ? Math.floor((pvDay(now) - pvDay(lastActive)) / 864e5) : null;
+  const topics = pvTopics(S.hw, S.att);
+  const strong = topics.slice().sort((a, b) => b.pct - a.pct).slice(0, 5);
+  const weak = topics.slice().sort((a, b) => a.pct - b.pct).filter(t => t.pct < 75).slice(0, 5);
+  const recStats = st.recordingStats && typeof st.recordingStats === 'object' ? st.recordingStats : {};
+  const recMinFor = id => { const r = recStats['session:' + id]; return r ? Math.round((r.seconds || 0) / 60) : 0; };
+  const recMin7 = Object.values(recStats).filter(r => r && r.lastAt && new Date(r.lastAt) >= d7).reduce((s, r) => s + Math.round((r.seconds || 0) / 60), 0);
+  const mAnswered = S.mistakes.filter(m => m.status === 'answered' || m.status === 'delivered' || m.ans).length;
+  const mMastered = S.mistakes.filter(m => m.mastered === 'true').length;
+  const mWeek = S.mistakes.filter(m => (m.status === 'answered' || m.status === 'delivered') && new Date(m.ts) >= d7).length;
+
+  // ----- exam countdown
+  let examLine = '', daysLeft = null;
+  const exInfo = examDateFor(st, S.course ? [S.course] : []);
+  if(exInfo){
+    daysLeft = daysUntilExam(exInfo.date);
+    if(daysLeft === 0) examLine = pvT('examToday')(st.course);
+    else if(daysLeft > 0) examLine = pvT('examIn')(pvNum(daysLeft), st.course, pvFmt(exInfo.date, true));
+  }
+  // ----- expected score (same forecast the student sees on their dashboard)
+  const est = isEstCourse(st.course);
+  const asScore = pct => est ? String(pctToEstScore(pct)) : pct + '%';
+  const timeline = [
+    ...done.map(h => ({ title: h.title, date: h.submittedAt || h.ts, pct: h.score ? h.score.pct : null })),
+    ...S.att.map(a => ({ title: a.examTitle, date: a.ts, pct: a.pct }))
+  ].filter(t => t.date && t.pct != null);
+  const fc = computeForecast(timeline);
+  const target = st.targetScore ? Number(st.targetScore) : null;
+  let xpHtml = '';
+  if(fc && fc.canForecast){
+    const exp = (daysLeft !== null && daysLeft >= 0) ? projectToExam(fc, daysLeft) : fc.projected;
+    const diff = est ? pctToEstScore(exp) - pctToEstScore(fc.current) : exp - fc.current;
+    const trend = Math.abs(diff) < (est ? 10 : 2) ? pvT('xpFlat') : diff > 0 ? pvT('xpUp')(pvNum(Math.abs(diff))) : pvT('xpDown')(pvNum(Math.abs(diff)));
+    const gap = target ? (est ? pctToEstScore(target) - pctToEstScore(exp) : target - exp) : null;
+    xpHtml = `<div class="pv-xp">
+      <div class="pv-xp-main"><span>${esc(daysLeft !== null && daysLeft >= 0 ? pvT('xpOnDay') : pvT('xp'))}</span><b>${pvNum(asScore(exp))}${est ? `<small>${esc(pvT('xpOf'))}</small>` : ''}</b><em class="${diff > 0 ? 'up' : diff < 0 ? 'down' : ''}">${esc(trend)}</em></div>
+      <div class="pv-xp-side">
+        <div><span>${esc(pvT('xpNow'))}</span><b>${pvNum(asScore(fc.current))}</b></div>
+        ${target ? `<div><span>${esc(pvT('xpTarget'))}</span><b>${pvNum(asScore(target))}</b><small>${fc.current >= target ? esc(pvT('xpReached')) : gap <= 0 ? esc(pvT('xpOnTrack')) : esc(pvT('xpToGo')(pvNum(gap)))}</small></div>` : ''}
+      </div>
+      <div class="pv-xp-note">${esc(pvT('xpBased')(pvNum(timeline.length)))}</div>
+    </div>`;
+  } else {
+    const gap = target && fc ? (est ? pctToEstScore(target) - pctToEstScore(fc.current) : target - fc.current) : null;
+    xpHtml = `<div class="pv-xp${target ? '' : ' pv-xp-wait'}"><div class="pv-xp-main"><span>${esc(pvT('xp'))}</span><b>${fc ? pvNum(asScore(fc.current)) : '—'}${fc && est ? `<small>${esc(pvT('xpOf'))}</small>` : ''}</b></div>
+      ${target ? `<div class="pv-xp-side"><div><span>${esc(pvT('xpTarget'))}</span><b>${pvNum(asScore(target))}</b>${gap !== null ? `<small>${gap <= 0 ? esc(pvT('xpReached')) : esc(pvT('xpToGo')(pvNum(gap)))}</small>` : ''}</div></div>` : ''}
+      <div class="pv-xp-note">${esc(pvT('xpNotYet')(pvNum(timeline.length)))}</div></div>`;
+  }
+  const ago = daysSince === null ? pvT('never') : daysSince === 0 ? pvT('today') : daysSince === 1 ? pvT('yesterday') : pvT('daysAgo')(pvNum(daysSince));
+
+  // ----- needs attention
+  const alerts = [];
+  if(overdue.length) alerts.push(['red', '📘', pvT('aOverdue')(pvNum(overdue.length)), overdue.slice(0, 4).map(h => h.title).join(' · ')]);
+  if(retakes) alerts.push(['red', '🔁', pvT('aRetake')(pvNum(retakes)), '']);
+  if(absent30) alerts.push(['amber', '📅', pvT('aAbsent')(pvNum(absent30)), '']);
+  if(daysSince !== null && daysSince >= 5) alerts.push(['amber', '💤', pvT('aInactive')(pvNum(daysSince)), '']);
+  if(weak.length) alerts.push(['info', '🎯', pvT('aWeak')(weak[0].k + ' (' + weak[0].pct + '%)'), '']);
+
+  // ----- chart points
+  const pts = [
+    ...done.filter(h => h.score && typeof h.score.pct === 'number').map(h => ({ ts: h.submittedAt || h.ts, pct: h.score.pct, title: h.title, kind: 'hw' })),
+    ...S.att.filter(a => a.source === 'exam' && typeof a.pct === 'number').map(a => ({ ts: a.ts, pct: a.pct, title: a.examTitle, kind: 'exam' }))
+  ].filter(p => p.ts).sort((a, b) => new Date(a.ts) - new Date(b.ts)).slice(-20);
+
+  // ----- homework list
+  const f = S.hwFilter;
+  const hwShown = hw.filter(h => { const s = statusOf.get(h.id); return f === 'all' || (f === 'todo' && s === 'todo') || (f === 'overdue' && s === 'overdue') || (f === 'done' && (s === 'ontime' || s === 'late' || s === 'retake')); });
+  const pill = s => ({ ontime: ['ok', pvT('sOnTime')], late: ['warn', pvT('sLate')], overdue: ['bad', pvT('sOverdue')], todo: ['mute', pvT('sTodo')], retake: ['bad', pvT('sRetake')] })[s];
+  const hwRows = hwShown.slice(0, S.hwShow).map(h => {
+    const s = statusOf.get(h.id), [cls, lbl] = pill(s);
+    return `<div class="pv-row"><div class="pv-row-main"><b>${esc(h.title || '')}</b><span>${[h.dueDate ? `${esc(pvT('due'))}: ${esc(pvFmt(h.dueDate))}` : '', h.submittedAt ? `${esc(pvT('done'))}: ${esc(pvFmt(h.submittedAt))}` : ''].filter(Boolean).join(' · ')}</span></div>
+      <div class="pv-row-side">${h.score && typeof h.score.pct === 'number' ? `<b class="pv-score ${h.score.pct >= 75 ? 'ok' : h.score.pct >= 50 ? 'warn' : 'bad'}">${h.score.correct}/${h.score.total} · ${h.score.pct}%</b>` : ''}<span class="pv-pill ${cls}">${esc(lbl)}</span></div></div>`;
+  }).join('');
+
+  // ----- exams / practice
+  const attSorted = S.att.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts));
+  const attRows = attSorted.slice(0, 15).map(a => `<div class="pv-row"><div class="pv-row-main"><b>${esc(a.examTitle || '')}</b><span>${esc(a.source === 'exam' ? pvT('exam') : pvT('skill'))} · ${esc(pvFmt(a.ts))}</span></div>
+    <div class="pv-row-side"><b class="pv-score ${a.pct >= 75 ? 'ok' : a.pct >= 50 ? 'warn' : 'bad'}">${a.correct}/${a.total} · ${a.pct}%</b></div></div>`).join('');
+
+  // ----- sessions
+  const today = pvDay(now);
+  const sess = S.sessions.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  const upcoming = sess.filter(s => s.date && pvDay(s.date + 'T00:00:00') >= today).reverse();
+  const past = sess.filter(s => s.date && pvDay(s.date + 'T00:00:00') < today);
+  const attPill = s => { const k = s.coordAttendance && s.coordAttendance.status; const map = { present: 'ok', late: 'warn', absent: 'bad', excused: 'mute' }; return `<span class="pv-pill ${map[k] || 'mute'}">${esc(k ? pvT(k) : pvT('notMarked'))}</span>`; };
+  const sessRow = (s, isPast) => `<div class="pv-row"><div class="pv-row-main"><b>${esc(s.topic || 'Session')}</b><span>${esc(pvFmt(s.date, true))}${s.time ? ' · ' + esc(s.time) : ''}${isPast && s.recordingUrl ? ' · ' + esc(recMinFor(s.id) ? pvT('watched')(pvNum(recMinFor(s.id))) : pvT('notWatched')) : ''}</span></div><div class="pv-row-side">${isPast ? attPill(s) : ''}</div></div>`;
+
+  const pdfOpened = S.pdfs.filter(p => p.views && p.views[uL]).length;
+  const waHref = (document.querySelector('a[href^="https://wa.me/2"]') || {}).href || 'https://wa.me/201093875919';
+  const bar = (pct, cls) => `<div class="pv-bar"><span class="${cls || ''}" style="width:${Math.max(2, Math.min(100, pct))}%"></span></div>`;
+
+  document.getElementById('parentViewContent').innerHTML = `
+    <section class="pv-hero">
+      <div class="pv-eyebrow">${esc(pvT('report'))} · ${esc(pvT('updated'))} ${esc(pvFmt(S.loadedAt, true))}</div>
+      <h2 class="pv-name">${esc(st.username)}</h2>
+      <div class="pv-meta">${esc([st.course, st.grade].filter(Boolean).join(' · '))}</div>
+      <div class="pv-hero-facts">
+        ${examLine ? `<span>⏳ ${esc(examLine)}</span>` : ''}
+        <span>🕒 ${esc(pvT('lastActive'))}: <b>${esc(ago)}</b></span>
+      </div>
+      ${xpHtml}
+    </section>
+
+    <section class="pv-kpis">
+      <div class="pv-kpi"><span>${esc(pvT('kHw'))}</span><b>${pvNum(done.length)} / ${pvNum(hw.length)}</b>${bar(hw.length ? done.length / hw.length * 100 : 0)}<small>${done.length ? esc(pvT('kOnTime')(pvNum(Math.round(onTime / done.length * 100)))) : '—'}</small></div>
+      <div class="pv-kpi"><span>${esc(pvT('kAvg'))}</span><b>${avg === null ? '—' : pvNum(avg) + '%'}</b>${bar(avg || 0, avg >= 75 ? 'ok' : avg >= 50 ? 'warn' : 'bad')}<small>${hwPcts.length ? '' : '—'}</small></div>
+      <div class="pv-kpi"><span>${esc(pvT('kAtt'))}</span><b>${marked.length ? pvNum(Math.round(attended.length / marked.length * 100)) + '%' : '—'}</b>${bar(marked.length ? attended.length / marked.length * 100 : 0)}<small>${marked.length ? esc(pvT('kAttSub')(pvNum(attended.length), pvNum(marked.length))) : '—'}</small></div>
+      <div class="pv-kpi"><span>${esc(pvT('kPracticeMonth'))}</span><b>${pvNum(practiceMonth)}</b><small>${esc(pvT('kPracticeSub'))}</small></div>
+    </section>
+
+    <section class="pv-card">
+      <h3>⚠️ ${esc(pvT('attention'))}</h3>
+      ${alerts.length ? `<div class="pv-alerts">${alerts.map(([lvl, ic, t, sub]) => `<div class="pv-alert ${lvl}"><span class="pv-alert-ic">${ic}</span><div><b>${esc(t)}</b>${sub ? `<span>${esc(sub)}</span>` : ''}</div></div>`).join('')}</div>` : `<div class="pv-good">${esc(pvT('allGood'))}</div>`}
+    </section>
+
+    <section class="pv-card">
+      <h3>🗓 ${esc(pvT('week'))}</h3>
+      <div class="pv-week">
+        <div><b>${pvNum(done.filter(h => h.submittedAt && new Date(h.submittedAt) >= d7).length)}</b><span>${esc(pvT('wHw'))}</span></div>
+        <div><b>${pvNum(S.att.filter(a => new Date(a.ts) >= d7).length)}</b><span>${esc(pvT('wPractice'))}</span></div>
+        <div><b>${pvNum(recMin7)}</b><span>${esc(pvT('wMin'))}</span></div>
+        <div><b>${pvNum(mWeek)}</b><span>${esc(pvT('wMistakes'))}</span></div>
+      </div>
+    </section>
+
+    <section class="pv-card">
+      <h3>📈 ${esc(pvT('trend'))}</h3>
+      ${pvChart(pts)}
+      ${pts.length >= 2 ? `<div class="pv-note">${esc(pvT('trendNote'))}</div>` : ''}
+    </section>
+
+    <section class="pv-card">
+      <h3>🎯 ${esc(pvT('topics'))}</h3>
+      ${topics.length ? `<div class="pv-topics">
+        <div><h4>💪 ${esc(pvT('strong'))}</h4>${strong.map(t => `<div class="pv-topic"><span>${esc(t.k)}</span><b>${pvNum(t.pct)}%</b>${bar(t.pct, 'ok')}</div>`).join('')}</div>
+        <div><h4>📌 ${esc(pvT('weak'))}</h4>${(weak.length ? weak : topics.slice().sort((a, b) => a.pct - b.pct).slice(0, 3)).map(t => `<div class="pv-topic"><span>${esc(t.k)}</span><b>${pvNum(t.pct)}%</b>${bar(t.pct, t.pct >= 75 ? 'ok' : t.pct >= 50 ? 'warn' : 'bad')}</div>`).join('')}</div>
+      </div>` : `<div class="pv-empty">${esc(pvT('noTopics'))}</div>`}
+    </section>
+
+    <section class="pv-card" id="pvHw">
+      <h3>📘 ${esc(pvT('hw'))}</h3>
+      <div class="pv-chips">${[['all', 'fAll', hw.length], ['todo', 'fTodo', hw.filter(h => statusOf.get(h.id) === 'todo').length], ['overdue', 'fOverdue', overdue.length], ['done', 'fDone', done.length]]
+        .map(([k, lbl, n]) => `<button type="button" class="pv-chip${f === k ? ' on' : ''}" data-f="${k}">${esc(pvT(lbl))} <small>${pvNum(n)}</small></button>`).join('')}</div>
+      ${hwRows || `<div class="pv-empty">${esc(pvT('noHw'))}</div>`}
+      ${hwShown.length > S.hwShow ? `<button type="button" class="btn btn-ghost pv-more" id="pvHwMore">${esc(pvT('more')(pvNum(Math.min(20, hwShown.length - S.hwShow))))}</button>` : ''}
+    </section>
+
+    <section class="pv-card">
+      <h3>📝 ${esc(pvT('exams'))}</h3>
+      ${attRows || `<div class="pv-empty">${esc(pvT('noExams'))}</div>`}
+    </section>
+
+    <section class="pv-card">
+      <h3>📅 ${esc(pvT('sessions'))}</h3>
+      ${upcoming.length ? `<h4>${esc(pvT('upcoming'))}</h4>${upcoming.slice(0, 5).map(s => sessRow(s, false)).join('')}` : ''}
+      ${past.length ? `<h4>${esc(pvT('past'))}</h4>${past.slice(0, 15).map(s => sessRow(s, true)).join('')}` : ''}
+      ${!sess.length ? `<div class="pv-empty">${esc(pvT('noSessions'))}</div>` : ''}
+    </section>
+
+
+    <section class="pv-card">
+      <h3>🧾 ${esc(pvT('help'))}</h3>
+      <div class="pv-week">
+        <div><b>${pvNum(S.mistakes.length)}</b><span>${esc(pvT('hTotal'))}</span></div>
+        <div><b>${pvNum(mAnswered)}</b><span>${esc(pvT('hAnswered'))}</span></div>
+        <div><b>${pvNum(Math.max(0, S.mistakes.length - mAnswered))}</b><span>${esc(pvT('hWaiting'))}</span></div>
+        <div><b>${pvNum(mMastered)}</b><span>${esc(pvT('hMastered'))}</span></div>
+      </div>
+    </section>
+
+    ${S.pdfs.length ? `<section class="pv-card"><h3>📄 ${esc(pvT('pdfs'))}</h3><div class="pv-note" style="margin:0;">${esc(pvT('pdfOpened')(pvNum(pdfOpened), pvNum(S.pdfs.length)))}</div>${bar(pdfOpened / S.pdfs.length * 100)}</section>` : ''}
+
+    <a class="pv-contact" href="${esc(waHref)}" target="_blank" rel="noopener">💬 ${esc(pvT('contact'))}</a>`;
+
+  document.querySelectorAll('#pvHw .pv-chip').forEach(b => b.addEventListener('click', ()=>{ S.hwFilter = b.dataset.f; S.hwShow = 20; pvRender(); document.getElementById('pvHw').scrollIntoView({ block: 'start' }); }));
+  const more = document.getElementById('pvHwMore'); if(more) more.addEventListener('click', ()=>{ S.hwShow += 20; pvRender(); });
+}
+</script>
+<script>
+
+/* =====================================================================
+   👪 Coordinator desk → "Parent link" tab: every student's parent-report
+   link, ready to copy one by one, as a ready-made message, straight to
+   WhatsApp, or all of them at once for a group.
+   ===================================================================== */
+let plCourse = 'all';
+let plQuery = '';
+function plUrl(token){ return `${window.location.origin}${window.location.pathname}?parentView=${token}`; }
+async function plEnsureToken(username){
+  const fresh = await getStudent(username);
+  if(!fresh) throw new Error('Student not found.');
+  if(fresh.parentViewToken) return fresh.parentViewToken;
+  const token = generateRandomToken();
+  const ok = await dbSet('students', studentKey(username), { ...fresh, parentViewToken: token });
+  if(!ok) throw new Error('Could not create the link — check the connection.');
+  invalidateDbCache('students');
+  const local = cdData && cdData.students.find(s => cdNorm(s.username) === cdNorm(username));
+  if(local) local.parentViewToken = token;
+  return token;
+}
+function plMessage(username, url){
+  return `👪 تقرير متابعة الطالب ${username}\nProgress report for ${username}:\n${url}`;
+}
+async function plCopy(text){
+  try{ await navigator.clipboard.writeText(text); return true; }
+  catch(e){
+    try{
+      const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); if(ok) return true;
+    }catch(_){}
+    prompt('Copy this:', text);
+    return false;
+  }
+}
+function plFlash(btn, txt){
+  const old = btn.dataset.label || btn.textContent; btn.dataset.label = old;
+  btn.textContent = txt; btn.classList.add('pl-done');
+  setTimeout(()=>{ btn.textContent = old; btn.classList.remove('pl-done'); }, 1800);
+}
+function plWaNumber(n){
+  let d = String(n || '').replace(/\D/g, '');
+  if(!d) return '';
+  if(d.startsWith('00')) d = d.slice(2);
+  if(d.startsWith('0')) d = '2' + d;           // Egyptian 01xxxxxxxxx → 201xxxxxxxxx
+  return d;
+}
+
+function cdRenderParentLinks(){
+  const el = document.getElementById('cdPlink');
+  if(!el || !cdData) return;
+  const courses = [...new Set(cdData.students.map(s => s.course).filter(Boolean))].sort();
+  const q = cdNorm(plQuery);
+  const list = cdData.students.filter(s => (plCourse === 'all' || s.course === plCourse) && (!q || cdNorm(s.username).includes(q)));
+  el.innerHTML = `
+    <div class="cd-card">
+      <div class="pl-head">
+        <div><b>👪 Parent link</b><span class="cd-muted">Each student has a private link to a full report for their parent — no account needed. Copy it and paste it in the parents' group or send it on WhatsApp.</span></div>
+      </div>
+      <div class="pl-tools">
+        <input type="search" class="cd-search" id="plSearch" placeholder="🔍 Find a student…" value="${esc(plQuery)}" autocomplete="off">
+        <select id="plCourse" class="pl-select"><option value="all">All courses</option>${courses.map(c => `<option value="${esc(c)}"${plCourse === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select>
+        <button type="button" class="btn btn-primary" id="plCopyAll">📋 Copy ${list.length === 1 ? "the link" : "all " + list.length + " links"} (for a group)</button>
+      </div>
+      <div class="pl-list">${list.map(s => `
+        <div class="pl-row" data-u="${esc(s.username)}">
+          <div class="pl-who"><b>${esc(s.username)}</b><span class="cd-muted">${esc([s.course, s.grade].filter(Boolean).join(' · '))}${s.parentNumber ? ` · 📞 ${esc(s.parentNumber)}` : ''}</span></div>
+          <div class="pl-actions">
+            <button type="button" class="btn btn-ghost pl-copy">🔗 Copy link</button>
+            <button type="button" class="btn btn-ghost pl-msg">📝 Copy message</button>
+            <button type="button" class="btn btn-ghost pl-wa">💬 WhatsApp${s.parentNumber ? ' parent' : ''}</button>
+            <button type="button" class="btn btn-ghost pl-open">👁 Open</button>
+          </div>
+        </div>`).join('') || '<div class="cd-empty">No students match.</div>'}</div>
+      <div class="pl-status cd-muted" id="plStatus" role="status"></div>
+    </div>`;
+
+  const s1 = document.getElementById('plSearch');
+  s1.addEventListener('input', ()=>{ plQuery = s1.value; const pos = s1.selectionStart; cdRenderParentLinks(); const n = document.getElementById('plSearch'); n.focus(); try{ n.setSelectionRange(pos, pos); }catch(e){} });
+  document.getElementById('plCourse').addEventListener('change', e => { plCourse = e.target.value; cdRenderParentLinks(); });
+
+  el.querySelectorAll('.pl-row').forEach(row => {
+    const u = row.dataset.u;
+    const st = cdData.students.find(s => s.username === u);
+    const withLink = async (btn, fn) => {
+      btn.disabled = true;
+      try{ const url = plUrl(await plEnsureToken(u)); await fn(url); }
+      catch(err){ alert(err.message || 'Something went wrong — try again.'); }
+      finally{ btn.disabled = false; }
+    };
+    row.querySelector('.pl-copy').addEventListener('click', e => withLink(e.currentTarget, async url => { await plCopy(url); plFlash(e.target, '✓ Copied'); }));
+    row.querySelector('.pl-msg').addEventListener('click', e => withLink(e.currentTarget, async url => { await plCopy(plMessage(u, url)); plFlash(e.target, '✓ Copied'); }));
+    row.querySelector('.pl-wa').addEventListener('click', e => {
+      // open the window straight away (phones block pop-ups opened later)
+      const w = window.open('', '_blank');
+      withLink(e.currentTarget, async url => {
+        const num = plWaNumber(st && st.parentNumber);
+        const href = `https://wa.me/${num}?text=${encodeURIComponent(plMessage(u, url))}`;
+        if(w) w.location.href = href; else window.location.href = href;
+      });
+    });
+    row.querySelector('.pl-open').addEventListener('click', e => {
+      const w = window.open('', '_blank');
+      withLink(e.currentTarget, async url => { if(w) w.location.href = url; else window.open(url, '_blank'); });
+    });
+  });
+
+  document.getElementById('plCopyAll').addEventListener('click', async e => {
+    const btn = e.currentTarget; btn.disabled = true;
+    const status = document.getElementById('plStatus');
+    const lines = [];
+    try{
+      let i = 0;
+      for(const s of list){
+        i++; status.textContent = `Preparing links… ${i}/${list.length}`;
+        const url = plUrl(await plEnsureToken(s.username));
+        lines.push(`• ${s.username}: ${url}`);
+      }
+      const text = `👪 تقارير متابعة الطلاب — Students' progress reports\n${plCourse !== 'all' ? plCourse + '\n' : ''}\n${lines.join('\n')}`;
+      await plCopy(text);
+      status.textContent = `✓ Copied ${lines.length} links — paste them in the group.`;
+      plFlash(btn, '✓ Copied');
+    }catch(err){ status.textContent = '⚠ ' + (err.message || 'Could not copy all links.'); }
+    finally{ btn.disabled = false; }
+  });
+}
 </script>
 
 </div>
