@@ -5168,7 +5168,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 16 Nov 2026 · E</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 17 Nov 2026</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -20390,13 +20390,13 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       // so this count agrees with what a student actually sees as pending
       // there, instead of the raw flag that never gets cleared once set.
       const myLaterCorrectForCount = [];
-      [...mineHw.filter(h => h.status === 'completed'), ...mineAttempts].forEach(item=>{
+      [...myFullHw.filter(h => h.status === 'completed'), ...mineAttempts].forEach(item=>{
         if(!Array.isArray(item.results)) return;
         const ts = item.submittedAt || item.ts;
         if(!ts) return;
         item.results.forEach(r=>{ if(r.correct) myLaterCorrectForCount.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), text: (r.text || '').trim().toLowerCase(), ts }); });
       });
-      const pendingRetakeCount = await countTrueResolvedPendingRetakes(currentStudent.username, mineHw, mineAttempts, myLaterCorrectForCount);
+      const pendingRetakeCount = await countTrueResolvedPendingRetakes(currentStudent.username, myFullHw, mineAttempts, myLaterCorrectForCount);
 
       if(pendingRetakeCount > 0){
         suggestions.push({
@@ -29191,53 +29191,53 @@ const PV_TXT = {
     tag: 'Parent report · read-only', lang: 'عربي', loading: 'Loading the report…', bad: "This link isn't valid — please ask for a new one.",
     report: 'Progress report', updated: 'Updated', lastActive: 'Last active on the website', never: 'not yet', today: 'today', yesterday: 'yesterday', daysAgo: n => `${n} days ago`,
     examIn: (n, c, d) => `${n} day${n == 1 ? '' : 's'} until the ${c} exam (${d})`, examToday: c => `The ${c} exam is today`, target: 'Target score',
-    kHw: 'Homework done', kOnTime: n => `${n}% on time`, kAvg: 'Average homework score', kAtt: 'Session attendance', kAttSub: (a, b) => `${a} of ${b} sessions`, kPay: 'Payments',
+    kHw: 'Homework done', kOnTime: n => `${n}% on time (of homework with a due date)`, kRetakeSheets: n => `+ ${n} retake sheet${n == 1 ? '' : 's'} done`, kAttNone: 'Not recorded yet', sDone: 'Done', kAvg: 'Average homework score', kAtt: 'Session attendance', kAttSub: (a, b) => `present in ${a} of ${b} recorded sessions`, kPay: 'Payments',
     kPaidFull: 'Paid in full ✓', kOwed: n => `${n} EGP remaining`, kNoFee: 'No fee set', kPracticeMonth: 'Practice this month', kPracticeSub: 'skills & exams done',
     attention: 'Needs attention', allGood: 'All good — nothing needs attention right now ✓',
-    aOverdue: n => `${n} homework past the due date and not done`, aRetake: n => `${n} retake${n == 1 ? '' : 's'} waiting (scored low — must redo)`,
+    aOverdue: n => `${n} homework past the due date and not done`, aRetake: n => `${n} retake${n == 1 ? '' : 's'} still waiting (low score — the wrong questions must be fixed)`,
     aAbsent: n => `Missed ${n} session${n == 1 ? '' : 's'} in the last 30 days`, aOwed: n => `${n} EGP of the course fee still unpaid`,
     aInactive: n => `Hasn't opened the website for ${n} days`, aWeak: t => `Weakest topic: ${t}`, aPending: n => `${n} payment${n == 1 ? '' : 's'} waiting for approval`,
-    week: 'Last 7 days', wHw: 'homework done', wPractice: 'skills / exams practised', wMin: 'minutes of recordings watched', wMistakes: 'mistakes reviewed with an assistant',
-    trend: 'Scores over time', trendNote: 'Each dot is one finished homework or exam (newest on the right).', noScores: 'No scores yet.',
-    topics: 'Topics', strong: 'Strongest', weak: 'Needs more work', noTopics: 'Not enough answers yet to judge topics.',
+    week: 'Last 7 days', wHw: 'homework done', wPractice: 'skills / exams practised', wMin: 'session recordings opened', wMistakes: 'questions answered by an assistant',
+    trend: 'Scores over time', trendNote: 'Each dot is one finished homework, exam or skill practice — the same results the student sees (newest on the right).', noScores: 'No scores yet.',
+    topics: 'Topics', strong: 'Strongest', weak: 'Needs more work', noStrong: 'No topic above 70% yet.', noTopics: 'Not enough answers yet to judge topics.',
     hw: 'Homework', fAll: 'All', fTodo: 'To do', fOverdue: 'Overdue', fDone: 'Done', sOnTime: 'Done on time', sLate: 'Done late', sOverdue: 'Overdue', sTodo: 'To do', sRetake: 'Retake needed',
     due: 'Due', done: 'Done', noHw: 'No homework yet.', more: n => `Show ${n} more`,
     exams: 'Exams & skill practice', exam: 'Exam', skill: 'Skill practice', noExams: 'No exams or practice yet.',
     sessions: 'Sessions & attendance', upcoming: 'Upcoming', past: 'Past sessions', present: 'Present', late: 'Late', absent: 'Absent', excused: 'Excused', notMarked: 'Not marked',
-    watched: m => `watched recording · ${m} min`, notWatched: 'recording not watched yet', noSessions: 'No sessions yet.',
+    watched: m => `opened the recording ${m}×`, notWatched: 'recording not opened yet', noSessions: 'No sessions yet.',
     pay: 'Payments', paid: 'Paid', fee: 'Course fee', remaining: 'Remaining', pPending: 'Waiting for approval', pConfirmed: 'Confirmed', noPay: 'No payments recorded yet.',
-    help: 'Mistakes & help from the assistants', hTotal: 'questions got wrong (all time)', hAnswered: 'explained by an assistant', hWaiting: 'waiting for an explanation', hMastered: 'now mastered',
+    help: 'Mistakes & help from the assistants', hTotal: 'questions got wrong (all time)', hAnswered: 'have an explanation to study', hByAsst: 'answered personally by an assistant', hWaiting: 'still without an explanation', hMastered: 'marked as mastered',
     pdfs: 'Session PDFs', pdfOpened: (a, b) => `Opened ${a} of ${b} session PDFs`,
     contact: 'Questions? Message Mr. Mohamed Ibrahim on WhatsApp', egp: 'EGP',
     xp: 'Expected score', xpOnDay: 'Expected on exam day', xpNow: 'Current level', xpTarget: 'Target', xpReached: 'Target reached ✓', xpOnTrack: 'On track to reach it ✓', xpToGo: n => `${n} to go`,
     xpUp: n => `Improving — about +${n} by the exam`, xpDown: n => `Dropping — about −${n} by the exam`, xpFlat: 'Holding steady',
-    xpNotYet: n => `The expected score appears after 4 results spread over at least a week (now ${n}).`, xpBased: n => `Based on ${n} homework & exam results.`, xpOf: ' / 800'
+    xpNotYet: n => `The expected score appears after 4 results spread over at least a week (now ${n}).`, xpNoDate: 'The expected score on exam day appears once an exam date is set for this course.', xpPast: 'The exam date has passed — the expected score appears again when the next date is set.', xpBased: n => `Based on ${n} homework & exam results.`, xpOf: ' / 800'
   },
   ar: {
     tag: 'تقرير ولي الأمر · للاطلاع فقط', lang: 'English', loading: 'جارِ تحميل التقرير…', bad: 'هذا الرابط غير صالح — من فضلك اطلب رابطًا جديدًا.',
     report: 'تقرير المتابعة', updated: 'آخر تحديث', lastActive: 'آخر دخول على الموقع', never: 'لم يدخل بعد', today: 'اليوم', yesterday: 'أمس', daysAgo: n => `منذ ${n} يوم`,
     examIn: (n, c, d) => `متبقي ${n} يوم على امتحان ${c} (${d})`, examToday: c => `امتحان ${c} اليوم`, target: 'الدرجة المستهدفة',
-    kHw: 'الواجبات المنجزة', kOnTime: n => `${n}% في الموعد`, kAvg: 'متوسط درجات الواجب', kAtt: 'حضور الحصص', kAttSub: (a, b) => `${a} من ${b} حصة`, kPay: 'المدفوعات',
+    kHw: 'الواجبات المنجزة', kOnTime: n => `${n}% في الموعد (من الواجبات ذات موعد تسليم)`, kRetakeSheets: n => `+ ${n} واجب إعادة منجز`, kAttNone: 'لم يُسجل بعد', sDone: 'تم', kAvg: 'متوسط درجات الواجب', kAtt: 'حضور الحصص', kAttSub: (a, b) => `حضر ${a} من ${b} حصة مسجلة`, kPay: 'المدفوعات',
     kPaidFull: 'تم الدفع بالكامل ✓', kOwed: n => `متبقي ${n} جنيه`, kNoFee: 'لم تُحدد الرسوم', kPracticeMonth: 'التدريب هذا الشهر', kPracticeSub: 'مهارات وامتحانات',
     attention: 'يحتاج إلى متابعة', allGood: 'كل شيء على ما يرام — لا يوجد ما يحتاج متابعة الآن ✓',
     aOverdue: n => `${n} واجب تجاوز موعد التسليم ولم يُحل`, aRetake: n => `${n} إعادة مطلوبة (درجة منخفضة — يجب إعادة الحل)`,
     aAbsent: n => `غاب عن ${n} حصة خلال آخر 30 يومًا`, aOwed: n => `${n} جنيه من رسوم الكورس لم تُدفع بعد`,
     aInactive: n => `لم يدخل الموقع منذ ${n} يوم`, aWeak: t => `أضعف موضوع: ${t}`, aPending: n => `${n} دفعة في انتظار التأكيد`,
-    week: 'آخر 7 أيام', wHw: 'واجبات منجزة', wPractice: 'تدريبات مهارات / امتحانات', wMin: 'دقائق مشاهدة تسجيلات', wMistakes: 'أخطاء تمت مراجعتها مع مساعد',
-    trend: 'الدرجات عبر الوقت', trendNote: 'كل نقطة واجب أو امتحان منتهٍ (الأحدث على اليمين).', noScores: 'لا توجد درجات بعد.',
-    topics: 'الموضوعات', strong: 'الأقوى', weak: 'يحتاج مجهود أكثر', noTopics: 'لا توجد إجابات كافية للحكم على الموضوعات بعد.',
+    week: 'آخر 7 أيام', wHw: 'واجبات منجزة', wPractice: 'تدريبات مهارات / امتحانات', wMin: 'تسجيلات حصص تم فتحها', wMistakes: 'أسئلة أجاب عنها مساعد',
+    trend: 'الدرجات عبر الوقت', trendNote: 'كل نقطة واجب أو امتحان أو تدريب مهارة منتهٍ — نفس النتائج التي يراها الطالب (الأحدث على اليمين).', noScores: 'لا توجد درجات بعد.',
+    topics: 'الموضوعات', strong: 'الأقوى', weak: 'يحتاج مجهود أكثر', noStrong: 'لا يوجد موضوع فوق 70% بعد.', noTopics: 'لا توجد إجابات كافية للحكم على الموضوعات بعد.',
     hw: 'الواجبات', fAll: 'الكل', fTodo: 'لم يُحل', fOverdue: 'متأخر', fDone: 'تم', sOnTime: 'تم في الموعد', sLate: 'تم متأخرًا', sOverdue: 'متأخر', sTodo: 'لم يُحل بعد', sRetake: 'مطلوب إعادة',
     due: 'التسليم', done: 'تم', noHw: 'لا توجد واجبات بعد.', more: n => `عرض ${n} أخرى`,
     exams: 'الامتحانات والتدريب', exam: 'امتحان', skill: 'تدريب مهارة', noExams: 'لا توجد امتحانات أو تدريبات بعد.',
     sessions: 'الحصص والحضور', upcoming: 'القادمة', past: 'الحصص السابقة', present: 'حاضر', late: 'متأخر', absent: 'غائب', excused: 'بعذر', notMarked: 'لم يُسجل',
-    watched: m => `شاهد التسجيل · ${m} دقيقة`, notWatched: 'لم يشاهد التسجيل بعد', noSessions: 'لا توجد حصص بعد.',
+    watched: m => `فتح التسجيل ${m} مرة`, notWatched: 'لم يفتح التسجيل بعد', noSessions: 'لا توجد حصص بعد.',
     pay: 'المدفوعات', paid: 'المدفوع', fee: 'رسوم الكورس', remaining: 'المتبقي', pPending: 'في انتظار التأكيد', pConfirmed: 'مؤكد', noPay: 'لا توجد مدفوعات مسجلة بعد.',
-    help: 'الأخطاء ومساعدة المساعدين', hTotal: 'سؤال أخطأ فيه (إجمالي)', hAnswered: 'شرحها مساعد', hWaiting: 'في انتظار الشرح', hMastered: 'أصبح يتقنها',
+    help: 'الأخطاء ومساعدة المساعدين', hTotal: 'سؤال أخطأ فيه (إجمالي)', hAnswered: 'لها شرح للمذاكرة', hByAsst: 'أجاب عنها مساعد شخصيًا', hWaiting: 'بدون شرح حتى الآن', hMastered: 'أتقنها',
     pdfs: 'ملفات الحصص PDF', pdfOpened: (a, b) => `فتح ${a} من ${b} ملف`,
     contact: 'لأي استفسار راسل مستر محمد إبراهيم على واتساب', egp: 'جنيه',
     xp: 'الدرجة المتوقعة', xpOnDay: 'المتوقع يوم الامتحان', xpNow: 'المستوى الحالي', xpTarget: 'المستهدف', xpReached: 'وصل للمستهدف ✓', xpOnTrack: 'في الطريق للوصول إليه ✓', xpToGo: n => `متبقي ${n}`,
     xpUp: n => `في تحسن — حوالي +${n} حتى الامتحان`, xpDown: n => `في تراجع — حوالي −${n} حتى الامتحان`, xpFlat: 'مستقر',
-    xpNotYet: n => `تظهر الدرجة المتوقعة بعد 4 نتائج على مدار أسبوع على الأقل (الآن ${n}).`, xpBased: n => `بناءً على ${n} نتيجة واجبات وامتحانات.`, xpOf: ' / 800'
+    xpNotYet: n => `تظهر الدرجة المتوقعة بعد 4 نتائج على مدار أسبوع على الأقل (الآن ${n}).`, xpNoDate: 'تظهر الدرجة المتوقعة يوم الامتحان بمجرد تحديد موعد امتحان لهذا الكورس.', xpPast: 'موعد الامتحان مرّ — ستظهر الدرجة المتوقعة مرة أخرى عند تحديد الموعد القادم.', xpBased: n => `بناءً على ${n} نتيجة واجبات وامتحانات.`, xpOf: ' / 800'
   }
 };
 let pvLang = (()=>{ try{ return localStorage.getItem('mi-pv-lang') || 'en'; }catch(e){ return 'en'; } })();
@@ -29292,14 +29292,39 @@ renderParentView = async function(token){
     if(!student){ const all = await fetchAllStudents(); student = all.find(s => s.parentViewToken === token); }
     if(!student){ loading.style.display = 'none'; errorBox.textContent = pvT('bad'); errorBox.style.display = 'block'; return; }
     const u = student.username;
-    const [hw, att, sessRaw, courses, mistakes, pdfs] = await Promise.all([
+    const [hwAll, att, sessRaw, courses, mistakes, pdfs] = await Promise.all([
       pvIdxFor('homework', u), pvIdxFor('attempts', u),
       dbGetWhere('sessions', 'username', u).catch(()=> []),
-      fetchAllCourses().catch(()=> []), pvMistakes(u), dbGetAll('sessionpdfs').catch(()=> [])
+      fetchAllCourses().catch(()=> []), gatherAllMistakeRows(u).catch(()=> []), dbGetAll('sessionpdfs').catch(()=> [])
     ]);
+    // Same data the student's own pages use: published homework only, and
+    // the answers of every finished homework / attempt (for topics and for
+    // deciding which retakes are really still pending).
+    const hw = hwAll.filter(h => isHomeworkPublished(h));
+    const [hwLite, attLite] = await Promise.all([
+      getResultsLite('homework', hw.filter(h => h.status === 'completed')), getResultsLite('attempts', att)
+    ]);
+    const laterCorrect = [];
+    const collect = (items, field) => items.forEach(it => { const ts = it[field] || it.ts; if(!ts || !Array.isArray(it.results)) return;
+      it.results.forEach(r => { if(r.correct) laterCorrect.push({ lesson: (r.lesson || 'General').trim().toLowerCase(), text: (r.text || '').trim().toLowerCase(), ts }); }); });
+    collect(hwLite, 'submittedAt'); collect(attLite, 'ts');
+    const overrideByDay = {};
+    mistakes.forEach(m => { if(m.retakenOverride === undefined || !m.ts) return; overrideByDay[new Date(m.ts).toDateString()] = m.retakenOverride; });
+    // exactly the rule the student's homework list uses
+    const stillPending = (item, field) => {
+      if(!item.retakeRequired) return false;
+      const ts = item[field];
+      if(ts){ const day = new Date(ts).toDateString(); if(overrideByDay[day] !== undefined) return !overrideByDay[day]; }
+      if(!Array.isArray(item.results) || !ts) return true;
+      const wrong = item.results.filter(r => !r.correct).map(r => ({ lesson: (r.lesson || 'General').trim().toLowerCase(), text: (r.text || '').trim().toLowerCase() }));
+      if(!wrong.length) return true;
+      const at = new Date(ts);
+      return !wrong.every(w => laterCorrect.some(c => (c.lesson === w.lesson || (w.text && c.text === w.text)) && new Date(c.ts) > at));
+    };
+    const pendingIds = new Set([...hwLite.filter(h => stillPending(h, 'submittedAt')).map(h => h.id), ...attLite.filter(a => stillPending(a, 'ts')).map(a => a.id)]);
     const seen = new Set();
     const sessions = (sessRaw || []).filter(s => s && !s._index && pvN(s.username) === pvN(u) && s.id && !seen.has(s.id) && seen.add(s.id));
-    _pvState = { token, student, hw: hw.filter(h => isHomeworkPublished(h)), att, sessions,
+    _pvState = { token, student, hw, att, hwLite, attLite, pendingIds, sessions,
       course: (courses || []).find(c => c.name === student.course) || null, mistakes,
       pdfs: (pdfs || []).filter(p => p && !p._index && typeof spVisibleTo === 'function' && spVisibleTo(p, student)), hwFilter: 'all', hwShow: 20, loadedAt: new Date() };
     pvRender();
@@ -29311,22 +29336,25 @@ renderParentView = async function(token){
   }
 };
 
-function pvHwStatus(h, now){
-  const due = h.dueDate ? new Date(h.dueDate + 'T23:59:59') : null;
+function pvDue(h){ return /^\d{4}-\d{2}-\d{2}$/.test(String(h.dueDate || '')) ? new Date(h.dueDate + 'T23:59:59') : null; }
+function pvHwStatus(h, now, pendingIds){
+  const due = pvDue(h);
   if(h.status === 'completed'){
-    if(h.retakeRequired) return 'retake';
-    if(due && h.submittedAt && new Date(h.submittedAt) > due) return 'late';
-    return 'ontime';
+    if(pendingIds && pendingIds.has(h.id)) return 'retake';
+    if(due && h.submittedAt) return new Date(h.submittedAt) > due ? 'late' : 'ontime';
+    return 'done';
   }
   if(due && due < now) return 'overdue';
   return 'todo';
 }
-function pvTopics(hw, att){
+// Same per-lesson tally as the student's own "Topic mastery": every graded
+// question from finished homework and attempts.
+function pvTopics(hwLite, attLite){
   const m = {};
-  const add = t => { if(!t || typeof t !== 'object') return; Object.entries(t).forEach(([k, v]) => { if(!Array.isArray(v)) return; m[k] = m[k] || [0, 0]; m[k][0] += +v[0] || 0; m[k][1] += +v[1] || 0; }); };
-  hw.filter(h => h.status === 'completed').forEach(h => add(h.topics));
-  att.forEach(a => add(a.topics));
-  return Object.entries(m).filter(([k, v]) => v[1] >= 3 && k && k !== 'General').map(([k, v]) => ({ k, pct: Math.round(v[0] / v[1] * 100), n: v[1] }));
+  [...hwLite, ...attLite].forEach(it => (it.results || []).forEach(r => {
+    const k = (r.lesson || 'General').trim(); m[k] = m[k] || [0, 0]; m[k][1]++; if(r.correct) m[k][0]++;
+  }));
+  return Object.entries(m).filter(([k, v]) => v[1] >= 5 && k && k !== 'General').map(([k, v]) => ({ k, pct: Math.round(v[0] / v[1] * 100), n: v[1] }));
 }
 function pvChart(points){
   if(points.length < 2) return `<div class="pv-empty">${pvT('noScores')}</div>`;
@@ -29350,14 +29378,18 @@ function pvRender(){
 
   // ----- numbers
   const hw = S.hw.slice().sort((a, b) => new Date(b.dueDate || b.ts || 0) - new Date(a.dueDate || a.ts || 0));
-  const statusOf = new Map(hw.map(h => [h.id, pvHwStatus(h, now)]));
+  const statusOf = new Map(hw.map(h => [h.id, pvHwStatus(h, now, S.pendingIds)]));
   const done = hw.filter(h => h.status === 'completed');
-  const isLate = h => { const due = h.dueDate ? new Date(h.dueDate + 'T23:59:59') : null; return !!(due && h.submittedAt && new Date(h.submittedAt) > due); };
-  const onTime = done.filter(h => !isLate(h)).length;
+  // "Homework" = the sheets you set; retake sheets the site makes
+  // automatically are counted separately so they don't inflate the numbers.
+  const regular = hw.filter(h => !h.isRetake), regDone = regular.filter(h => h.status === 'completed');
+  const retakeSheetsDone = done.filter(h => h.isRetake).length;
+  const withDue = regDone.filter(h => pvDue(h) && h.submittedAt);
+  const onTimeN = withDue.filter(h => new Date(h.submittedAt) <= pvDue(h)).length;
   const overdue = hw.filter(h => statusOf.get(h.id) === 'overdue');
-  const hwPcts = done.map(h => h.score && h.score.pct).filter(p => typeof p === 'number');
+  const hwPcts = regDone.map(h => h.score && h.score.pct).filter(p => typeof p === 'number');
   const avg = hwPcts.length ? Math.round(hwPcts.reduce((s, x) => s + x, 0) / hwPcts.length) : null;
-  const retakes = done.filter(h => h.retakeRequired).length + S.att.filter(a => a.retakeRequired).length;
+  const retakes = S.pendingIds.size;
   const marked = S.sessions.filter(s => s.coordAttendance && s.coordAttendance.status && s.coordAttendance.status !== 'excused');
   const attended = marked.filter(s => s.coordAttendance.status === 'present' || s.coordAttendance.status === 'late');
   const d30 = new Date(now - 30 * 864e5), d7 = new Date(now - 7 * 864e5);
@@ -29368,15 +29400,17 @@ function pvRender(){
   const actTimes = [...logins, ...done.map(h => h.submittedAt), ...S.att.map(a => a.ts)].filter(Boolean).map(t => new Date(t)).filter(d => !isNaN(d));
   const lastActive = actTimes.length ? new Date(Math.max(...actTimes)) : null;
   const daysSince = lastActive ? Math.floor((pvDay(now) - pvDay(lastActive)) / 864e5) : null;
-  const topics = pvTopics(S.hw, S.att);
-  const strong = topics.slice().sort((a, b) => b.pct - a.pct).slice(0, 5);
+  const topics = pvTopics(S.hwLite, S.attLite);
+  const strong = topics.filter(t => t.pct >= 70).sort((a, b) => b.pct - a.pct).slice(0, 5);
   const weak = topics.slice().sort((a, b) => a.pct - b.pct).filter(t => t.pct < 75).slice(0, 5);
   const recStats = st.recordingStats && typeof st.recordingStats === 'object' ? st.recordingStats : {};
-  const recMinFor = id => { const r = recStats['session:' + id]; return r ? Math.round((r.seconds || 0) / 60) : 0; };
-  const recMin7 = Object.values(recStats).filter(r => r && r.lastAt && new Date(r.lastAt) >= d7).reduce((s, r) => s + Math.round((r.seconds || 0) / 60), 0);
-  const mAnswered = S.mistakes.filter(m => m.status === 'answered' || m.status === 'delivered' || m.ans).length;
-  const mMastered = S.mistakes.filter(m => m.mastered === 'true').length;
-  const mWeek = S.mistakes.filter(m => (m.status === 'answered' || m.status === 'delivered') && new Date(m.ts) >= d7).length;
+  const recOpens = id => { const r = recStats['session:' + id]; return r ? (r.opens || 0) : 0; };
+  const recMin7 = Object.values(recStats).filter(r => r && r.lastAt && new Date(r.lastAt) >= d7).length;
+  // same rules as the student's Mistake History
+  const mAnswered = S.mistakes.filter(m => m.status === 'answered' || getQuestionExplanations(m).length > 0).length;
+  const mByAsst = S.mistakes.filter(m => m.answer && m.answer.answeredBy).length;
+  const mMastered = S.mistakes.filter(m => m.masteredByStudent).length;
+  const mWeek = S.mistakes.filter(m => m.answer && m.answer.answeredAt && new Date(m.answer.answeredAt) >= d7).length;
 
   // ----- exam countdown
   let examLine = '', daysLeft = null;
@@ -29396,13 +29430,13 @@ function pvRender(){
   const fc = computeForecast(timeline);
   const target = st.targetScore ? Number(st.targetScore) : null;
   let xpHtml = '';
-  if(fc && fc.canForecast){
-    const exp = (daysLeft !== null && daysLeft >= 0) ? projectToExam(fc, daysLeft) : fc.projected;
+  if(fc && fc.canForecast && daysLeft !== null && daysLeft >= 0){
+    const exp = projectToExam(fc, daysLeft);
     const diff = est ? pctToEstScore(exp) - pctToEstScore(fc.current) : exp - fc.current;
     const trend = Math.abs(diff) < (est ? 10 : 2) ? pvT('xpFlat') : diff > 0 ? pvT('xpUp')(pvNum(Math.abs(diff))) : pvT('xpDown')(pvNum(Math.abs(diff)));
     const gap = target ? (est ? pctToEstScore(target) - pctToEstScore(exp) : target - exp) : null;
     xpHtml = `<div class="pv-xp">
-      <div class="pv-xp-main"><span>${esc(daysLeft !== null && daysLeft >= 0 ? pvT('xpOnDay') : pvT('xp'))}</span><b>${pvNum(asScore(exp))}${est ? `<small>${esc(pvT('xpOf'))}</small>` : ''}</b><em class="${diff > 0 ? 'up' : diff < 0 ? 'down' : ''}">${esc(trend)}</em></div>
+      <div class="pv-xp-main"><span>${esc(pvT('xpOnDay'))}</span><b>${pvNum(asScore(exp))}${est ? `<small>${esc(pvT('xpOf'))}</small>` : ''}</b><em class="${diff > 0 ? 'up' : diff < 0 ? 'down' : ''}">${esc(trend)}</em></div>
       <div class="pv-xp-side">
         <div><span>${esc(pvT('xpNow'))}</span><b>${pvNum(asScore(fc.current))}</b></div>
         ${target ? `<div><span>${esc(pvT('xpTarget'))}</span><b>${pvNum(asScore(target))}</b><small>${fc.current >= target ? esc(pvT('xpReached')) : gap <= 0 ? esc(pvT('xpOnTrack')) : esc(pvT('xpToGo')(pvNum(gap)))}</small></div>` : ''}
@@ -29411,9 +29445,9 @@ function pvRender(){
     </div>`;
   } else {
     const gap = target && fc ? (est ? pctToEstScore(target) - pctToEstScore(fc.current) : target - fc.current) : null;
-    xpHtml = `<div class="pv-xp${target ? '' : ' pv-xp-wait'}"><div class="pv-xp-main"><span>${esc(pvT('xp'))}</span><b>${fc ? pvNum(asScore(fc.current)) : '—'}${fc && est ? `<small>${esc(pvT('xpOf'))}</small>` : ''}</b></div>
+    xpHtml = `<div class="pv-xp${target ? '' : ' pv-xp-wait'}"><div class="pv-xp-main"><span>${esc(pvT('xpNow'))}</span><b>${fc ? pvNum(asScore(fc.current)) : '—'}${fc && est ? `<small>${esc(pvT('xpOf'))}</small>` : ''}</b></div>
       ${target ? `<div class="pv-xp-side"><div><span>${esc(pvT('xpTarget'))}</span><b>${pvNum(asScore(target))}</b>${gap !== null ? `<small>${gap <= 0 ? esc(pvT('xpReached')) : esc(pvT('xpToGo')(pvNum(gap)))}</small>` : ''}</div></div>` : ''}
-      <div class="pv-xp-note">${esc(pvT('xpNotYet')(pvNum(timeline.length)))}</div></div>`;
+      <div class="pv-xp-note">${esc(!fc || !fc.canForecast ? pvT('xpNotYet')(pvNum(timeline.length)) : daysLeft !== null && daysLeft < 0 ? pvT('xpPast') : pvT('xpNoDate'))}</div></div>`;
   }
   const ago = daysSince === null ? pvT('never') : daysSince === 0 ? pvT('today') : daysSince === 1 ? pvT('yesterday') : pvT('daysAgo')(pvNum(daysSince));
 
@@ -29428,13 +29462,13 @@ function pvRender(){
   // ----- chart points
   const pts = [
     ...done.filter(h => h.score && typeof h.score.pct === 'number').map(h => ({ ts: h.submittedAt || h.ts, pct: h.score.pct, title: h.title, kind: 'hw' })),
-    ...S.att.filter(a => a.source === 'exam' && typeof a.pct === 'number').map(a => ({ ts: a.ts, pct: a.pct, title: a.examTitle, kind: 'exam' }))
+    ...S.att.filter(a => typeof a.pct === 'number').map(a => ({ ts: a.ts, pct: a.pct, title: a.examTitle, kind: a.source === 'exam' ? 'exam' : 'skill' }))
   ].filter(p => p.ts).sort((a, b) => new Date(a.ts) - new Date(b.ts)).slice(-20);
 
   // ----- homework list
   const f = S.hwFilter;
-  const hwShown = hw.filter(h => { const s = statusOf.get(h.id); return f === 'all' || (f === 'todo' && s === 'todo') || (f === 'overdue' && s === 'overdue') || (f === 'done' && (s === 'ontime' || s === 'late' || s === 'retake')); });
-  const pill = s => ({ ontime: ['ok', pvT('sOnTime')], late: ['warn', pvT('sLate')], overdue: ['bad', pvT('sOverdue')], todo: ['mute', pvT('sTodo')], retake: ['bad', pvT('sRetake')] })[s];
+  const hwShown = hw.filter(h => { const s = statusOf.get(h.id); return f === 'all' || (f === 'todo' && s === 'todo') || (f === 'overdue' && s === 'overdue') || (f === 'done' && (s === 'ontime' || s === 'done' || s === 'late' || s === 'retake')); });
+  const pill = s => ({ ontime: ['ok', pvT('sOnTime')], done: ['ok', pvT('sDone')], late: ['warn', pvT('sLate')], overdue: ['bad', pvT('sOverdue')], todo: ['mute', pvT('sTodo')], retake: ['bad', pvT('sRetake')] })[s];
   const hwRows = hwShown.slice(0, S.hwShow).map(h => {
     const s = statusOf.get(h.id), [cls, lbl] = pill(s);
     return `<div class="pv-row"><div class="pv-row-main"><b>${esc(h.title || '')}</b><span>${[h.dueDate ? `${esc(pvT('due'))}: ${esc(pvFmt(h.dueDate))}` : '', h.submittedAt ? `${esc(pvT('done'))}: ${esc(pvFmt(h.submittedAt))}` : ''].filter(Boolean).join(' · ')}</span></div>
@@ -29452,7 +29486,7 @@ function pvRender(){
   const upcoming = sess.filter(s => s.date && pvDay(s.date + 'T00:00:00') >= today).reverse();
   const past = sess.filter(s => s.date && pvDay(s.date + 'T00:00:00') < today);
   const attPill = s => { const k = s.coordAttendance && s.coordAttendance.status; const map = { present: 'ok', late: 'warn', absent: 'bad', excused: 'mute' }; return `<span class="pv-pill ${map[k] || 'mute'}">${esc(k ? pvT(k) : pvT('notMarked'))}</span>`; };
-  const sessRow = (s, isPast) => `<div class="pv-row"><div class="pv-row-main"><b>${esc(s.topic || 'Session')}</b><span>${esc(pvFmt(s.date, true))}${s.time ? ' · ' + esc(s.time) : ''}${isPast && s.recordingUrl ? ' · ' + esc(recMinFor(s.id) ? pvT('watched')(pvNum(recMinFor(s.id))) : pvT('notWatched')) : ''}</span></div><div class="pv-row-side">${isPast ? attPill(s) : ''}</div></div>`;
+  const sessRow = (s, isPast) => `<div class="pv-row"><div class="pv-row-main"><b>${esc(s.topic || 'Session')}</b><span>${esc(pvFmt(s.date, true))}${s.time ? ' · ' + esc(s.time) : ''}${isPast && s.recordingUrl ? ' · ' + esc(recOpens(s.id) ? pvT('watched')(pvNum(recOpens(s.id))) : pvT('notWatched')) : ''}</span></div><div class="pv-row-side">${isPast ? attPill(s) : ''}</div></div>`;
 
   const pdfOpened = S.pdfs.filter(p => p.views && p.views[uL]).length;
   const waHref = (document.querySelector('a[href^="https://wa.me/2"]') || {}).href || 'https://wa.me/201093875919';
@@ -29471,9 +29505,9 @@ function pvRender(){
     </section>
 
     <section class="pv-kpis">
-      <div class="pv-kpi"><span>${esc(pvT('kHw'))}</span><b>${pvNum(done.length)} / ${pvNum(hw.length)}</b>${bar(hw.length ? done.length / hw.length * 100 : 0)}<small>${done.length ? esc(pvT('kOnTime')(pvNum(Math.round(onTime / done.length * 100)))) : '—'}</small></div>
+      <div class="pv-kpi"><span>${esc(pvT('kHw'))}</span><b>${pvNum(regDone.length)} / ${pvNum(regular.length)}</b>${bar(regular.length ? regDone.length / regular.length * 100 : 0)}<small>${withDue.length ? esc(pvT('kOnTime')(pvNum(Math.round(onTimeN / withDue.length * 100)))) : retakeSheetsDone ? esc(pvT('kRetakeSheets')(pvNum(retakeSheetsDone))) : '—'}</small></div>
       <div class="pv-kpi"><span>${esc(pvT('kAvg'))}</span><b>${avg === null ? '—' : pvNum(avg) + '%'}</b>${bar(avg || 0, avg >= 75 ? 'ok' : avg >= 50 ? 'warn' : 'bad')}<small>${hwPcts.length ? '' : '—'}</small></div>
-      <div class="pv-kpi"><span>${esc(pvT('kAtt'))}</span><b>${marked.length ? pvNum(Math.round(attended.length / marked.length * 100)) + '%' : '—'}</b>${bar(marked.length ? attended.length / marked.length * 100 : 0)}<small>${marked.length ? esc(pvT('kAttSub')(pvNum(attended.length), pvNum(marked.length))) : '—'}</small></div>
+      <div class="pv-kpi"><span>${esc(pvT('kAtt'))}</span><b>${marked.length ? pvNum(Math.round(attended.length / marked.length * 100)) + '%' : '—'}</b>${bar(marked.length ? attended.length / marked.length * 100 : 0)}<small>${marked.length ? esc(pvT('kAttSub')(pvNum(attended.length), pvNum(marked.length))) : esc(pvT('kAttNone'))}</small></div>
       <div class="pv-kpi"><span>${esc(pvT('kPracticeMonth'))}</span><b>${pvNum(practiceMonth)}</b><small>${esc(pvT('kPracticeSub'))}</small></div>
     </section>
 
@@ -29501,7 +29535,7 @@ function pvRender(){
     <section class="pv-card">
       <h3>🎯 ${esc(pvT('topics'))}</h3>
       ${topics.length ? `<div class="pv-topics">
-        <div><h4>💪 ${esc(pvT('strong'))}</h4>${strong.map(t => `<div class="pv-topic"><span>${esc(t.k)}</span><b>${pvNum(t.pct)}%</b>${bar(t.pct, 'ok')}</div>`).join('')}</div>
+        <div><h4>💪 ${esc(pvT('strong'))}</h4>${strong.length ? '' : `<div class="pv-empty">${esc(pvT('noStrong'))}</div>`}${strong.map(t => `<div class="pv-topic"><span>${esc(t.k)}</span><b>${pvNum(t.pct)}%</b>${bar(t.pct, 'ok')}</div>`).join('')}</div>
         <div><h4>📌 ${esc(pvT('weak'))}</h4>${(weak.length ? weak : topics.slice().sort((a, b) => a.pct - b.pct).slice(0, 3)).map(t => `<div class="pv-topic"><span>${esc(t.k)}</span><b>${pvNum(t.pct)}%</b>${bar(t.pct, t.pct >= 75 ? 'ok' : t.pct >= 50 ? 'warn' : 'bad')}</div>`).join('')}</div>
       </div>` : `<div class="pv-empty">${esc(pvT('noTopics'))}</div>`}
     </section>
@@ -29532,6 +29566,7 @@ function pvRender(){
       <div class="pv-week">
         <div><b>${pvNum(S.mistakes.length)}</b><span>${esc(pvT('hTotal'))}</span></div>
         <div><b>${pvNum(mAnswered)}</b><span>${esc(pvT('hAnswered'))}</span></div>
+        <div><b>${pvNum(mByAsst)}</b><span>${esc(pvT('hByAsst'))}</span></div>
         <div><b>${pvNum(Math.max(0, S.mistakes.length - mAnswered))}</b><span>${esc(pvT('hWaiting'))}</span></div>
         <div><b>${pvNum(mMastered)}</b><span>${esc(pvT('hMastered'))}</span></div>
       </div>
