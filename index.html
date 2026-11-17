@@ -4364,6 +4364,9 @@
   .sc-inline{ display:flex; gap:8px; } .sc-inline input{ flex:1; }
   .sc-arow{ display:flex; align-items:center; gap:12px; border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:12px 14px; margin-bottom:8px; flex-wrap:wrap; }
   .sc-arow.is-hidden{ opacity:.55; }
+  #showcasePanel textarea{ width:100%; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:10px 14px; border-radius:8px; font-family:'Inter',sans-serif; font-size:0.9rem; }
+  .sc-acover{ width:44px; height:78px; object-fit:cover; border-radius:8px; border:1px solid var(--line); flex:0 0 auto; }
+  .sc-cover-btn{ cursor:pointer; display:inline-flex; align-items:center; }
   .sc-anum{ width:30px; height:30px; border-radius:50%; background:rgba(14,154,167,.12); display:flex; align-items:center; justify-content:center; font-weight:700; flex:0 0 auto; }
   .sc-amain{ display:flex; flex-direction:column; gap:2px; min-width:0; flex:1 1 220px; }
   .sc-amain span{ color:var(--muted); font-size:0.85rem; }
@@ -5168,7 +5171,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 17 Nov 2026</span></span>
+      <span>© 2026 Mr. Mohamed Ibrahim. All rights reserved. <span class="mono" id="siteVersion" style="font-size:0.72rem;color:var(--muted);margin-left:6px;">Version 17 Nov 2026 · B</span></span>
       <span style="display:flex;align-items:center;gap:18px;">
         Made for students who want it to click.
         <button class="admin-link open-admin-btn" id="openAdmin">Admin</button>
@@ -7020,7 +7023,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <div class="exam-editor" style="margin-top:0;">
         <div class="field-row">
           <label class="field-label">TikTok video link</label>
-          <input type="url" id="scUrl" placeholder="https://www.tiktok.com/@yourname/video/7312345678901234567">
+          <input type="url" id="scUrl" placeholder="Paste any TikTok link — e.g. https://vt.tiktok.com/ZSxxxxxx/">
         </div>
         <div class="sc-three">
           <div class="field-row"><label class="field-label">Student name (optional)</label><input type="text" id="scName" placeholder="e.g. Omar"></div>
@@ -7028,6 +7031,12 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           <div class="field-row"><label class="field-label">Course (optional)</label><input type="text" id="scCourse" placeholder="e.g. EST — Oct 2026"></div>
         </div>
         <div class="editor-actions"><button class="btn btn-primary" id="scAddBtn" type="button">Add to the home page</button></div>
+        <div class="field-row" style="margin-top:22px;">
+          <label class="field-label">…or add many at once — one TikTok link per line</label>
+          <textarea id="scBulk" rows="6" placeholder="https://vt.tiktok.com/ZSxxxxxx/ | Omar | EST 780&#10;https://www.tiktok.com/@yourname/video/7312345678901234567 | Salma | SAT 760&#10;https://vm.tiktok.com/ZMxxxxxx/"></textarea>
+          <span class="id-hint">Any TikTok link works — the short links from the phone's Share button too. After the link you can add <b>| name | score | course</b> (optional).</span>
+          <button class="btn btn-ghost" id="scBulkBtn" type="button" style="margin-top:10px;">Add all</button>
+        </div>
         <div class="field-row" style="margin-top:18px;">
           <label class="field-label">Your TikTok profile link (optional — adds a "See more on TikTok" button)</label>
           <div class="sc-inline"><input type="url" id="scProfile" placeholder="https://www.tiktok.com/@yourname"><button class="btn btn-ghost" id="scProfileSave" type="button">Save</button></div>
@@ -29723,6 +29732,54 @@ function scVideoId(url){
   return m ? m[1] : null;
 }
 function scIsShortLink(url){ return /(?:vm|vt)\.tiktok\.com\/|tiktok\.com\/t\//i.test(String(url || '')); }
+// Any TikTok link — full, short share link (vt./vm.), or pasted with other
+// text around it — is turned into the real video by a helper on Supabase.
+async function scResolve(urls){
+  const local = u => { const id = scVideoId(u); return id ? { input: u, videoId: id, kind: /\/photo\//i.test(u) ? 'photo' : 'video', url: String(u).match(/https?:\/\/\S+|[\w.-]*tiktok\.com\/\S+/i)[0].split('?')[0] } : null; };
+  try{
+    const { data, error } = await supabaseClient.functions.invoke('tiktok-resolve', { body: { urls } });
+    if(error || !data || !Array.isArray(data.results)) throw error || new Error('no answer');
+    return data.results.map((r, i) => r.videoId ? r : (local(urls[i]) || r));
+  }catch(e){
+    return urls.map(u => local(u) || { input: u, error: scIsShortLink(u) ? "couldn't open this short link right now — try again in a minute" : 'not a TikTok video link' });
+  }
+}
+async function scAddMany(entries){
+  // entries: [{ link, name, score, course }]
+  const res = await scResolve(entries.map(e => e.link));
+  const { items } = await scFetchAll();
+  const have = new Set(items.map(x => x.videoId));
+  const added = [], failed = [], dup = [];
+  const fresh = [];
+  res.forEach((r, i) => {
+    const e = entries[i];
+    if(!r || !r.videoId){ failed.push({ e, why: (r && r.error) || 'not a TikTok video link' }); return; }
+    if(have.has(r.videoId)){ dup.push(e); return; }
+    have.add(r.videoId);
+    fresh.push({ e, r });
+  });
+  if(fresh.length){
+    // new ones go first, in the order they were pasted
+    await Promise.all(items.map((it, k) => dbSet('showcase', it.id, { ...it, order: k + fresh.length })));
+    for(let k = 0; k < fresh.length; k++){
+      const { e, r } = fresh[k];
+      const id = generateId('sc');
+      const ok = await dbSet('showcase', id, { id, url: r.url, videoId: r.videoId, kind: r.kind || 'video', author: r.author || null,
+        name: e.name || '', score: e.score || '', course: e.course || '', order: k, hidden: false, ts: new Date(Date.now() + (fresh.length - k)).toISOString(), by: getCurrentAnswererIdentity() });
+      if(ok) added.push({ e, r }); else failed.push({ e, why: "couldn't save — check the connection" });
+    }
+  }
+  invalidateDbCache('showcase');
+  return { added, failed, dup };
+}
+function scReport(r){
+  const parts = [];
+  if(r.added.length) parts.push(`✓ Added ${r.added.length} video${r.added.length === 1 ? '' : 's'} to the home page.`);
+  if(r.added.some(a => a.r.kind === 'photo')) parts.push('ℹ Photo slideshows open on TikTok when tapped (TikTok only lets videos play inside other websites).');
+  if(r.dup.length) parts.push(`${r.dup.length} already on the list (skipped).`);
+  if(r.failed.length) parts.push(`⚠ ${r.failed.length} couldn't be added:<br>` + r.failed.map(f => `• <code>${esc(String(f.e.link).slice(0, 70))}</code> — ${esc(f.why)}`).join('<br>'));
+  return parts.join('<br>');
+}
 async function scFetchAll(){
   const rows = await dbGetAll('showcase');
   const items = (rows || []).filter(r => r && r.id && r.id !== 'settings' && !r._index && r.videoId);
@@ -29730,19 +29787,9 @@ async function scFetchAll(){
   const settings = (rows || []).find(r => r && r.id === 'settings') || {};
   return { items, settings };
 }
-const _scThumbs = {};
-async function scThumb(item){
-  if(_scThumbs[item.videoId] !== undefined) return _scThumbs[item.videoId];
-  try{
-    const res = await fetch('https://www.tiktok.com/oembed?url=' + encodeURIComponent(item.url));
-    const j = res.ok ? await res.json() : null;
-    _scThumbs[item.videoId] = (j && j.thumbnail_url) || null;
-  }catch(e){ _scThumbs[item.videoId] = null; }
-  return _scThumbs[item.videoId];
-}
 function scCardHtml(it, i){
-  return `<button type="button" class="sc-card" data-vid="${esc(it.videoId)}" aria-label="Play ${esc(it.name || 'student')}'s video">
-    <span class="sc-poster" style="--h:${(i * 47) % 360}"></span>
+  return `<button type="button" class="sc-card" data-vid="${esc(it.videoId)}" data-kind="${esc(it.kind || 'video')}" data-url="${esc(it.url)}" aria-label="Play ${esc(it.name || 'student')}'s video">
+    <span class="sc-poster${it.cover ? ' has-img' : ''}" style="--h:${(i * 47) % 360};${it.cover ? `background-image:url('${esc(it.cover)}')` : ''}"></span>
     <span class="sc-shade"></span>
     ${it.score ? `<span class="sc-score">${esc(it.score)}</span>` : ''}
     <span class="sc-play" aria-hidden="true">▶</span>
@@ -29764,19 +29811,12 @@ async function scRenderHome(){
   more.textContent = `Show ${Math.min(SC_PAGE, items.length - scShown)} more`;
   const prof = document.getElementById('scProfileLink');
   if(data.settings.profileUrl){ prof.href = data.settings.profileUrl; prof.hidden = false; } else prof.hidden = true;
-  // pictures: only for cards that are on screen (or about to be)
-  const io = new IntersectionObserver(entries => entries.forEach(async en => {
-    if(!en.isIntersecting) return;
-    io.unobserve(en.target);
-    const it = items.find(x => x.videoId === en.target.dataset.vid); if(!it) return;
-    const t = await scThumb(it);
-    if(t){ const p = en.target.querySelector('.sc-poster'); p.style.backgroundImage = `url("${t.replace(/"/g, '%22')}")`; p.classList.add('has-img'); }
-  }), { rootMargin: '300px' });
-  grid.querySelectorAll('.sc-card').forEach(c => io.observe(c));
 }
 document.addEventListener('click', e => {
   const c = e.target.closest && e.target.closest('#scGrid .sc-card');
   if(!c) return;
+  // photo slideshows can't play inside other websites — open them on TikTok
+  if(c.dataset.kind === 'photo'){ window.open(c.dataset.url, '_blank', 'noopener'); return; }
   // only one video plays at a time
   document.querySelectorAll('#scGrid .sc-live').forEach(f => {
     const back = document.createElement('div'); back.innerHTML = f.dataset.card; f.replaceWith(back.firstElementChild);
@@ -29812,11 +29852,14 @@ async function scRenderAdmin(){
   list.innerHTML = items.map((it, i) => `
     <div class="sc-arow${it.hidden ? ' is-hidden' : ''}" data-id="${esc(it.id)}">
       <div class="sc-anum">${i + 1}</div>
-      <div class="sc-amain"><b>${esc(it.name || '(no name)')}</b><span>${esc([it.score, it.course].filter(Boolean).join(' · '))}${it.hidden ? ' · <em>hidden</em>' : ''}</span>
+      ${it.cover ? `<img class="sc-acover" src="${esc(it.cover)}" alt="">` : ''}
+      <div class="sc-amain"><b>${esc(it.name || '(no name)')}</b><span>${esc([it.score, it.course].filter(Boolean).join(' · '))}${it.kind === 'photo' ? ' · 📷 photo slideshow (opens on TikTok)' : ''}${it.hidden ? ' · <em>hidden</em>' : ''}</span>
         <a href="${esc(it.url)}" target="_blank" rel="noopener" class="sc-alink">${esc(it.url)}</a></div>
       <div class="sc-aact">
         <button type="button" class="btn btn-ghost sc-up" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
         <button type="button" class="btn btn-ghost sc-down" ${i === items.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+        <label class="btn btn-ghost sc-cover-btn">🖼 ${it.cover ? 'Change cover' : 'Add cover'}<input type="file" accept="image/*" hidden></label>
+        <button type="button" class="btn btn-ghost sc-edit">Edit</button>
         <button type="button" class="btn btn-ghost sc-hide">${it.hidden ? 'Show' : 'Hide'}</button>
         <button type="button" class="btn btn-ghost sc-del">Delete</button>
       </div>
@@ -29831,6 +29874,18 @@ async function scRenderAdmin(){
     const it = items[i];
     row.querySelector('.sc-up').addEventListener('click', ()=> reorder(i, i - 1));
     row.querySelector('.sc-down').addEventListener('click', ()=> reorder(i, i + 1));
+    row.querySelector('.sc-cover-btn input').addEventListener('change', async e => {
+      const f = e.target.files && e.target.files[0]; if(!f) return;
+      const lbl = row.querySelector('.sc-cover-btn'); lbl.firstChild.textContent = 'Uploading… ';
+      try{ const url = await uploadQuestionImage(f, 900, 0.82); await save(it, { cover: url }); invalidateDbCache('showcase'); scRenderAdmin(); scRenderHome(); }
+      catch(err){ alert(err.message || 'Upload failed'); lbl.firstChild.textContent = '🖼 Add cover'; }
+    });
+    row.querySelector('.sc-edit').addEventListener('click', async ()=>{
+      const name = prompt('Student name:', it.name || ''); if(name === null) return;
+      const score = prompt('Score (e.g. EST 780):', it.score || ''); if(score === null) return;
+      const course = prompt('Course (optional):', it.course || ''); if(course === null) return;
+      await save(it, { name: name.trim(), score: score.trim(), course: course.trim() }); invalidateDbCache('showcase'); scRenderAdmin(); scRenderHome();
+    });
     row.querySelector('.sc-hide').addEventListener('click', async ()=>{ await save(it, { hidden: !it.hidden }); invalidateDbCache('showcase'); scRenderAdmin(); });
     row.querySelector('.sc-del').addEventListener('click', async ()=>{
       if(!confirm(`Remove ${it.name || 'this'} video from the home page?`)) return;
@@ -29842,30 +29897,36 @@ function scWire(){
   document.getElementById('showcasePanel')._wired = true;
   document.getElementById('scAddBtn').addEventListener('click', async ()=>{
     const msg = document.getElementById('scMsg');
-    const url = document.getElementById('scUrl').value.trim();
-    const name = document.getElementById('scName').value.trim();
-    const score = document.getElementById('scScore').value.trim();
-    const course = document.getElementById('scCourse').value.trim();
-    if(!url){ msg.textContent = '⚠ Paste the TikTok link first.'; return; }
-    const vid = scVideoId(url);
-    if(!vid){
-      msg.textContent = scIsShortLink(url)
-        ? '⚠ That is a short TikTok link. Open it in your browser, then copy the full link from the address bar — it looks like tiktok.com/@name/video/1234567890…'
-        : "⚠ That doesn't look like a TikTok video link. It should look like tiktok.com/@name/video/1234567890…";
-      return;
-    }
-    const btn = document.getElementById('scAddBtn'); btn.disabled = true;
-    const { items } = await scFetchAll();
-    if(items.some(x => x.videoId === vid)){ msg.textContent = 'That video is already on the list.'; btn.disabled = false; return; }
-    // new videos go first
-    await Promise.all(items.map((it, k) => dbSet('showcase', it.id, { ...it, order: k + 1 })));
-    const id = generateId('sc');
-    const ok = await dbSet('showcase', id, { id, url: url.split('?')[0], videoId: vid, name, score, course, order: 0, hidden: false, ts: new Date().toISOString(), by: getCurrentAnswererIdentity() });
-    btn.disabled = false;
-    if(!ok){ msg.textContent = "⚠ Couldn't save — check the connection and try again."; return; }
-    ['scUrl', 'scName', 'scScore', 'scCourse'].forEach(i => { document.getElementById(i).value = ''; });
-    msg.textContent = '✓ Added — it now shows first in "Student results" on the home page.';
-    invalidateDbCache('showcase'); scRenderAdmin(); scShown = SC_PAGE; scRenderHome();
+    const link = document.getElementById('scUrl').value.trim();
+    if(!link){ msg.textContent = '⚠ Paste the TikTok link first.'; return; }
+    const btn = document.getElementById('scAddBtn'); btn.disabled = true; btn.textContent = 'Checking the link…';
+    const r = await scAddMany([{ link, name: document.getElementById('scName').value.trim(), score: document.getElementById('scScore').value.trim(), course: document.getElementById('scCourse').value.trim() }]);
+    btn.disabled = false; btn.textContent = 'Add to the home page';
+    msg.innerHTML = scReport(r);
+    if(r.added.length) ['scUrl', 'scName', 'scScore', 'scCourse'].forEach(i => { document.getElementById(i).value = ''; });
+    scRenderAdmin(); scShown = SC_PAGE; scRenderHome();
+  });
+  document.getElementById('scBulkBtn').addEventListener('click', async ()=>{
+    const msg = document.getElementById('scMsg');
+    const lines = document.getElementById('scBulk').value.split(/\n+/).map(l => l.trim()).filter(Boolean);
+    const entries = [];
+    lines.forEach(line => {
+      const m = /(https?:\/\/)?([a-z0-9-]+\.)*tiktok\.com\/[^\s|,]+/i.exec(line);
+      if(!m){ return; }
+      const split = t => t.replace(/^\s*[|\t-]\s*/, '').split(/\s*[|\t]\s*|\s+-\s+/).map(x => x.trim()).filter(Boolean);
+      // name | score | course normally come after the link; text before it is used only if nothing follows
+      const after = split(line.slice(m.index + m[0].length)), before = split(line.slice(0, m.index));
+      const rest = after.length ? after : before.filter(x => !/:$/.test(x));
+      entries.push({ link: m[0], name: rest[0] || '', score: rest[1] || '', course: rest[2] || '' });
+    });
+    if(!entries.length){ msg.textContent = '⚠ No TikTok links found — paste one link per line.'; return; }
+    const btn = document.getElementById('scBulkBtn'); btn.disabled = true; btn.textContent = `Checking ${entries.length} link${entries.length === 1 ? '' : 's'}…`;
+    const r = await scAddMany(entries.slice(0, 50));
+    btn.disabled = false; btn.textContent = 'Add all';
+    msg.innerHTML = scReport(r) + (entries.length > 50 ? '<br>Only the first 50 were added — paste the rest again.' : '');
+    if(!r.failed.length) document.getElementById('scBulk').value = '';
+    else document.getElementById('scBulk').value = r.failed.map(f => [f.e.link, f.e.name, f.e.score, f.e.course].filter(Boolean).join(' | ')).join('\n');
+    scRenderAdmin(); scShown = SC_PAGE; scRenderHome();
   });
   document.getElementById('scProfileSave').addEventListener('click', async ()=>{
     const v = document.getElementById('scProfile').value.trim();
