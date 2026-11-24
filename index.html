@@ -6678,6 +6678,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       <button class="admin-tab" data-tab="qualityPanel" data-roles="admin">🏅 Quality</button>
       <button class="admin-tab" data-tab="weeklyUpdatesPanel" data-roles="admin,assistant,act-admin">Weekly Updates</button>
       <button class="admin-tab" data-tab="aiReportsPanel" data-roles="admin">🤖 AI &amp; Parent Reports</button>
+      <button class="admin-tab" data-tab="waInboxPanel" data-roles="admin">💬 WhatsApp Inbox</button>
     </div>
 
     <div class="admin-panel active" id="adminOverviewPanel">
@@ -7682,6 +7683,41 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       </div>
       <div id="weeklyUpdatesListWrap">
         <div class="admin-empty">Loading…</div>
+      </div>
+    </div>
+
+    <div class="admin-panel" id="waInboxPanel">
+      <div class="admin-note">Messages parents send to your WhatsApp bot number, and what the bot or you replied. You can answer a parent for free within <b>24 hours</b> of their last message.</div>
+      <section class="air-card" id="waiKeyCard" style="display:none;">
+        <div class="air-card-head"><h3>Inbox key</h3></div>
+        <div class="air-inline">
+          <input type="password" id="waiKeyInput" autocomplete="off" spellcheck="false" placeholder="Inbox key">
+          <button type="button" class="btn btn-primary air-small" id="waiKeySave">Open inbox</button>
+        </div>
+        <div class="air-msg" id="waiKeyMsg" role="status" aria-live="polite"></div>
+        <div class="air-muted air-tight">Saved only on this device, so you type it once per computer or phone.</div>
+      </section>
+      <div class="wai-wrap" id="waiWrap" style="display:none;">
+        <div class="wai-list-col">
+          <div class="wai-list-head">
+            <b>Conversations</b>
+            <button type="button" class="btn btn-ghost air-small" id="waiRefresh">Refresh</button>
+          </div>
+          <input type="search" id="waiSearch" class="wai-search" placeholder="Search student or number">
+          <div id="waiList"><div class="admin-empty">Loading…</div></div>
+        </div>
+        <div class="wai-thread-col" id="waiThreadCol">
+          <div class="wai-thread-head" id="waiThreadHead"><span class="air-muted">Pick a conversation</span></div>
+          <div class="wai-thread" id="waiThread"></div>
+          <div class="wai-reply" id="waiReplyBox" style="display:none;">
+            <div class="air-muted air-tight" id="waiWindowNote"></div>
+            <textarea id="waiReplyText" rows="3" placeholder="Write a reply…"></textarea>
+            <div class="wai-reply-row">
+              <span class="air-msg" id="waiReplyMsg" role="status" aria-live="polite"></span>
+              <button type="button" class="btn btn-primary air-small" id="waiSend">Send</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -9289,6 +9325,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
       if(tab.dataset.tab === 'assistantActivityPanel'){ renderAssistantActivity(); if(typeof cdRenderCoordinatorActivity === 'function') cdRenderCoordinatorActivity(); if(typeof tdRenderAdminActivity === 'function') tdRenderAdminActivity(); }
       if(tab.dataset.tab === 'weeklyUpdatesPanel'){ renderWeeklyUpdates(); }
       if(tab.dataset.tab === 'aiReportsPanel' && typeof renderAiReportsPanel === 'function'){ renderAiReportsPanel(); }
+      if(tab.dataset.tab === 'waInboxPanel' && typeof waInboxOpen === 'function'){ waInboxOpen(); }
     });
   });
 
@@ -29942,5 +29979,208 @@ function scWire(){
 </script>
 
 </div>
+<style>
+  /* ---------------- WHATSAPP INBOX ---------------- */
+  .wai-wrap{ display:grid; grid-template-columns:minmax(240px,320px) 1fr; gap:14px; min-height:520px; }
+  .wai-list-col,.wai-thread-col{ background:var(--panel); border:1px solid var(--line); border-radius:14px; min-width:0; display:flex; flex-direction:column; overflow:hidden; }
+  .wai-list-head,.wai-thread-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; border-bottom:1px solid var(--line); }
+  .wai-search{ margin:10px 12px; width:calc(100% - 24px); box-sizing:border-box; }
+  #waiList{ overflow-y:auto; max-height:600px; }
+  .wai-conv{ display:block; width:100%; text-align:left; background:none; border:none; border-bottom:1px solid var(--line); padding:11px 14px; cursor:pointer; color:var(--text); font:inherit; }
+  .wai-conv:hover{ background:var(--panel-2); }
+  .wai-conv.active{ background:var(--accent-wash); }
+  .wai-conv-top{ display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .wai-conv-name{ font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .wai-conv-time{ font-size:0.75rem; color:var(--muted); flex-shrink:0; }
+  .wai-conv-preview{ font-size:0.83rem; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px; }
+  .wai-dot{ display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--signal); margin-right:6px; vertical-align:middle; }
+  .wai-thread{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:8px; max-height:460px; min-height:260px; }
+  .wai-msg{ max-width:78%; padding:9px 12px; border-radius:12px; white-space:pre-wrap; word-wrap:break-word; font-size:0.9rem; line-height:1.45; }
+  .wai-msg.parent{ align-self:flex-start; background:var(--panel-2); border:1px solid var(--line); }
+  .wai-msg.model,.wai-msg.admin{ align-self:flex-end; background:var(--accent-wash); border:1px solid var(--line); }
+  .wai-msg-meta{ font-size:0.72rem; color:var(--muted); margin-top:4px; }
+  .wai-reply{ border-top:1px solid var(--line); padding:12px 14px; }
+  .wai-reply textarea{ width:100%; box-sizing:border-box; resize:vertical; margin-top:6px; }
+  .wai-search,.wai-reply textarea{ background:var(--panel-2); color:var(--text); border:1px solid var(--line); border-radius:10px; padding:9px 11px; font:inherit; font-size:0.9rem; }
+  .wai-search:focus,.wai-reply textarea:focus{ outline:none; border-color:var(--signal); }
+  .wai-reply textarea:disabled{ opacity:0.5; }
+  .wai-reply-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:8px; }
+  @media (max-width:760px){
+    .wai-wrap{ grid-template-columns:1fr; }
+    .wai-wrap.thread-open .wai-list-col{ display:none; }
+    .wai-wrap:not(.thread-open) .wai-thread-col{ display:none; }
+  }
+</style>
+<script>
+  /* ---------------- WHATSAPP INBOX ----------------
+     Reads parents' WhatsApp messages through the "whatsapp-inbox" server
+     function. The messages themselves are never readable with the public
+     website key; the function only answers when the inbox key is given. */
+  (function(){
+    const FN = `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/whatsapp-inbox`;
+    const KEY_STORE = 'mi-wa-inbox-key';
+    const $ = (id) => document.getElementById(id);
+    const h = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    let conversations = [];
+    let currentPhone = null;
+    let timer = null;
+    let wired = false;
+
+    function getKey(){ try{ return localStorage.getItem(KEY_STORE) || ''; }catch(e){ return ''; } }
+    function setKey(k){ try{ if(k) localStorage.setItem(KEY_STORE, k); else localStorage.removeItem(KEY_STORE); }catch(e){} }
+
+    async function call(action, extra = {}){
+      const res = await fetch(FN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-inbox-key': getKey() },
+        body: JSON.stringify({ action, ...extra }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if(res.status === 401){ showKeyCard('That inbox key is wrong. Please type it again.'); throw new Error('bad-key'); }
+      if(!res.ok) throw new Error(body.error || ('Error ' + res.status));
+      return body;
+    }
+
+    function fmtTime(ts){
+      if(!ts) return '';
+      const d = new Date(ts);
+      const today = new Date();
+      if(d.toDateString() === today.toDateString()) return d.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+      return d.toLocaleDateString([], { day:'numeric', month:'short' }) + ' ' + d.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+    }
+    function prettyPhone(p){ return p ? '+' + p : ''; }
+    function convName(c){ return c.students ? c.students : prettyPhone(c.phone); }
+
+    function showKeyCard(msg){
+      $('waiKeyCard').style.display = '';
+      $('waiWrap').style.display = 'none';
+      $('waiKeyMsg').textContent = msg || '';
+      stopTimer();
+    }
+
+    function renderList(){
+      const q = ($('waiSearch').value || '').trim().toLowerCase();
+      const list = conversations.filter(c => !q || (c.students || '').toLowerCase().includes(q) || (c.phone || '').includes(q.replace(/\D/g, '') || '\u0000'));
+      if(!list.length){
+        $('waiList').innerHTML = `<div class="admin-empty">${conversations.length ? 'No match.' : 'No messages from parents yet.'}</div>`;
+        return;
+      }
+      $('waiList').innerHTML = list.map(c => {
+        const waiting = c.last_role === 'user';
+        const who = c.last_role === 'user' ? '' : (c.last_role === 'admin' ? 'You: ' : '🤖 ');
+        return `<button type="button" class="wai-conv${c.phone === currentPhone ? ' active' : ''}" data-phone="${h(c.phone)}">
+          <div class="wai-conv-top">
+            <span class="wai-conv-name">${waiting ? '<span class="wai-dot" title="Waiting for a reply"></span>' : ''}${h(convName(c))}</span>
+            <span class="wai-conv-time">${h(fmtTime(c.last_at))}</span>
+          </div>
+          <div class="wai-conv-preview">${h(who + (c.last_content || '').replace(/\s+/g, ' ').slice(0, 90))}</div>
+        </button>`;
+      }).join('');
+      $('waiList').querySelectorAll('.wai-conv').forEach(btn => btn.addEventListener('click', () => openThread(btn.dataset.phone)));
+    }
+
+    async function loadList(){
+      try{
+        const r = await call('list');
+        conversations = r.conversations || [];
+        $('waiKeyCard').style.display = 'none';
+        $('waiWrap').style.display = '';
+        renderList();
+      }catch(e){
+        if(e.message !== 'bad-key') $('waiList').innerHTML = `<div class="admin-empty">Couldn't load messages: ${h(e.message)}</div>`;
+      }
+    }
+
+    async function openThread(phone, keepScroll){
+      currentPhone = phone;
+      $('waiWrap').classList.add('thread-open');
+      renderList();
+      const c = conversations.find(x => x.phone === phone) || { phone };
+      $('waiThreadHead').innerHTML = `<div><b>${h(convName(c))}</b><div class="air-muted air-tight">${h(prettyPhone(phone))}</div></div>
+        <button type="button" class="btn btn-ghost air-small" id="waiBack">← Back</button>`;
+      $('waiBack').addEventListener('click', () => { currentPhone = null; $('waiWrap').classList.remove('thread-open'); renderList(); });
+      const box = $('waiThread');
+      if(!keepScroll) box.innerHTML = '<div class="admin-empty">Loading…</div>';
+      try{
+        const r = await call('thread', { phone });
+        if(currentPhone !== phone) return;
+        const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+        box.innerHTML = (r.messages || []).map(m => {
+          const cls = m.role === 'user' ? 'parent' : m.role;
+          const label = m.role === 'user' ? 'Parent' : (m.role === 'admin' ? 'You' : '🤖 Bot');
+          return `<div class="wai-msg ${cls}">${h(m.content)}<div class="wai-msg-meta">${label} · ${h(fmtTime(m.created_at))}</div></div>`;
+        }).join('') || '<div class="admin-empty">No messages.</div>';
+        if(!keepScroll || atBottom) box.scrollTop = box.scrollHeight;
+        const lastParent = [...(r.messages || [])].reverse().find(m => m.role === 'user');
+        const left = lastParent ? 24 * 3600 * 1000 - (Date.now() - new Date(lastParent.created_at).getTime()) : -1;
+        $('waiReplyBox').style.display = '';
+        if(left > 0){
+          const hrs = Math.floor(left / 3600000), mins = Math.floor((left % 3600000) / 60000);
+          $('waiWindowNote').textContent = `You can reply for free for ${hrs}h ${mins}m more.`;
+          $('waiSend').disabled = false; $('waiReplyText').disabled = false;
+        } else {
+          $('waiWindowNote').textContent = 'More than 24 hours since this parent\'s last message — WhatsApp only allows a reply after they message again.';
+          $('waiSend').disabled = true; $('waiReplyText').disabled = true;
+        }
+      }catch(e){
+        if(e.message !== 'bad-key') box.innerHTML = `<div class="admin-empty">Couldn't load: ${h(e.message)}</div>`;
+      }
+    }
+
+    async function sendReply(){
+      const text = $('waiReplyText').value.trim();
+      if(!text || !currentPhone) return;
+      $('waiSend').disabled = true;
+      $('waiReplyMsg').textContent = 'Sending…';
+      try{
+        await call('reply', { phone: currentPhone, text });
+        $('waiReplyText').value = '';
+        $('waiReplyMsg').textContent = 'Sent ✓';
+        await loadList();
+        await openThread(currentPhone, true);
+        $('waiThread').scrollTop = $('waiThread').scrollHeight;
+      }catch(e){
+        $('waiReplyMsg').textContent = e.message === 'bad-key' ? '' : e.message;
+      }finally{
+        $('waiSend').disabled = false;
+        setTimeout(() => { $('waiReplyMsg').textContent = ''; }, 5000);
+      }
+    }
+
+    function stopTimer(){ if(timer){ clearInterval(timer); timer = null; } }
+    function startTimer(){
+      stopTimer();
+      timer = setInterval(() => {
+        const panel = $('waInboxPanel');
+        const overlay = document.getElementById('adminOverlay');
+        if(!panel || !panel.classList.contains('active') || (overlay && !overlay.classList.contains('open'))){ stopTimer(); return; }
+        loadList().then(() => { if(currentPhone) openThread(currentPhone, true); });
+      }, 20000);
+    }
+
+    function wire(){
+      if(wired) return; wired = true;
+      $('waiKeySave').addEventListener('click', async () => {
+        const k = $('waiKeyInput').value.trim();
+        if(!k){ $('waiKeyMsg').textContent = 'Type the inbox key first.'; return; }
+        setKey(k);
+        $('waiKeyMsg').textContent = 'Checking…';
+        try{ await call('check'); $('waiKeyInput').value = ''; await loadList(); startTimer(); }catch(e){ if(e.message !== 'bad-key') $('waiKeyMsg').textContent = e.message; }
+      });
+      $('waiKeyInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') $('waiKeySave').click(); });
+      $('waiRefresh').addEventListener('click', () => { loadList().then(() => { if(currentPhone) openThread(currentPhone, true); }); });
+      $('waiSearch').addEventListener('input', renderList);
+      $('waiSend').addEventListener('click', sendReply);
+    }
+
+    window.waInboxOpen = function(){
+      wire();
+      if(!getKey()){ showKeyCard(''); return; }
+      loadList().then(() => { if(currentPhone) openThread(currentPhone, true); });
+      startTimer();
+    };
+  })();
+</script>
+
 </body>
 </html>
