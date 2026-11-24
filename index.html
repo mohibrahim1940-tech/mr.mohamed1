@@ -24222,6 +24222,7 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
           ${s.status === 'approved' ? `<button class="student-action-btn student-plan-btn" title="See this student's plan, or give them one">📋 Plan</button>` : ''}
           <button class="student-action-btn parent-link-btn" title="Get a shareable, read-only link for this student's parent — no login needed">👨‍👩‍👧 Parent link</button>
           ${!isAssistant ? `<button class="student-action-btn reset-pass-btn" title="Passwords are stored securely and can't be viewed — set a new one instead">Reset password</button>` : ''}
+          ${!isAssistant ? `<button class="student-action-btn parent-number-btn" title="The WhatsApp number that gets this student's daily report">📱 Parent number</button>` : ''}
           ${!isAssistant ? `<button class="student-action-btn delete-student-btn">Delete</button>` : ''}
         </td>
       `;
@@ -24307,6 +24308,35 @@ if ((globalThis as any).Deno?.serve && !(globalThis as any).__PARENT_REPORTS_TES
         }catch(err){
           prompt(`Copy this link to send to ${s.username}'s parent (no account needed):`, url);
         }
+      });
+      tr.querySelector('.parent-number-btn')?.addEventListener('click', async ()=>{
+        const entered = prompt(
+          `Parent's WhatsApp number for "${s.username}".\n` +
+          `The daily WhatsApp report goes to this number, and the bot only answers this number about ${s.username}.\n\n` +
+          `Egyptian numbers: 010 1234 5678 is fine.\nOutside Egypt: start with + and the country code, e.g. +971 50 123 4567.`,
+          s.parentNumber || '');
+        if(entered === null) return;
+        const raw = entered.trim();
+        if(!raw){ alert('Please enter a number.'); return; }
+        const d = digitsOnly(raw);
+        const intl = (raw.startsWith('+') || raw.startsWith('00')) && !d.replace(/^00/, '').startsWith('20');
+        let formatted;
+        if(intl){
+          const n = d.replace(/^00/, '');
+          if(n.length < 8 || n.length > 15){ alert('That number doesn\'t look right. Check it and try again.'); return; }
+          formatted = '+' + n;
+        } else {
+          formatted = formatEgyptNumber(d.replace(/^00/, ''));
+          if(!/^\+201[0-9]{9}$/.test(formatted)){ alert('That doesn\'t look like an Egyptian mobile number (11 digits starting with 01). Check it and try again.'); return; }
+        }
+        if(formatted === s.parentNumber) return;
+        const student = await getStudent(s.username);
+        if(!student){ alert('Could not load this student — try again.'); return; }
+        const ok = await dbSet('students', studentKey(s.username), { ...student, parentNumber: formatted });
+        if(!ok){ alert('Could not save the number — check your connection and try again.'); return; }
+        invalidateDbCache('students');
+        alert(`Saved. ${s.username}'s reports will now go to ${formatted}.`);
+        await renderAdminStudents();
       });
       tr.querySelector('.reset-pass-btn')?.addEventListener('click', async ()=>{
         const newPass = prompt(`Set a new password for "${s.username}". They'll need to use this the next time they sign in.\n\n(Passwords are stored securely, so the old one can't be shown — only reset.)`, '');
